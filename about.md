@@ -13,8 +13,9 @@
 ### 以往博客说明:###
 ---
 - 1 [csdn blog: menggucaoyuan](http://blog.csdn.net/menggucaoyuan/article/category/1269292)
-- 2 [cnblogs blog: menggucaoyuan](http://www.cnblogs.com/menggucaoyuan/)
-- 3 [cnblogs blog: menggucaoyuan](http://my.oschina.net/alexstocks/blog?fromerr=ueepi6wH) 
+- 2 [oschina blog: menggucaoyuan](http://my.oschina.net/alexstocks/blog?fromerr=ueepi6wH) 
+- 3 [cnblogs blog: menggucaoyuan](http://www.cnblogs.com/menggucaoyuan/)
+
  
 个人以往写了一些博客，所有的博客林林总总都写在以上三家博客栏里，然而不打算接着在这三家的地盘写了，以后有文章只放在[github博客系统](http://alexstocks.github.io/)。对于以往的博客，在本文作为一番综述，以作一个了结。我以往写博客的历史，分为两个阶段：
 
