@@ -16,7 +16,7 @@
 - 2 [cnblogs blog: menggucaoyuan](http://www.cnblogs.com/menggucaoyuan/)
 - 3 [cnblogs blog: menggucaoyuan](http://my.oschina.net/alexstocks/blog?fromerr=ueepi6wH) 
  
-个人以往写了一些博客，所有的博客林林总总都写在以上三家博客栏里，由于打算接着更新这些博客了，以后有文章只放在本博客系统里。对于以往的博客，分为几个阶段：
+个人以往写了一些博客，所有的博客林林总总都写在以上三家博客栏里，然而不打算接着在这三家的地盘写了，以后有文章只放在[github博客系统](http://alexstocks.github.io/)。对于以往的博客，在本文作为一番综述，以作一个了结。我以往写博客的历史，分为两个阶段：
 
 - 1 2010年工作至今，以上链接里的所有blog主要是关于个人对后台分布式知识的粗浅理解，几乎都是自己的原创，很少转载的几篇都标明了转载来源，但是不注重格式，所以就不搬到github blog上了，下面分别整理一下列出来，算作是梳理下自己的知识系统。
 
