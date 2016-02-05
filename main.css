@@ -1,0 +1,133 @@
+body {
+    font-size: 110%;
+    margin: 1% 20% 5% 20%;
+    padding: 0% 5% 5% 5%;
+    width: 50%;
+    line-height: 150%;
+}
+
+h1 {
+    color: DimGray;
+    line-height: 150%;
+}
+
+h2 {
+    font-family: STKaiti, KaiTi, "SimSun", "Palatino Linotype", "Book Antiqua", Palatino, Verdana, serif;
+    margin-bottom: 50px;
+    padding: 5px;
+    padding-left: 15px;
+    border-bottom: 2px LightGray solid;
+    line-height: 150%;
+    color: CornflowerBlue;
+}
+
+li {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+table.index {
+    margin: 0px auto;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    width: 95%;
+}
+
+table.index td {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.post table {
+    padding: 0;
+    border-collapse: collapse;
+}
+
+.post table tr {
+    border-top: 1px solid #cccccc;
+    background-color: white;
+    margin: 0;
+    padding: 0;
+}
+
+.post table tr:nth-child(2n) {
+    background-color: #f8f8f8;
+}
+
+.post table tr th {
+    font-weight: bold;
+    border: 1px solid #cccccc;
+    margin: 0;
+    padding: 6px 13px;
+}
+
+.post table tr td {
+    border: 1px solid #cccccc;
+    margin: 0;
+    padding: 6px 13px;
+}
+
+.post table tr th :first-child, table tr td :first-child {
+    margin-top: 0;
+}
+
+.post table tr th :last-child, table tr td :last-child {
+    margin-bottom: 0;
+}
+
+a {
+    color: Gray;
+    text-decoration: none;
+}
+
+.post a {
+    color: Black;
+    border-bottom: 1px solid Silver;
+    padding-bottom: 1px;
+}
+
+pre {
+    font-family: Consolas, Monaco, "Courier New", Courier, monospace;
+    font-size: 70%;
+    border: 1px solid LightGray;
+    border-radius: 5px;
+    background-color: WhiteSmoke;
+    padding: 10px;
+    margin-left: 10px;
+    width: 95%;
+}
+
+code {
+    font-family: Consolas, Monaco, "Courier New", Courier, monospace;
+    font-size: 75%;
+    border: 1px solid LightGray;
+    border-radius: 3px;
+    background-color: WhiteSmoke;
+    padding: 1px;
+    padding-left: 3px;
+    padding-right: 3px;
+    margin: 1px;
+    margin-left: 3px;
+    margin-right: 3px;
+}
+
+pre code {
+    font-size: 100%;
+    border: none;
+    border-radius: 0px;
+    background-color: WhiteSmoke;
+    padding: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
+    margin: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 80%;
+    max-height: 80%;
+}
