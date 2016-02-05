@@ -29,6 +29,8 @@
 
 ### old blogs ###
 ---
+**由于一些博客在多家的地盘放着，由于用户评论也不同，我就对blog做相应的修改，多版本就造成了数据不一致，故而在此都列出来**
+
 - lisk 
 
      *个人用C语言实现的一套linux基础库，花费三年有余*
@@ -44,7 +46,9 @@
     > github: https://github.com/AlexStocks/flatbuffers
 
     > [Cap'n Proto, FlatBuffers, and SBE](http://blog.csdn.net/menggucaoyuan/article/details/34436899)
-    
+
+    > [FlatBuffers与protobuf性能比较](http://my.oschina.net/alexstocks/blog/283779)
+
     > [FlatBuffers与protobuf性能比较](http://blog.csdn.net/menggucaoyuan/article/details/34409433)
 
 	> [定制一个FlatBuffers编译器](http://blog.csdn.net/menggucaoyuan/article/details/34408111)
@@ -69,6 +73,10 @@
 
 	> [七牛的存储算法猜测](http://blog.csdn.net/menggucaoyuan/article/details/41913555)
 
+	> [七牛的存储算法猜测](http://my.oschina.net/alexstocks/blog/355849)
+
+	> [多线程下写日志](http://my.oschina.net/alexstocks/blog/355849)
+
 	> [多线程下写日志](http://blog.csdn.net/menggucaoyuan/article/details/40656941)
 
 	> [Redis Cluster](http://my.oschina.net/alexstocks/blog/397773)
@@ -85,6 +93,8 @@
 	
 	> [高性能web服务器的秘密核武器](http://blog.csdn.net/menggucaoyuan/article/details/38470221)
 
+	> [如何快速的把日志输出到磁盘上](http://my.oschina.net/alexstocks/blog/299619)
+	> 
 	> [如何快速的把日志输出到磁盘上](http://blog.csdn.net/menggucaoyuan/article/details/38460419)
 
 	> [EINTR错误处理](http://blog.csdn.net/menggucaoyuan/article/details/8904304)
@@ -149,11 +159,6 @@
 	> [用盛金公式求解一元三次方程](http://blog.csdn.net/menggucaoyuan/article/details/6680143)
 
 	> [关于颜色的透明度的形象理解](http://blog.csdn.net/menggucaoyuan/article/details/6063216)
-
-	*这两篇文章是介绍gogoprotobuf的一些关键语法，于2015年1月初写成，并马上被推荐到oschina.net的首页，其他一堆抄袭网站直接就复制粘贴过去，后来我于2015/12又做了扩充，新添加了三个命令说明，你在那些抄袭网站一定看不到 ^_^ *
-	> [gogoprotobuf使用(下)](http://my.oschina.net/alexstocks/blog/387058)
-
-	> [gogoprotobuf使用(上)](http://my.oschina.net/alexstocks/blog/387031)
 
 - 其他
 
