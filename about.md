@@ -1,4 +1,4 @@
-## 扒粪者 * 于雨氏 * 追述以往 ##
+## 扒粪者-于雨氏 * 追述以往 ##
 ---
 *written by Alex Stocks on 2016/02/05*
 
@@ -167,9 +167,7 @@
 ### tools ###
 ---
 -	:
-
 	个人于闲暇时候喜欢学习一些新的语言并写一些小工具，下面按照语言分门别类之:
-
     * C++11 muduo
 
 	*陈硕显示的muduo库依赖boost且使用了cmake，个人觉得既然有了C++11，就没必要让爱好者继续使用boost了，就用C++11重写了一遍。顺便搞死了我讨厌的cmake，自己手工从零给其写了makefile替代之。*
@@ -209,6 +207,11 @@
 	*对protobuf的测试*
 	> https://github.com/AlexStocks/test/tree/master/pb-test
 	
+	*redis migrate with password，不晓得为啥半年多了还没有被合入trunk*
+	> https://github.com/antirez/redis/pull/2507
+	> 
+	> https://github.com/AlexStocks/redis/commit/30ef3fa99d60e86816f746ae0877f62e1de394df
+	
 ### 跋 ###
 ---
 
@@ -220,5 +223,5 @@
 
 好的开源系统还有很多，根据工作需要以及个人能力，慢慢啃吧。虽然这个过程充满荆棘，扒拉代码这活又脏又累，但是我们的征途是星辰大海！
 
-## 扒粪者 于雨氏 ##
+## 扒粪者-于雨氏 ##
 于雨氏，2016/02/05，于金箱堂。
