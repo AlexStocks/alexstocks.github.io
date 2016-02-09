@@ -506,18 +506,28 @@ img {
 <h2>扒粪者-于雨氏</h2>
 <p>于雨氏，2016/02/05，于金箱堂。</p>
 
-<table width="100%" border="0">
-<form method="post" action="post.php" name="theform" onsubmit="return formCheck()"></form>
-<tbody>
-<tr><td>
-<input class="smallInput" name="title" size="10" type="hidden">
-<b>请留言</b> 
-<input type="hidden" name="anti">
-</td></tr>
-<tr><td><textarea class="smallArea" cols=50% name="data" rows="8"></textarea></td></tr>
-<tr><td><center><input type="submit" value="提交" class="buttonface"></center></td></tr>
+<div id="disqus_thread"></div>
+<script>
+/**
+* RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+* LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables
+*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL; // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
 
-</tbody></table>
+s.src = '//alexstocks.disqus.com/embed.js';
+
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
 
 </body>
 </html>
