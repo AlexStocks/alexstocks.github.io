@@ -508,16 +508,10 @@ img {
 
 <table width="100%" border="0">
 <form method="post" action="post.php" name="theform" onsubmit="return formCheck()"></form>
-<tbody><tr><td>
-名字:<input class="smallInput" name="name" size="20" value="">
-<input type="checkbox" name="typeset" checked="">自动排版(贴代码等已排版数据请取消),采用自动排版,留言分段请敲两次回车.
-</td></tr>
-<tr><td>
-密码:<input type="password" name="password" "=""> 可选,第一次输入自动注册,本网站只记录密码的md5值,不会盗取你的密码
-</td></tr>
+<tbody>
 <tr><td>
 <input class="smallInput" name="title" size="70" type="hidden">
-请在<b>非常必要</b>时再给留言加标题 80 字以内 <input type="checkbox" onchange="document.theform.title.disabled=!document.theform.title.disabled;document.theform.title.type=''">
+<b>请留言</b> 
 <input type="hidden" name="anti">
 </td></tr>
 <tr><td><textarea class="smallArea" cols="70" name="data" rows="8"></textarea></td></tr>
