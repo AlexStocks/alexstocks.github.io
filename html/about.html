@@ -501,28 +501,30 @@ img {
 <h2>扒粪者-于雨氏</h2>
 <p>于雨氏，2016/02/05，于金箱堂。</p>
 
-<div id="disqus_thread"><iframe id="dsq-app2" name="dsq-app2" allowtransparency="true" frameborder="0" scrolling="no" tabindex="0" title="Disqus" width="100%" src="/html/saved_resource.html" style="width: 1px !important; min-width: 100% !important; border: none !important; overflow: hidden !important; height: 925px !important;" horizontalscrolling="no" verticalscrolling="no"></iframe></div>
+<div id="disqus_thread"></div>
 <script type="text/javascript">
+var disqus_shortname = 'ikurento.com'; // Required - Replace example with your forum shortname
+var disqus_identifier = window.location.pathname; //'a unique identifier for each page where Disqus is present';
+var disqus_title = document.title; // 'a unique title for each page where Disqus is present';
+var disqus_url = document.URL; // window.location.origin + window.location.pathname; // 'a unique URL for each page where Disqus is present';
+	
+var disqus_config = function () {
+this.page.url = window.location.href; // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = window.location.pathname; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
 
-<script type="text/javascript">
-    var disqus_shortname = 'alexstocks';
-    (function() {
-        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-    })();
-</script>
-<noscript>Please enable JavaScript to view the &lt;a href="https://disqus.com/?ref_noscript"&gt;comments powered by Disqus.&lt;/a&gt;</noscript>
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
 
-<script type="text/javascript">
-var disqus_shortname = 'alexstocks';
-(function () {
-    var s = document.createElement('script'); s.async = true;
-    s.type = 'text/javascript';
-    s.src = '//' + disqus_shortname + '.disqus.com/count.js';
-    (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
-}());
+s.src = '//alexstocks.disqus.com/embed.js';
+
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
 </script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+<script id="dsq-count-scr" src="//alexstocks.disqus.com/count.js" async></script>
 
 </body>
 </html>
