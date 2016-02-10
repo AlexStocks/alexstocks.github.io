@@ -1,4 +1,6 @@
 // https://segmentfault.com/a/1190000002807674
+<div id="disqus_thread"></div>
+<script type="text/javascript">
 var disqus_shortname = 'alexstocks'; // Required - Replace example with your forum shortname
 var disqus_identifier = window.location.pathname; //'a unique identifier for each page where Disqus is present';
 var disqus_title = document.title; // 'a unique title for each page where Disqus is present';
