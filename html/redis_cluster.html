@@ -402,12 +402,12 @@ img {
 <li>F 接收proxy和keeper发来的心跳包；</li>
 <li>G 根据proxy心跳包，发出统计某个db的内存size的指令给keeper；</li>
 <li>H 如果某个db的size超出其粒度限额(quota)，则通知各个proxy封禁其写请求访问；</li>
-<li>I 定时检测超出quota的db，一旦其db容量下降到何时额度，就通知proxy开放对其进行写请求的访问；</li>
+<li>I 定时检测超出quota的db，一旦其db容量下降到合适额度，就通知proxy开放对其进行写请求的访问；</li>
 <li>J 接收用户扩展其某个db的size指令，检验请求合法性并通过后，做出如下流程：</li>
 </ul>
 <blockquote>
 <p>1 向各个proxy发出对某个db的写请求访问封禁通知；</p>
-<p>2 收到所有的proxy响应后，从备用资源池抽出何时的instance上的db，作为migrate命令的参数发给keeper；</p>
+<p>2 收到所有的proxy响应后，从备用资源池抽出合适粒度的instance的db，作为migrate命令的参数发给keeper；</p>
 <p>3 根据keeper操作结果，修改metadb中db的相关信息；</p>
 <p>4 命令keeper对原db做出drop操作；</p>
 <p>5 通知各个proxy修改redis pool架构信息并开放对某个db的写请求访问；</p>
