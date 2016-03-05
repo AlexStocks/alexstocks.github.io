@@ -300,7 +300,7 @@ img {
 </li>
 <li>
 <p>2 Scale up能力</p>
-<p>基于Redis的cluster目前采用了两种设计模式：proxy based和无中心的smart client based(如官方的Redis 3.0)。官方实现的Redis Cluster把系统设计成了一个&quot;All-In-Box&quot;模式的cluster，看似简洁易用轻便很多，但是谁用谁知道。目前业界没有简单比较成功的使用案例。</p>
+<p>基于Redis的cluster目前采用了两种设计模式：proxy based和无中心的smart client based(如官方的Redis 3.0)。官方实现的Redis Cluster把系统设计成了一个&quot;All-In-Box&quot;模式的cluster，看似简洁易用轻便很多，但是谁用谁知道，目前业界暂时没有关于Redis 3.0的比较成功的使用案例。</p>
 <p>Proxy-based Redis Cluster看似让架构复杂很多，但是这种架构很容易做到让每个模块自身职责明了清晰，升级也就方便很多，契合微服务的精神。目前比较成功的proxy有twemproxy，比较方便使用的Redis Cluster有Codis等。</p>
 </li>
 </ul>
@@ -327,7 +327,7 @@ img {
 <li>8 Proxy把value返回给client；</li>
 <li>9 client收到value。</li>
 </ul>
-<p>如果client读到的value与写入的value一致，便可以认为写成功了，否则认为是失败的，不管中间的原因是Rm与Rs的同步太慢还是中间整个流程耗时过长导致了请求超时。如果某个Redis的写操作被认为是幂等的，则用户可以通过重试上面的流程来提高写成功率。这个方案需要redis和proxy配合一起保证数据的强一致性。</p>
+<p>如果client读到的value与写入的value一致，便可以认为写成功了，否则认为是失败的，不管其原因是Rm与Rs的同步太慢还是中间整个流程耗时过长导致了请求超时。如果某个Redis的写操作被认为是幂等的，则用户可以通过重试上面的流程来提高写成功率。这个方案需要redis和proxy配合一起保证数据的强一致性。</p>
 <p>还有一种选择。proxy可以向Rm发送info命令，可以得到其sync buffer的offset值master<em>repl</em>offset，依据写请求前后两个不同的offset值，大致地可以把上面的流程修改为：</p>
 <ul>
 <li>1 client发出Write Request；</li>
