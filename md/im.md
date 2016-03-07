@@ -33,14 +33,14 @@
 
 本文只考虑IM系统的在线消息模型，不考虑其离线消息系统[能够存储IM消息的系统]。根据个人理解，其应有的feature如下：
 
-- 1 整个系统中Server端提供存储转发能力，无论整体架构是B/S还是C/S； 
-- 2 消息发送者能够成功发送消息给后端，且得到后端地确认；
-- 3 接收端能否不重不漏地接收Server端转发来的没有超过**消息生命周期**和**系统承载能力**的消息；
-- 4 整个系统只考虑文本短消息[即限制其长度]；
-- 5 每条消息都有生命周期，如一天，且有长度限制如1440B【尽量不要超过一个物理frame】，只考虑在线消息的处理，无论是超时的消息还是超出系统承载能力的消息[如键盘狂人或者键盘狂机器人发出的消息]都被认为是"垃圾消息";
-- 6 为简单起见，不给消息很多类型，如个人对个人消息，群消息，讨论组消息等，都认为是一种群[下文用channel替代之，也有人用Room这个词]消息类型；
-- 7 为简单起见，这个群的建立与销毁流程本文不述及，也即消息流程开始的时候各个消息群都已经组建完毕，且流程中没有成员的增减；
-- 8 账户申请、用户鉴权和天朝独有的黄反词检查等IM安全层等暂不考虑；
+- A 整个系统中Server端提供存储转发能力，无论整体架构是B/S还是C/S； 
+- B 消息发送者能够成功发送消息给后端，且得到后端地确认；
+- C 接收端能否不重不漏地接收Server端转发来的没有超过**消息生命周期**和**系统承载能力**的消息；
+- D 整个系统只考虑文本短消息[即限制其长度]；
+- E 每条消息都有生命周期，如一天，且有长度限制如1440B【尽量不要超过一个物理frame】，只考虑在线消息的处理，无论是超时的消息还是超出系统承载能力的消息[如键盘狂人或者键盘狂机器人发出的消息]都被认为是"垃圾消息";
+- F 为简单起见，不给消息很多类型，如个人对个人消息，群消息，讨论组消息等，都认为是一种群[下文用channel替代之，也有人用Room这个词]消息类型；
+- G 为简单起见，这个群的建立与销毁流程本文不述及，也即消息流程开始的时候各个消息群都已经组建完毕，且流程中没有成员的增减；
+- H 账户申请、用户鉴权和天朝独有的黄反词检查等IM安全层等暂不考虑；
 
 根据以上系统特点，先给出一套稍微完备的IM系统的框架图：
 
@@ -112,15 +112,15 @@ UIN在于broker之间进行一段时间内有效的会话服务，称之为一�
 
 基于上面这个假设，producer发出的消息请求被称为msg req，服务器给客户端返回的消息响应称为msg ack。整个消息流程为：
 
-- 1 client以阻塞方式发出msg req，req = {producer uin, channel name, msg device id, msg time, msg content}；
-- 2 broker收到消息后，以uin为hash或者通过其他hash方式把消息转发给某个msg chat server；
-- 3 msg chat server收到消息后以 {producer uin【发送者id】 + msg device id【设备id】+ msg time【消息发送时间，精确到秒】}到本地消息缓存中查询消息是否已经存在，如果存在则终止消息流程，给broker返回"duplicate msg"这个msg ack，否则继续；
-- 4 msg chat server到Counter模块以channel name为key查询其最新的msg id，把msg id自增一后作为这条消息的id；
-- 5 msg chat server把分配好id的消息插入本地msg cache和msg DB[mysql/mongoDB]中；
-- 6 msg chat server给broker返回msg ack, ack = {producer uin, channel name, msg device id, msg time, msg id}；
-- 7 broker把ack下发给producer；
-- 8 producer收到ack包后终止消息流程，如果在发送流程超时后仍未收到消息则转到步骤1进行重试，并计算重试次数；
-- 9 如果重试次数超过两次依然失败则提示“系统繁忙” or “网络环境不佳，请主人稍后再尝试发送”等，终止消息发送流程。
+- A client以阻塞方式发出msg req，req = {producer uin, channel name, msg device id, msg time, msg content}；
+- B broker收到消息后，以uin为hash或者通过其他hash方式把消息转发给某个msg chat server；
+- C msg chat server收到消息后以 {producer uin【发送者id】 + msg device id【设备id】+ msg time【消息发送时间，精确到秒】}到本地消息缓存中查询消息是否已经存在，如果存在则终止消息流程，给broker返回"duplicate msg"这个msg ack，否则继续；
+- D msg chat server到Counter模块以channel name为key查询其最新的msg id，把msg id自增一后作为这条消息的id；
+- E msg chat server把分配好id的消息插入本地msg cache和msg DB[mysql/mongoDB]中；
+- F msg chat server给broker返回msg ack, ack = {producer uin, channel name, msg device id, msg time, msg id}；
+- G broker把ack下发给producer；
+- H producer收到ack包后终止消息流程，如果在发送流程超时后仍未收到消息则转到步骤1进行重试，并计算重试次数；
+- I 如果重试次数超过两次依然失败则提示“系统繁忙” or “网络环境不佳，请主人稍后再尝试发送”等，终止消息发送流程。
 
 上面设计到了一个模块图中没有的概念：msg cache，之所以没有绘制出来，是因为msg cache的大小是可预估的，假设msg chat server的服务人数是40 000人，消息发送频率是1条/s，消息的生命周期是4 hour，消息长度是1kB。，那么这个cache大小 = 1k * 4 * 3600 * 40000 = 576 000 000kB，这个数字可能有点恐怖，如果是真实商业环境这个数字只会更小。其本质是一个hashtable。
 
