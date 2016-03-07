@@ -240,6 +240,6 @@ step H可能简单，上面已经叙述过心跳时间不是固定不变的，ro
 - 6 [腾讯IM架构 1亿在线背后的技术挑战](http://wenku.baidu.com/view/caa2161859eef8c75fbfb3c0.html)
 - 7 [微信技术总监周颢：一亿用户背后架构秘密](http://news.pedaily.cn/201503/20150301379053.shtml)
 - 8 [视频：微信技术总监周颢：一亿用户背后架构秘密](http://www.uml.net.cn/video/lecture/2-20120427-101.asp)
--  
+
 ## 扒粪者-于雨氏 ##
 于雨氏，2016/03/07，于金箱堂。
