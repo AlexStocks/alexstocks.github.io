@@ -160,6 +160,12 @@
 
 	> [关于颜色的透明度的形象理解](http://blog.csdn.net/menggucaoyuan/article/details/6063216)
 
+	> 下文链接是http://blog.csdn.net/menggucaoyuan/article/details/6365596，记忆中是2011-04-26 23:22(http://www.boyunjian.com/do/article/s.do?keyword=CUDA%20%E5%AE%89%E8%A3%85&pageno=7显示时间)我翻译自codeproject上的一篇教程文章，后来觉得文章实在不入流就删除了，从Wikipedia链接：https://zh.wikipedia.org/wiki/User:Wissning显示最后修改时间是2012年6月13日 (星期三) 07:14，这个时间应该是删除时间。不过既然有网站转载就说明它还有用，下面附上两个转载链接(但是二者都没声明是转载文章更没有指出转载来源^_^)。
+	> 
+	>  [CUDA: 通过九个步骤实现在VS2010中加载CUDA 3.2](http://www.jeepshoe.org/285540142.htm)
+
+	>  [CUDA: 通过九个步骤实现在VS2010中加载CUDA 3.2](http://www.xuebuyuan.com/2051642.html)
+
 - 其他
 
 	> [互联网新贵英雄谱](http://blog.csdn.net/menggucaoyuan/article/details/6873171)
@@ -170,7 +176,7 @@
 	个人于闲暇时候喜欢学习一些新的语言并写一些小工具，下面按照语言分门别类之:
     * C++11 muduo
 
-	*陈硕显示的muduo库依赖boost且使用了cmake，个人觉得既然有了C++11，就没必要让爱好者继续使用boost了，就用C++11重写了一遍。顺便搞死了我讨厌的cmake，自己手工从零给其写了makefile替代之。*
+	*陈硕先生的muduo库依赖boost且使用了cmake，个人觉得既然有了C++11，就没必要让爱好者继续使用boost了，就用C++11重写了一遍。顺便删除了cmake(muduo只运行在unix类服务器上那就没必要用cmake)，自己手工从零给其写了makefile替代之。*
 	> https://github.com/AlexStocks/muduo
 
     * golang
@@ -207,11 +213,19 @@
 	*对protobuf的测试*
 	> https://github.com/AlexStocks/test/tree/master/pb-test
 	
-	*redis migrate with password，不晓得为啥半年多了还没有被合入trunk*
+	* Redis
+
+	*给redis migrate命令提交的一个patch[redis migrate with password，即给migrate命令添加了一个密码验证功能]*
 	> https://github.com/antirez/redis/pull/2507
 	> 
 	> https://github.com/AlexStocks/redis/commit/30ef3fa99d60e86816f746ae0877f62e1de394df
-	
+	> 
+	> [redis的一些坑](http://my.oschina.net/alexstocks/blog/378086)
+	>
+	> [redis server replication 源码分析](http://alexstocks.github.io/html/redis_replication_readme.html)
+	> 
+	> [一种基于Redis的多租户多粒度分布式内存文件系统](http://alexstocks.github.io/html/redis_cluster.html)
+
 ### 跋 ###
 ---
 
@@ -221,7 +235,12 @@
 
 现在鄙人写blog不似以往，需兼顾格式与版权，而个人记性实在不好，有的东西需来回翻腾好几次，以减少文章中的自相矛盾之处，实在觉得写一个别人稍微能看的blog是种力气活。
 
-好的开源系统还有很多，根据工作需要以及个人能力，慢慢啃吧。虽然这个过程充满荆棘，扒拉代码这活又脏又累，但是我们的征途是星辰大海！
+好的开源系统还有很多，根据工作需要以及个人能力，慢慢啃吧。
+
+老罗语录：通往牛逼的路上，风景差的让人只想说脏话，但创业者在意的是远方。其实啃代码也一样，这活又脏又累且过程充满荆棘，但是我们的征途是星辰大海！</p>
 
 ## 扒粪者-于雨氏 ##
-于雨氏，2016/02/05，于金箱堂。
+
+> 2016/02/05，于雨氏，于金箱堂。
+>
+> 2016/02/10，于金箱堂，添加了disqus评论功能。
