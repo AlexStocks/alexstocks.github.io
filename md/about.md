@@ -221,6 +221,8 @@
 	> https://github.com/AlexStocks/redis/commit/30ef3fa99d60e86816f746ae0877f62e1de394df
 	> 
 	> [redis的一些坑](http://my.oschina.net/alexstocks/blog/378086)
+	> 
+	> [redis性能提高与Nagel算法](http://my.oschina.net/alexstocks/blog/387715)
 	>
 	> [redis server replication 源码分析](http://alexstocks.github.io/html/redis_replication_readme.html)
 	> 
