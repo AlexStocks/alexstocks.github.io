@@ -224,6 +224,8 @@
 	> 
 	> [redis性能提高与Nagel算法](http://my.oschina.net/alexstocks/blog/387715)
 	>
+	> [redis工具集](https://github.com/AlexStocks/redis-tool-set)
+	> 
 	> [redis server replication 源码分析](http://alexstocks.github.io/html/redis_replication_readme.html)
 	> 
 	> [一种基于Redis的多租户多粒度分布式内存文件系统](http://alexstocks.github.io/html/redis_cluster.html)
