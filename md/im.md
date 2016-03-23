@@ -267,7 +267,7 @@ step H要求router至少要存储client最新四次的登录时间，然后根�
 - 8 天生的分布式能力，保证其多IDC的部署能力；
 - 9 尽个人能力，不断优化中......
 
-如有指教，欢迎在本文下方留言板留言或者发送email与我(alexstocks@foxmail.com)交流。
+如有指教，欢迎在本文下方留言板留言或者发送email与我(alexstocks at foxmail dot com)交流。
 
 ### 9 跋 ###
 ---
