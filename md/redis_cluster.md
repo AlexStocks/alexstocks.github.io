@@ -15,7 +15,7 @@ Redis是目前一种比较流行的内存数据库，但是其缺点也非常明
 
 	基于Redis的cluster目前采用了两种设计模式：proxy based和无中心的smart client based(如官方的Redis 3.0)。官方实现的Redis Cluster把系统设计成了一个"All-In-Box"模式的cluster，看似简洁易用轻便很多，其实不过是多个模块应该执行的任务混合在一起让一个Redis执行了，看似平等的一模一样的Redis进程的逻辑变得很复杂起来，一旦出问题就是一堆乱麻，你就只能呵呵哒了。目前业界暂时没有关于Redis 3.0的比较成功的使用案例。
 
-	Proxy-based Redis Cluster看似让架构复杂很多，但是这种架构很容易做到让每个模块自身职责明了清晰，分工明确，每个模块可以独立部署升级，所以运维也就方便很多，契合微服务的精神。目前比较成功的proxy有twemproxy，比较方便使用的Redis Cluster有Codis等。
+	Proxy-based Redis Cluster看似让架构复杂很多，但是这种架构很容易做到让每个模块自身职责明了清晰且分工明确，尽可能专注于符合自己职责的工作，每个模块可以独立部署升级，所以运维也就方便很多，契合微服务的精神。目前比较成功的proxy有twemproxy，比较方便使用的Redis Cluster有Codis等。
 
 
 ### 2 多租户与多粒度和内存分布式文件系统 ###
