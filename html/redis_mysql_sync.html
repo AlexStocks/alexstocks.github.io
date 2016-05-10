@@ -293,10 +293,10 @@ img {
 <h3>0 分布式集群的数据一致性</h3>
 <p>分布式集群的存储层一般由缓存层与数据固化层构成。</p>
 <p>对存储层进行读写的时候，需要考虑到数据的一致性。数据一致性分为强一致（实时一致性）和弱一致(最终一致性)，根据数据一致性要求的不同，读写流程也要做相应的改变。下面结合个人经验给出两种情况下的读写流程步骤。</p>
-<p>一般的简单的分布式系统，缓冲层可以使用redis集群，固化层则可以使用mysql或者mongodb。<strong>限于个人经验，本文所指的缓存层专指redis集群，固化层专指mysql或者mongodb数据库。</strong></p>
+<p>一般的简单的分布式系统，缓存层可以使用redis集群，固化层则可以使用mysql或者mongodb集群。<strong>限于个人经验，本文所指的缓存层专指redis集群，固化层专指mysql或者mongodb集群。</strong></p>
 <p>下面所有函数都遵循的几个条件：</p>
 <ul>
-<li>1 数据的key（key=&quot;foo.bar&quot;）有垃圾值rubbish(如rubbish = &quot;rubish-123987401234-zbert-rubish&quot;)；</li>
+<li>1 数据的key(如key=&quot;foo.bar&quot;)有垃圾值rubbish(如rubbish = &quot;rubish-123987401234-zbert-rubish&quot;)；</li>
 <li>2 key相关的锁为lock(如lock = &quot;lock.foo.bar&quot;)</li>
 <li>3 lock为乐观锁，其超时时间为ttl(如ttl = 10s)</li>
 </ul>
@@ -404,7 +404,7 @@ func read(key) (err, value) {
 </ul>
 <h3>2 弱一致性系统的读写流程</h3>
 <hr />
-<p>弱一致性系统要求缓存和数据库的数据在数据库更新成功后，缓存可以过一段时间与数据库的值一致，对读请求读到一个key的旧值时也可以其操作成功。</p>
+<p>弱一致性系统要求数据库的数据更新成功后，缓存可以过一段时间后与数据库的值一致，读请求读到一个key的旧值时也可以认为其操作成功。</p>
 <ul>
 <li>
 <p>读流程</p>
