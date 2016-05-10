@@ -1,4 +1,4 @@
-## 分布式系统的读写流程 ##
+## 分布式系统存储层的读写流程 ##
 ---
 *written by Alex Stocks on 2016/05/10*
 
@@ -29,56 +29,56 @@
 
 		 func write(key, value) err {
 		  	err = "okay"
+
 		  	// 1 生成本次lock的随机值rand，然后申请lock；
-		 		rand = time().now() * getpid() * random()
-		 		t0 = t1 = time().now()
-		 		ret = "null"
-		 		while ret != "okay" {
-		 		    t1 = time().now()
-		 		    if (t1 - t0) >= ttl {
-		 		        break
-		 		    }
+		 	rand = time().now() * getpid() * random()
+		 	t0 = t1 = time().now()
+		 	ret = "null"
+		 	while ret != "okay" {
+		 	    t1 = time().now()
+		 	    if (t1 - t0) >= ttl {
+					ret = "fail"
+		 	        goto fail
+		 	    }
 
-		 		    ret = redis.set(lock PX ttl NX)
-		 		}
+				timeout = t1 - t0
+		 	    ret = redis.set(lock rand PX timeout NX)
+		 	}
 
-		 		if (t1 - t0) >= ttl {
-		 		    err = "fail"
-		 		    goto end
-		 		}
+		 	// 2 把缓存中的值更新为垃圾值
+		 	ret = redis.set(key, rubish)
+		 	if ret != "okay" {
+		 	   err = "fail"
+		 	   goto end
+		 	}
 
-		 		// 2 把缓存中的值更新为垃圾值
-		 		ret = redis.set(key, rubish)
-		 		if ret != "okay" {
-		 		   err = "fail"
-		 		   goto end
-		 		}
+		 	// 3 更新db (mysql or mongodb)
+		 	ret = db.update(key, value)
+		 	if ret != "okay" {
+		 	   err = "fail"
+		 	   goto end
+		 	}
 
-		 		// 3 更新db (mysql or mongodb)
-		 		ret = db.update(key, value)
-		 		if ret != "okay" {
-		 		   err = "fail"
-		 		   goto end
-		 		}
+		 	// 4 更新缓存
+		 	ret = redis.set(key, value)
+		 	if ret != "okay" {
+		 	   redis.del(key)
+		 	}
 
-		 		// 4 更新缓存
-		 		ret = redis.set(key, value)
-		 		if ret != "okay" {
-		 		   redis.del(key)
-		 		}
+		 	end:
+		 	// 5 删除锁
+		 	ret = get("lock.foo.bar")
+		 	if ret == rand {
+		 	    redis.del(lock)
+		 	}
 
-		 		end:
-		 		// 5 删除锁
-		 		ret = get("lock.foo.bar")
-		 		if ret == rand {
-		 		    redis.del(lock)
-		 		}
-
-				return
+			return
 		 }
 
 
 - 读流程
+
+读流程也用到超时时间ttl，其值可与写流程下的ttl不同，如1s。
 
 		func read_cache(key) (err, value) {
 	 	 	err = "okay"
@@ -102,19 +102,48 @@
 	 	 		return
 	 	 	}
 
-     	 	// 2 从db读取value
-	 	 	err, value = db.get(key)
-     	 	if err == "fail" {
-	 	 		return
+		  	// 2 生成本次lock的随机值rand，然后申请lock；
+		 	rand = time().now() * getpid() * random()
+		 	t0 = t1 = time().now()
+		 	ret = "null"
+		 	while ret != "okay" {
+		 	    t1 = time().now()
+		 	    if (t1 - t0) >= ttl {
+					ret = "fail"
+		 	        goto fail
+		 	    }
+
+				timeout = t1 - t0
+		 	    ret = redis.set(lock rand PX timeout NX)
+		 	}
+
+			// 3 拿到lock后，再次从缓存读一次，以防止其他读者已经把value读回到cache中
+	 	 	err, value = read_cache(key)
+     	 	if err == "okay" && value != rubbish {
+	 	 		goto end
 	 	 	}
 
-	 	 	// 3 写入redis
-	 	 	err = redis.setnx(key, value) // 既要防止与write函数的第2 或 4步冲突，又要防止与其他读者执行到这一步时发生冲突
-			if err != "okay" {
-				// 多个读者同时执行到第三步时，只有第一个会成功，所以后面的读者再次从缓存读取数据
-				err, value = read_cache(key)
-				return
-			}
+     	 	// 4 从db读取value
+	 	 	err, value = db.get(key)
+     	 	if err == "fail" {
+	 	 		goto end
+	 	 	}
+
+	 	 	// 5 写入redis
+	 	 	// err = redis.setnx(key, value) // 既要防止与write函数的第2 或 4步冲突，又要防止与其他读者执行到这一步时发生冲突
+			// if err != "okay" {
+			// 	// 多个读者同时执行到第三步时，只有第一个会成功，所以后面的读者再次从缓存读取数据
+			// 	err, value = read_cache(key)
+			// 	return
+			// }
+	 	 	err = redis.set(key, value)
+
+			end:
+		 	// 6 删除锁
+		 	ret = get("lock.foo.bar")
+		 	if ret == rand {
+		 	    redis.del(lock)
+		 	}
 
 			return
      	}
@@ -139,15 +168,11 @@
 		 		while ret != "okay" {
 		 		    t1 = time().now()
 		 		    if (t1 - t0) >= ttl {
-		 		        break
+						err = "fail"
+						goto end
 		 		    }
 
-		 		    ret = redis.set(lock PX ttl NX)
-		 		}
-
-		 		if (t1 - t0) >= ttl {
-		 		    err = "fail"
-		 		    goto end
+		 		    ret = redis.set(lock rand PX ttl NX)
 		 		}
 
 		 		// 2 把缓存中的值更新为垃圾值
@@ -176,8 +201,9 @@
 		 		if ret == rand {
 		 		    redis.del(lock)
 		 		}
-		 }
 
+				return
+		 }
 
 ## 扒粪者-于雨氏 ##
 
