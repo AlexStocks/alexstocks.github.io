@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html>
+<head>
+ 
+<meta http-equiv="context-type" content="text/html" charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<link rel="stylesheet" type="text/css" href="/css/main.css">
+
+<title>扒粪者-于雨氏(AlexStocks)'s blog: go-http-optimize</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+
+/* RESET
+=============================================================================*/
+
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* BODY
+=============================================================================*/
+
+body {
+  font-family: Helvetica, arial, freesans, clean, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  background-color: #fff;
+  padding: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+body>*:first-child {
+  margin-top: 0 !important;
+}
+
+body>*:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* BLOCKS
+=============================================================================*/
+
+p, blockquote, ul, ol, dl, table, pre {
+  margin: 15px 0;
+}
+
+/* HEADERS
+=============================================================================*/
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 tt, h1 code, h2 tt, h2 code, h3 tt, h3 code, h4 tt, h4 code, h5 tt, h5 code, h6 tt, h6 code {
+  font-size: inherit;
+}
+
+h1 {
+  font-size: 28px;
+  color: #000;
+}
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #ccc;
+  color: #000;
+}
+
+h3 {
+  font-size: 18px;
+}
+
+h4 {
+  font-size: 16px;
+}
+
+h5 {
+  font-size: 14px;
+}
+
+h6 {
+  color: #777;
+  font-size: 14px;
+}
+
+body>h2:first-child, body>h1:first-child, body>h1:first-child+h2, body>h3:first-child, body>h4:first-child, body>h5:first-child, body>h6:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+h1+p, h2+p, h3+p, h4+p, h5+p, h6+p {
+  margin-top: 10px;
+}
+
+/* LINKS
+=============================================================================*/
+
+a {
+  color: #4183C4;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* LISTS
+=============================================================================*/
+
+ul, ol {
+  padding-left: 30px;
+}
+
+ul li > :first-child, 
+ol li > :first-child, 
+ul li ul:first-of-type, 
+ol li ol:first-of-type, 
+ul li ol:first-of-type, 
+ol li ul:first-of-type {
+  margin-top: 0px;
+}
+
+ul ul, ul ol, ol ol, ol ul {
+  margin-bottom: 0;
+}
+
+dl {
+  padding: 0;
+}
+
+dl dt {
+  font-size: 14px;
+  font-weight: bold;
+  font-style: italic;
+  padding: 0;
+  margin: 15px 0 5px;
+}
+
+dl dt:first-child {
+  padding: 0;
+}
+
+dl dt>:first-child {
+  margin-top: 0px;
+}
+
+dl dt>:last-child {
+  margin-bottom: 0px;
+}
+
+dl dd {
+  margin: 0 0 15px;
+  padding: 0 15px;
+}
+
+dl dd>:first-child {
+  margin-top: 0px;
+}
+
+dl dd>:last-child {
+  margin-bottom: 0px;
+}
+
+/* CODE
+=============================================================================*/
+
+pre, code, tt {
+  font-size: 12px;
+  font-family: Consolas, "Liberation Mono", Courier, monospace;
+}
+
+code, tt {
+  margin: 0 0px;
+  padding: 0px 0px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px;
+}
+
+pre>code {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent;
+}
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px;
+}
+
+pre code, pre tt {
+  background-color: transparent;
+  border: none;
+}
+
+kbd {
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    background-color: #DDDDDD;
+    background-image: linear-gradient(#F1F1F1, #DDDDDD);
+    background-repeat: repeat-x;
+    border-color: #DDDDDD #CCCCCC #CCCCCC #DDDDDD;
+    border-image: none;
+    border-radius: 2px 2px 2px 2px;
+    border-style: solid;
+    border-width: 1px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    line-height: 10px;
+    padding: 1px 4px;
+}
+
+/* QUOTES
+=============================================================================*/
+
+blockquote {
+  border-left: 4px solid #DDD;
+  padding: 0 15px;
+  color: #777;
+}
+
+blockquote>:first-child {
+  margin-top: 0px;
+}
+
+blockquote>:last-child {
+  margin-bottom: 0px;
+}
+
+/* HORIZONTAL RULES
+=============================================================================*/
+
+hr {
+  clear: both;
+  margin: 15px 0;
+  height: 0px;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+  border-bottom: 4px solid #ddd;
+  padding: 0;
+}
+
+/* TABLES
+=============================================================================*/
+
+table th {
+  font-weight: bold;
+}
+
+table th, table td {
+  border: 1px solid #ccc;
+  padding: 6px 13px;
+}
+
+table tr {
+  border-top: 1px solid #ccc;
+  background-color: #fff;
+}
+
+table tr:nth-child(2n) {
+  background-color: #f8f8f8;
+}
+
+/* IMAGES
+=============================================================================*/
+
+img {
+  max-width: 100%
+}
+</style>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-59043644-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</head>
+<body>
+<h2>一次Golang HTTP响应优化过程</h2>
+<hr />
+<p><em>written by Alex Stocks on 2016/08/01</em></p>
+<h3>1 前言</h3>
+<hr />
+<p>最近鄙人在用golang撸一个rpc框架，表示层协议采用了HTTP协议，在进行性能测试的时候发现server端给客户端进行回复的时候，一个大小282B的TCP响应包竟然被拆分成了超过30个TCP包返回给了客户端，其中大部分包长度不超过10B！   </p>
+<p>通过追踪Go的内部代码以及相关工具的辅助下最终完成了把HTTP response通过一个TCP packet完成传输的优化过程。</p>
+<h3>2 问题详述</h3>
+<hr />
+<p>2016/07/30比人给rpc框架谢了一个简单的echo测试用例，在服务端用tcpdump抓包(command: tcpdump -Xnlpvvs0 -S port 10000 -iany)时惊讶地发现了前言中叙述的问题，抓包详细结果比较大(如果你感兴趣请点击链接<a href="../doc/http-slices.pdf">http-slices</a>)，在此只给出关键部分的截图：</p>
+<pre><code>![](../pic/http-slices.png)
+</code></pre>
+
+<h3>3 问题扒粪</h3>
+<hr />
+<p>根据抓包的结果，直觉是server端把一次HTTP响应内容拆分成很多子tcp packet发送了客户端。</p>
+<p>为了验证更深入地分析server端程序写响应的过程，祭出大杀器strace(command: strace -p 32732 -f)分析整个过程中server端程序的系统调用流程，整个流程结果也比较大(如果你感兴趣请点击链接<a href="../doc/http-server-strace.pdf">http-server-strace</a>)，在此只给出关键部分的截图：</p>
+<pre><code>![](../pic/http-server-strace.png)
+</code></pre>
+
+<p>截图中几个醒目的地方很显然地给出了问题的答案：多次tcp小包回写。</p>
+<h3>4 刨根问底</h3>
+<hr />
+<p>通过相关工具找到了问题所在，下一步就是通过分析代码流程，找出问题相关的代码块所在。</p>
+<p>下面先贴出rpc框架中给客户端返回response的关键代码：</p>
+<pre><code>func SendResponse(m *Message) error {
+    rsp := &amp;http.Response{
+        Header:        r.Header,
+        Body:          &amp;buffer{b},
+        Status:        &quot;200 OK&quot;,
+        StatusCode:    200,
+        Proto:         &quot;HTTP/1.1&quot;,
+        ProtoMajor:    1,
+        ProtoMinor:    1,
+        ContentLength: int64(len(m.Body)),
+    }
+
+    return rsp.Write(h.conn) // h.conn is net.TcpConn
+}
+</code></pre>
+
+<p>上面代码构造了一个http.Response对象rsp，然后借助于golang的内部函数net/http/response.go:(*Response)Write把rsp写回给client。</p>
+<p>要继续追踪问题，就须查看上面的Write函数的具体实现了，其关键代码如下：</p>
+<pre><code>// https://github.com/golang/go/blob/master/src/net/http/response.go
+func (r *Response) Write(w io.Writer) error {
+    // Status line
+    protoMajor, protoMinor := strconv.Itoa(r.ProtoMajor), strconv.Itoa(r.ProtoMinor)
+    statusCode := strconv.Itoa(r.StatusCode) + &quot; &quot;
+    text = strings.TrimPrefix(text, statusCode)
+    if _, err := io.WriteString(w, &quot;HTTP/&quot;+protoMajor+&quot;.&quot;+protoMinor+&quot; &quot;+statusCode+text+&quot;\r\n&quot;); err != nil {
+        return err
+    }
+
+    // Clone it, so we can modify r1 as needed.
+    r1 := new(Response)
+    *r1 = *r
+    if r1.ContentLength == 0 &amp;&amp; r1.Body != nil {
+        // Is it actually 0 length? Or just unknown?
+        var buf [1]byte
+        r1.Body.Read(buf[:])
+
+        r1.ContentLength = -1
+        r1.Body = struct {
+            io.Reader
+            io.Closer
+        }{
+            io.MultiReader(bytes.NewReader(buf[:1]), r.Body),
+            r.Body,
+        }
+    }
+    // If we're sending a non-chunked HTTP/1.1 response without a
+    // content-length, the only way to do that is the old HTTP/1.0
+    // way, by noting the EOF with a connection close, so we need
+    // to set Close.
+    if r1.ContentLength == -1 &amp;&amp; !r1.Close &amp;&amp; r1.ProtoAtLeast(1, 1) &amp;&amp; !chunked(r1.TransferEncoding) {
+        r1.Close = true
+    }
+
+    // Process Body,ContentLength,Close,Trailer
+    tw, err := newTransferWriter(r1)
+    if err != nil {
+        return err
+    }
+    err = tw.WriteHeader(w)
+    if err != nil {
+        return err
+    }
+
+    // Rest of header
+    err = r.Header.WriteSubset(w, respExcludeHeader)
+    if err != nil {
+        return err
+    }
+
+    // contentLengthAlreadySent may have been already sent for
+    // POST/PUT requests, even if zero length. See Issue 8180.
+    contentLengthAlreadySent := tw.shouldSendContentLength()
+    if r1.ContentLength == 0 &amp;&amp; !chunked(r1.TransferEncoding) &amp;&amp; !contentLengthAlreadySent {
+        if _, err := io.WriteString(w, &quot;Content-Length: 0\r\n&quot;); err != nil {
+            return err
+        }
+    }
+
+    // End-of-header
+    if _, err := io.WriteString(w, &quot;\r\n&quot;); err != nil {
+        return err
+    }
+
+    // Write body and trailer
+    err = tw.WriteBody(w)
+    if err != nil {
+        return err
+    }
+
+    // Success
+    return nil
+}
+</code></pre>
+
+<p>通过上面的代码，可见golang的策略是在序列化HTTP的内容的过程中逐步把序列化结果写入@w(w io.Writer)中的，符合抓包内容表现以及系统跟踪的系统函数调用分析结果。</p>
+<p>那么，解决方法不可能是hack golang的这个函数，能改变的只能是rpc框架对这个函数的调用方式。</p>
+<h3>5 解决之道</h3>
+<hr />
+<p>鄙人目前能否想到的思路就是给Response.Write method传入一个buffer，让这个method先把HTTP response内容写入这个buffer，然后再把buffer缓存所有个内容一次性地写入net.TcpConn中。</p>
+<p>根据这个思路，修改后的SendResponse函数关键代码如下：</p>
+<pre><code>func SendResponse(m *Message) error {
+    rsp := &amp;http.Response{
+            Header:        r.Header,
+            Body:          &amp;buffer{b},
+            Status:        &quot;200 OK&quot;,
+            StatusCode:    200,
+            Proto:         &quot;HTTP/1.1&quot;,
+            ProtoMajor:    1,
+            ProtoMinor:    1,
+            ContentLength: int64(len(m.Body)),
+    }
+
+    /*
+        return rsp.Write(h.conn)
+    */
+    rspBuf := bytes.NewBuffer(make([]byte, 0))
+    err := rsp.Write(rspBuf)
+    if err != nil {
+            return err
+    }
+
+    _, err = rspBuf.WriteTo(h.conn)
+    return err
+}
+</code></pre>
+
+<p>改进代码并重新部署程序后，用tcpdump抓包结果如下：</p>
+<pre><code>![](../pic/http-merge.png)
+</code></pre>
+
+<p>从截图内容可以看出改进后的代码确实达到了我的目的。同样地，如果你对整个抓包结果感兴趣，请点击链接<a href="../doc/http-merge.pdf">http-merge</a>)。</p>
+<h3>6 总结</h3>
+<hr />
+<p>优化无止境，每个人都有自己的观察方法和追踪套路，多掌握一些工具对优化效率的提高大有裨益。</p>
+<p>吾人愚人也，记忆力很差劲，本文记述整个优化过程最重要的目的仅为本人备忘，此次优化过程花费了我一天时间和精力，如果你有更好的方法请不吝赐教！</p>
+<p>此记。</p>
+<h2>扒粪者-于雨氏</h2>
+<blockquote>
+<p>于雨氏，2016/08/01，初作此文于东沪。</p>
+</blockquote>
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+// disqus comment js block, added on 2016/02/10
+// https://segmentfault.com/a/1190000002807674
+var disqus_shortname = 'alexstocks'; // Required - Replace example with your forum shortname
+var disqus_identifier = window.location.pathname; //'a unique identifier for each page where Disqus is present';
+var disqus_title = document.title; // 'a unique title for each page where Disqus is present';
+var disqus_url = document.URL; // window.location.origin + window.location.pathname; // 'a unique URL for each page where Disqus is present';
+var disqus_config = function () {
+this.page.url = window.location.href; // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = window.location.pathname; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+
+(function() {
+var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js'; dsq.setAttribute('data-timestamp', +new Date());
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+<script id="dsq-count-scr" src='//' + disqus_shortname + '.disqus.com/count.js' async></script>
+
+
+</body>
+</html>
+
