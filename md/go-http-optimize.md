@@ -14,7 +14,7 @@
 
 2016/07/30比人给rpc框架谢了一个简单的echo测试用例，在服务端用tcpdump抓包(command: tcpdump -Xnlpvvs0 -S port 10000 -iany)时惊讶地发现了前言中叙述的问题，抓包详细结果比较大(如果你感兴趣请点击链接[http-slices](../doc/http-slices.pdf))，在此只给出关键部分的截图：
 
-	![](../pic/http-slices.png)
+![](../pic/http-slices.png)
 
 ### 3 问题扒粪  ###
 ---
@@ -23,7 +23,7 @@
 
 为了验证更深入地分析server端程序写响应的过程，祭出大杀器strace(command: strace -p 32732 -f)分析整个过程中server端程序的系统调用流程，整个流程结果也比较大(如果你感兴趣请点击链接[http-server-strace](../doc/http-server-strace.pdf))，在此只给出关键部分的截图：
 
-	![](../pic/http-server-strace.png)
+![](../pic/http-server-strace.png)
 
 截图中几个醒目的地方很显然地给出了问题的答案：多次tcp小包回写。
 
@@ -167,7 +167,7 @@
 
 改进代码并重新部署程序后，用tcpdump抓包结果如下：
 
-	![](../pic/http-merge.png)
+![](../pic/http-merge.png)
 
 从截图内容可以看出改进后的代码确实达到了我的目的。同样地，如果你对整个抓包结果感兴趣，请点击链接[http-merge](../doc/http-merge.pdf))。
 
