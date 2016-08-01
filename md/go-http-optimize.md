@@ -12,7 +12,7 @@
 ### 2 问题详述 ###
 ---
 
-2016/07/30比人给rpc框架谢了一个简单的echo测试用例，在服务端用tcpdump抓包(command: tcpdump -Xnlpvvs0 -S port 10000 -iany)时惊讶地发现了前言中叙述的问题，抓包详细结果比较大(如果你感兴趣请点击链接[http-slices](../doc/http-slices.pdf))，在此只给出关键部分的截图：
+2016/07/30比人给rpc框架写了一个简单的echo测试用例，在服务端用tcpdump抓包(command: tcpdump -Xnlpvvs0 -S port 10000 -iany)时惊讶地发现了前言中叙述的问题，抓包详细结果比较大(如果你感兴趣请点击链接[http-slices](../doc/http-slices.pdf))，在此只给出关键部分的截图：
 
 ![](../pic/http-slices.png)
 
@@ -136,7 +136,7 @@
 ### 5 解决之道  ###
 ---
 
-鄙人目前能否想到的思路就是给Response.Write method传入一个buffer，让这个method先把HTTP response内容写入这个buffer，然后再把buffer缓存所有个内容一次性地写入net.TcpConn中。
+鄙人目前能否想到的思路就是给Response.Write method传入一个buffer，让这个method先把HTTP response内容写入这个buffer，然后再把buffer缓存所有内容一次性地写入net.TcpConn中。
 
 根据这个思路，修改后的SendResponse函数关键代码如下：
 

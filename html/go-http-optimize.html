@@ -312,7 +312,7 @@ img {
 <p>通过追踪Go的内部代码以及相关工具的辅助下最终完成了把HTTP response通过一个TCP packet完成传输的优化过程。</p>
 <h3>2 问题详述</h3>
 <hr />
-<p>2016/07/30比人给rpc框架谢了一个简单的echo测试用例，在服务端用tcpdump抓包(command: tcpdump -Xnlpvvs0 -S port 10000 -iany)时惊讶地发现了前言中叙述的问题，抓包详细结果比较大(如果你感兴趣请点击链接<a href="../doc/http-slices.pdf">http-slices</a>)，在此只给出关键部分的截图：</p>
+<p>2016/07/30比人给rpc框架写了一个简单的echo测试用例，在服务端用tcpdump抓包(command: tcpdump -Xnlpvvs0 -S port 10000 -iany)时惊讶地发现了前言中叙述的问题，抓包详细结果比较大(如果你感兴趣请点击链接<a href="../doc/http-slices.pdf">http-slices</a>)，在此只给出关键部分的截图：</p>
 <p><img src="../pic/http-slices.png" /></p>
 <h3>3 问题扒粪</h3>
 <hr />
@@ -422,7 +422,7 @@ func (r *Response) Write(w io.Writer) error {
 <p>那么，解决方法不可能是hack golang的这个函数，能改变的只能是rpc框架对这个函数的调用方式。</p>
 <h3>5 解决之道</h3>
 <hr />
-<p>鄙人目前能否想到的思路就是给Response.Write method传入一个buffer，让这个method先把HTTP response内容写入这个buffer，然后再把buffer缓存所有个内容一次性地写入net.TcpConn中。</p>
+<p>鄙人目前能否想到的思路就是给Response.Write method传入一个buffer，让这个method先把HTTP response内容写入这个buffer，然后再把buffer缓存所有内容一次性地写入net.TcpConn中。</p>
 <p>根据这个思路，修改后的SendResponse函数关键代码如下：</p>
 <pre><code>func SendResponse(m *Message) error {
     rsp := &amp;http.Response{
