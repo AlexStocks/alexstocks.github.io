@@ -1,6 +1,6 @@
 ## Golang之闭包 ##
 ---
-*written by Alex Stocks on 2016/09/25*
+*written by Alex Stocks on 2016/09/24*
 
 ### 1 closure定义 ###
 ---
