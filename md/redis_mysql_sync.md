@@ -17,7 +17,7 @@
 
    - 1 数据的key(如key="foo.bar")有垃圾值rubbish(如rubbish = "rubish-123987401234-zbert-rubish")；
    - 2 key相关的锁为lock(如lock = "lock.foo.bar")
-   - 3 lock为乐观锁，其超时时间为ttl(如ttl = 10s)
+   - 3 lock为mutex类型(即不对操作者的读写身份进行区分)乐观锁，其超时时间为ttl(如ttl = 10s)
 
 
 ### 1 强一致性系统的读写流程 ###
@@ -30,22 +30,22 @@
 		 func write(key, value) err {
 		  	err = "okay"
 
-		  	// 1 生成本次lock的随机值rand，然后申请lock；
+		  	// 1 生成本次lock的随机值rand，然后申请与key对应的lock
 		 	rand = time().now() * getpid() * random()
 		 	t0 = t1 = time().now()
 		 	ret = "null"
 		 	while ret != "okay" {
 		 	    t1 = time().now()
 		 	    if (t1 - t0) >= ttl {
-					ret = "fail"
-		 	        goto fail
+					err = "fail"
+		 	        goto end
 		 	    }
 
 				timeout = t1 - t0
 		 	    ret = redis.set(lock rand PX timeout NX)
 		 	}
 
-		 	// 2 把缓存中的值更新为垃圾值
+		 	// 2 把缓存中的值更新为垃圾值, 以表示key的当前值无效
 		 	ret = redis.set(key, rubish)
 		 	if ret != "okay" {
 		 	   err = "fail"
@@ -83,6 +83,7 @@
 		func read_cache(key) (err, value) {
 	 	 	err = "okay"
 
+			// 防止读与写竞争
 	 	 	err, value = redis.get(key)
      	 	if err == "okay" {
      	 		if value == rubbish {
@@ -96,7 +97,7 @@
 		}
 
 		func read(key) (err, value) {
-     	 	// 1 从缓存读取value
+     	 	// 1 从缓存读取value, 读取失败说明key超时不存在了或者有写者正在对key进行更新
 	 	 	err, value = read_cache(key)
      	 	if err == "okay" {
 	 	 		return
@@ -109,8 +110,8 @@
 		 	while ret != "okay" {
 		 	    t1 = time().now()
 		 	    if (t1 - t0) >= ttl {
-					ret = "fail"
-		 	        goto fail
+					err = "fail"
+		 	        goto end
 		 	    }
 
 				timeout = t1 - t0
@@ -118,12 +119,13 @@
 		 	}
 
 			// 3 拿到lock后，再次从缓存读一次，以防止其他读者已经把value读回到cache中
+			// 多个读者同时执行到第三步时，只有第一个会成功，所以后面的读者只需要再次从缓存读取数据即可
 	 	 	err, value = read_cache(key)
      	 	if err == "okay" && value != rubbish {
 	 	 		goto end
 	 	 	}
 
-     	 	// 4 从db读取value
+     	 	// 4 第一个获取锁成功的读者从db读取value
 	 	 	err, value = db.get(key)
      	 	if err == "fail" {
 	 	 		goto end
@@ -172,7 +174,8 @@
 						goto end
 		 		    }
 
-		 		    ret = redis.set(lock rand PX ttl NX)
+		 		    // ret = redis.set(lock rand PX ttl NX)
+		 		    ret = redis.set(lock rand PX timeout NX)
 		 		}
 
 		 		// 2 把缓存中的值更新为垃圾值
