@@ -388,7 +388,41 @@ producer = KafkaProducer(
     bootstrap_servers=brokers,
     api_version = (0, 10))</code></pre></div>
 
-<h2 id="toc_3">扒粪者-于雨氏</h2>
+<h3 id="toc_3">2 kafka集群稳定性测试</h3>
+
+<hr>
+
+<p>测试环境：</p>
+
+<ul>
+<li>在一台机器上部署1个zk实例（zookeeper-3.4.8）;</li>
+<li>在同一台机器上部署3个kafka实例(kafka_2.11-0.10.1.1); </li>
+<li>在同一台机器上部署1个kafka producer实例(基于kafka-python库，以下简称P)；</li>
+<li>在同一台机器上部署1个kafka consumer实例(基于kafka-python库，以下简称C)；</li>
+<li>topic一个，其replica为3，partition为3；</li>
+</ul>
+
+<p>测试流程：</p>
+
+<blockquote>
+<p>case 1 kill全部kafka实例然后30s内再全部重启</p>
+</blockquote>
+
+<div><pre><code class="language-none">P与C依然能正常工作，但丢失消息若干且部分乱序。</code></pre></div>
+
+<blockquote>
+<p>case 2 kill一个kafka实例然后重启之</p>
+</blockquote>
+
+<div><pre><code class="language-none">重启kafka之前，P与C都能正常工作， 但又部分消息乱序。重启kafka实例之后，60S内P与C都与新实例建立了正常连接，且partition2以新实例为leader。   </code></pre></div>
+
+<blockquote>
+<p>case 3 kill一个kafka实例，kill P然后重启P，再kill C再重启C</p>
+</blockquote>
+
+<div><pre><code class="language-none">kill P且重启之后，P与C都可以正常工作。干掉C又重启之后，P与C依然能正常工作，但丢失消息若干且部分乱序。</code></pre></div>
+
+<h2 id="toc_4">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>2017/02/02，于雨氏，于致真大厦。</p>

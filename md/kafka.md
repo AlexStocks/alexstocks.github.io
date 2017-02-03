@@ -54,6 +54,28 @@
         bootstrap_servers=brokers,
         api_version = (0, 10))
 
+### 2 kafka集群稳定性测试 ###
+---
+
+测试环境：
+
+- 在一台机器上部署1个zk实例（zookeeper-3.4.8）;
+- 在同一台机器上部署3个kafka实例(kafka_2.11-0.10.1.1); 
+- 在同一台机器上部署1个kafka producer实例(基于kafka-python库，以下简称P)；
+- 在同一台机器上部署1个kafka consumer实例(基于kafka-python库，以下简称C)；
+- topic一个，其replica为3，partition为3；
+
+测试流程：
+
+> case 1 kill全部kafka实例然后30s内再全部重启
+
+    P与C依然能正常工作，但丢失消息若干且部分乱序。
+> case 2 kill一个kafka实例然后重启之
+    
+    重启kafka之前，P与C都能正常工作， 但又部分消息乱序。重启kafka实例之后，60S内P与C都与新实例建立了正常连接，且partition2以新实例为leader。   
+> case 3 kill一个kafka实例，kill P然后重启P，再kill C再重启C
+
+    kill P且重启之后，P与C都可以正常工作。干掉C又重启之后，P与C依然能正常工作，但丢失消息若干且部分乱序。
 
 ## 扒粪者-于雨氏 ##
 
