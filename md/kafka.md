@@ -76,6 +76,12 @@
 > case 3 kill一个kafka实例，kill P然后重启P，再kill C再重启C
 
     kill P且重启之后，P与C都可以正常工作。干掉C又重启之后，P与C依然能正常工作，但丢失消息若干且部分乱序。
+> case 4 新建一个topic，其partition为3，其replica为1，然后kill掉两个kafka实例    
+
+    kill掉一个kafka实例后，这个topic的信息如下图：    
+   ![kafka-topic-one-replica](../pic/kafka-topic-one-replica.png)
+      
+    所以kafka中topic的replica应该大于2。
 
 ## 扒粪者-于雨氏 ##
 

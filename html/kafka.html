@@ -422,6 +422,16 @@ producer = KafkaProducer(
 
 <div><pre><code class="language-none">kill P且重启之后，P与C都可以正常工作。干掉C又重启之后，P与C依然能正常工作，但丢失消息若干且部分乱序。</code></pre></div>
 
+<blockquote>
+<p>case 4 新建一个topic，其partition为3，其replica为1，然后kill掉两个kafka实例    </p>
+</blockquote>
+
+<div><pre><code class="language-none">kill掉一个kafka实例后，这个topic的信息如下图：    </code></pre></div>
+
+<p><img src="../pic/kafka-topic-one-replica.png" alt="kafka-topic-one-replica"></p>
+
+<div><pre><code class="language-none">所以kafka中topic的replica应该大于2。</code></pre></div>
+
 <h2 id="toc_4">扒粪者-于雨氏</h2>
 
 <blockquote>
