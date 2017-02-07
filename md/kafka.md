@@ -65,6 +65,7 @@
 - 在同一台机器上部署1个kafka consumer实例(基于kafka-python库，以下简称C)；
 - topic一个，其replica为3，partition为3；
 
+
 测试流程：
 
 > case 1 kill全部kafka实例然后30s内再全部重启
@@ -83,6 +84,9 @@
       
     所以kafka中topic的replica应该大于1。
     
+    
+上面程序的相关代码详见[kafka failure test](https://github.com/AlexStocks/test/tree/master/kafka/kafka_failure_test)。
+
 ### 3 线上kafka集群服务恢复 ###
 ---
 第一次把线上那台死掉的机器重启后，它不断在重建数据，大约10分钟后仍然没有启动成功，目测是数据彻底乱掉了。于是我们把其数目录清空，然后再启动就成功了。
