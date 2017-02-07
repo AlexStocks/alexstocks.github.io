@@ -1,4 +1,4 @@
-## Kafka 使用过成中遇到的问题以及解决办法 ##
+## Kafka 海滩拾贝 ##
 ---
 *written by Alex Stocks on 2017/02/02*
 
