@@ -82,6 +82,7 @@
    ![kafka-topic-one-replica](../pic/kafka-topic-one-replica.png)
       
     所以kafka中topic的replica应该大于1。
+    
 ### 2 线上kafka集群服务恢复 ###
 ---
 第一次把线上那台死掉的机器重启后，它不断在重建数据，大约10分钟后仍然没有启动成功，目测是数据彻底乱掉了。于是我们把其数目录清空，然后再启动就成功了。
@@ -92,7 +93,17 @@
 
 参考上面的case4和这个参数，大约就知道优化方向了。
 
+### 3 kafka消费者与broker连接不断挂掉 ###
+---
 
+在上海一家做wifi软件的公司工作的时候遇到这样一个问题：kafka consumer(Java)与broker之间的连接总是不断挂掉，查看了consumer的源码(主要是poll函数)后，发现主要原因是：
+
+    consumer是单线程程序，从broker批量取出一批消息后处理，处理完毕后向broker汇报心跳，即messge process逻辑和heartbeat逻辑在一个线程上。
+    
+   解决方法是：设置max.partition.fetch.bytes=4096(kafka v0.9.0.0)或者max.poll.records=10(kafka v0.10.0.1)，这两个参数是用来设置每次拉取消息的最大量。
+   
+通过缩小batch message size来缩短message process时间，从而不阻塞hearbeat上报时间，后面这种现象就再也没有发生了。
+   
 ## 扒粪者-于雨氏 ##
 
 > 2017/02/02，于雨氏，于致真大厦。
