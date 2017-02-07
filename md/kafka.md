@@ -81,7 +81,7 @@
     kill掉一个kafka实例后，这个topic的信息如下图：    
    ![kafka-topic-one-replica](../pic/kafka-topic-one-replica.png)
       
-    所以kafka中topic的replica应该大于2。
+    所以kafka中topic的replica应该大于1。
 
 ## 扒粪者-于雨氏 ##
 
