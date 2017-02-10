@@ -434,6 +434,20 @@ producer = KafkaProducer(
 
 <p>上面程序的相关代码详见<a href="https://github.com/AlexStocks/test/tree/master/kafka/kafka_failure_test">kafka failure test</a>。</p>
 
+<p>不改变测试环境其他条件，仅改变topic的replica为1的情况下，再次以下测试：</p>
+
+<blockquote>
+<p>case 1 kill全部kafka实例，3分钟后再全部重启</p>
+</blockquote>
+
+<div><pre><code class="language-none">P与C依然能正常工作，但丢失消息若干且部分乱序。但如果P为confluent_kafka(以下简称CK)实现，则仅仅有消息乱序现象。</code></pre></div>
+
+<blockquote>
+<p>case 2 kill全部kafka实例，48分钟后再全部重启</p>
+</blockquote>
+
+<div><pre><code class="language-none">P与C依然能正常工作，但丢失消息若干。</code></pre></div>
+
 <h3 id="toc_4">3 线上kafka集群服务恢复</h3>
 
 <hr>
@@ -462,6 +476,8 @@ producer = KafkaProducer(
 
 <blockquote>
 <p>2017/02/02，于雨氏，于致真大厦。</p>
+
+<p>2017/02/19，于雨氏，于致真大厦，添加replica为1条件下的测试结果。</p>
 </blockquote>
 
 <div id="disqus_thread"></div>
