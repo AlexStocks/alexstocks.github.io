@@ -122,6 +122,19 @@
 
 - 据B站服务端老大说经他们测试，partition数目为磁盘数目的4倍（也就是说每个盘上放4个partition）时候kafka的性能最优；
 - 磁盘建议使用ssd，为了充分利用CPU提高系统吞吐率计（无论磁盘顺序写再怎么快也跟不上内存和cpu的吞吐率）；
+- 如果使用SATA或者ATA磁盘，为了提高吞吐率建议使用多个磁盘，通过log.dirs配置这些磁盘目录，如 “log.dirs=/mnt/diska,/mnt/diskb,/mnt/diskc”，但是相关优缺点自己权衡，根据参考文档2这个参数会导致kafka如下行为：
+
+   > The intention is to allow the use of multiple disks without RAID or
+logical volume management.
+   >
+   > It takes a comma separated list and partition replicas are randomly
+distributed to the list.
+   >
+   > If you get a disk error that results in an IOException the broker will shut itself down.
+   
+   另外，不要一个目录配置成ssd而另一个目录配置成SATA，否则会导致topic数据传输忽快忽慢；
+- 磁盘上数据保留时间(相关参数是log.retention.hours=168)建议改为24小时或者你认为其他的合适值即可；
+- 不要想当然认为kafka保存数据的过程是可靠的，broker接收收据后异步批量刷入磁盘的，为了保证数据及时写入磁盘，可以修改参数 “log.flush.interval.messages”（这个参数一般不要修改，过大则影响数据可靠性，过小则影响broker的吞吐率进而影响响应生产者和消费者的速度，详细解释见参考文档3）；
 - worker数目最好与parition数目相等（小于当然也可以），鄙人自己测试当partiton数目为1而消费者为10的时候，系统响应速度急剧下降，可见消费者都把时间浪费在消息争用上了；
 - 为了保证系统稳定性，replica数目最少为2；
 - 生产者发送消息选择压缩方法的时候，建议选择lz4（详见参考文档1）； 
@@ -134,6 +147,9 @@
 ## 参考文档 ##
 
 - 1 [Kafka Compression Performance Tests](http://blog.yaorenjie.com/2015/03/27/Kafka-Compression-Performance-Tests/)
+- 2 [[Kafka-users] new log.dirs property (as opposed to log.dir)
+](http://grokbase.com/t/kafka/users/136mjfz5bg/new-log-dirs-property-as-opposed-to-log-dir)
+- 3 [apache kafka系列之server.properties配置文件参数说明](http://blog.csdn.net/lizhitao/article/details/25667831)
    
    
 ## 扒粪者-于雨氏 ##
