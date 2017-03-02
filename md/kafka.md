@@ -120,12 +120,16 @@
 ### 5 kafka使用建议 ###
 ---
 
-- 据B站服务端老大说经他们测试，partition数目为16时候kafka的性能最优，为了吞吐率个人建议设置为32；
+- 据B站服务端老大说经他们测试，partition数目为磁盘数目的4倍（也就是说每个盘上放4个partition）时候kafka的性能最优；
+- 磁盘建议使用ssd，为了充分利用CPU提高系统吞吐率计（无论磁盘顺序写再怎么快也跟不上内存和cpu的吞吐率）；
 - worker数目最好与parition数目相等（小于当然也可以），鄙人自己测试当partiton数目为1而消费者为10的时候，系统响应速度急剧下降，可见消费者都把时间浪费在消息争用上了；
 - 为了保证系统稳定性，replica数目最少为2；
-- 建议及时跟进最新版kafka(目前是0.10.2.0)，个人发现 v0.10.1.0 版本的jar包不能正确获取某个consumer group的消费者个数；
+- 生产者发送消息选择压缩方法的时候，建议选择lz4（详见参考文档1）； 
+- 如果使用kafka的版本是v0.10以上，建议使用最新版kafka(目前是0.10.2.0)，个人发现 v0.10.1.0 版本的jar包不能正确获取某个consumer group的消费者个数；
+- 其实个人真心建议不要使用v0.10，使用v0.8 or v0.9即可，其中一个原因是kafka版本越新则其周围可用的工具越少，工具的更新速度实在比不上kafka版本的个更新速度，每个大版本的更新就意味着其架构的大改；
+- kafka v0.10的版本支持了offset存储在kafka上，但是他的offset提交处理速度非常慢，虽然支持异步定时提交offset，但是重启的话还是会丢，所以依赖kafka做主从同步保障数据一致性是不可能的（例如阿里的canal在mysql master和mysql slave之间传递binlog式它们是绝对不会使用kafka的），也就说kafka不考虑消费者是否重复消费，当然也有大厂自己封装kafka后把每个consumer消费的offset存在别的中间件上，通过assign方式读取kafka消息来保证不重复消费kafka message；
 - 不要使用github.com/wvanbergen/kafka/consumergroup包，这个包将近两年没有更新，在kafka v0.10.1.0上测试的时候发现其官方example程序不能正确建立consumer group，建议以github.com/bsm/sarama-cluster替代之；
-- 生产者发送消息选择压缩方法的时候，建议选择lz4（详见参考文档1）；   
+  
    
 ## 参考文档 ##
 
