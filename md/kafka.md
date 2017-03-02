@@ -125,7 +125,7 @@
 - 为了保证系统稳定性，replica数目最少为2；
 - 建议及时跟进最新版kafka(目前是0.10.2.0)，个人发现 v0.10.1.0 版本的jar包不能正确获取某个consumer group的消费者个数；
 - 不要使用github.com/wvanbergen/kafka/consumergroup包，这个包将近两年没有更新，在kafka v0.10.1.0上测试的时候发现其官方example程序不能正确建立consumer group，建议以github.com/bsm/sarama-cluster替代之；
-- 生产者发送消息选择亚搜方法的时候，建议选择lz4（详见参考文档1）；   
+- 生产者发送消息选择压缩方法的时候，建议选择lz4（详见参考文档1）；   
    
 ## 参考文档 ##
 
