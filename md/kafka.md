@@ -120,11 +120,17 @@
 ### 5 kafka使用建议 ###
 ---
 
-- 某二次元网站服务端老大说经他们测试，partition数目为16时候kafka的性能最优，为了吞吐率个人建议设置为32；
+- 据B站服务端老大说经他们测试，partition数目为16时候kafka的性能最优，为了吞吐率个人建议设置为32；
 - worker数目最好与parition数目相等（小于当然也可以），鄙人自己测试当partiton数目为1而消费者为10的时候，系统响应速度急剧下降，可见消费者都把时间浪费在消息争用上了；
 - 为了保证系统稳定性，replica数目最少为2；
 - 建议及时跟进最新版kafka(目前是0.10.2.0)，个人发现 v0.10.1.0 版本的jar包不能正确获取某个consumer group的消费者个数；
 - 不要使用github.com/wvanbergen/kafka/consumergroup包，这个包将近两年没有更新，在kafka v0.10.1.0上测试的时候发现其官方example程序不能正确建立consumer group，建议以github.com/bsm/sarama-cluster替代之；
+- 生产者发送消息选择亚搜方法的时候，建议选择lz4（详见参考文档1）；   
+   
+## 参考文档 ##
+
+- 1 [Kafka Compression Performance Tests](http://blog.yaorenjie.com/2015/03/27/Kafka-Compression-Performance-Tests/)
+   
    
 ## 扒粪者-于雨氏 ##
 
