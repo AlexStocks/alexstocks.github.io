@@ -342,11 +342,40 @@ kbd {
 
 <p>今日稍有闲暇，赶往公司想把事故复盘一遍，以追踪事故原因。下面分别列出相关问题，并记录解决方法。</p>
 
-<h3 id="toc_2">1 无法连接kafka实例</h3>
+<h3 id="toc_2">1 kafka启动与无法连接broker问题若干</h3>
 
 <hr>
 
-<p>由于测试环境机器数目有限，我便在一个测试机器启动了3个kafka实例(kafka_2.11-0.10.1.1)和1个zk实例（zookeeper-3.4.9），并写了相关python程序去连接kafka集群，但是程序一直报如下错误：</p>
+<p>由于测试环境机器数目有限，我便在一个测试机器启动了3个kafka实例(kafka_2.11-0.10.1.1)和1个zk实例（zookeeper-3.4.9），并写了相关python程序去连接kafka集群。</p>
+
+<h4 id="toc_3">Q1 kafka broker无法启动</h4>
+
+<h2 id="toc_4"></h2>
+
+<p>broker无法启动大致有两个原因：第一是内存不足，第二是jmx无法启动。
+可以通过修改kafka-server-start.sh如下一行代码来确定broker修改JVM HEAP size：</p>
+
+<div><pre><code class="language-none">export KAFKA_HEAP_OPTS=&quot;-Xmx1G -Xms1G&quot;</code></pre></div>
+
+<p>把kafka-run-class.sh如下代码删除掉就可以关闭kafka的JMX：</p>
+
+<div><pre><code class="language-none"># JMX settings
+if [ -z &quot;$KAFKA_JMX_OPTS&quot; ]; then
+  KAFKA_JMX_OPTS=&quot;-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false  -Dcom.sun.management.jmxremote.ssl=false &quot;
+fi
+
+# JMX port to use
+if [  $JMX_PORT ]; then
+  KAFKA_JMX_OPTS=&quot;$KAFKA_JMX_OPTS -Dcom.sun.management.jmxremote.port=$JMX_PORT &quot;
+fi</code></pre></div>
+
+<p>把JMX关掉的坏处在于一些依赖于JMX（KafkaOffsetMonitor)就无法工作了。</p>
+
+<h4 id="toc_5">Q2 python程序无法连接kafka broker</h4>
+
+<h2 id="toc_6"></h2>
+
+<p>程序一直报如下错误：</p>
 
 <div><pre><code class="language-none">kafka.errors.NoBrokersAvailable: NoBrokersAvailable</code></pre></div>
 
@@ -388,7 +417,7 @@ producer = KafkaProducer(
     bootstrap_servers=brokers,
     api_version = (0, 10))</code></pre></div>
 
-<h3 id="toc_3">2 kafka集群稳定性测试</h3>
+<h3 id="toc_7">2 kafka集群稳定性测试</h3>
 
 <hr>
 
@@ -448,7 +477,7 @@ producer = KafkaProducer(
 
 <div><pre><code class="language-none">P与C依然能正常工作，但丢失消息若干。</code></pre></div>
 
-<h3 id="toc_4">3 线上kafka集群服务恢复</h3>
+<h3 id="toc_8">3 线上kafka集群服务恢复</h3>
 
 <hr>
 
@@ -460,7 +489,7 @@ producer = KafkaProducer(
 
 <p>参考上面的case4和这个参数，大约就知道优化方向了。</p>
 
-<h3 id="toc_5">4 kafka消费者与broker连接不断挂掉</h3>
+<h3 id="toc_9">4 kafka消费者与broker连接不断挂掉</h3>
 
 <hr>
 
@@ -472,7 +501,7 @@ producer = KafkaProducer(
 
 <p>通过缩小batch message size来缩短message process时间，从而不阻塞hearbeat上报时间，后面这种现象就再也没有发生了。</p>
 
-<h3 id="toc_6">5 kafka使用建议</h3>
+<h3 id="toc_10">5 kafka使用建议</h3>
 
 <hr>
 
@@ -503,7 +532,7 @@ distributed to the list.</p>
 <li><p>不要使用github.com/wvanbergen/kafka/consumergroup包，这个包将近两年没有更新，在kafka v0.10.1.0上测试的时候发现其官方example程序不能正确建立consumer group，建议以github.com/bsm/sarama-cluster替代之；</p></li>
 </ul>
 
-<h2 id="toc_7">参考文档</h2>
+<h2 id="toc_11">参考文档</h2>
 
 <ul>
 <li>1 <a href="http://blog.yaorenjie.com/2015/03/27/Kafka-Compression-Performance-Tests/">Kafka Compression Performance Tests</a></li>
@@ -512,7 +541,7 @@ distributed to the list.</p>
 <li>3 <a href="http://blog.csdn.net/lizhitao/article/details/25667831">apache kafka系列之server.properties配置文件参数说明</a></li>
 </ul>
 
-<h2 id="toc_8">扒粪者-于雨氏</h2>
+<h2 id="toc_12">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>2017/02/02，于雨氏，于致真大厦。</p>
@@ -520,6 +549,8 @@ distributed to the list.</p>
 <p>2017/02/19，于雨氏，于致真大厦，添加replica为1条件下的测试结果。</p>
 
 <p>2017/03/02，于雨氏，于致真大厦，添加“kafka使用建议”。</p>
+
+<p>2017/03/25，于雨氏，于致真大厦，补充“kafka启动与无法连接kafka问题若干”一节。</p>
 </blockquote>
 
 <div id="disqus_thread"></div>

@@ -9,10 +9,37 @@
 
 今日稍有闲暇，赶往公司想把事故复盘一遍，以追踪事故原因。下面分别列出相关问题，并记录解决方法。
 
-### 1 无法连接kafka实例 ###
+### 1 kafka启动与无法连接broker问题若干 ###
 ---
 
-由于测试环境机器数目有限，我便在一个测试机器启动了3个kafka实例(kafka_2.11-0.10.1.1)和1个zk实例（zookeeper-3.4.9），并写了相关python程序去连接kafka集群，但是程序一直报如下错误：
+由于测试环境机器数目有限，我便在一个测试机器启动了3个kafka实例(kafka_2.11-0.10.1.1)和1个zk实例（zookeeper-3.4.9），并写了相关python程序去连接kafka集群。
+
+#### Q1 kafka broker无法启动
+-
+
+broker无法启动大致有两个原因：第一是内存不足，第二是jmx无法启动。
+可以通过修改kafka-server-start.sh如下一行代码来确定broker修改JVM HEAP size：
+
+	export KAFKA_HEAP_OPTS="-Xmx1G -Xms1G"
+
+把kafka-run-class.sh如下代码删除掉就可以关闭kafka的JMX：
+
+	# JMX settings
+	if [ -z "$KAFKA_JMX_OPTS" ]; then
+	  KAFKA_JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false  -Dcom.sun.management.jmxremote.ssl=false "
+	fi
+	
+	# JMX port to use
+	if [  $JMX_PORT ]; then
+	  KAFKA_JMX_OPTS="$KAFKA_JMX_OPTS -Dcom.sun.management.jmxremote.port=$JMX_PORT "
+	fi
+
+把JMX关掉的坏处在于一些依赖于JMX（KafkaOffsetMonitor)就无法工作了。
+
+#### Q2 python程序无法连接kafka broker
+-
+
+程序一直报如下错误：
 	
     kafka.errors.NoBrokersAvailable: NoBrokersAvailable
 
@@ -159,3 +186,5 @@ distributed to the list.
 > 2017/02/19，于雨氏，于致真大厦，添加replica为1条件下的测试结果。
 >
 > 2017/03/02，于雨氏，于致真大厦，添加“kafka使用建议”。
+> 
+> 2017/03/25，于雨氏，于致真大厦，补充“kafka启动与无法连接kafka问题若干”一节。
