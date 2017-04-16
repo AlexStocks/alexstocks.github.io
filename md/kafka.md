@@ -169,8 +169,16 @@ distributed to the list.
 - 其实个人真心建议不要使用v0.10，使用v0.8 or v0.9即可，其中一个原因是kafka版本越新则其周围可用的工具越少，工具的更新速度实在比不上kafka版本的个更新速度，每个大版本的更新就意味着其架构的大改；
 - kafka v0.10的版本支持了offset存储在kafka上，但是他的offset提交处理速度非常慢，虽然支持异步定时提交offset，但是重启的话还是会丢，所以依赖kafka做主从同步保障数据一致性是不可能的（例如阿里的canal在mysql master和mysql slave之间传递binlog式它们是绝对不会使用kafka的），也就说kafka不考虑消费者是否重复消费，当然也有大厂自己封装kafka后把每个consumer消费的offset存在别的中间件上，通过assign方式读取kafka消息来保证不重复消费kafka message；
 - 不要使用github.com/wvanbergen/kafka/consumergroup包，这个包将近两年没有更新，在kafka v0.10.1.0上测试的时候发现其官方example程序不能正确建立consumer group，建议以github.com/bsm/sarama-cluster替代之；
+- kafka使用的网卡流量到达极限的70%后，就开始大量丢包；
+- kafka streaming的statestore是通过rocksdb实现的；
+- kafka数据的顺序性、重复性和完整性（是否会丢）在发送端是没有保证的，[官方文档](http://docs.confluent.io/2.0.0/clients/producer.html)对此有详细描述。这里只谈到retries参数（librdkafka：message.send.max.retries），它是在发送失败的情况设置重新发送次数，但是熟悉消息系统的人知道：一旦有消息发送重试就可能导致本来在生产者端上顺序在前的消息A和B到了broker之后顺序却是B和A，如果要确保在broker上消息顺序也是A和B，那么可以设置max.in.flight.requests.per.connection参数为1，它确保生产者发送A成功之前不会发送B，即每次只发送一个消息（生产者的吞吐率就没法保证了）；
+- kafka 2017 7月份响应版本发布后，可以在broker上进行消息重复过滤；
+- 目前的kafka的负载均衡只考虑磁盘负载均衡没有考虑网卡流量，譬如有的topic虽然数据少但是消费者比较多，此时网卡就没有均衡，但即使是磁盘均衡也做到不够好，它的负载均衡是以partition为维度的，但topic下的各个parition的数据量不可能相等；
   
-   
+### 6 kafka toolset ###
+---
+1 [MirrorMaker](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=27846330) - Kafka's mirroring feature makes it possible to maintain a replica of an existing Kafka cluster. 
+
 ## 参考文档 ##
 
 - 1 [Kafka Compression Performance Tests](http://blog.yaorenjie.com/2015/03/27/Kafka-Compression-Performance-Tests/)
@@ -181,10 +189,8 @@ distributed to the list.
    
 ## 扒粪者-于雨氏 ##
 
-> 2017/02/02，于雨氏，于致真大厦。
->
-> 2017/02/19，于雨氏，于致真大厦，添加replica为1条件下的测试结果。
->
-> 2017/03/02，于雨氏，于致真大厦，添加“kafka使用建议”。
-> 
-> 2017/03/25，于雨氏，于致真大厦，补充“kafka启动与无法连接kafka问题若干”一节。
+* 2017/02/02，于雨氏，于致真大厦。
+* 2017/02/19，于雨氏，于致真大厦，添加replica为1条件下的测试结果。
+* 2017/03/02，于雨氏，于致真大厦，添加“kafka使用建议”。 
+* 2017/03/25，于雨氏，于致真大厦，补充“kafka启动与无法连接kafka问题若干”一节。
+* 2017/03/25，于雨氏，于致真大厦，补充“使用建议”一节。
