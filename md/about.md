@@ -8,7 +8,7 @@
 - facebook  : Alex Stocks
 - twitter   : @AlexandMStocks
 - weibo.com : @于雨巴巴
-- wechat: alexanderstocks
+- wechat    : alexanderstocks
 
 ### 以往博客说明:###
 ---

@@ -1,0 +1,80 @@
+## flume使用经验总结 ##
+---
+*written by Alex Stocks on 2017/04/26*
+
+
+### 说明 ###
+---
+下面列出的相关程序都已经放到我的[python测试程序github repo](https://github.com/alexstocks/python-practice/tree/master/mysql_redis_es/flume)上。
+
+### 测试单个agent ###
+---
+
+- 0 把flume.conf和flume-env.sh放到flume/conf下面，启动agent1
+ 
+		/bin/bash agent1_load.sh start
+
+- 1 运行单个test client
+	 
+	 	python tcp_log_clt.py:
+	 	
+		Processed 300000 messages in 52.34 seconds
+		14.93 MB/s
+		5731.43 Msgs/s
+
+- 2 同时运行12个client   
+	
+		/bin/bash multiple_tcp_log_clt.sh:
+		
+		Processed 300000 messages in 52.34 seconds
+		1.23 MB/s
+		470.60 Msgs/s
+
+可见瓶颈是在flume，当n个client运行的时候，其性能是单个进程执行结果的1/n。
+
+## 优化措施 ##
+---
+
+- 1 把flume.conf的flume_agent1.channels.ch1.capacity从8192改为16384，结果如故。
+
+- 2 把flume-env.sh中G1 GC算法关闭且修改启动命令(关闭console并修改log level)后优化效果明显
+
+	    原启动命令：nohup bin/flume-ng agent --conf ./conf/ -f conf/flume.conf -Dflume.root.logger=DEBUG,console -n $name >$name.nohup.out 2>&1 &
+	    修改后的启动命令：nohup bin/flume-ng agent --conf ./conf/ -f conf/flume.conf -Dflume.root.logger=INFO -n $name >$name.nohup.out 2>&1 &
+	
+	    执行单个client(python tcp_log_clt.py)测试结果：
+	    Processed 300000 messsages in 18.22 seconds
+	    42.89 MB/s
+	    16462.31 Msgs/s
+
+- 3 启动agent1( sink是file )& agent2( sink是kafka )，然后同时启动两个tcp client
+
+		启动agent1： /bin/bash agent1_load.sh start
+		启动agent2： /bin/bash agent2_load.sh start
+	
+	    client1(python tcp_log_clt1.py)运行结果：
+	    Processed 300000 messsages in 21.45 seconds
+		36.43 MB/s
+		13983.04 Msgs/s
+		
+		client2(python tcp_log_clt2.py)运行结果：
+		Processed 300000 messsages in 20.19 seconds
+		38.71 MB/s
+		14857.84 Msgs/s
+
+   此次测试sink目的地kafka和sink均在本机上，通过iostat -x 1命令可以看到，参数wkB/s高峰可达155136.00，低峰则仅为42.00，均衡值为78613.20。
+   
+## flume注意事项 ##
+---
+
+- 1 sink只能有一个，否则日志会被平均输出到各个sink中，而不是每个sink都能得到相同的数据拷贝
+- 2 对于BatchSize的详细解释见参考文档1。[**BatchSize的意义是：你希望将多个事件打包为一个事务，这样事务确认的开销就会摊薄到批量事务中的每一个事件，这样可以大大的提高你的吞吐量。**]
+
+## 参考文档 ##
+
+- 1 [Apache Flume 性能调优 (第一部分)](http://myg0u.com/hadoop/2016/05/04/flume-performance-tuning-part-1.html)
+
+## 扒粪者-于雨氏 ##
+
+> 2017/04/26，于雨氏，于致真大厦。
+
