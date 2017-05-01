@@ -72,7 +72,7 @@
 
 我刚开始误以为一个agent只能运行一个流，我的对策就是启动多个agent，然后我只想启动一个flume进程，我竟然荒唐地想在一个flume里面启动两个agent！
 
-后来经过测试发现在一个flume agent中可以启动多个流，只要保证每个刘的sink和source配置正确各自的channel即可，这个问题就迎刃而解了。
+后来经过测试发现在一个flume agent中可以启动多个流，只要保证每个流的sink和source配置正确各自的channel即可，这个问题就迎刃而解了。
 
 相关配置请参考[flume-log-agent.conf](https://github.com/alexstocks/python-practice/blob/master/mysql_redis_es_flume/flume/flume_log_agent.conf)。
   
