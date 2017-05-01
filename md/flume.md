@@ -3,11 +3,11 @@
 *written by Alex Stocks on 2017/04/26*
 
 
-### 说明 ###
+### 0 说明 ###
 ---
 下面列出的相关程序都已经放到我的[python测试程序github repo](https://github.com/alexstocks/python-practice/tree/master/mysql_redis_es/flume)上。
 
-### 测试单个agent ###
+### 1 测试单个agent ###
 ---
 
 - 0 把flume.conf和flume-env.sh放到flume/conf下面，启动agent1
@@ -32,7 +32,7 @@
 
 可见瓶颈是在flume，当n个client运行的时候，其性能是单个进程执行结果的1/n。
 
-## 优化措施 ##
+## 2 优化措施 ##
 ---
 
 - 1 把flume.conf的flume_agent1.channels.ch1.capacity从8192改为16384，结果如故。
@@ -63,8 +63,21 @@
 		14857.84 Msgs/s
 
    此次测试sink目的地kafka和sink均在本机上，通过iostat -x 1命令可以看到，参数wkB/s高峰可达155136.00，低峰则仅为42.00，均衡值为78613.20。
+  
    
-## flume注意事项 ##
+## 3 flume中并行运行多个流 ##
+--- 
+
+有这样的需求：flume监听两个tcp端口，然后把两个端口收到的日志分别发送到各自对应的kafka topic。
+
+我刚开始误以为一个agent只能运行一个流，我的对策就是启动多个agent，然后我只想启动一个flume进程，我竟然荒唐地想在一个flume里面启动两个agent！
+
+后来经过测试发现在一个flume agent中可以启动多个流，只要保证每个刘的sink和source配置正确各自的channel即可，这个问题就迎刃而解了。
+
+相关配置请参考[flume-log-agent.conf](https://github.com/alexstocks/python-practice/blob/master/mysql_redis_es_flume/flume/flume_log_agent.conf)。
+  
+   
+## 4 flume注意事项 ##
 ---
 
 - 1 sink只能有一个，否则日志会被平均输出到各个sink中，而不是每个sink都能得到相同的数据拷贝
@@ -77,4 +90,5 @@
 ## 扒粪者-于雨氏 ##
 
 > 2017/04/26，于雨氏，于致真大厦。
-
+> 
+> 2017/05/01，于雨氏，于致真大厦添加 “flume中并行运行多个流” 章节。

@@ -144,7 +144,10 @@ broker无法启动大致有两个原因：第一是内存不足，第二是jmx�
    
 通过缩小batch message size来缩短message process时间，从而不阻塞hearbeat上报时间，后面这种现象就再也没有发生了。
    
-### 5 kafka使用建议 ###
+### 5 kafka使用建议及相关参数 ###
+---
+
+#### 5.1 kafka使用建议 ####
 ---
 
 - 据B站服务端老大说经他们测试，partition数目为磁盘数目的4倍（也就是说每个盘上放4个partition）时候kafka的性能最优；
@@ -174,6 +177,54 @@ distributed to the list.
 - kafka数据的顺序性、重复性和完整性（是否会丢）在发送端是没有保证的，[官方文档](http://docs.confluent.io/2.0.0/clients/producer.html)对此有详细描述。这里只谈到retries参数（librdkafka：message.send.max.retries），它是在发送失败的情况设置重新发送次数，但是熟悉消息系统的人知道：一旦有消息发送重试就可能导致本来在生产者端上顺序在前的消息A和B到了broker之后顺序却是B和A，如果要确保在broker上消息顺序也是A和B，那么可以设置max.in.flight.requests.per.connection参数为1，它确保生产者发送A成功之前不会发送B，即每次只发送一个消息（生产者的吞吐率就没法保证了）；
 - kafka 2017 7月份响应版本发布后，可以在broker上进行消息重复过滤；
 - 目前的kafka的负载均衡只考虑磁盘负载均衡没有考虑网卡流量，譬如有的topic虽然数据少但是消费者比较多，此时网卡就没有均衡，但即使是磁盘均衡也做到不够好，它的负载均衡是以partition为维度的，但topic下的各个parition的数据量不可能相等；
+
+#### 5.2 kafka最优参数 ####
+---
+
+在Kafka Beijing Meetup(3rd)上，胡夕给出了下图各个参数集：
+
+![](../pic/kafka-best-params.jpg)
+
+下面分别解释下各个参数的意义。
+
+##### 5.2.1 Broker #####
+---
+* log.retention.hours - 日志保存时间 (hours)。还有一个参数log.retention.bytes(日志最大字节数)，bytes和minutes无论哪个先达到都会启动相应的淘汰策略
+* num.network.threads - 处理网络请求的最大线程数
+* auto.leader.rebalance.enable - 是否在broker端启动partition-rebalance线程
+* replica.fetch.max.bytes - replicas每次获取数据的最大字节数
+* connections.max.idle.ms - 链接超时时间，如果链接idle时间超过这个时间则会被broker关闭
+* unclean.leader.election.enable - 是否允许leader死掉的情况下，不具备ISR选举资格的replicas被选为leader
+
+##### 5.2.2 Producer #####
+---
+* batch.size - 批处理消息字节数。如果某个消息大于这个值则不会被处理
+* linger.ms - 发送延迟时间。producer端的消息发送线程到record buffer中获取消息然后立即发送，不管消息字节数是否达到batch.size，此时如果消息的数量太少就会影响吞吐率，linger参数的意义就是让发送线程发现发送消息总量太小的时候再等待ling.ms时间后再启动发送动作
+* compression.type - 压缩类型，目前最恰当的type就是lz4。当启动压缩算法后，将导致producer端消息处理时间过长，为了增大吞吐率就需要调整上面两个参数值
+* max.in.flight.requests.per.connection - 发送多少消息后等待broker端的回复。这个参数和retry配合使用，会影响消息的顺序，详细意义请参考5.1章节的内容
+* max.request.size - 请求的最大字节数。这个设置会限制producer每次批量发送请求的数目，以防发出大量的请求
+
+##### 5.2.3 Consumer #####
+---
+* fetch.message.max.bytes - 单次fetch消息的最大字节数。Producer端的max.message.bytes = broker端的replica.fetch.max.bytes = 消费者的fetch.message.max.bytes，这三个值一起控制了单个消息的最大长度
+* num.consumer.fetchers - 用于fetch数据的fetcher线程数
+* auto.commit.enable - 是否自动提交offset
+
+##### 5.2.4 Os & Jvm #####
+---
+* linux文件系统最好使用ext3 or ext4
+* commit interval(page buffer commit)改为60s
+* vm.swappiness为0，等于告诉os尽量使用内存空间，然后才是磁盘swap的虚拟内存空间。否则os将频繁进行进程调度， 磁盘使用的波动就会比较大
+* JVM的heap区域设置为4G。因为会消耗28-30g的文件系统缓存。
+* JVM的gc算法尽量使用CMS
+
+##### 5.2.5 CPU #####
+---
+* CPU尽量选择多核。参考文档4认为：kafka不算是CPU消耗型服务，在主频和CPU核数之间，选择后者，将会获得多核带来的更好的并发处理性能。
+
+##### 5.2.6 disk #####
+---
+* 推荐使用RAID。在kafka broker中配置多目录，每个目录配置在不同的磁盘上。参考文档4 不建议使用SSD。
   
 ### 6 kafka toolset ###
 ---
@@ -185,6 +236,7 @@ distributed to the list.
 - 2 [[Kafka-users] new log.dirs property (as opposed to log.dir)
 ](http://grokbase.com/t/kafka/users/136mjfz5bg/new-log-dirs-property-as-opposed-to-log-dir)
 - 3 [apache kafka系列之server.properties配置文件参数说明](http://blog.csdn.net/lizhitao/article/details/25667831)
+- 4 [某互联网大厂kafka最佳实践](http://www.jianshu.com/p/8689901720fd)
    
    
 ## 扒粪者-于雨氏 ##
@@ -194,3 +246,4 @@ distributed to the list.
 * 2017/03/02，于雨氏，于致真大厦，添加“kafka使用建议”。 
 * 2017/03/25，于雨氏，于致真大厦，补充“kafka启动与无法连接kafka问题若干”一节。
 * 2017/03/25，于雨氏，于致真大厦，补充“使用建议”一节。
+* 2017/05/01，于雨氏，于致真大厦，根据kafka beijing meetup(3rd)添加5.1&5.2。

@@ -334,13 +334,13 @@ kbd {
 
 <p><em>written by Alex Stocks on 2017/04/26</em></p>
 
-<h3 id="toc_1">说明</h3>
+<h3 id="toc_1">0 说明</h3>
 
 <hr>
 
 <p>下面列出的相关程序都已经放到我的<a href="https://github.com/alexstocks/python-practice/tree/master/mysql_redis_es/flume">python测试程序github repo</a>上。</p>
 
-<h3 id="toc_2">测试单个agent</h3>
+<h3 id="toc_2">1 测试单个agent</h3>
 
 <hr>
 
@@ -366,7 +366,7 @@ Processed 300000 messages in 52.34 seconds
 
 <p>可见瓶颈是在flume，当n个client运行的时候，其性能是单个进程执行结果的1/n。</p>
 
-<h2 id="toc_3">优化措施</h2>
+<h2 id="toc_3">2 优化措施</h2>
 
 <hr>
 
@@ -399,7 +399,19 @@ Processed 300000 messsages in 20.19 seconds
 <p>此次测试sink目的地kafka和sink均在本机上，通过iostat -x 1命令可以看到，参数wkB/s高峰可达155136.00，低峰则仅为42.00，均衡值为78613.20。</p></li>
 </ul>
 
-<h2 id="toc_4">flume注意事项</h2>
+<h2 id="toc_4">3 flume中并行运行多个流</h2>
+
+<hr>
+
+<p>有这样的需求：flume监听两个tcp端口，然后把两个端口收到的日志分别发送到各自对应的kafka topic。</p>
+
+<p>我刚开始误以为一个agent只能运行一个流，我的对策就是启动多个agent，然后我只想启动一个flume进程，我竟然荒唐地想在一个flume里面启动两个agent！</p>
+
+<p>后来经过测试发现在一个flume agent中可以启动多个流，只要保证每个刘的sink和source配置正确各自的channel即可，这个问题就迎刃而解了。</p>
+
+<p>相关配置请参考<a href="https://github.com/alexstocks/python-practice/blob/master/mysql_redis_es_flume/flume/flume_log_agent.conf">flume-log-agent.conf</a>。</p>
+
+<h2 id="toc_5">4 flume注意事项</h2>
 
 <hr>
 
@@ -408,16 +420,18 @@ Processed 300000 messsages in 20.19 seconds
 <li>2 对于BatchSize的详细解释见参考文档1。[<strong>BatchSize的意义是：你希望将多个事件打包为一个事务，这样事务确认的开销就会摊薄到批量事务中的每一个事件，这样可以大大的提高你的吞吐量。</strong>]</li>
 </ul>
 
-<h2 id="toc_5">参考文档</h2>
+<h2 id="toc_6">参考文档</h2>
 
 <ul>
 <li>1 <a href="http://myg0u.com/hadoop/2016/05/04/flume-performance-tuning-part-1.html">Apache Flume 性能调优 (第一部分)</a></li>
 </ul>
 
-<h2 id="toc_6">扒粪者-于雨氏</h2>
+<h2 id="toc_7">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>2017/04/26，于雨氏，于致真大厦。</p>
+
+<p>2017/05/01，于雨氏，于致真大厦添加 “flume中并行运行多个流” 章节。</p>
 </blockquote>
 
 
