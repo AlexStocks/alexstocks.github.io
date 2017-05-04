@@ -175,8 +175,21 @@ distributed to the list.
 - kafka使用的网卡流量到达极限的70%后，就开始大量丢包；
 - kafka streaming的statestore是通过rocksdb实现的；
 - kafka数据的顺序性、重复性和完整性（是否会丢）在发送端是没有保证的，[官方文档](http://docs.confluent.io/2.0.0/clients/producer.html)对此有详细描述。这里只谈到retries参数（librdkafka：message.send.max.retries），它是在发送失败的情况设置重新发送次数，但是熟悉消息系统的人知道：一旦有消息发送重试就可能导致本来在生产者端上顺序在前的消息A和B到了broker之后顺序却是B和A，如果要确保在broker上消息顺序也是A和B，那么可以设置max.in.flight.requests.per.connection参数为1，它确保生产者发送A成功之前不会发送B，即每次只发送一个消息（生产者的吞吐率就没法保证了）；
-- kafka 2017 7月份响应版本发布后，可以在broker上进行消息重复过滤；
 - 目前的kafka的负载均衡只考虑磁盘负载均衡没有考虑网卡流量，譬如有的topic虽然数据少但是消费者比较多，此时网卡就没有均衡，但即使是磁盘均衡也做到不够好，它的负载均衡是以partition为维度的，但topic下的各个parition的数据量不可能相等；
+
+##### 5.1.1 broker #####
+---
+
+- Kafka中Topic命名规范
+
+<app_name>_<feature>_<function>
+
+如ikurento_push_sched
+
+- partition数目
+
+partition数目多少并不会严重影响broker性能，confluent官方层测试过10000个partition的情况。
+
 
 #### 5.2 kafka最优参数 ####
 ---
@@ -225,8 +238,22 @@ distributed to the list.
 ##### 5.2.6 disk #####
 ---
 * 推荐使用RAID。在kafka broker中配置多目录，每个目录配置在不同的磁盘上。参考文档4 不建议使用SSD。
+
+### 6 kafka lastest feature list ###
+---
+
+#### 6.1 producer  ####
+---
+
+#### 6.2 broker  ####
+---
+- kafka 2017 7月份响应版本发布后，可以在broker上进行[消息重复过滤](https://cwiki.apache.org/confluence/display/KAFKA/KIP-98+-+Exactly+Once+Delivery+and+Transactional+Messaging)；
+
+#### 6.3 consumer  ####
+---
+- kafka 目前最新版本(0.10.2)已经添加[OffsetsForTime功能](https://cwiki.apache.org/confluence/display/KAFKA/KIP-33+-+Add+a+time+based+log+index)，在consumer端有API [offsetsForTimes](https://kafka.apache.org/0102/javadoc/org/apache/kafka/clients/consumer/Consumer.html#offsetsForTimes(java.util.Map))，可以获取某个时间范围内的消息的offset集合；
   
-### 6 kafka toolset ###
+### 7 kafka toolset ###
 ---
 1 [MirrorMaker](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=27846330) - Kafka's mirroring feature makes it possible to maintain a replica of an existing Kafka cluster. 
 
@@ -247,3 +274,4 @@ distributed to the list.
 * 2017/03/25，于雨氏，于致真大厦，补充“kafka启动与无法连接kafka问题若干”一节。
 * 2017/03/25，于雨氏，于致真大厦，补充“使用建议”一节。
 * 2017/05/01，于雨氏，于致真大厦，根据kafka beijing meetup(3rd)添加5.1&5.2。
+* 2017/05/04，于雨氏，于致真大厦，添加“kafka lastest feature list”一章。

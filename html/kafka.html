@@ -537,11 +537,28 @@ distributed to the list.</p>
 <li><p>kafka使用的网卡流量到达极限的70%后，就开始大量丢包；</p></li>
 <li><p>kafka streaming的statestore是通过rocksdb实现的；</p></li>
 <li><p>kafka数据的顺序性、重复性和完整性（是否会丢）在发送端是没有保证的，<a href="http://docs.confluent.io/2.0.0/clients/producer.html">官方文档</a>对此有详细描述。这里只谈到retries参数（librdkafka：message.send.max.retries），它是在发送失败的情况设置重新发送次数，但是熟悉消息系统的人知道：一旦有消息发送重试就可能导致本来在生产者端上顺序在前的消息A和B到了broker之后顺序却是B和A，如果要确保在broker上消息顺序也是A和B，那么可以设置max.in.flight.requests.per.connection参数为1，它确保生产者发送A成功之前不会发送B，即每次只发送一个消息（生产者的吞吐率就没法保证了）；</p></li>
-<li><p>kafka 2017 7月份响应版本发布后，可以在broker上进行消息重复过滤；</p></li>
 <li><p>目前的kafka的负载均衡只考虑磁盘负载均衡没有考虑网卡流量，譬如有的topic虽然数据少但是消费者比较多，此时网卡就没有均衡，但即使是磁盘均衡也做到不够好，它的负载均衡是以partition为维度的，但topic下的各个parition的数据量不可能相等；</p></li>
 </ul>
 
-<h4 id="toc_12">5.2 kafka最优参数</h4>
+<h5 id="toc_12">5.1.1 broker</h5>
+
+<hr>
+
+<ul>
+<li>Kafka中Topic命名规范</li>
+</ul>
+
+<p><app_name><em><feature></em><function></p>
+
+<p>如ikurento<em>push</em>sched</p>
+
+<ul>
+<li>partition数目</li>
+</ul>
+
+<p>partition数目多少并不会严重影响broker性能，confluent官方层测试过10000个partition的情况。</p>
+
+<h4 id="toc_13">5.2 kafka最优参数</h4>
 
 <hr>
 
@@ -551,7 +568,7 @@ distributed to the list.</p>
 
 <p>下面分别解释下各个参数的意义。</p>
 
-<h5 id="toc_13">5.2.1 Broker</h5>
+<h5 id="toc_14">5.2.1 Broker</h5>
 
 <hr>
 
@@ -564,7 +581,7 @@ distributed to the list.</p>
 <li>unclean.leader.election.enable - 是否允许leader死掉的情况下，不具备ISR选举资格的replicas被选为leader</li>
 </ul>
 
-<h5 id="toc_14">5.2.2 Producer</h5>
+<h5 id="toc_15">5.2.2 Producer</h5>
 
 <hr>
 
@@ -576,7 +593,7 @@ distributed to the list.</p>
 <li>max.request.size - 请求的最大字节数。这个设置会限制producer每次批量发送请求的数目，以防发出大量的请求</li>
 </ul>
 
-<h5 id="toc_15">5.2.3 Consumer</h5>
+<h5 id="toc_16">5.2.3 Consumer</h5>
 
 <hr>
 
@@ -586,7 +603,7 @@ distributed to the list.</p>
 <li>auto.commit.enable - 是否自动提交offset</li>
 </ul>
 
-<h5 id="toc_16">5.2.4 Os &amp; Jvm</h5>
+<h5 id="toc_17">5.2.4 Os &amp; Jvm</h5>
 
 <hr>
 
@@ -598,7 +615,7 @@ distributed to the list.</p>
 <li>JVM的gc算法尽量使用CMS</li>
 </ul>
 
-<h5 id="toc_17">5.2.5 CPU</h5>
+<h5 id="toc_18">5.2.5 CPU</h5>
 
 <hr>
 
@@ -606,7 +623,7 @@ distributed to the list.</p>
 <li>CPU尽量选择多核。参考文档4认为：kafka不算是CPU消耗型服务，在主频和CPU核数之间，选择后者，将会获得多核带来的更好的并发处理性能。</li>
 </ul>
 
-<h5 id="toc_18">5.2.6 disk</h5>
+<h5 id="toc_19">5.2.6 disk</h5>
 
 <hr>
 
@@ -614,13 +631,37 @@ distributed to the list.</p>
 <li>推荐使用RAID。在kafka broker中配置多目录，每个目录配置在不同的磁盘上。参考文档4 不建议使用SSD。</li>
 </ul>
 
-<h3 id="toc_19">6 kafka toolset</h3>
+<h3 id="toc_20">6 kafka lastest feature list</h3>
+
+<hr>
+
+<h4 id="toc_21">6.1 producer</h4>
+
+<hr>
+
+<h4 id="toc_22">6.2 broker</h4>
+
+<hr>
+
+<ul>
+<li>kafka 2017 7月份响应版本发布后，可以在broker上进行<a href="https://cwiki.apache.org/confluence/display/KAFKA/KIP-98+-+Exactly+Once+Delivery+and+Transactional+Messaging">消息重复过滤</a>；</li>
+</ul>
+
+<h4 id="toc_23">6.3 consumer</h4>
+
+<hr>
+
+<ul>
+<li>kafka 目前最新版本(0.10.2)已经添加<a href="https://cwiki.apache.org/confluence/display/KAFKA/KIP-33+-+Add+a+time+based+log+index">OffsetsForTime功能</a>，在consumer端有API <a href="https://kafka.apache.org/0102/javadoc/org/apache/kafka/clients/consumer/Consumer.html#offsetsForTimes(java.util.Map)">offsetsForTimes</a>，可以获取某个时间范围内的消息的offset集合；</li>
+</ul>
+
+<h3 id="toc_24">7 kafka toolset</h3>
 
 <hr>
 
 <p>1 <a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=27846330">MirrorMaker</a> - Kafka&#39;s mirroring feature makes it possible to maintain a replica of an existing Kafka cluster. </p>
 
-<h2 id="toc_20">参考文档</h2>
+<h2 id="toc_25">参考文档</h2>
 
 <ul>
 <li>1 <a href="http://blog.yaorenjie.com/2015/03/27/Kafka-Compression-Performance-Tests/">Kafka Compression Performance Tests</a></li>
@@ -630,7 +671,7 @@ distributed to the list.</p>
 <li>4 <a href="http://www.jianshu.com/p/8689901720fd">某互联网大厂kafka最佳实践</a></li>
 </ul>
 
-<h2 id="toc_21">扒粪者-于雨氏</h2>
+<h2 id="toc_26">扒粪者-于雨氏</h2>
 
 <ul>
 <li>2017/02/02，于雨氏，于致真大厦。</li>
@@ -639,6 +680,7 @@ distributed to the list.</p>
 <li>2017/03/25，于雨氏，于致真大厦，补充“kafka启动与无法连接kafka问题若干”一节。</li>
 <li>2017/03/25，于雨氏，于致真大厦，补充“使用建议”一节。</li>
 <li>2017/05/01，于雨氏，于致真大厦，根据kafka beijing meetup(3rd)添加5.1&amp;5.2。</li>
+<li>2017/05/04，于雨氏，于致真大厦，添加“kafka lastest feature list”一章。</li>
 </ul>
 
 
@@ -663,8 +705,6 @@ dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js'; dsq.setAttribute('da
 </script>
 <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
 <script id="dsq-count-scr" src='//' + disqus_shortname + '.disqus.com/count.js' async></script>
-
-
 
 </body>
 
