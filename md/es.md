@@ -11,6 +11,8 @@
 ---
 
 - 0 es6去除了type(参考文档1)，数据层级变成了index -> doc
+
+    详细阅读了文中提及的pr，是在elasticsearch.conf中多了一个index.mapping.single_type 配置项，其默认值为false。当其值为true的时候，index中只能有一个type，且系es为index创建好的，名称不能改变。
  
 
 ## 参考文档 ##
