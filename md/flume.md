@@ -76,8 +76,15 @@
 
 相关配置请参考[flume-log-agent.conf](https://github.com/alexstocks/python-practice/blob/master/mysql_redis_es_flume/flume/flume_log_agent.conf)。
   
+## 4 实时监控多个log文件 ##
+---
+*本段文字引自参考文档2*
+
+在flume1.7之前如果想要监控一个文件新增的内容，我们一般采用的source 为 exec tail, 但是这会有一个弊端，就是当你的服务器宕机重启后，此时数据读取还是从头开始。在flume1.7没有出来之前我们一般的解决思路为：当读取一条记录后，就把当前的记录的行号记录到一个文件中，宕机重启时，我们可以先从文件中获取到最后一次读取文件的行数，然后继续监控读取下去。保证数据不丢失、不重复。
+
+而在flume1.7时新增了一个source 的类型为taildir,它可以监控一个目录下的多个文件，并且实现了实时读取记录保存的功能。相关详细配置见[flume-all.conf](https://github.com/alexstocks/python-practice/blob/master/mysql_redis_es_flume/flume/flume-all.conf)。
    
-## 4 flume注意事项 ##
+## 5 flume注意事项 ##
 ---
 
 - 1 sink只能有一个，否则日志会被平均输出到各个sink中，而不是每个sink都能得到相同的数据拷贝
@@ -86,9 +93,12 @@
 ## 参考文档 ##
 
 - 1 [Apache Flume 性能调优 (第一部分)](http://myg0u.com/hadoop/2016/05/04/flume-performance-tuning-part-1.html)
+- 2 [flume1.7 新特性介绍 taildir 介绍](https://my.oschina.net/u/1780960/blog/793783)
 
 ## 扒粪者-于雨氏 ##
 
 > 2017/04/26，于雨氏，于致真大厦。
 > 
 > 2017/05/01，于雨氏，于致真大厦添加 “flume中并行运行多个流” 章节。
+> 
+> 2017/05/10，于雨氏，于丰台住所添加 “实时监控多个log文件” 章节。

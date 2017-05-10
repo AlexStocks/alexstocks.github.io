@@ -411,7 +411,17 @@ Processed 300000 messsages in 20.19 seconds
 
 <p>相关配置请参考<a href="https://github.com/alexstocks/python-practice/blob/master/mysql_redis_es_flume/flume/flume_log_agent.conf">flume-log-agent.conf</a>。</p>
 
-<h2 id="toc_5">4 flume注意事项</h2>
+<h2 id="toc_5">4 实时监控多个log文件</h2>
+
+<hr>
+
+<p><em>本段文字引自参考文档2</em></p>
+
+<p>在flume1.7之前如果想要监控一个文件新增的内容，我们一般采用的source 为 exec tail, 但是这会有一个弊端，就是当你的服务器宕机重启后，此时数据读取还是从头开始。在flume1.7没有出来之前我们一般的解决思路为：当读取一条记录后，就把当前的记录的行号记录到一个文件中，宕机重启时，我们可以先从文件中获取到最后一次读取文件的行数，然后继续监控读取下去。保证数据不丢失、不重复。</p>
+
+<p>而在flume1.7时新增了一个source 的类型为taildir,它可以监控一个目录下的多个文件，并且实现了实时读取记录保存的功能。相关详细配置见<a href="https://github.com/alexstocks/python-practice/blob/master/mysql_redis_es_flume/flume/flume-all.conf">flume-all.conf</a>。</p>
+
+<h2 id="toc_6">5 flume注意事项</h2>
 
 <hr>
 
@@ -420,18 +430,21 @@ Processed 300000 messsages in 20.19 seconds
 <li>2 对于BatchSize的详细解释见参考文档1。[<strong>BatchSize的意义是：你希望将多个事件打包为一个事务，这样事务确认的开销就会摊薄到批量事务中的每一个事件，这样可以大大的提高你的吞吐量。</strong>]</li>
 </ul>
 
-<h2 id="toc_6">参考文档</h2>
+<h2 id="toc_7">参考文档</h2>
 
 <ul>
 <li>1 <a href="http://myg0u.com/hadoop/2016/05/04/flume-performance-tuning-part-1.html">Apache Flume 性能调优 (第一部分)</a></li>
+<li>2 <a href="https://my.oschina.net/u/1780960/blog/793783">flume1.7 新特性介绍 taildir 介绍</a></li>
 </ul>
 
-<h2 id="toc_7">扒粪者-于雨氏</h2>
+<h2 id="toc_8">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>2017/04/26，于雨氏，于致真大厦。</p>
 
 <p>2017/05/01，于雨氏，于致真大厦添加 “flume中并行运行多个流” 章节。</p>
+
+<p>2017/05/10，于雨氏，于丰台住所添加 “实时监控多个log文件” 章节。</p>
 </blockquote>
 
 
@@ -456,8 +469,6 @@ dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js'; dsq.setAttribute('da
 </script>
 <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
 <script id="dsq-count-scr" src='//' + disqus_shortname + '.disqus.com/count.js' async></script>
-
-
 
 </body>
 
