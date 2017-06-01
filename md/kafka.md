@@ -266,6 +266,7 @@ partition数目多少并不会严重影响broker性能，confluent官方层测�
 ](http://grokbase.com/t/kafka/users/136mjfz5bg/new-log-dirs-property-as-opposed-to-log-dir)
 - 3 [apache kafka系列之server.properties配置文件参数说明](http://blog.csdn.net/lizhitao/article/details/25667831)
 - 4 [某互联网大厂kafka最佳实践](http://www.jianshu.com/p/8689901720fd)
+- 5 [kafka数据可靠性深度解读](http://www.bijishequ.com/detail/381629?p=71)
    
    
 ## 扒粪者-于雨氏 ##
