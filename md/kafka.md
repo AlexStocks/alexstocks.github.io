@@ -208,7 +208,9 @@ partition数目多少并不会严重影响broker性能，confluent官方层测�
 * replica.fetch.max.bytes - replicas每次获取数据的最大字节数
 * connections.max.idle.ms - 链接超时时间，如果链接idle时间超过这个时间则会被broker关闭
 * unclean.leader.election.enable - 是否允许leader死掉的情况下，不具备ISR选举资格的replicas被选为leader
-* min.insync.replicas - 设定ISR中的最小副本数是多少，默认值为1。当且仅当request.required.acks参数设置为-1时，此参数才生效。如果ISR中的副本数少于min.insync.replicas配置的数量时，客户端会返回异常：org.apache.kafka.common.errors.NotEnoughReplicasExceptoin: Messages are rejected since there are fewer in-sync replicas than required。
+* min.insync.replicas - 设定ISR中的最小副本数是多少，默认值为1。当且仅当request.required.acks参数设置为-1时，此参数才生效。如果ISR中的副本数少于min.insync.replicas配置的数量时，客户端会返回异常：org.apache.kafka.common.errors.NotEnoughReplicasExceptoin: Messages are rejected since there are fewer in-sync replicas than required
+* max.connections.per.ip - 每个ip地址上每个broker可以被连接的最大数目
+* max.connections.per.ip.overrides - 配置针对某个特别的IP or hostname的连接个数最大限制，配置样例见[#KAFKA-512](https://issues.apache.org/jira/browse/KAFKA-1512)
 
 ##### 5.2.2 Producer #####
 ---
@@ -259,6 +261,7 @@ partition数目多少并不会严重影响broker性能，confluent官方层测�
 ---
 1 [MirrorMaker](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=27846330) - Kafka's mirroring feature makes it possible to maintain a replica of an existing Kafka cluster. 
 
+
 ## 参考文档 ##
 
 - 1 [Kafka Compression Performance Tests](http://blog.yaorenjie.com/2015/03/27/Kafka-Compression-Performance-Tests/)
@@ -266,7 +269,7 @@ partition数目多少并不会严重影响broker性能，confluent官方层测�
 ](http://grokbase.com/t/kafka/users/136mjfz5bg/new-log-dirs-property-as-opposed-to-log-dir)
 - 3 [apache kafka系列之server.properties配置文件参数说明](http://blog.csdn.net/lizhitao/article/details/25667831)
 - 4 [某互联网大厂kafka最佳实践](http://www.jianshu.com/p/8689901720fd)
-- 5 [kafka数据可靠性深度解读](http://www.bijishequ.com/detail/381629?p=71)
+- 5 [kafka数据可靠性深度解读](http://www.bijishequ.com/detail/381629?p=71) - *唯品会出品，里面关于“Leader选举”一节写的比较详细，尤其是“leader选举的算法非常多，比如Zookeeper的Zab、Raft以及Viewstamped Replication。而Kafka所使用的leader选举算法更像是微软的PacificA算法”这句话*
    
    
 ## 扒粪者-于雨氏 ##
