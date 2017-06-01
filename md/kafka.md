@@ -208,6 +208,7 @@ partition数目多少并不会严重影响broker性能，confluent官方层测�
 * replica.fetch.max.bytes - replicas每次获取数据的最大字节数
 * connections.max.idle.ms - 链接超时时间，如果链接idle时间超过这个时间则会被broker关闭
 * unclean.leader.election.enable - 是否允许leader死掉的情况下，不具备ISR选举资格的replicas被选为leader
+* min.insync.replicas - 设定ISR中的最小副本数是多少，默认值为1。当且仅当request.required.acks参数设置为-1时，此参数才生效。如果ISR中的副本数少于min.insync.replicas配置的数量时，客户端会返回异常：org.apache.kafka.common.errors.NotEnoughReplicasExceptoin: Messages are rejected since there are fewer in-sync replicas than required。
 
 ##### 5.2.2 Producer #####
 ---
@@ -216,6 +217,7 @@ partition数目多少并不会严重影响broker性能，confluent官方层测�
 * compression.type - 压缩类型，目前最恰当的type就是lz4。当启动压缩算法后，将导致producer端消息处理时间过长，为了增大吞吐率就需要调整上面两个参数值
 * max.in.flight.requests.per.connection - 发送多少消息后等待broker端的回复。这个参数和retry配合使用，会影响消息的顺序，详细意义请参考5.1章节的内容
 * max.request.size - 请求的最大字节数。这个设置会限制producer每次批量发送请求的数目，以防发出大量的请求
+* request.required.acks - 设置数据发送数据请求的可靠性的级别。在设置request.required.acks=-1的同时，也要min.insync.replicas这个参数(可以在broker或者topic层面进行设置)的配合，这样才能发挥最大的功效。
 
 ##### 5.2.3 Consumer #####
 ---
