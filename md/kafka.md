@@ -211,6 +211,8 @@ partition数目多少并不会严重影响broker性能，confluent官方层测�
 * min.insync.replicas - 设定ISR中的最小副本数是多少，默认值为1。当且仅当request.required.acks参数设置为-1时，此参数才生效。如果ISR中的副本数少于min.insync.replicas配置的数量时，客户端会返回异常：org.apache.kafka.common.errors.NotEnoughReplicasExceptoin: Messages are rejected since there are fewer in-sync replicas than required
 * max.connections.per.ip - 每个ip地址上每个broker可以被连接的最大数目
 * max.connections.per.ip.overrides - 配置针对某个特别的IP or hostname的连接个数最大限制，配置样例见[#KAFKA-512](https://issues.apache.org/jira/browse/KAFKA-1512)
+* offsets.topic.replication.factor - Topic __consumer_offsets的replica值，这个值默认为1，这是因为如果cluster只有一个kafka的情况下让系统跑起来，详细说明见[KAFKA-1846](https://issues.apache.org/jira/browse/KAFKA-1846)
+* offsets.topic.num.partitions - Topic __consumer_offsets的partition值，默认为50。
 
 ##### 5.2.2 Producer #####
 ---

@@ -582,6 +582,8 @@ distributed to the list.</p>
 <li>min.insync.replicas - 设定ISR中的最小副本数是多少，默认值为1。当且仅当request.required.acks参数设置为-1时，此参数才生效。如果ISR中的副本数少于min.insync.replicas配置的数量时，客户端会返回异常：org.apache.kafka.common.errors.NotEnoughReplicasExceptoin: Messages are rejected since there are fewer in-sync replicas than required</li>
 <li>max.connections.per.ip - 每个ip地址上每个broker可以被连接的最大数目</li>
 <li>max.connections.per.ip.overrides - 配置针对某个特别的IP or hostname的连接个数最大限制，配置样例见<a href="https://issues.apache.org/jira/browse/KAFKA-1512">#KAFKA-512</a></li>
+<li>offsets.topic.replication.factor - Topic _<em>consumer</em>offsets的replica值，这个值默认为1，这是因为如果cluster只有一个kafka的情况下让系统跑起来，详细说明见<a href="https://issues.apache.org/jira/browse/KAFKA-1846">KAFKA-1846</a></li>
+<li>offsets.topic.num.partitions - Topic _<em>consumer</em>offsets的partition值，默认为50。</li>
 </ul>
 
 <h5 id="toc_15">5.2.2 Producer</h5>
