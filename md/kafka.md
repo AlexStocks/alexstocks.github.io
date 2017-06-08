@@ -204,7 +204,8 @@ partition数目多少并不会严重影响broker性能，confluent官方层测�
 ---
 * log.retention.hours - 日志保存时间 (hours)。还有一个参数log.retention.bytes(日志最大字节数)，bytes和minutes无论哪个先达到都会启动相应的淘汰策略
 * num.network.threads - 处理网络请求的最大线程数
-* auto.leader.rebalance.enable - 是否在broker端启动partition-rebalance线程
+* auto.leader.rebalance.enable - 是否在broker端启动partition-rebalance线程，检查Leader分配是否平衡
+* leader.imbalance.check.interval.seconds - 周期性检查Leader分配是否平衡时间间隔
 * replica.fetch.max.bytes - replicas每次获取数据的最大字节数
 * connections.max.idle.ms - 链接超时时间，如果链接idle时间超过这个时间则会被broker关闭
 * unclean.leader.election.enable - 是否允许leader死掉的情况下，不具备ISR选举资格的replicas被选为leader
