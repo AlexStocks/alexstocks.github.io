@@ -7,11 +7,11 @@
 
 Redis是目前一种比较流行的内存数据库，但是其缺点也非常明显：
 
-- 1 Scale out能力
+- 1 Scale up能力
 
 	Redis采用了单进程架构，无法利用服务端多核的高性能，进而制约了其对服务器超大内存的使用能力。Redis能够使用的内存极限容量经验值为【8G, 24G】，超过这个容量上限其性能便急剧下降。
 
-- 2 Scale up能力
+- 2 Scale out能力
 
 	基于Redis的cluster目前采用了两种设计模式：proxy based和无中心的smart client based(如官方的Redis 3.0)。官方实现的Redis Cluster把系统设计成了一个"All-In-Box"模式的cluster，看似简洁易用轻便很多，其实不过是多个模块应该执行的任务混合在一起让一个Redis执行了，看似平等的一模一样的Redis进程的逻辑变得很复杂起来，一旦出问题就是一堆乱麻，你就只能呵呵哒了。目前业界暂时没有关于Redis 3.0的比较成功的使用案例。
 
