@@ -1026,6 +1026,9 @@ rdb文件中有这两个字段：repl-id和repl-offset，对应redis代码中mas
 
 </font>
 
+rdb的文件格式如下：
+![](../pic/redis_rdb.jpg)
+
 <font color=green>
 
     int rdbLoad(char *filename) {
@@ -5169,11 +5172,13 @@ master的周期性任务如下：
 
 ![](../pic/redis_replication_interactive.png)
 *图片源自参考文档3*
+
 ## 参考文档：##
 
-- 1 redis/src/replication.c
-- 2 http://redis.readthedocs.org/en/latest/topic/replication.html
-- 3 http://www.hoterran.info/redis_replication
+- 1 [replicate.c](https://github.com/antirez/redis/blob/unstable/src/replication.c)
+- 2 [redis replicate](http://redis.readthedocs.org/en/latest/topic/replication.html)
+- 3 [redis源代码分析- replication](http://www.hoterran.info/redis_replication)
+- 4 [深入浅出 Redis client/server交互流程](https://mp.weixin.qq.com/s?__biz=MzIzNjUxMzk2NQ==&mid=2247483989&idx=1&sn=c1aac5b3eca9cb3f9e177d88ba189719&chksm=e8d7fd97dfa074815a7e6e1ce873d798bd4180820ee11f81b6dc332df6bda1810e6e6327179c&scene=0&pass_ticket=wSunpEuiPF7%2FQbYg%2B2nrTevzjVtfHc4OYisRYX7QMLfz9p09DAO1Z3mRej1zI5W8#rd)
 
 ## 于雨氏 ##
 * 2015/07/19，于金箱堂，于雨氏在redis code基础上扒粪后有此新作。
