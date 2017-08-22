@@ -183,7 +183,7 @@ kbd {
 
 <h2 id="toc_1">1 redis主流程</h2>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p><strong>redis启动流程:</strong></p>
 
@@ -232,7 +232,7 @@ kbd {
 
 <h3 id="toc_2">1.1 初始化server相关参数</h3>
 
-<p><font color=blue>
+<p><font color=purple>
 初始化server.runid，并给replication相关参数赋值。
 </font></p>
 
@@ -246,7 +246,7 @@ kbd {
 
 <p></font></p>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <div><pre><code class="language-none">/*
  * 这个函数为一个redis instance生成一个160bit的id
@@ -380,7 +380,7 @@ void initServerConfig(void) {
 
 <h4 id="toc_4">1.2.1 读取配置文件</h4>
 
-<p><font color=blue>
+<p><font color=purple>
 如果进程启动的时候已经被赋予了redis的options，则使用这些options，不再读conf文件。
 </font></p>
 
@@ -421,7 +421,7 @@ void initServerConfig(void) {
 
 <h4 id="toc_5">1.2.2 对字符流@config逐行拆分</h4>
 
-<p><font color=blue>
+<p><font color=purple>
 这个函数中比较重要的就是如果redis的role是slave，则获取master的host和port，并把state设置为REDIS<em>REPL</em>CONNECT
 </font></p>
 
@@ -712,7 +712,7 @@ int anetTcpAccept(char *err, int s, char *ip, size_t ip_len, int *port) {
 
 <h4 id="toc_11">1.3.3.2 创建客户端</h4>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p><em>创建客户端后注册接受client的请求的回调函数readQueryFromClient，最后把客户端放入server的客户端集合:server.clients。</em></p>
 
@@ -788,7 +788,7 @@ static void acceptCommonHandler(int fd, int flags) {
 
 <h4 id="toc_12">1.3.3.3 在监听端口上接受请求并创建对应客户端的综合流程</h4>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p><em>目前逻辑步骤是：接受客户端的请求；创建对应的client句柄；插入client集合；检查client集合是否超限。</em></p>
 
@@ -827,7 +827,7 @@ void acceptTcpHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
 
 <h4 id="toc_14">1.4.1 检查overcommit_memory</h4>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>overcommit<em>memory文件指定了内核针对内存分配的策略，overcommit</em>memory值可以是0、1、2。</p>
 
@@ -859,7 +859,7 @@ void acceptTcpHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
 
 <h4 id="toc_15">1.4.2 检查Huge Page</h4>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p><em>Transparent Huge Page用户合并物理内存的page</em></p>
 
@@ -934,7 +934,7 @@ void loadDataFromDisk(void) {
 
 <h5 id="toc_19">1.5.1.1 创建fake client</h5>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>fake client用于aof模式下load aof文件的时候，重放客户端请求然后把数据写进内存。redis不会对其进行回复。</p>
 
@@ -1202,7 +1202,7 @@ fmterr: /* Format error. */
 
 <h4 id="toc_21">1.5.2 加载rdb文件</h4>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>rdb文件中有这两个字段：repl-id和repl-offset，对应redis代码中master<em>replid和master</em>repl_offset<a href="https://redis.io/topics/replication">replication</a>一文中说明这两个字段唯一的标记了redis master的一组dataset。</p>
 
@@ -1339,7 +1339,7 @@ eoferr: /* unexpected end of file is handled here with a fatal exit */
 
 <h3 id="toc_22">1.6 半道出家</h3>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p><em>正常运行的实例[master or slave]，收到slaveof命令后更换master，启动slave模式。</em></p>
 
@@ -1393,7 +1393,7 @@ void replicationSetMaster(char *ip, int port) {
 
 <h3 id="toc_24">2.1 连接master</h3>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>redis的timer响应函数ServerCron每秒调用一次replication的周期函数replicationCron。这个函数检查到slave还没有成功连接master时，先进行连接动作。</p>
 
@@ -1449,7 +1449,7 @@ int connectWithMaster(void) {
 
 <h3 id="toc_25">2.2 断开与master之间的连接</h3>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>如果处于REDIS<em>REPL</em>CONNECTING or REDIS<em>REPL</em>RECEIVE<em>PONG的状态，而且距离上次接收数据时间已经超时，则断开与master之间的连接，把状态置为REDIS</em>REPL_CONNECT。</p>
 
@@ -1484,7 +1484,7 @@ void undoConnectWithMaster(void) {
 
 <h3 id="toc_26">2.3 判断与master之间的连接是否成功并发出PING命令</h3>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p><em>正常的connect异步流程是：先connect，而后判断fd是否可写，最后再判断连接是否有误。而上面的连接过程中，connect成功后就直接发出了PSYNC命令，所以收到其reply函数syncWithMaster就意味着server.sync<em>transfer</em>s确实可写。</em></p>
 
@@ -1627,7 +1627,7 @@ ssize_t syncWrite(int fd, char *ptr, ssize_t size, long long timeout) {
 
 <h3 id="toc_28">2.4 接收PING的响应PING 并进行数据同步</h3>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>再次收到对PSYNC命令的响应，就是收到PONG响应。如果需要进行密码验证，就进行发送密码进行验证，注意发送的密码就是slave自己的密码，这里隐含着一个条件：master-slave级联模式下主从的密码须一致。</p>
 
@@ -1828,7 +1828,7 @@ char *sendSynchronousCommand(int fd, ...) {
 
 <h4 id="toc_30">2.4.2 增量同步尝试</h4>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>有增量同步特性的主服务器为被发送的复制流创建一个内存缓冲区（in-memory backlog）， 并且主服务器和所有从服务器之间都记录一个复制偏移量（replication offset）和一个主服务器 ID （master run id），当出现闪断但是slave又重新连接成功后，如果：</p>
 
@@ -2011,7 +2011,7 @@ int slaveTryPartialResynchronization(int fd) {
 
 <h3 id="toc_31">2.5 全量同步</h3>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>slave启动之后，刚开始进行的数据同步只能以全量的方式进行，尔后才有增量同步的可能。所以先分析全量同步的流程。</p>
 
@@ -2291,7 +2291,7 @@ error:
         if (remaining &lt; readlen) readlen = remaining;
     }
 
-    // 读取reply data    
+    // 读取reply data
     qblen = sdslen(c-&gt;querybuf);
     if (c-&gt;querybuf_peak &lt; qblen) c-&gt;querybuf_peak = qblen;
     c-&gt;querybuf = sdsMakeRoomFor(c-&gt;querybuf, readlen);
@@ -2337,7 +2337,7 @@ error:
 
 <h3 id="toc_33">2.7 server.cached_master与server.master</h3>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>server.master代表slave与master之间的连接句柄，当这个连接超时后连接会被关闭，但是句柄这个连接所用到的内存资源会被赋值给server.cached<em>master。待需要重新与master建立连接的时候，server.master只需要从server.cached</em>master处获取到这个句柄就可以了。</p>
 
@@ -2347,7 +2347,7 @@ error:
 
 <h3 id="toc_34">2.7.1 创建连接句柄</h3>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>slave在与master进行连接并同步数据的过程中修改相关的状态，待全量同步完成，会调用createClient，并把状态修改为CONNECTED.</p>
 
@@ -2357,7 +2357,7 @@ error:
 
 <h3 id="toc_35">2.7.2 关闭连接，释放句柄</h3>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>slave每次与master之间有通信时，server.master-&gt;lastinteraction都会被更新。</p>
 
@@ -2473,7 +2473,7 @@ void disconnectSlaves(void) {
 
 <h3 id="toc_36">2.7.3 增量同步激活server.cached_master</h3>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>当slave与master之间进行增量同步的时候，会激活server.cached_master。具体流程请参考 /** 2.4.2 增量同步尝试 **/ 一节的函数replicationResurrectCachedMaster()。</p>
 
@@ -2508,7 +2508,7 @@ void disconnectSlaves(void) {
         if (remaining &lt; readlen) readlen = remaining;
     }
 
-    // 创建buffer，并读取请求数据 
+    // 创建buffer，并读取请求数据
     qblen = sdslen(c-&gt;querybuf);
     if (c-&gt;querybuf_peak &lt; qblen) c-&gt;querybuf_peak = qblen;
     c-&gt;querybuf = sdsMakeRoomFor(c-&gt;querybuf, readlen);
@@ -2557,7 +2557,7 @@ void disconnectSlaves(void) {
 <p><font color=green></p>
 
 <div><pre><code class="language-none">void processInputBuffer(redisClient *c) {
-    // 循环处理收到的一批命令 
+    // 循环处理收到的一批命令
     /* Keep processing while there is something in the input buffer */
     while(sdslen(c-&gt;querybuf)) {
         /* Determine request type when unknown. */
@@ -2592,7 +2592,7 @@ void disconnectSlaves(void) {
 
 <h4 id="toc_40">3.2.1 分析请求数据流</h4>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>把收到的字符流按照redis protocol处理成redis能够理解的数据，即把数据由“泥巴”初步的加工成“砖坯”。</p>
 
@@ -2667,7 +2667,7 @@ void disconnectSlaves(void) {
 
 <h4 id="toc_41">3.2.2 执行请求命令</h4>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>处理命令的前期核验流程：</p>
 
@@ -2868,7 +2868,7 @@ void disconnectSlaves(void) {
 
 <h4 id="toc_42">3.2.2.1 执行请求命令</h4>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>执行用户请求，如果请求是写命令则把内容序列化到磁盘、同步给slave。</p>
 
@@ -2935,7 +2935,7 @@ void call(redisClient *c, int flags) {
 
 <h5 id="toc_43">3.2.2.1.1 同步数据至disk&amp;slaves</h5>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>同步数据流程：</p>
 
@@ -3071,7 +3071,7 @@ void replicationFeedSlaves(list *slaves, int dictid, robj **argv, int argc) {
 
 <h6 id="toc_44">3.2.2.1.1.1 把redis object放入backlog</h6>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>backlog buffer[server.repl_backlog]可以认为是一种ring buffer，几个重要的成员意义如下：</p>
 
@@ -3177,7 +3177,7 @@ void pingCommand(redisClient *c) {
 
 <h3 id="toc_46">3.4 处理REPLCONF命令</h3>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>客户端会在发起sync命令之前发送这个REPLCONF命令，以用于确认可以开始replication流程。他有下列三个功能：</p>
 
@@ -3256,7 +3256,7 @@ void pingCommand(redisClient *c) {
 
 <h4 id="toc_47">3.4.1 把slave置为online态</h4>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>slave处于REDIS<em>REPL</em>ONLINE状态，说明slave已经收到了rdb文件，可以增量地接受master的数据。</p>
 
@@ -3264,7 +3264,7 @@ void pingCommand(redisClient *c) {
 
 <p><font color=green></p>
 
-<div><pre><code class="language-none">/* 
+<div><pre><code class="language-none">/*
  * 这个函数会把slave的state置为online态。当slave收到了rdb文件的数据时候
  * 这个函数会被调用，master会准备好把更多的数据同步给slave。
  *
@@ -3293,7 +3293,7 @@ void putSlaveOnline(redisClient *slave) {
 
 <h4 id="toc_48">3.4.2 master的GETACK与slave的SEND ACK</h4>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>beforeSleep()可以认为是redis的不定时循环函数，用于把backlog写入aof文件之类任务。它的其中一个任务就是向所有的slaves发送REPLCONF GETACK命令，以获取从的replication offset。</p>
 
@@ -3331,7 +3331,7 @@ void beforeSleep(struct aeEventLoop *eventLoop) {
 
 <p></font></p>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>slave被动或者主动向master回复replication offset。</p>
 
@@ -3369,7 +3369,7 @@ void replicationSendAck(void) {
 
 <h3 id="toc_49">3.5 处理wait命令</h3>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>注意replicationRequestAckFromSlaves()函数前面有一段注释，说明了wait的原理,道出了同步数据复制的精髓：
 Redis同步数据复制的流程概括几点就是：</p>
@@ -3395,7 +3395,7 @@ Redis同步数据复制的流程概括几点就是：</p>
 
 <h4 id="toc_50">3.5.1 接收到wait命令的处理流程</h4>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>waitCommand流程：</p>
 
@@ -3515,7 +3515,7 @@ void replicationRequestAckFromSlaves(void) {
 
 <h4 id="toc_51">3.5.2 处理等待wait回复的客户端</h4>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>master向slave发出REPLCONF GETACK命令后，slave会向master回复结果，详细结果请参加/** 3.4.2 master的GETACK与slave的SEND ACK **/一节。
 master发出命令后的流程是：</p>
@@ -3545,7 +3545,7 @@ master发出命令后的流程是：</p>
 
 /* Check if there are clients blocked in WAIT that can be unblocked since
  * we received enough ACKs from slaves. */
-// 查验所有阻塞等待WAIT命令回复的客户端，如果已经收到足够ACK的客户端的数目，就把他们变成unblocked状态。 
+// 查验所有阻塞等待WAIT命令回复的客户端，如果已经收到足够ACK的客户端的数目，就把他们变成unblocked状态。
 void processClientsWaitingReplicas(void) {
     long long last_offset = 0;
     int last_numreplicas = 0;
@@ -3644,7 +3644,7 @@ void processUnblockedClients(void) {
 
 <h5 id="toc_52">3.5.2.1 处理超时的等待WAIT返回的客户端</h5>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>clientsCron()函数一次最多检查50个的客户端。</p>
 
@@ -3734,9 +3734,9 @@ void replyToBlockedClientTimedOut(redisClient *c) {
 
 <p></font></p>
 
-<h3 id="toc_53">3.6 处理同步请求[psync or sync] ###</h3>
+<h3 id="toc_53">3.6 处理同步请求[psync or sync]</h3>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>进行数据同步须满足下列条件：</p>
 
@@ -3845,7 +3845,7 @@ void syncCommand(redisClient *c) {
         } else {
             /* No way, we need to wait for the next BGSAVE in order to
              * register differences. */
-            // 等待下个周期的BGSAVE    
+            // 等待下个周期的BGSAVE
             c-&gt;replstate = REDIS_REPL_WAIT_BGSAVE_START;
             redisLog(REDIS_NOTICE,&quot;Waiting for next BGSAVE for SYNC&quot;);
         }
@@ -3912,7 +3912,7 @@ void copyClientOutputBuffer(redisClient *dst, redisClient *src) {
 
 <h4 id="toc_54">3.6.1 增量同步</h4>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>处理客户端的PSYNC命令，如果能够进行增量同步则调用函数addReplyReplicationBacklog进行数据增量同步，否则若请求参数处于下列情形之一：
 1) 请求的runid与master的runid不符合；
@@ -4040,7 +4040,7 @@ need_full_resync:
 <p><font color=green></p>
 
 <div><pre><code class="language-none">/* Feed the slave &#39;c&#39; with the replication backlog starting from the
- * specified &#39;offset&#39; up to the end of the backlog. */ 
+ * specified &#39;offset&#39; up to the end of the backlog. */
 // 从server backlog的@offset处开始读取数据放入@c的buffer，返回读取的内容的有效长度
 long long addReplyReplicationBacklog(redisClient *c, long long offset) {
     long long j, skip, len;
@@ -4101,7 +4101,7 @@ long long addReplyReplicationBacklog(redisClient *c, long long offset) {
 
 <h3 id="toc_56">3.7 replication 周期性任务</h3>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>master的周期性任务如下：</p>
 
@@ -4196,7 +4196,7 @@ void replicationCron(void) {
 
     /* If we have no attached slaves and there is a replication backlog
      * using memory, free it after some (configured) time. */
-    // 没有slave，则释放backlog 
+    // 没有slave，则释放backlog
     if (listLength(server.slaves) == 0 &amp;&amp; server.repl_backlog_time_limit &amp;&amp;
         server.repl_backlog)
     {
@@ -4301,17 +4301,17 @@ int startBgsaveForReplication(void) {
     return retval;
 }</code></pre></div>
 
-<p></font> </p>
+<p></font></p>
 
 <h4 id="toc_58">3.7.1.1 无盘数据同步</h4>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>子进程把数据同步给slave后，会把处理结果返回给父进程。父进程会在serverCron()里面调用backgroundSaveDoneHandlerSocket()检查处理结果。</p>
 
-<p></font> </p>
+<p></font></p>
 
-<p><font color=green>  </p>
+<p><font color=green></p>
 
 <div><pre><code class="language-none">/* Spawn an RDB child that writes the RDB to the sockets of the slaves
  * that are currently in REDIS_REPL_WAIT_BGSAVE_START state. */
@@ -4427,7 +4427,7 @@ int rdbSaveToSlavesSockets(void) {
             msglen = sizeof(uint64_t)*(1+2*numfds);
             if (*len == 0 ||
                 // rdb_pipe_write_result_to_parent是pipefds[1]
-                write(server.rdb_pipe_write_result_to_parent,msg,msglen) 
+                write(server.rdb_pipe_write_result_to_parent,msg,msglen)
                 != msglen)
             {
                 retval = REDIS_ERR; // 有错误
@@ -4461,9 +4461,9 @@ int rdbSaveToSlavesSockets(void) {
     return REDIS_OK; /* unreached */
 }</code></pre></div>
 
-<h5 id="toc_59">3.7.1.1.1 无盘数据同步时创建redis I/O通道 #####</h5>
+<h5 id="toc_59">3.7.1.1.1 无盘数据同步时创建redis I/O通道</h5>
 
-<p><font color=blue>   </p>
+<p><font color=purple></p>
 
 <p>根据master与处于REDIS<em>REPL</em>WAIT<em>BGSAVE</em>START状态的slave之间的连接的集合，创建rio的I/O channel。注意下面的写数据的函数rioFdsetWrite，它每次写数据都是向所有的slave发送数据。</p>
 
@@ -4580,9 +4580,9 @@ void rioInitWithFdset(rio *r, int *fds, int numfds) {
 
 <p></font></p>
 
-<h5 id="toc_60">3.7.1.1.2 无盘方式同步数据 #####</h5>
+<h5 id="toc_60">3.7.1.1.2 无盘方式同步数据</h5>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <div><pre><code class="language-none">/* This is just a wrapper to rdbSaveRio() that additionally adds a prefix
  * and a suffix to the generated RDB dump. The prefix is:
@@ -4886,9 +4886,9 @@ void rioInitWithFile(rio *r, FILE *fp) {
 
 <p></font></p>
 
-<h3 id="toc_63">3.7.2 核验处于良好连接状态的slave的数目 ###</h3>
+<h3 id="toc_63">3.7.2 核验处于良好连接状态的slave的数目</h3>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>一下文字摘抄自：http://redisdoc.com/topic/replication.html#n</p>
 
@@ -5111,7 +5111,7 @@ void backgroundSaveDoneHandlerDisk(int exitcode, int bysignal) {
     server.rdb_child_type = REDIS_RDB_CHILD_TYPE_NONE;
     server.rdb_save_time_start = -1;
 
-    /* 
+    /*
      * 如果子进程返回了OK，则设置相应client的status。否则就关闭同步数据时发生错误的连接。
      */
     ok_slaves = zmalloc(sizeof(uint64_t)); /* Make space for the count. */
@@ -5187,7 +5187,7 @@ void backgroundSaveDoneHandlerDisk(int exitcode, int bysignal) {
 
 <h5 id="toc_68">3.8.1.3 检查完毕后更新相应slave的状态</h5>
 
-<p><font color=blue></p>
+<p><font color=purple></p>
 
 <p>如果有盘方式下BGSAVE任务完成，则开始把数据同步给相应的slave。</p>
 
@@ -5195,16 +5195,16 @@ void backgroundSaveDoneHandlerDisk(int exitcode, int bysignal) {
 
 <p><font color=green></p>
 
-<div><pre><code class="language-none">/* 
+<div><pre><code class="language-none">/*
  * 每次后台保存数据运行完毕或者redis的replicaton的策略由有盘方式改为无盘方式时，
  * 这个函数就会被调用。
  *
  * 函数找出正在等待bgsave任务完成的slave后，进行无阻塞的数据同步。如果检查到
  * 后台在进行BGSAVE时又有新的slave连接过来，那么就让它等待下一次BGSAVE，因为
  * 保存RDB数据的过程中又有了新的数据，别的进程没有积存这些数据。
- * 
+ *
  * @bgsaveerr: 如果其值为REDIS_OK，则说明BGSAVE任务成功，如果是REDIS_ERR则说明发生了错误。
- * @type: 则用于说明子进程的任务类型(disk or socket target). 
+ * @type: 则用于说明子进程的任务类型(disk or socket target).
  */
 void updateSlavesWaitingBgsave(int bgsaveerr, int type) {
     listNode *ln;
@@ -5396,7 +5396,6 @@ void sendBulkToSlave(aeEventLoop *el, int fd, void *privdata, int mask) {
 <li>2015/07/19，于金箱堂，于雨氏在redis code基础上扒粪后有此新作。</li>
 <li>2017/08/21，于得实堂，添加repl<em>id &amp; repl</em>offset相关分析文字。</li>
 </ul>
-
 
 <div id="disqus_thread"></div>
 <script type="text/javascript">
