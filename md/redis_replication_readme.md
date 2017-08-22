@@ -56,13 +56,12 @@
 </font>
 
 <font color=yellow>
+ 
+*Linux中的随机数可以从两个特殊的文件中产生，一个是/dev/urandom.另外一个是/dev/random。他们产生随机数的原理是利用当前系统的熵池来计算出固定一定数量的随机比特，然后将这些比特作为字节流返回。*
 
->Linux中的随机数可以从两个特殊的文件中产生，一个是/dev/urandom.另外一个是/dev/random。他们产生随机数的原理是利用当前系统的熵池来计算出固定一定数量的随机比特，然后将这些比特作为字节流返回。
->
- >熵池就是当前系统的环境噪音，熵指的是一个系统的混乱程度，系统噪音可以通过很多参数来评估，如内存的使用，文件的使用量，不同类型的进程数量等等。如果当前环境噪音变化的不是很剧烈或者当前环境噪音很小，比如刚开机的时候，而当前需要大量的随机比特，这时产生的随机数的随机效果就不是很好了。这就是为什么会有/dev/urandom和/dev/random这两种不同的文件，后者在不能产生新的随机数时会阻塞程序，而前者不会（ublock），当然产生的随机数效果就不太好了，这对加密解密这样的应用来说就不是一种很好的选择。
->
->/dev/random会阻塞当前的程序，直到根据熵池产生新的随机字节之后才返回，所以使用/dev/random比使用/dev/urandom产生大量随机数的速度要慢。
->
+*熵池就是当前系统的环境噪音，熵指的是一个系统的混乱程度，系统噪音可以通过很多参数来评估，如内存的使用，文件的使用量，不同类型的进程数量等等。如果当前环境噪音变化的不是很剧烈或者当前环境噪音很小，比如刚开机的时候，而当前需要大量的随机比特，这时产生的随机数的随机效果就不是很好了。这就是为什么会有/dev/urandom和/dev/random这两种不同的文件，后者在不能产生新的随机数时会阻塞程序，而前者不会（ublock），当然产生的随机数效果就不太好了，这对加密解密这样的应用来说就不是一种很好的选择。*
+
+*/dev/random会阻塞当前的程序，直到根据熵池产生新的随机字节之后才返回，所以使用/dev/random比使用/dev/urandom产生大量随机数的速度要慢。*
 
 </font>
 
@@ -534,9 +533,9 @@
 
 <font color=blue>
  
->创建客户端后注册接受client的请求的回调函数readQueryFromClient，最后把客户端放入server的客户端集合:server.clients。
->
->如果client集合超限[默认是10000]就给client返回err msg，然后再释放client句柄并关闭连接。
+*创建客户端后注册接受client的请求的回调函数readQueryFromClient，最后把客户端放入server的客户端集合:server.clients。*
+
+*如果client集合超限[默认是10000]就给client返回err msg，然后再释放client句柄并关闭连接。*
 
 </font>
 
@@ -610,11 +609,11 @@
 
 <font color=blue>
 
->目前逻辑步骤是：接受客户端的请求；创建对应的client句柄；插入client集合；检查client集合是否超限。
->
->那为什么不先检查server.clients的数目后直接把超限的连接请求给拒绝掉呢？
->
->acceptCommonHandler()函数里给出了一段解释：需要给客户端发送error message，以让用户明白错误的原因。
+*目前逻辑步骤是：接受客户端的请求；创建对应的client句柄；插入client集合；检查client集合是否超限。*
+
+*那为什么不先检查server.clients的数目后直接把超限的连接请求给拒绝掉呢？*
+
+*acceptCommonHandler()函数里给出了一段解释：需要给客户端发送error message，以让用户明白错误的原因。*
 
 </font>
 
@@ -678,17 +677,13 @@ overcommit_memory文件指定了内核针对内存分配的策略，overcommit_m
 
 <font color=blue>
 
-Transparent Huge Page用户合并物理内存的page
+*Transparent Huge Page用户合并物理内存的page*
 
->内核线程khugepaged周期性自动扫描内存，自动将地址连续可以合并的4KB的普通Page并成2MB的Huge Page。
->
->Redhat系统
->
->>通过内核参数/sys/kernel/mm/redhat_transparent_hugepage/enabled打开.
->
->其他Linux系统
->
->>通过内核参数/sys/kernel/mm/transparent_hugepage/enabled打开.
+*内核线程khugepaged周期性自动扫描内存，自动将地址连续可以合并的4KB的普通Page并成2MB的Huge Page。*
+
+*Redhat系统，通过内核参数/sys/kernel/mm/redhat_transparent_hugepage/enabled打开.*
+
+*其他Linux系统，通过内核参数/sys/kernel/mm/transparent_hugepage/enabled打开.*
 
 </font>
 
@@ -1162,9 +1157,9 @@ rdb文件中有这两个字段：repl-id和repl-offset，对应redis代码中mas
 
 <font color=blue>
 
->正常运行的实例[master or slave]，收到slaveof命令后更换master，启动slave模式。
->
->先断绝与已有的master以及slaves之间的连接，并放弃收到的或者将要发出的增量同步数据，然后初始化相关配置，设置状态为REDIS_REPL_CONNECT。
+*正常运行的实例[master or slave]，收到slaveof命令后更换master，启动slave模式。*
+
+*先断绝与已有的master以及slaves之间的连接，并放弃收到的或者将要发出的增量同步数据，然后初始化相关配置，设置状态为REDIS_REPL_CONNECT。*
 </font>
 
 <font color=green>
@@ -1307,11 +1302,11 @@ redis的timer响应函数ServerCron每秒调用一次replication的周期函数r
 
 <font color=blue>
 
->正常的connect异步流程是：先connect，而后判断fd是否可写，最后再判断连接是否有误。而上面的连接过程中，connect成功后就直接发出了PSYNC命令，所以收到其reply函数syncWithMaster就意味着server.sync_transfer_s确实可写。
->
->syncWithMaster函数起始逻辑就是判断fd是否有error，这个是继续连接流程的第三步，如果没有error就可以确认连接可读可写而且没有error，此时就可以删除对可写事件的关注。
->
->确定没有错误后再发出PING命令，状态更改为REDIS_REPL_RECEIVE_PONG。
+*正常的connect异步流程是：先connect，而后判断fd是否可写，最后再判断连接是否有误。而上面的连接过程中，connect成功后就直接发出了PSYNC命令，所以收到其reply函数syncWithMaster就意味着server.sync_transfer_s确实可写。*
+
+*syncWithMaster函数起始逻辑就是判断fd是否有error，这个是继续连接流程的第三步，如果没有error就可以确认连接可读可写而且没有error，此时就可以删除对可写事件的关注。*
+
+*确定没有错误后再发出PING命令，状态更改为REDIS_REPL_RECEIVE_PONG。*
 
 </font>
 
@@ -1450,11 +1445,11 @@ redis的timer响应函数ServerCron每秒调用一次replication的周期函数r
 
 <font color=blue>
 
->再次收到对PSYNC命令的响应，就是收到PONG响应。如果需要进行密码验证，就进行发送密码进行验证，注意发送的密码就是slave自己的密码，这里隐含着一个条件：master-slave级联模式下主从的密码须一致。
->
->尔后通过AUTH & REPLCONF命令发送密码验证和自己的listenning port后，先尝试进行增量同步。这一步其实涉及到 redis 2.8版本以前的一个bug：如果master和slave之间正在执行数据同步的时候网络闪断，那么连接重新建立以后每次都要重新全量的接收数据！所以redis 2.8以后的版本就有了这个patch。
->
-> 函数的流程为：
+再次收到对PSYNC命令的响应，就是收到PONG响应。如果需要进行密码验证，就进行发送密码进行验证，注意发送的密码就是slave自己的密码，这里隐含着一个条件：master-slave级联模式下主从的密码须一致。
+
+而后通过AUTH & REPLCONF命令发送密码验证和自己的listenning port后，先尝试进行增量同步。这一步其实涉及到 redis 2.8版本以前的一个bug：如果master和slave之间正在执行数据同步的时候网络闪断，那么连接重新建立以后每次都要重新全量的接收数据！所以redis 2.8以后的版本就有了这个patch。
+
+函数的流程为：
 
 - 1 如果server.repl_state为REDIS_REPL_RECEIVE_PONG，则以阻塞的方式读取回复；
 - 2 如果需要验证密码，则发送AUTH passwd进行密码验证；
@@ -1830,9 +1825,9 @@ redis的timer响应函数ServerCron每秒调用一次replication的周期函数r
 
 <font color=blue>
 
->slave启动之后，刚开始进行的数据同步只能以全量的方式进行，尔后才有增量同步的可能。所以先分析全量同步的流程。
->
->全量同步函数流程：
+slave启动之后，刚开始进行的数据同步只能以全量的方式进行，尔后才有增量同步的可能。所以先分析全量同步的流程。
+
+全量同步函数流程：
 
 - 1 确定数据长度和数据读取模式[精确 & 模糊];
 - 2 读取数据；
@@ -2154,9 +2149,9 @@ redis的timer响应函数ServerCron每秒调用一次replication的周期函数r
 
 <font color=blue>
 
->server.master代表slave与master之间的连接句柄，当这个连接超时后连接会被关闭，但是句柄这个连接所用到的内存资源会被赋值给server.cached_master。待需要重新与master建立连接的时候，server.master只需要从server.cached_master处获取到这个句柄就可以了。
->
->通过二者实现了slave与master之间连接句柄的循环利用。cached_master可以认为是一个“迷你型”的资源回收池。
+server.master代表slave与master之间的连接句柄，当这个连接超时后连接会被关闭，但是句柄这个连接所用到的内存资源会被赋值给server.cached_master。待需要重新与master建立连接的时候，server.master只需要从server.cached_master处获取到这个句柄就可以了。
+
+通过二者实现了slave与master之间连接句柄的循环利用。cached_master可以认为是一个“迷你型”的资源回收池。
 
 </font>
 
@@ -2164,9 +2159,9 @@ redis的timer响应函数ServerCron每秒调用一次replication的周期函数r
 
 <font color=blue>
 
-> slave在与master进行连接并同步数据的过程中修改相关的状态，待全量同步完成，会调用createClient，并把状态修改为CONNECTED.
->
-> 相关的代码可以到/** 2.5 全量同步 **/一节参考函数readSyncBulkPayload。
+slave在与master进行连接并同步数据的过程中修改相关的状态，待全量同步完成，会调用createClient，并把状态修改为CONNECTED.
+
+相关的代码可以到**2.5 全量同步**一节参考函数readSyncBulkPayload。
 
 </font>
 
@@ -2409,9 +2404,9 @@ slave每次与master之间有通信时，server.master->lastinteraction都会被
 
 <font color=blue>
 
->把收到的字符流按照redis protocol处理成redis能够理解的数据，即把数据由“泥巴”初步的加工成“砖坯”。
->
->还有一个同类函数是processMultibulkBuffer()。
+把收到的字符流按照redis protocol处理成redis能够理解的数据，即把数据由“泥巴”初步的加工成“砖坯”。
+
+还有一个同类函数是processMultibulkBuffer()。
 
 </font>
 
@@ -2683,11 +2678,9 @@ slave每次与master之间有通信时，server.master->lastinteraction都会被
 
 <font color=blue>
 
->
->执行用户请求，如果请求是写命令则把内容序列化到磁盘、同步给slave。
->
->当命令是写命令的时候，server的dirty值会自增。所以这里通过dirty值即可判断是否应该做序列化。
->
+执行用户请求，如果请求是写命令则把内容序列化到磁盘、同步给slave。
+
+当命令是写命令的时候，server的dirty值会自增。所以这里通过dirty值即可判断是否应该做序列化。
 
 </font>
 
@@ -3104,11 +3097,9 @@ slave处于REDIS_REPL_ONLINE状态，说明slave已经收到了rdb文件，可�
 
 <font color=blue>
 
->
->beforeSleep()可以认为是redis的不定时循环函数，用于把backlog写入aof文件之类任务。它的其中一个任务就是向所有的slaves发送REPLCONF GETACK命令，以获取从的replication offset。
->
->slave收到REPLCONF GETACK命令后，就会调用replicationSendAck进行回复。除了收到master的命令进行被动地回复外，slave还会在周期性函数replicationCron()中主动调用replicationSendAck进行回复。
->
+beforeSleep()可以认为是redis的不定时循环函数，用于把backlog写入aof文件之类任务。它的其中一个任务就是向所有的slaves发送REPLCONF GETACK命令，以获取从的replication offset。
+
+slave收到REPLCONF GETACK命令后，就会调用replicationSendAck进行回复。除了收到master的命令进行被动地回复外，slave还会在周期性函数replicationCron()中主动调用replicationSendAck进行回复。
 
 </font>
 
@@ -3182,7 +3173,7 @@ slave被动或者主动向master回复replication offset。
 
 <font color=blue>
 
->注意replicationRequestAckFromSlaves()函数前面有一段注释，说明了wait的原理,道出了同步数据复制的精髓：
+注意replicationRequestAckFromSlaves()函数前面有一段注释，说明了wait的原理,道出了同步数据复制的精髓：
 Redis同步数据复制的流程概括几点就是：
 
 - master有一个供PSYNC使用的全局replication offset；
@@ -4689,24 +4680,22 @@ master的周期性任务如下：
 
 <font color=blue>
 
-> 一下文字摘抄自：http://redisdoc.com/topic/replication.html#n
->	
->从Redis 2.8开始，为了保证数据的安全性，可以通过配置，让主服务器只在有至少N个当前已连接从服务器的情况下，才执行写命令。
->
->不过， 因为 Redis 使用异步复制， 所以主服务器发送的写数据并不一定会被从服务器接收到， 因此， 数据丢失的可能性仍然是存在的。
->
->以下是这个特性的运作原理：
+一下文字摘抄自：http://redisdoc.com/topic/replication.html#n
+	
+从Redis 2.8开始，为了保证数据的安全性，可以通过配置，让主服务器只在有至少N个当前已连接从服务器的情况下，才执行写命令。
+
+不过， 因为 Redis 使用异步复制， 所以主服务器发送的写数据并不一定会被从服务器接收到， 因此， 数据丢失的可能性仍然是存在的。
+
+以下是这个特性的运作原理：
 
 - 从服务器以每秒一次的频率 PING 主服务器一次， 并报告复制流的处理情况。
 - 主服务器会记录各个从服务器最后一次向它发送 PING 的时间。
 - 用户可以通过配置， 指定网络延迟的最大值 min-slaves-max-lag ， 以及执行写操作所需的至少从服务器数量 min-slaves-to-write 。
 - 如果至少有 min-slaves-to-write 个从服务器， 并且这些服务器的延迟值都少于 min-slaves-max-lag 秒， 那么主服务器就会执行客户端请求的写操作。
 
->
->你可以将这个特性看作 CAP 理论中的 C 的条件放宽版本：尽管不能保证写操作的持久性，但起码丢失数据的窗口会被严格限制在指定的秒数中。
->
->另一方面，如果条件达不到 min-slaves-to-write 和 min-slaves-max-lag 所指定的条件， 那么写操作就不会被执行，主服务器会向请求执行写操作的客户端返回一个错误。
->
+你可以将这个特性看作 CAP 理论中的 C 的条件放宽版本：尽管不能保证写操作的持久性，但起码丢失数据的窗口会被严格限制在指定的秒数中。
+
+另一方面，如果条件达不到 min-slaves-to-write 和 min-slaves-max-lag 所指定的条件， 那么写操作就不会被执行，主服务器会向请求执行写操作的客户端返回一个错误。
 
 </font>
 
@@ -5156,40 +5145,35 @@ master的周期性任务如下：
 
 ###4.1 replication流程文字描述###
 
->无论是初次连接还是重新连接， 当建立一个从服务器时， 从服务器都将向主服务器发送一个 SYNC 命令。
->
->接到 SYNC 命令的主服务器将开始执行 BGSAVE ， 并在保存操作执行期间， 将所有新执行的写入命令都保存到一个缓冲区里面。
->
->当 BGSAVE 执行完毕后， 主服务器将执行保存操作所得的 .rdb 文件发送给从服务器， 从服务器接收这个 .rdb 文件， 并将文件中的数据载入到内存中。
->
->之后主服务器会以 Redis 命令协议的格式， 将写命令缓冲区中积累的所有内容都发送给从服务器。
->
->你可以通过 telnet 命令来亲自验证这个同步过程： 首先连上一个正在处理命令请求的 Redis 服务器， 然后向它发送 SYNC 命令， 过一阵子， 你将看到 telnet 会话（session）接收到服务器发来的大段数据（.rdb 文件）， 之后还会看到， 所有在服务器执行过的写命令， 都会重新发送到 telnet 会话来。
->
->即使有多个从服务器同时向主服务器发送 SYNC ， 主服务器也只需执行一次 BGSAVE 命令， 就可以处理所有这些从服务器的同步请求。
->
->从服务器可以在主从服务器之间的连接断开时进行自动重连， 在 Redis 2.8 版本之前， 断线之后重连的从服务器总要执行一次完整重同步（full resynchronization）操作， 但是从 Redis 2.8 版本开始， 从服务器可以根据主服务器的情况来选择执行完整重同步还是部分重同步（partial resynchronization）。
->
->另外，有关配置项的注意事项：如果主服务器通过 requirepass 选项设置了密码， 那么为了让从服务器的同步操作可以顺利进行， 我们也必须为从服务器进行相应的身份验证设置。
+无论是初次连接还是重新连接， 当建立一个从服务器时， 从服务器都将向主服务器发送一个 SYNC 命令。
+
+接到 SYNC 命令的主服务器将开始执行 BGSAVE ， 并在保存操作执行期间， 将所有新执行的写入命令都保存到一个缓冲区里面。
+
+当 BGSAVE 执行完毕后， 主服务器将执行保存操作所得的 .rdb 文件发送给从服务器， 从服务器接收这个 .rdb 文件， 并将文件中的数据载入到内存中。
+
+之后主服务器会以 Redis 命令协议的格式， 将写命令缓冲区中积累的所有内容都发送给从服务器。
+
+你可以通过 telnet 命令来亲自验证这个同步过程： 首先连上一个正在处理命令请求的 Redis 服务器， 然后向它发送 SYNC 命令， 过一阵子， 你将看到 telnet 会话（session）接收到服务器发来的大段数据（.rdb 文件）， 之后还会看到， 所有在服务器执行过的写命令， 都会重新发送到 telnet 会话来。
+
+即使有多个从服务器同时向主服务器发送 SYNC ， 主服务器也只需执行一次 BGSAVE 命令， 就可以处理所有这些从服务器的同步请求。
+
+从服务器可以在主从服务器之间的连接断开时进行自动重连， 在 Redis 2.8 版本之前， 断线之后重连的从服务器总要执行一次完整重同步（full resynchronization）操作， 但是从 Redis 2.8 版本开始， 从服务器可以根据主服务器的情况来选择执行完整重同步还是部分重同步（partial resynchronization）。
+
+另外，有关配置项的注意事项：如果主服务器通过 requirepass 选项设置了密码， 那么为了让从服务器的同步操作可以顺利进行， 我们也必须为从服务器进行相应的身份验证设置。
 
 ###4.2 replication过程中slave与master的函数流程图###
 
-![](./pic/redis_replication.png)
-
-from:http://www.hoterran.info/redis_replication
-
+![](../pic/redis_replication.png)
+*图片源自参考文档3*
 ###4.3 replication过程中slave与master的状态变化图###
 
-![](./pic/redis_replication_interactive.png)
-
-from:http://www.hoterran.info/redis_replication
-
+![](../pic/redis_replication_interactive.png)
+*图片源自参考文档3*
 ## 参考文档：##
 
 - 1 redis/src/replication.c
 - 2 http://redis.readthedocs.org/en/latest/topic/replication.html
 - 3 http://www.hoterran.info/redis_replication
-
 
 ## 于雨氏 ##
 * 2015/07/19，于金箱堂，于雨氏在redis code基础上扒粪后有此新作。
