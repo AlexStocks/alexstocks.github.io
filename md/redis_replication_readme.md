@@ -1444,17 +1444,17 @@ redis的timer响应函数ServerCron每秒调用一次replication的周期函数r
 
 </font>
 
-###2.4 接收PING的响应PING 并进行数据同步 ###
+###2.4 接收PING的响应PONG 并进行数据同步 ###
 
 <font color=purple>
 
-再次收到对PSYNC命令的响应，就是收到PONG响应。如果需要进行密码验证，就进行发送密码进行验证，注意发送的密码就是slave自己的密码，这里隐含着一个条件：master-slave级联模式下主从的密码须一致。
+再次收到对PSYNC命令的响应，就是收到PONG响应。如果需要进行密码验证，就进行发送密码进行验证，注意发送的密码就是slave自己的密码。
 
 而后通过AUTH & REPLCONF命令发送密码验证和自己的listenning port后，先尝试进行增量同步。这一步其实涉及到 redis 2.8版本以前的一个bug：如果master和slave之间正在执行数据同步的时候网络闪断，那么连接重新建立以后每次都要重新全量的接收数据！所以redis 2.8以后的版本就有了这个patch。
 
 函数的流程为：
 
-- 1 如果server.repl_state为REDIS_REPL_RECEIVE_PONG，则以阻塞的方式读取回复；
+- 1 如果server.repl_state为REDIS\_REPL\_RECEIVE\_PONG，则以阻塞的方式读取回复；
 - 2 如果需要验证密码，则发送AUTH passwd进行密码验证；
 - 3 把自己的监听端口告诉master；
 - 4 尝试进行增量同步，注册增量同步回函数readQueryFromClient；
