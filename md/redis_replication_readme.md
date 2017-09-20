@@ -55,7 +55,7 @@
 初始化server.runid，并给replication相关参数赋值。
 </font>
 
-<font color=yellow>
+<font color=blue>
 
 *Linux中的随机数可以从两个特殊的文件中产生，一个是/dev/urandom.另外一个是/dev/random。他们产生随机数的原理是利用当前系统的熵池来计算出固定一定数量的随机比特，然后将这些比特作为字节流返回。*
 

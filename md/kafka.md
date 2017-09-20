@@ -180,15 +180,13 @@ distributed to the list.
 ##### 5.1.1 broker #####
 ---
 
-- Kafka中Topic命名规范
+- Kafka中Topic命名规范: appname\_feature\_function
 
-<app_name>_<feature>_<function>
-
-如ikurento_push_sched
+  如ikurento_push_sched
 
 - partition数目
 
-partition数目多少并不会严重影响broker性能，confluent官方层测试过10000个partition的情况。
+  partition数目多少并不会严重影响broker性能，confluent官方层测试过10000个partition的情况。
 
 
 #### 5.2 kafka最优参数 ####
@@ -213,6 +211,31 @@ partition数目多少并不会严重影响broker性能，confluent官方层测�
 * max.connections.per.ip - 每个ip地址上每个broker可以被连接的最大数目
 * max.connections.per.ip.overrides - 配置针对某个特别的IP or hostname的连接个数最大限制，配置样例见[#KAFKA-512](https://issues.apache.org/jira/browse/KAFKA-1512)
 * offsets.topic.replication.factor - Topic __consumer_offsets的replica值，这个值默认为1，这是因为如果cluster只有一个kafka的情况下让系统跑起来，详细说明见[KAFKA-1846](https://issues.apache.org/jira/browse/KAFKA-1846)
+ 
+  <font color=blue>
+  
+  如果不修改offsets.topic.replication.factor的值，则__consumer_offsets的replica为1，如果某个partition的leader broker宕机，那就只能去无语对苍天了。所以预防的方法就是在config/server.properties中设置offsets.topic.replication.factor=3。那么，如果忘记修改offsets.topic.replication.factor的值，有什么补救补救办法，总不能眼睁睁看着悲剧发生吧？
+  
+  办法总是有的。可以通过kafka提供的重新分配分区工具 bin/kafka-reassign-partitions.sh 修改__consumer_offsets的replica，操作步骤如下：
+  1 请先准备重新分配分区配置文件replica.json：   
+  
+  		{"version":1,
+  			"partitions":[
+  				{"topic":"__consumer_offsets","partition":0,"replicas":[0,1,2]},
+  				{"topic":"__consumer_offsets","partition":1,"replicas":[1,2,0]},
+  				{"topic":"__consumer_offsets","partition":2,"replicas":[2,0,1]},
+		]}
+		
+  2 通过如下命令执行扩容：   
+  
+  		./bin/kafka-reassign-partitions.sh --zookeeper $zk  --reassignment-json-file replica.json --execute 
+  
+  3 查看扩容结果:   
+  
+  		./bin/kafka-reassign-partitions.sh --zookeeper $zk  --reassignment-json-file replica.json --verify 
+  
+  </font>
+  
 * offsets.topic.num.partitions - Topic __consumer_offsets的partition值，默认为50。
 
 ##### 5.2.2 Producer #####
