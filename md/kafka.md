@@ -28,7 +28,7 @@ broker无法启动大致有两个原因：第一是内存不足，第二是jmx�
 	if [ -z "$KAFKA_JMX_OPTS" ]; then
 	  KAFKA_JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false  -Dcom.sun.management.jmxremote.ssl=false "
 	fi
-	
+
 	# JMX port to use
 	if [  $JMX_PORT ]; then
 	  KAFKA_JMX_OPTS="$KAFKA_JMX_OPTS -Dcom.sun.management.jmxremote.port=$JMX_PORT "
@@ -40,7 +40,7 @@ broker无法启动大致有两个原因：第一是内存不足，第二是jmx�
 -
 
 程序一直报如下错误：
-	
+
     kafka.errors.NoBrokersAvailable: NoBrokersAvailable
 
 首先查看了kafka集群的网络监听情况。执行命令 netstat -nlp | grep 9092 得到如下结果：
@@ -48,7 +48,7 @@ broker无法启动大致有两个原因：第一是内存不足，第二是jmx�
     tcp6   0      0 127.0.0.1:19092         :::*     LISTEN      18782/java
     tcp6   0      0 127.0.0.1:29092         :::*     LISTEN      19111/java
     tcp6   0      0 127.0.0.1:9092          :::*     LISTEN      18406/java
-    
+
 注意到了kafka实例使用的tcp协议的版本是tcp6，google一番后发现解决方法是把如下语句加入你的bash启动脚本（.bash_profile or .bashrc）：
 
     export _JAVA_OPTIONS="-Djava.net.preferIPv4Stack=true"
@@ -57,7 +57,7 @@ broker无法启动大致有两个原因：第一是内存不足，第二是jmx�
 
     tcp   0      0 127.0.0.1:19092  0.0.0.0:*               LISTEN   25551/java
     tcp   0      0 127.0.0.1:29092  0.0.0.0:*               LISTEN   25842/java
-    tcp   0      0 127.0.0.1:9092   0.0.0.0:*               LISTEN   25254/java 
+    tcp   0      0 127.0.0.1:9092   0.0.0.0:*               LISTEN   25254/java
 
 客户端程序是kafka python(https://github.com/dpkp/kafka-python)写的，再次启动后报如下错误：
 
@@ -73,7 +73,7 @@ broker无法启动大致有两个原因：第一是内存不足，第二是jmx�
     File "/usr/local/lib/python2.7/dist-packages/kafka/client_async.py", line 791, in check_version
     raise Errors.NoBrokersAvailable()
     kafka.errors.NoBrokersAvailable: NoBrokersAvailable
-    
+
 再次google后，在producer的参数里加上api_conf字段解决问题，修改后的代码如下：
 
     brokers = bootstrap_servers.split(',')
@@ -87,7 +87,7 @@ broker无法启动大致有两个原因：第一是内存不足，第二是jmx�
 测试环境：
 
 - 在一台机器上部署1个zk实例（zookeeper-3.4.8）;
-- 在同一台机器上部署3个kafka实例(kafka_2.11-0.10.1.1); 
+- 在同一台机器上部署3个kafka实例(kafka_2.11-0.10.1.1);
 - 在同一台机器上部署1个kafka producer实例(基于kafka-python库，以下简称P)；
 - 在同一台机器上部署1个kafka consumer实例(基于kafka-python库，以下简称C)；
 - topic一个，其replica为3，partition为3；
@@ -99,21 +99,21 @@ broker无法启动大致有两个原因：第一是内存不足，第二是jmx�
 
     P与C依然能正常工作，但丢失消息若干且部分乱序。
 > case 2 kill一个kafka实例然后重启之
-    
-    重启kafka之前，P与C都能正常工作， 但又部分消息乱序。重启kafka实例之后，60S内P与C都与新实例建立了正常连接，且partition2以新实例为leader。   
+
+    重启kafka之前，P与C都能正常工作， 但又部分消息乱序。重启kafka实例之后，60S内P与C都与新实例建立了正常连接，且partition2以新实例为leader。
 > case 3 kill一个kafka实例，kill P然后重启P，再kill C再重启C
 
     kill P且重启之后，P与C都可以正常工作。干掉C又重启之后，P与C依然能正常工作，但丢失消息若干且部分乱序。
-> case 4 新建一个topic，其partition为3，其replica为1，然后kill掉两个kafka实例    
+> case 4 新建一个topic，其partition为3，其replica为1，然后kill掉两个kafka实例
 
-    kill掉一个kafka实例后，这个topic的信息如下图：    
+    kill掉一个kafka实例后，这个topic的信息如下图：
    ![kafka-topic-one-replica](../pic/kafka-topic-one-replica.png)
-      
+
     所以kafka中topic的replica应该大于1。
-    
-    
+
+
 上面程序的相关代码详见[kafka failure test](https://github.com/AlexStocks/test/tree/master/kafka/kafka_failure_test)。
-    
+
 不改变测试环境其他条件，仅改变topic的replica为1的情况下，再次以下测试：
 > case 1 kill全部kafka实例，3分钟后再全部重启
 
@@ -121,8 +121,8 @@ broker无法启动大致有两个原因：第一是内存不足，第二是jmx�
 > case 2 kill全部kafka实例，48分钟后再全部重启
 
     P与C依然能正常工作，但丢失消息若干。
-    
-        
+
+
 ### 3 线上kafka集群服务恢复 ###
 ---
 第一次把线上那台死掉的机器重启后，它不断在重建数据，大约10分钟后仍然没有启动成功，目测是数据彻底乱掉了。于是我们把其数目录清空，然后再启动就成功了。
@@ -139,11 +139,11 @@ broker无法启动大致有两个原因：第一是内存不足，第二是jmx�
 在上海一家做wifi软件的公司工作的时候遇到这样一个问题：kafka consumer(Java)与broker之间的连接总是不断挂掉，查看了consumer的源码(主要是poll函数)后，发现主要原因是：
 
     consumer是单线程程序，从broker批量取出一批消息后处理，处理完毕后向broker汇报心跳，即messge process逻辑和heartbeat逻辑在一个线程上。
-    
+
    解决方法是：设置max.partition.fetch.bytes=4096(kafka v0.9.0.0)或者max.poll.records=10(kafka v0.10.0.1)，这两个参数是用来设置每次拉取消息的最大量。
-   
+
 通过缩小batch message size来缩短message process时间，从而不阻塞hearbeat上报时间，后面这种现象就再也没有发生了。
-   
+
 ### 5 kafka使用建议及相关参数 ###
 ---
 
@@ -161,13 +161,13 @@ logical volume management.
 distributed to the list.
    >
    > If you get a disk error that results in an IOException the broker will shut itself down.
-   
+
    另外，不要一个目录配置成ssd而另一个目录配置成SATA，否则会导致topic数据传输忽快忽慢；
 - 磁盘上数据保留时间(相关参数是log.retention.hours=168)建议改为24小时或者你认为其他的合适值即可；
 - 不要想当然认为kafka保存数据的过程是可靠的，broker接收收据后异步批量刷入磁盘的，为了保证数据及时写入磁盘，可以修改参数 “log.flush.interval.messages”（这个参数一般不要修改，过大则影响数据可靠性，过小则影响broker的吞吐率进而影响响应生产者和消费者的速度，详细解释见参考文档3）；
 - worker数目最好与parition数目相等（小于当然也可以），鄙人自己测试当partiton数目为1而消费者为10的时候，系统响应速度急剧下降，可见消费者都把时间浪费在消息争用上了；
 - 为了保证系统稳定性，replica数目最少为2；
-- 生产者发送消息选择压缩方法的时候，建议选择lz4（详见参考文档1）； 
+- 生产者发送消息选择压缩方法的时候，建议选择lz4（详见参考文档1）；
 - 如果使用kafka的版本是v0.10以上，建议使用最新版kafka(目前是0.10.2.0)，个人发现 v0.10.1.0 版本的jar包不能正确获取某个consumer group的消费者个数；
 - 其实个人真心建议不要使用v0.10，使用v0.8 or v0.9即可，其中一个原因是kafka版本越新则其周围可用的工具越少，工具的更新速度实在比不上kafka版本的个更新速度，每个大版本的更新就意味着其架构的大改；
 - kafka v0.10的版本支持了offset存储在kafka上，但是他的offset提交处理速度非常慢，虽然支持异步定时提交offset，但是重启的话还是会丢，所以依赖kafka做主从同步保障数据一致性是不可能的（例如阿里的canal在mysql master和mysql slave之间传递binlog式它们是绝对不会使用kafka的），也就说kafka不考虑消费者是否重复消费，当然也有大厂自己封装kafka后把每个consumer消费的offset存在别的中间件上，通过assign方式读取kafka消息来保证不重复消费kafka message；
@@ -211,31 +211,31 @@ distributed to the list.
 * max.connections.per.ip - 每个ip地址上每个broker可以被连接的最大数目
 * max.connections.per.ip.overrides - 配置针对某个特别的IP or hostname的连接个数最大限制，配置样例见[#KAFKA-512](https://issues.apache.org/jira/browse/KAFKA-1512)
 * offsets.topic.replication.factor - Topic __consumer_offsets的replica值，这个值默认为1，这是因为如果cluster只有一个kafka的情况下让系统跑起来，详细说明见[KAFKA-1846](https://issues.apache.org/jira/browse/KAFKA-1846)
- 
+
   <font color=blue>
-  
+
   如果不修改offsets.topic.replication.factor的值，则__consumer_offsets的replica为1，如果某个partition的leader broker宕机，那就只能去无语对苍天了。所以预防的方法就是在config/server.properties中设置offsets.topic.replication.factor=3。那么，如果忘记修改offsets.topic.replication.factor的值，有什么补救补救办法，总不能眼睁睁看着悲剧发生吧？
-  
+
   办法总是有的。可以通过kafka提供的重新分配分区工具 bin/kafka-reassign-partitions.sh 修改__consumer_offsets的replica，操作步骤如下：
-  1 请先准备重新分配分区配置文件replica.json：   
-  
+  1 请先准备重新分配分区配置文件replica.json：
+
   		{"version":1,
   			"partitions":[
   				{"topic":"__consumer_offsets","partition":0,"replicas":[0,1,2]},
   				{"topic":"__consumer_offsets","partition":1,"replicas":[1,2,0]},
   				{"topic":"__consumer_offsets","partition":2,"replicas":[2,0,1]},
 		]}
-		
-  2 通过如下命令执行扩容：   
-  
-  		./bin/kafka-reassign-partitions.sh --zookeeper $zk  --reassignment-json-file replica.json --execute 
-  
-  3 查看扩容结果:   
-  
-  		./bin/kafka-reassign-partitions.sh --zookeeper $zk  --reassignment-json-file replica.json --verify 
-  
+
+  2 通过如下命令执行扩容：
+
+  		./bin/kafka-reassign-partitions.sh --zookeeper $zk  --reassignment-json-file replica.json --execute
+
+  3 查看扩容结果:
+
+  		./bin/kafka-reassign-partitions.sh --zookeeper $zk  --reassignment-json-file replica.json --verify
+
   </font>
-  
+
 * offsets.topic.num.partitions - Topic __consumer_offsets的partition值，默认为50。
 
 ##### 5.2.2 Producer #####
@@ -250,6 +250,7 @@ distributed to the list.
 ##### 5.2.3 Consumer #####
 ---
 * fetch.message.max.bytes - 单次fetch消息的最大字节数。Producer端的max.message.bytes = broker端的replica.fetch.max.bytes = 消费者的fetch.message.max.bytes，这三个值一起控制了单个消息的最大长度
+* max.poll.records - 限制每回poll返回的最大数据条数。前面已经说到，fetch.message.max.bytes在v.10里面被max.poll.records替换掉，另外v.10版本中heartbeat不再在poll中触发，而是由单独的线程来完成，详细见[KIP-62](https://cwiki.apache.org/confluence/display/KAFKA/KIP-62%3A+Allow+consumer+to+send+heartbeats+from+a+background+thread)。
 * num.consumer.fetchers - 用于fetch数据的fetcher线程数
 * auto.commit.enable - 是否自动提交offset
 
@@ -282,10 +283,10 @@ distributed to the list.
 #### 6.3 consumer  ####
 ---
 - kafka 目前最新版本(0.10.2)已经添加[OffsetsForTime功能](https://cwiki.apache.org/confluence/display/KAFKA/KIP-33+-+Add+a+time+based+log+index)，在consumer端有API [offsetsForTimes](https://kafka.apache.org/0102/javadoc/org/apache/kafka/clients/consumer/Consumer.html#offsetsForTimes(java.util.Map))，可以获取某个时间范围内的消息的offset集合；
-  
+
 ### 7 kafka toolset ###
 ---
-1 [MirrorMaker](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=27846330) - Kafka's mirroring feature makes it possible to maintain a replica of an existing Kafka cluster. 
+1 [MirrorMaker](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=27846330) - Kafka's mirroring feature makes it possible to maintain a replica of an existing Kafka cluster.
 
 
 ## 参考文档 ##
@@ -296,14 +297,16 @@ distributed to the list.
 - 3 [apache kafka系列之server.properties配置文件参数说明](http://blog.csdn.net/lizhitao/article/details/25667831)
 - 4 [某互联网大厂kafka最佳实践](http://www.jianshu.com/p/8689901720fd)
 - 5 [kafka数据可靠性深度解读](http://www.bijishequ.com/detail/381629?p=71) - *唯品会出品，里面关于“Leader选举”一节写的比较详细，尤其是“leader选举的算法非常多，比如Zookeeper的Zab、Raft以及Viewstamped Replication。而Kafka所使用的leader选举算法更像是微软的PacificA算法”这句话*
-   
-   
+
+
 ## 扒粪者-于雨氏 ##
 
 * 2017/02/02，于雨氏，于致真大厦。
 * 2017/02/19，于雨氏，于致真大厦，添加replica为1条件下的测试结果。
-* 2017/03/02，于雨氏，于致真大厦，添加“kafka使用建议”。 
+* 2017/03/02，于雨氏，于致真大厦，添加“kafka使用建议”。
 * 2017/03/25，于雨氏，于致真大厦，补充“kafka启动与无法连接kafka问题若干”一节。
 * 2017/03/25，于雨氏，于致真大厦，补充“使用建议”一节。
 * 2017/05/01，于雨氏，于致真大厦，根据kafka beijing meetup(3rd)添加5.1&5.2。
 * 2017/05/04，于雨氏，于致真大厦，添加“kafka lastest feature list”一章。
+
+
