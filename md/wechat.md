@@ -243,5 +243,5 @@ Master-Master架构下数据的一致性是个很大的问题。两个数据中�
 - 1 [从无到有：微信后台系统的演进之路](http://www.infoq.com/cn/articles/the-road-of-the-growth-weixin-background)
 
 ## 于雨氏 ##
-于雨氏在原文基础上扒粪后有此新作。2016/01/14，于金箱堂。
+于雨氏在原文基础上扒粪后有此新作。2016/01/14，于金箱堂。   
 又，添加disqus评论功能。2016/02/10，于金箱堂。
