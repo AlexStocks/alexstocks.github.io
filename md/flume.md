@@ -5,7 +5,7 @@
 
 ### 0 说明 ###
 ---
-下面列出的相关程序都已经放到我的[python测试程序github repo](https://github.com/alexstocks/python-practice/tree/master/mysql_redis_es/flume)上。
+下面列出的相关程序都已经放到我的[python测试程序github repo](https://github.com/alexstocks/python-practice/tree/master/mysql_redis_es_flume/flume)上。
 
 ### 1 测试单个agent ###
 ---
