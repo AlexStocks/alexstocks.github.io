@@ -85,7 +85,7 @@
     
 - 4 Relay启动之时先读取/pubsub/group_num的值（譬如为2），接着读取路径/pubsub/broker/group0和/pubsub/broker/group1下所有的Broker实例，同时watch注册中心的路径/pubsub/group_num的值的改变，，并watch注册中心路径pubsub/broker/group0和/pubsub/broker/group1下所有的Broker实例，最后把自身信息注册到Regitry路径/pubsub/relay下；
 
-    Relay工作流程与Proxy相似，不同之处在于它会把某Gateway Message发送给group内所有Broker Instance。
+    Relay工作流程与Proxy相似，不同之处在于：收到Gateway Message后先把数据写入Database中，然后把Message发送给Room ID对应的group内所有Broker Instance。
 
 ### 3 总结 ###
 ---
