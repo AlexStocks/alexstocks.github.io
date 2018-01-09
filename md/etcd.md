@@ -103,7 +103,7 @@ etcd单节点启动命令如下：
 
 etcd v3基于grpc提供了REST接口，提供了PUT/DELETE/GET等类似HTTP的幂等原语，使之可在功能上与zookeeper等同，但是使用go开发的etcd性能可甩基于JVM的zookeeper好几条街【参考文档2】。etcd v3的协议与zookeeper不同，zetcd将ZooKeeper客户端的请求转换为适合于etcd数据模型和API要求的消息发送给etcd，然后将etcd的响应消息转换后返回给客户端，zetcd性能跟zookeeper相比不遑多让。
 
-个人建议把zetcd作为服务端环境的基础设置，在使用etcd集群提供的服务的每个系统上都部署一个，把原有依赖zookeeper服务的系统迁移到etcd之上。
+个人建议把zetcd作为服务端环境的基础设置，在使用etcd集群提供的服务的每个系统上都部署一个，把原有依赖zookeeper服务的系统迁移到etcd之上。官方文档【参考文档3】中提到使用proxy的好处是：当etcd cluster成员变动比较大的时候，proxy自动把失效的成员从可用etcd member list中剔除掉，并发送心跳包去探测其是否活过来。
 
 至于zetcd如何使用本文不再详述。
 
@@ -111,6 +111,7 @@ etcd v3基于grpc提供了REST接口，提供了PUT/DELETE/GET等类似HTTP的�
 
 - 1 [Clustering Guide](https://github.com/coreos/etcd/blob/master/Documentation/op-guide/clustering.md)
 - 2 [Exploring Performance of etcd, Zookeeper and Consul Consistent Key-value Datastores](https://coreos.com/blog/performance-of-etcd.html)
+- 3 [When to use etcd gateway](https://github.com/coreos/etcd/blob/master/Documentation/op-guide/gateway.md#when-to-use-etcd-gateway)
 
 ## 扒粪者-于雨氏 ##
 
