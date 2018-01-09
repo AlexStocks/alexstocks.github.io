@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>etcd</title>
+
+
+<style type="text/css">
+*{margin:0;padding:0;}
+body {
+	font:13.34px helvetica,arial,freesans,clean,sans-serif;
+	color:black;
+	line-height:1.4em;
+	background-color: #F8F8F8;
+	padding: 0.7em;
+}
+p {
+	margin:1em 0;
+	line-height:1.5em;
+}
+table {
+	font-size:inherit;
+	font:100%;
+	margin:1em;
+}
+table th{border-bottom:1px solid #bbb;padding:.2em 1em;}
+table td{border-bottom:1px solid #ddd;padding:.2em 1em;}
+input[type=text],input[type=password],input[type=image],textarea{font:99% helvetica,arial,freesans,sans-serif;}
+select,option{padding:0 .25em;}
+optgroup{margin-top:.5em;}
+pre,code{font:12px Monaco,"Courier New","DejaVu Sans Mono","Bitstream Vera Sans Mono",monospace;}
+pre {
+	margin:1em 0;
+	font-size:12px;
+	background-color:#eee;
+	border:1px solid #ddd;
+	padding:5px;
+	line-height:1.5em;
+	color:#444;
+	overflow:auto;
+	-webkit-box-shadow:rgba(0,0,0,0.07) 0 1px 2px inset;
+	-webkit-border-radius:3px;
+	-moz-border-radius:3px;border-radius:3px;
+}
+pre code {
+	padding:0;
+	font-size:12px;
+	background-color:#eee;
+	border:none;
+}
+code {
+	font-size:12px;
+	background-color:#f8f8ff;
+	color:#444;
+	padding:0 .2em;
+	border:1px solid #dedede;
+}
+img{border:0;max-width:100%;}
+abbr{border-bottom:none;}
+a{color:#4183c4;text-decoration:none;}
+a:hover{text-decoration:underline;}
+a code,a:link code,a:visited code{color:#4183c4;}
+h2,h3{margin:1em 0;}
+h1,h2,h3,h4,h5,h6{border:0;}
+h1{font-size:170%;border-top:4px solid #aaa;padding-top:.5em;margin-top:1.5em;}
+h1:first-child{margin-top:0;padding-top:.25em;border-top:none;}
+h2{font-size:150%;margin-top:1.5em;border-top:4px solid #e0e0e0;padding-top:.5em;}
+h3{margin-top:1em;}
+hr{border:1px solid #ddd;}
+ul{margin:1em 0 1em 2em;}
+ol{margin:1em 0 1em 2em;}
+ul li,ol li{margin-top:.5em;margin-bottom:.5em;}
+ul ul,ul ol,ol ol,ol ul{margin-top:0;margin-bottom:0;}
+blockquote{margin:1em 0;border-left:5px solid #ddd;padding-left:.6em;color:#555;}
+dt{font-weight:bold;margin-left:1em;}
+dd{margin-left:2em;margin-bottom:1em;}
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
+}
+kbd {
+  display: inline-block;padding: 3px 5px;font-size: 11px;line-height: 10px;color: #555;vertical-align: middle;background-color: #fcfcfc;border: solid 1px #ccc;border-bottom-color: #bbb;border-radius: 3px;box-shadow: inset 0 -1px 0 #bbb;
+}
+* {
+	-webkit-print-color-adjust: exact;
+}
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:0 auto;
+    }
+}
+@media print {
+	table, pre {
+		page-break-inside: avoid;
+	}
+	pre {
+		word-wrap: break-word;
+	}
+}
+</style>
+
+
+</head>
+
+<body>
+
+<h2 id="toc_0">etcd使用经验总结</h2>
+
+<hr>
+
+<p><em>written by Alex Stocks on 2018/01/09</em></p>
+
+<h3 id="toc_1">0 说明</h3>
+
+<hr>
+
+<p>为分布式集群提供一致性服务的组件，先有google内部的Chubby，后有hadoop生态的zookeeper。基于Java的zookeeper保证CP，但是廉颇老矣——个人以往的同事曾经测试过在三千左右的客户端的频繁读写情况下zookeeper会频繁死掉。相对zookeeper等同类产品，coreos开发的etcd的优点自不必说，容器时代的王者kubuernets依赖它可实现上万个容器的管理。</p>
+
+<p>近日在单机上部署了一个etcd静态集群和基于这个静态集群的动态集群，并进行了相关测试，本文是部署以及测试过程的遇到的相关问题的流水账，权做记忆，以备后来参考。</p>
+
+<p>etcd目前主要有v2和v3两个版本，各有优点，本文都有使用，但以v3为主。个人使用etcd的体会：etcd与其说是一个提供一致性服务的分布式系统，不如说是一个分布式kv数据库。</p>
+
+<h3 id="toc_2">1 静态集群</h3>
+
+<hr>
+
+<p>关于集群如何部署，其实参考文档1已经有详细说明，本节只说明我自己测试时的使用方式。</p>
+
+<p>etcd单节点启动命令如下：</p>
+
+<div><pre><code class="language-none">etcd --name=${name} \
+    --data-dir=${data_dir} \
+    --wal-dir=${wal_dir} \
+    --initial-advertise-peer-urls http://${ip}:${peer_port} \
+    --listen-peer-urls http://${ip}:${peer_port} \
+    --listen-client-urls http://${ip}:${client_port},http://127.0.0.1:${client_port} \
+    --advertise-client-urls http://${ip}:${client_port} \
+    --initial-cluster-token ${cluster_name} \
+    --initial-cluster etcd_node0=http://${ip}:${peer_port},etcd_node1=http://${peer1_ip}:${peer1_peer_port},etcd_node2=http://${peer2_ip}:${peer2_peer_port} \
+    --initial-cluster-state new  &gt;&gt; ${log_dir}/${name}.log 2&gt;&amp;1 &amp;</code></pre></div>
+
+<p>各个参数的详细意义本文不作解释，只给出主要参数的含义如下：   </p>
+
+<ul>
+<li>1 name是node的名称，用于在集群中标识当前节点，etcd单节点允许迁移，迁移后名称不变即可被其他节点识别；</li>
+<li>2 etcd底层使用的kv数据库coreos/bbolt是类似于Rocksdb的一个LSM数据库实现，与Rocksdb一样数据有wal和data两种，建议两种数据分别存储到不同的存储系统上，以保证数据安全和系统性能；</li>
+<li>3 initial-cluster-token用于标识集群的名称，initial-cluster则给出了静态cluster的各个成员的名称以及地址；</li>
+<li>4 initial-cluster-state说明单节点启动时候的状态，节点重启时这个参数就不要在用了(但是测试过程中重启且没有注释掉该参数并未发现异常)；</li>
+</ul>
+
+<p>集群部署完毕后，可以借助etcdctl查看集群的成员列表以及集群运行状态。etcdctl自身也分为v2和v3两个版本，集群状态的查看可借助其v2版本，使用方式如下：</p>
+
+<div><pre><code class="language-none">export ETCDCTL_API=2
+echo &quot;-----------------member list----------------&quot;
+etcdctl --endpoints=“http://localhost:2379” member list
+echo &quot;-----------------cluster health-------------&quot;
+etcdctl --endpoints=“http://localhost:2379“ cluster-health</code></pre></div>
+
+<h2 id="toc_3">2 动态集群</h2>
+
+<hr>
+
+<p>当可以预估etcd集群的使用量以及明确知道集群的成员的时候，可以静态方式部署集群。但大部分情况下这两个无法确定的时候，可以使用动态方式部署集群。</p>
+
+<p>动态方式部署etcd集群依赖于etcd具备的动态发现(官文成为discovery)功能：可以使用已有的etcd集群或者dns服务作为etcd通信数据pubsub节点，实现另一个集群中各个已有成员之间的服务发现和新成员的加入，进而实现集群的扩展。</p>
+
+<p>个人倾向于以一个数量有限且压力不大的静态集群作为动态集群各个节点的discovery的基础。个人使用Elasticsearch多年，这种使用方式其实与Elasticsearch集群的部署方式雷同：先部署若干以控制角色启动的Elasticsearch节点组成一个discovery中心，然后各个以数据节点角色启动的Elasticsearch通过这个discovery中心实现服务发现。可见大道所行处，成熟的架构雷同。</p>
+
+<p>在一个静态集群上创建channel如下：</p>
+
+<div><pre><code class="language-none">curl -X PUT &quot;http://${registry_url}/v2/keys/discovery/testdiscoverycluster/_config/size&quot; -d value=3</code></pre></div>
+
+<p>动态集群etcd单节点启动命令如下：</p>
+
+<div><pre><code class="language-none">etcd --name=${name} \
+    --data-dir=${data_dir} \
+    --wal-dir=${wal_dir} \
+    --initial-advertise-peer-urls http://${ip}:${peer_port} \
+    --listen-peer-urls http://${ip}:${peer_port} \
+    --listen-client-urls http://${ip}:${client_port},http://127.0.0.1:${client_port} \
+    --advertise-client-urls http://${ip}:${client_port} \
+    --discovery http://localhost:2379/v2/keys/discovery/testdiscoverycluster \
+    --initial-cluster-token ${cluster_name} &gt;&gt; ${log_dir}/${name}.log 2&gt;&amp;1 &amp;  </code></pre></div>
+
+<p>可见不需要再指定集群内的各个成员，只需要指定discovery channel即可。</p>
+
+<h2 id="toc_4">3 测试</h2>
+
+<hr>
+
+<p>当动态集群启动后，集群内成员间即可相互通信，不依赖于原静态集群。有作证明的测试过程如下：</p>
+
+<blockquote>
+<p>1 部署一个静态集群；<br>
+2 以discovery方式在静态集群之上再部署一个动态集群；<br>
+3 杀掉静态集群各个成员；<br>
+4 通过etcdctl查看动态集群成员列表以及集群状态，成员不变，集群状态是healthy；<br>
+5 向动态集群添加新成员失败；<br>
+6 杀掉一个动态集群成员，再重新启动后成功加入动态集群；<br>
+7 杀掉一个动态集群成员，清空其data<em>dir和wal</em>dir下数据，再重新启动后加入动态集群失败；</p>
+</blockquote>
+
+<p>只要动态集群现有成员的数据还在，就能保证动态集群自身的稳定运行。又有作证明的测试过程如下：</p>
+
+<blockquote>
+<p>1 部署一个静态集群；<br>
+2 以discovery方式在静态集群之上再部署一个动态集群；<br>
+3 杀掉动态集群各个成员，清空各个成员数据，然后分别启动之，这些成员加入动态集群失败；<br>
+4 修改各个成员的name，然后再启动，加入动态集群成功；     </p>
+</blockquote>
+
+<p>上面最后一步启动的各个节点，其实是以新node的身份加入了原动态集群。</p>
+
+<h2 id="toc_5">4 zookeeper</h2>
+
+<hr>
+
+<p>考虑到zookeeper集群是第一个流行起来的同类组件，已有很多分布式系统已经采用它，这些系统不可能为了使用etcd而重新开发，etcd为了与之兼容而在etcd v3之上开发了一个etcd代理：zetcd。</p>
+
+<p>etcd v3基于grpc提供了REST接口，提供了PUT/DELETE/GET等类似HTTP的幂等原语，使之可在功能上与zookeeper等同，但是使用go开发的etcd性能可甩基于JVM的zookeeper好几条街【参考文档2】。etcd v3的协议与zookeeper不同，zetcd将ZooKeeper客户端的请求转换为适合于etcd数据模型和API要求的消息发送给etcd，然后将etcd的响应消息转换后返回给客户端，zetcd性能跟zookeeper相比不遑多让。</p>
+
+<p>个人建议把zetcd作为服务端环境的基础设置，在使用etcd集群提供的服务的每个系统上都部署一个，把原有依赖zookeeper服务的系统迁移到etcd之上。</p>
+
+<p>至于zetcd如何使用本文不再详述。</p>
+
+<h2 id="toc_6">参考文档</h2>
+
+<ul>
+<li>1 <a href="https://github.com/coreos/etcd/blob/master/Documentation/op-guide/clustering.md">Clustering Guide</a></li>
+<li>2 <a href="https://coreos.com/blog/performance-of-etcd.html">Exploring Performance of etcd, Zookeeper and Consul Consistent Key-value Datastores</a></li>
+</ul>
+
+<h2 id="toc_7">扒粪者-于雨氏</h2>
+
+<blockquote>
+<p>2018/01/09，于雨氏，初作此文于西二旗。</p>
+</blockquote>
+
+
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+// disqus comment js block, added on 2016/02/10
+// https://segmentfault.com/a/1190000002807674
+var disqus_shortname = 'alexstocks'; // Required - Replace example with your forum shortname
+var disqus_identifier = window.location.pathname; //'a unique identifier for each page where Disqus is present';
+var disqus_title = document.title; // 'a unique title for each page where Disqus is present';
+var disqus_url = document.URL; // window.location.origin + window.location.pathname; // 'a unique URL for each page where Disqus is present';
+var disqus_config = function () {
+this.page.url = window.location.href; // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = window.location.pathname; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+
+(function() {
+var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js'; dsq.setAttribute('data-timestamp', +new Date());
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+<script id="dsq-count-scr" src='//' + disqus_shortname + '.disqus.com/count.js' async></script>
+
+
+
+</body>
+
+</html>
