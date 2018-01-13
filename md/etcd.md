@@ -1,6 +1,6 @@
 ## etcd使用经验总结 ##
 ---
-*written by Alex Stocks on 2018/01/09*
+*written by Alex Stocks on 2018/01/09，版权所有，无授权不得转载*
 
 
 ### 0 说明 ###
