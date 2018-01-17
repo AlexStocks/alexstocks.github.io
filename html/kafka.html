@@ -409,6 +409,7 @@ distributed to the list.</p>
 <li>max.poll.records - 限制每回poll返回的最大数据条数。前面已经说到，fetch.message.max.bytes在v.10里面被max.poll.records替换掉，另外v.10版本中heartbeat不再在poll中触发，而是由单独的线程来完成，详细见<a href="https://cwiki.apache.org/confluence/display/KAFKA/KIP-62%3A+Allow+consumer+to+send+heartbeats+from+a+background+thread">KIP-62</a>。</li>
 <li>num.consumer.fetchers - 用于fetch数据的fetcher线程数</li>
 <li>auto.commit.enable - 是否自动提交offset</li>
+<li>partition.assignment.strategy - <code>参考文献6</code>  建议将这个值设为 “ org.apache.kafka.clients.consumer.RoundRobinAssignor”，因为 <code>默认的策略（Range partitioning）会导致partition分配不均，如果采用默认的策略，当consumer（logstash数量*worker数量）的数量大于topic partition数量时，partition总是只会被分配给固定的一部分consumer</code>，经个人测试采用这个策略后当consumer group内consumer多余partition数目的时候，确实能保证所有的consumer都有自己的目标partition，只不过一些partition的consumer多余一个而已。</li>
 </ul>
 
 <h5 id="toc_17">5.2.4 Os &amp; Jvm</h5>
@@ -478,6 +479,7 @@ distributed to the list.</p>
 <li>3 <a href="http://blog.csdn.net/lizhitao/article/details/25667831">apache kafka系列之server.properties配置文件参数说明</a></li>
 <li>4 <a href="http://www.jianshu.com/p/8689901720fd">某互联网大厂kafka最佳实践</a></li>
 <li>5 <a href="http://www.bijishequ.com/detail/381629?p=71">kafka数据可靠性深度解读</a> - <em>唯品会出品，里面关于“Leader选举”一节写的比较详细，尤其是“leader选举的算法非常多，比如Zookeeper的Zab、Raft以及Viewstamped Replication。而Kafka所使用的leader选举算法更像是微软的PacificA算法”这句话</em></li>
+<li>6 <a href="https://mp.weixin.qq.com/s/onrBwQ0vyLJYWD_FRnNjEg">B站日志系统的前世今生</a></li>
 </ul>
 
 <h2 id="toc_26">扒粪者-于雨氏</h2>
@@ -490,7 +492,9 @@ distributed to the list.</p>
 <li>2017/03/25，于雨氏，于致真大厦，补充“使用建议”一节。</li>
 <li>2017/05/01，于雨氏，于致真大厦，根据kafka beijing meetup(3rd)添加5.1&amp;5.2。</li>
 <li>2017/05/04，于雨氏，于致真大厦，添加“kafka lastest feature list”一章。</li>
+<li>2018/01/17，于雨氏，于海淀，添加consumer”partition.assignment.strategy“参数说明。</li>
 </ul>
+
 
 
 <div id="disqus_thread"></div>
@@ -514,6 +518,8 @@ dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js'; dsq.setAttribute('da
 </script>
 <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
 <script id="dsq-count-scr" src='//' + disqus_shortname + '.disqus.com/count.js' async></script>
+
+
 
 </body>
 
