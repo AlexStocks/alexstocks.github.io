@@ -334,7 +334,7 @@ num.streams则是指定consumers的个数。经个人测试，kafka partition数
 * 2017/03/25，于雨氏，于致真大厦，补充“使用建议”一节。
 * 2017/05/01，于雨氏，于致真大厦，根据kafka beijing meetup(3rd)添加5.1&5.2。
 * 2017/05/04，于雨氏，于致真大厦，添加“kafka lastest feature list”一章。
-* 2018/01/17，于雨氏，于海淀，添加consumer”partition.assignment.strategy“参数说明。
+* 2018/01/17，于雨氏，于海淀，添加MirrorMaker一节和consumer”partition.assignment.strategy“参数说明。
 
 
 
