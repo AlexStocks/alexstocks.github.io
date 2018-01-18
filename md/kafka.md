@@ -246,6 +246,7 @@ distributed to the list.
 * max.in.flight.requests.per.connection - 发送多少消息后等待broker端的回复。这个参数和retry配合使用，会影响消息的顺序，详细意义请参考5.1章节的内容
 * max.request.size - 请求的最大字节数。这个设置会限制producer每次批量发送请求的数目，以防发出大量的请求
 * request.required.acks - 设置数据发送数据请求的可靠性的级别。在设置request.required.acks=-1的同时，也要min.insync.replicas这个参数(可以在broker或者topic层面进行设置)的配合，这样才能发挥最大的功效，具体含义见参考文档5。
+* session.timeout.ms - 在恶劣网络环境下要注意放大这个值，以防止producer不稳定。
 
 ##### 5.2.3 Consumer #####
 ---
@@ -253,14 +254,14 @@ distributed to the list.
 * max.poll.records - 限制每回poll返回的最大数据条数。前面已经说到，fetch.message.max.bytes在v.10里面被max.poll.records替换掉，另外v.10版本中heartbeat不再在poll中触发，而是由单独的线程来完成，详细见[KIP-62](https://cwiki.apache.org/confluence/display/KAFKA/KIP-62%3A+Allow+consumer+to+send+heartbeats+from+a+background+thread)。
 * num.consumer.fetchers - 用于fetch数据的fetcher线程数
 * auto.commit.enable - 是否自动提交offset
-* partition.assignment.strategy - `参考文献6`  建议将这个值设为 “ org.apache.kafka.clients.consumer.RoundRobinAssignor”，因为 `默认的策略（Range partitioning）会导致partition分配不均，如果采用默认的策略，当consumer（logstash数量*worker数量）的数量大于topic partition数量时，partition总是只会被分配给固定的一部分consumer`，经个人测试采用这个策略后当consumer group内consumer多余partition数目的时候，确实能保证所有的consumer都有自己的目标partition，只不过一些partition的consumer多余一个而已。
+* partition.assignment.strategy - `参考文献6`  建议将这个值设为 “ org.apache.kafka.clients.consumer.RoundRobinAssignor”，因为 `默认的策略（Range partitioning）会导致partition分配不均，如果采用默认的策略，当consumer（logstash数量*worker数量）的数量大于topic partition数量时，partition总是只会被分配给固定的一部分consumer`，经个人测试采用这个策略后当consumer group内consumer多余partition数目的时候，确实能保证所有的consumer都有自己的目标partition，只不过一些partition的consumer多余一个而已。关于两种策略的更详细区别请见 `参考文档7` 和 `参考文档14`。
 
-##### 5.2.4 Os & Jvm #####
+##### 5.2.4 Os & Jvm & Mem #####
 ---
 * linux文件系统最好使用ext3 or ext4
 * commit interval(page buffer commit)改为60s
 * vm.swappiness为0，等于告诉os尽量使用内存空间，然后才是磁盘swap的虚拟内存空间。否则os将频繁进行进程调度， 磁盘使用的波动就会比较大
-* JVM的heap区域设置为4G。因为会消耗28-30g的文件系统缓存。
+* JVM的heap区域设置为4G，kafka官方推荐6G。因为会消耗28-30g的文件系统缓存。
 * JVM的gc算法尽量使用CMS
 
 ##### 5.2.5 CPU #####
@@ -269,26 +270,42 @@ distributed to the list.
 
 ##### 5.2.6 disk #####
 ---
-* 推荐使用RAID。在kafka broker中配置多目录，每个目录配置在不同的磁盘上。参考文档4 不建议使用SSD。
+* 推荐使用RAID。在kafka broker中配置多目录，每个目录配置在不同的磁盘上。参考文档4 不建议使用SSD，但是经个人测试confluent kafka producer向128G的ssd上运行的kafka每秒可压测出23.8GB/s的结果，而在1T SATA上运行的kafka只能压测出4.9MB/s的结果。
 
 ### 6 kafka lastest feature list ###
 ---
 
-#### 6.1 producer  ####
+#### 6.1 broker  ####
 ---
+- kafka 2017 7月份0.11版本发布后，可以在broker上进行[消息重复过滤](https://cwiki.apache.org/confluence/display/KAFKA/KIP-98+-+Exactly+Once+Delivery+and+Transactional+Messaging)，增强事务处理能力；
 
-#### 6.2 broker  ####
----
-- kafka 2017 7月份响应版本发布后，可以在broker上进行[消息重复过滤](https://cwiki.apache.org/confluence/display/KAFKA/KIP-98+-+Exactly+Once+Delivery+and+Transactional+Messaging)；
-
-#### 6.3 consumer  ####
+#### 6.2 consumer  ####
 ---
 - kafka 目前最新版本(0.10.2)已经添加[OffsetsForTime功能](https://cwiki.apache.org/confluence/display/KAFKA/KIP-33+-+Add+a+time+based+log+index)，在consumer端有API [offsetsForTimes](https://kafka.apache.org/0102/javadoc/org/apache/kafka/clients/consumer/Consumer.html#offsetsForTimes(java.util.Map))，可以获取某个时间范围内的消息的offset集合；
 
 ### 7 kafka toolset ###
 ---
-1 [MirrorMaker](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=27846330) - Kafka's mirroring feature makes it possible to maintain a replica of an existing Kafka cluster.
 
+kafka自身不建议跨IDC部署，可以使用confluent的官方工具MirrorMaker或者uber开源的工具uReplicator把数据在跨IDC之间进行复制。uReplicator是基于MirrorMaker做的二次开发，但是uReplicator不能很好的支持kafka 0.10以上版本，暂不考虑。
+
+#### 7.1 MirrorMaker ####
+---
+
+MirrorMaker自身支持把多个kafka集群的数据复制到一个目的地kafka集群中。关于MirrorMake怎么使用请详细参考8到13，但是请注意，这里面很多参数是针对kafka 0.9的，在kafka 0.10里面已经无用，具体哪些无用，自己多测试即可。
+
+下面重点说明conf/mirror-producer.properties的“partition.assignment.strategy”和MirrorMaker的”num.streams”。
+
+“partition.assignment.strategy”关系到consumer的负载均衡策略，默认的range策略会导致负载不均衡且consumer group内consumer的个数无法多余topic partition的数目， `参考文档6` 和 `参考文档11` 都提到这个问题，具体原因参见 `参考文档7` 和 `参考文档14`。
+
+num.streams则是指定consumers的个数。经个人测试，kafka partition数目为36时，实际测试环境中num.streams给定值为40，而MirrorMaker的实际consumer的个数为72，把num.streams改为100后consumer个数也是100，所以二者不一定一致。
+
+至于MirrorMaker的性能还可以，想kafka集群写入13993021个长度为100B的kv后，MirrorMaker两分钟内复制完毕。
+
+至于MirrorMaker的缺点，参考文档13提到 `当 MirrorMaker 节点发生故障时，数据复制延迟较大，对于动态添加 topic 则需要重启进程、黑白名单管理完全静态等。虽然 uReplicator 针对 MirrorMaker 进行了大量优化，但在我们的大量测试之后仍遇到众多问题，我们需要具备动态管理 MirrorMaker 进程的能力，同时我们也不希望每次都重启 MirrorMaker进程`，至于MirrorMaker有哪些深坑，囿于测试条件限制，个人无法给出定论。
+
+个人的看法是，一个topic启动一个MirrorMaker，`参考文档12`说为了系统稳定性和高可用，建议“Always run more than one mirror-maker processes. Make sure you use the same groupId in consumer config.”。
+
+至于MirrorMaker 集群自身的稳定性，`参考文档12` 认为可以通过检查MirrorMaker的consumer group的lag值来验证，确实是一个好办法。
 
 ## 参考文档 ##
 
@@ -299,7 +316,14 @@ distributed to the list.
 - 4 [某互联网大厂kafka最佳实践](http://www.jianshu.com/p/8689901720fd)
 - 5 [kafka数据可靠性深度解读](http://www.bijishequ.com/detail/381629?p=71) - *唯品会出品，里面关于“Leader选举”一节写的比较详细，尤其是“leader选举的算法非常多，比如Zookeeper的Zab、Raft以及Viewstamped Replication。而Kafka所使用的leader选举算法更像是微软的PacificA算法”这句话*
 - 6 [B站日志系统的前世今生](https://mp.weixin.qq.com/s/onrBwQ0vyLJYWD_FRnNjEg)
-
+- 7 [Kafka分区分配策略](https://www.iteblog.com/archives/2209.html)
+- 8 [Kafka mirroring](https://cwiki.apache.org/confluence/display/KAFKA/Kafka+mirroring)
+- 9 [Kafka mirroring (MirrorMaker)](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=27846330)
+- 10 [basic_ops_mirror_maker](https://kafka.apache.org/documentation.html#basic_ops_mirror_maker)
+- 11 [Kafka MirrorMaker使用与性能调优全解析](https://mp.weixin.qq.com/s/tDbSpypnVOVK6203lZ758w)
+- 12 [Kafka Mirror Maker Best Practices](https://community.hortonworks.com/articles/79891/kafka-mirror-maker-best-practices.html)
+- 13 [百亿访问量的监控平台如何炼成？](http://www.sohu.com/a/211335858_262549)
+- 14 [Kafka为Consumer分派分区：RangeAssignor和RoundRobinAssignor](http://blog.csdn.net/zhanyuanlin/article/details/76021614)
 
 ## 扒粪者-于雨氏 ##
 
