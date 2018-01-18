@@ -170,7 +170,7 @@ distributed to the list.
 - 生产者发送消息选择压缩方法的时候，建议选择lz4（详见参考文档1）；
 - 如果使用kafka的版本是v0.10以上，建议使用最新版kafka(目前是0.10.2.0)，个人发现 v0.10.1.0 版本的jar包不能正确获取某个consumer group的消费者个数；
 - 其实个人真心建议不要使用v0.10，使用v0.8 or v0.9即可，其中一个原因是kafka版本越新则其周围可用的工具越少，工具的更新速度实在比不上kafka版本的个更新速度，每个大版本的更新就意味着其架构的大改；
-- kafka v0.10的版本支持了offset存储在kafka上，但是他的offset提交处理速度非常慢，虽然支持异步定时提交offset，但是重启的话还是会丢，所以依赖kafka做主从同步保障数据一致性是不可能的（例如阿里的canal在mysql master和mysql slave之间传递binlog式它们是绝对不会使用kafka的），也就说kafka不考虑消费者是否重复消费，当然也有大厂自己封装kafka后把每个consumer消费的offset存在别的中间件上，通过assign方式读取kafka消息来保证不重复消费kafka message；
+- kafka v0.10的版本支持了offset存储在kafka上，但是他的offset提交处理速度非常慢，虽然支持异步定时提交offset，但是重启的话还是会丢，所以依赖kafka做主从同步保障数据一致性是不可能的（例如阿里的canal在mysql 集群间传递binlog式它们是绝对不会使用kafka的），也就说kafka不考虑消费者是否重复消费，当然也有大厂自己封装kafka后把每个consumer消费的offset存在别的中间件上，通过assign方式读取kafka消息来保证不重复消费kafka message；
 - 不要使用github.com/wvanbergen/kafka/consumergroup包，这个包将近两年没有更新，在kafka v0.10.1.0上测试的时候发现其官方example程序不能正确建立consumer group，建议以github.com/bsm/sarama-cluster替代之；
 - kafka使用的网卡流量到达极限的70%后，就开始大量丢包；
 - kafka streaming的statestore是通过rocksdb实现的；
@@ -295,7 +295,7 @@ MirrorMaker自身支持把多个kafka集群的数据复制到一个目的地kafk
 
 下面重点说明conf/mirror-producer.properties的“partition.assignment.strategy”和MirrorMaker的”num.streams”。
 
-“partition.assignment.strategy”关系到consumer的负载均衡策略，默认的range策略会导致负载不均衡且consumer group内consumer的个数无法多余topic partition的数目， `参考文档6` 和 `参考文档11` 都提到这个问题，具体原因参见 `参考文档7` 和 `参考文档14`。
+“partition.assignment.strategy”关系到consumer的负载均衡策略，默认的range策略会导致负载不均衡且consumer group内consumer的个数多于topic partition的数目时多余的consumer处于idle状态无法工作， `参考文档6` 和 `参考文档11` 都提到这个问题，具体原因参见 `参考文档7` 和 `参考文档14`。采用RoundRobin策略后，所有的consumer都会处于工作状态，加快数据复制速度。
 
 num.streams则是指定consumers的个数。经个人测试，kafka partition数目为36时，实际测试环境中num.streams给定值为40，而MirrorMaker的实际consumer的个数为72，把num.streams改为100后consumer个数也是100，所以二者不一定一致。
 
