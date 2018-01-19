@@ -175,7 +175,7 @@ distributed to the list.
 - kafka使用的网卡流量到达极限的70%后，就开始大量丢包；
 - kafka streaming的statestore是通过rocksdb实现的；
 - kafka数据的顺序性、重复性和完整性（是否会丢）在发送端是没有保证的，[官方文档](http://docs.confluent.io/2.0.0/clients/producer.html)对此有详细描述。这里只谈到retries参数（librdkafka：message.send.max.retries），它是在发送失败的情况设置重新发送次数，但是熟悉消息系统的人知道：一旦有消息发送重试就可能导致本来在生产者端上顺序在前的消息A和B到了broker之后顺序却是B和A，如果要确保在broker上消息顺序也是A和B，那么可以设置max.in.flight.requests.per.connection参数为1，它确保生产者发送A成功之前不会发送B，即每次只发送一个消息（生产者的吞吐率就没法保证了）；
-- 目前的kafka的负载均衡只考虑磁盘负载均衡没有考虑网卡流量，譬如有的topic虽然数据少但是消费者比较多，此时网卡就没有均衡，但即使是磁盘均衡也做到不够好，它的负载均衡是以partition为维度的，但topic下的各个parition的数据量不可能相等；
+- 目前的kafka的负载均衡只考虑磁盘负载均衡没有考虑网卡流量，譬如有的topic虽然数据少但是消费者比较多，此时网卡就没有均衡，但即使是磁盘均衡也做到不够好，它的负载均衡是以partition为维度的，但多topic的parition数据量不可能相等；
 
 ##### 5.1.1 broker #####
 ---
@@ -254,7 +254,12 @@ distributed to the list.
 * max.poll.records - 限制每回poll返回的最大数据条数。前面已经说到，fetch.message.max.bytes在v.10里面被max.poll.records替换掉，另外v.10版本中heartbeat不再在poll中触发，而是由单独的线程来完成，详细见[KIP-62](https://cwiki.apache.org/confluence/display/KAFKA/KIP-62%3A+Allow+consumer+to+send+heartbeats+from+a+background+thread)。
 * num.consumer.fetchers - 用于fetch数据的fetcher线程数
 * auto.commit.enable - 是否自动提交offset
-* partition.assignment.strategy - `参考文献6`  建议将这个值设为 “ org.apache.kafka.clients.consumer.RoundRobinAssignor”，因为 `默认的策略（Range partitioning）会导致partition分配不均，如果采用默认的策略，当consumer（logstash数量*worker数量）的数量大于topic partition数量时，partition总是只会被分配给固定的一部分consumer`，经个人测试采用这个策略后当consumer group内consumer多余partition数目的时候，确实能保证所有的consumer都有自己的目标partition，只不过一些partition的consumer多余一个而已。关于两种策略的更详细区别请见 `参考文档7` 和 `参考文档14`。
+* partition.assignment.strategy - `参考文献6`  建议将这个值设为 “ org.apache.kafka.clients.consumer.RoundRobinAssignor”，因为 `默认的策略（Range partitioning）会导致partition分配不均，如果采用默认的策略，当consumer（logstash数量*worker数量）的数量大于topic partition数量时，partition总是只会被分配给固定的一部分consumer`，这个策略本质是一种跨topic的shuffle，保证一个consumer group内消费多个topic时，总体保持负载均衡。关于两种策略的更详细区别请见 `参考文档7` 和 `参考文档14`。   
+RoundRobinAssignor策略使用有以下要求：   
+	- 同一个Consumer Group里面的所有消费者的num.streams必须相等；   
+	- 同一个Consumer Group内每个消费者订阅的主题必须相同。
+
+参照MirrorMaker，这两个要求很好理解。
 
 ##### 5.2.4 Os & Jvm & Mem #####
 ---
@@ -297,7 +302,9 @@ MirrorMaker自身支持把多个kafka集群的数据复制到一个目的地kafk
 
 “partition.assignment.strategy”关系到consumer的负载均衡策略，默认的range策略会导致负载不均衡且consumer group内consumer的个数多于topic partition的数目时多余的consumer处于idle状态无法工作， `参考文档6` 和 `参考文档11` 都提到这个问题，具体原因参见 `参考文档7` 和 `参考文档14`。采用RoundRobin策略后，所有的consumer都会处于工作状态，加快数据复制速度。
 
-num.streams则是指定consumers的个数。经个人测试，kafka partition数目为36时，实际测试环境中num.streams给定值为40，而MirrorMaker的实际consumer的个数为72，把num.streams改为100后consumer个数也是100，所以二者不一定一致。
+num.streams则是指定consumers的个数。经个人测试，共两个kafka topic，每个topic partition数目为36时，实际测试环境中num.streams给定值为40，而MirrorMaker的实际consumer的个数为72，把num.streams改为100后consumer个数也是100，所以二者不一定一致。而当consumer个数为100，只消费一个topic的时候，有36个consumer线程处于工作状态，其他线程都处于空闲状态（如下图）。所以num.streams的值应该设置为所有topic的partition数目之和。
+
+![consumer-partition](../pic/mirror-maker-partition.png)
 
 至于MirrorMaker的性能还可以，想kafka集群写入13993021个长度为100B的kv后，MirrorMaker两分钟内复制完毕。
 
