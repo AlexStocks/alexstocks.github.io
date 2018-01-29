@@ -67,27 +67,29 @@
 
    当/pubsub/proxy下有新的实例信息的时候，Regitsty会通知给Client;
    
-- 2 Proxy启动时读取/pubsub/group_num的值（譬如为2），接着读取路径/pubsub/broker/group0和/pubsub/broker/group1下所有的Broker实例，同时watch注册中心的路径/pubsub/group_num的值的改变，最后把自身信息注册到Regitry路径/pubsub/proxy下；
+- 2 Proxy启动时读取/pubsub/group_num的值（譬如为2），接着读取路径/pubsub/broker/group0和/pubsub/broker/group1下所有的Broker实例，同时watch注册中心的路径/pubsub/group_num的值的改变，最后把自身信息注册到Registry路径/pubsub/proxy下；
 
     当/pubsub/group_num的值发生改变的时候(譬如值改为4)，意味着pubsub系统发生了垂直扩展，Proxy要及时读新group路径（如/pubsub/broker/group2和/pubsub/broker/group3）下的实例，并watch这些路径，关注相应Group下实例的改变；
     
     之所以Proxy在获取Registry下所有当前的Broker实例信息后再注册自身信息，是因为此时它才具有转发消息的资格。
     
-    Proxy转发某个Room消息时候，先根据约定的哈希算法以Room ID为参数把Room Message发送到某个Broker Group【譬如Room ID % Broker Group number】，然后根据相关负载均衡算法把消息转发到Broker Group内某个Broker实例；
+    Proxy转发某个Room消息时候，先根据约定的哈希算法以Room ID为参数把Room Message发送到某个Broker Group【譬如Room ID % Broker Group number】，然后再根据Group内Broker总数和哈希算法【譬如Room ID % Broker number】把消息转发到Broker Group内某个Broker实例；
     
-- 3 Broker启动之时先把自身信息注册到Regitry路径/pubsub/broker/group(x)下，然后从Relay Database里把Room ID到某Group的所有映射关系加载过来，但只留下自身所在的Broker Group所应该负责的映射数据；
+- 3 Broker启动之时先把自身信息注册到Registry路径/pubsub/broker/relay_group(x)下，然后从Relay Database里把Room ID到某Group的所有映射关系加载过来，但只留下自身所在的Broker Group所应该负责的映射数据，待加载完毕数据后再把自身注册到Registry路径/pubsub/broker/group(x)下；
     
-    注意Broker之所以先注册然后再加载Database中的数据，是为了在加载数据的时候同时接收Relay转发来的Gateway Message，但是在数据加载完前这些受到的数据先被缓存起来，待映射关系加载完并被清洗干净后再把这些数据重放一遍。
+    注意Broker之所以先注册然后再加载Database中的数据，是为了在加载数据的时候同时接收Relay转发来的Gateway Message，但是在数据加载完前这些受到的数据先被缓存起来，待映射关系加载完并被清洗干净后再把这些数据重放一遍；
     
-    当发生垂直扩展的时候，新的Group个数必须是2的幂，只有新Group内所有Broker Instance都加载实例完毕，再更改/pubsub/group_num的值；
+    Broker之所以要针对relay和proxy分别注册两个路径，是为了在加载完毕映射关系前不对Proxy提供转发消息的服务，同时也方便Broker Group应对的消息量增大时进行水平扩展；
+    
+    当Broker发生垂直扩展的时候，新的Group个数必须是2的幂，只有新Group内所有Broker Instance都加载实例完毕，再更改/pubsub/group_num的值；
     
     老的Broker也要watch路径/pubsub/group_num的值，当这个值增加的时候，它需要清洗不再由自身负责的路由映射数据；
     
-- 4 Relay启动之时先读取/pubsub/group_num的值（譬如为2），接着读取路径/pubsub/broker/group0和/pubsub/broker/group1下所有的Broker实例，同时watch注册中心的路径/pubsub/group_num的值的改变，，并watch注册中心路径pubsub/broker/group0和/pubsub/broker/group1下所有的Broker实例，最后把自身信息注册到Regitry路径/pubsub/relay下；
+- 4 Relay启动之时先读取/pubsub/group_num的值（譬如为2），接着读取路径/pubsub/broker/relay_group0和/pubsub/broker/relay_group1下所有的Broker实例，同时watch注册中心的路径/pubsub/group_num的值的改变，，并watch注册中心路径pubsub/broker/group0和/pubsub/broker/group1下所有的Broker实例，最后把自身信息注册到Registry路径/pubsub/relay下；
 
     Relay工作流程与Proxy相似，不同之处在于：收到Gateway Message后先把数据写入Database中，然后把Message发送给Room ID对应的group内所有Broker Instance。
     
-### 3 稳定性 ###
+### 3 系统稳定性 ###
 ---
 
 系统具有了可扩展性仅仅是系统可用的初步，整个系统要保证最低粒度的SLA（0.99），就必须在两个维度对系统的可靠性就行感知：消息延迟和系统内部组件的高可用。
@@ -112,15 +114,33 @@
 
 同时依靠心跳包的延迟还可以判断broker的处理能力，基于此值做同一group内多broker端的负载均衡。
 
-### 4 总结 ###
+
+### 4 消息可靠性 ###
+---
+
+公司内部内部原有一个走tcp通道的pubsub系统，但是经过元旦一次大事故（几乎全线崩溃）后，相关业务的一些重要消息改走这套基于UDP的pubsub系统了。这些消息如服务端下达给客户端的游戏动作指令，是不允许丢失的，但其特点是相对于聊天消息来说量非常小（单人1秒最多一个），所以需要在目前UDP链路传递消息的基础之上再构建一个可靠消息链路。
+
+国内IM大厂的消息系统也是以UDP链路为基础的，他们的做法是消息重试加ack构建了可靠消息稳定传输链路。但是这种做法会降低系统的吞吐率，所以需要独辟蹊径。
+
+UDP通信的本质就是伪装的IP通信，TCP自身的稳定性无非是重传、去重和ack，所以不考虑消息顺序性的情况下可以通过重传与去重来保证消息的可靠性。
+
+基于目前系统的可靠消息传输流程如下：
+1 Client给每个命令消息依据snowflake算法配置一个ID，复制三份，立即发送给不同的Proxy；
+2 Proxy收到命令消息以后随机发送给一个Broker；
+3 Broker收到后传输给Gateway；
+4 Gateway接收到命令消息后根据消息ID进行重复判断，如果重复则丢弃，否则就发送给APP，并缓存之。
+
+正常的消息在pubsub系统中传输时，Proxy会根据消息的Room ID传递给固定的Broker，以保证消息的有序性。
+
+### 5 总结 ###
 ---
 
 这套pubsub系统，只考虑了消息的传递，尚需完善，有一下task lisk：
 
-- 1 消息以UDP链路传递，不可靠；
+- 1 消息以UDP链路传递，不可靠【2018/01/29解决之】；
 - 2 目前的负载均衡算法采用了极简的RoundRobin算法，可以根据成功率和延迟添加基于权重的负载均衡算法实现；
-- 3 只考虑传递，没有考虑消息的去重，可以根据消息ID实现这个功能；
-- 4 各个模块之间没有考虑心跳方案，整个系统的稳定性依赖于Registry；
+- 3 只考虑传递，没有考虑消息的去重，可以根据消息ID实现这个功能【2018/01/29解决之】；
+- 4 各个模块之间没有考虑心跳方案，整个系统的稳定性依赖于Registry【2018/01/17解决之】；
 - 5 其他......
 
 此记。
@@ -132,4 +152,6 @@
 ## 扒粪者-于雨氏 ##
 > 于雨氏，2017/12/31，初作此文于丰台金箱堂。
 > 
-> 于雨氏，2018/01/16，于海淀添加“稳定性”一节。
+> 于雨氏，2018/01/16，于海淀添加“系统稳定性”一节。
+> 
+> 于雨氏，2018/01/29，于海淀添加“消息可靠性”一节。
