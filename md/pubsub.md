@@ -1,4 +1,4 @@
-## 一套可扩展的pub/sub系统实现 ##
+## 一套高可用的pub/sub系统实现 ##
 ---
 *written by Alex Stocks on 2017/12/31*
 
