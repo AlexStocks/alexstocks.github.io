@@ -75,9 +75,9 @@
     
     Proxy转发某个Room消息时候，先根据约定的哈希算法以Room ID为参数把Room Message发送到某个Broker Group【譬如Room ID % Broker Group number】，然后再根据Group内Broker总数和哈希算法【譬如Room ID % Broker number】把消息转发到Broker Group内某个Broker实例；
     
-- 3 Broker启动之时先把自身信息注册到Registry路径/pubsub/broker/relay_group(x)下，然后从Relay Database里把Room ID到某Group的所有映射关系加载过来，但只留下自身所在的Broker Group所应该负责的映射数据，待加载完毕数据后再把自身注册到Registry路径/pubsub/broker/group(x)下；
+- 3 Broker启动之时先把自身信息注册到Registry路径/pubsub/broker/relay_group(x)下，然后从Relay Database里把自身所在的Broker Group所应该负责的Room ID到某Gateway映射数据加载进来，待加载完毕数据后再把自身注册到Registry路径/pubsub/broker/group(x)下；
     
-    注意Broker之所以先注册然后再加载Database中的数据，是为了在加载数据的时候同时接收Relay转发来的Gateway Message，但是在数据加载完前这些受到的数据先被缓存起来，待映射关系加载完并被清洗干净后再把这些数据重放一遍；
+    注意Broker之所以先注册然后再加载Database中的数据，是为了在加载数据的时候同时接收Relay转发来的Gateway Message，但是在数据加载完前这些受到的数据先被缓存起来，待映射关系加载完后就把这些数据重放一遍；
     
     Broker之所以要针对relay和proxy分别注册两个路径，是为了在加载完毕映射关系前不对Proxy提供转发消息的服务，同时也方便Broker Group应对的消息量增大时进行水平扩展；
     
