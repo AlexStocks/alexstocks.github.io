@@ -123,7 +123,7 @@ kbd {
 
 <p>2017年9月初初步实现了一套极简的pub/sub系统，其大致架构如下：</p>
 
-<p><img src="../pic/pubsub-simple.png" alt=""></p>
+<p><img src="../pic/pubsub_simple.png" alt=""></p>
 
 <p>系统名词解释：</p>
 
@@ -134,9 +134,9 @@ kbd {
 
 <p>3 Broker ：系统Server，Broker会根据Gateway message组织Room ID和Gateway IP&amp;port的映射关系，然后把Proxy发来的消息转发到Room中所有成员登录的所有Gateway，；</p>
 
-<p>4 Relay  ：用户登录消息转发者，把Gateway转发来的用户登入登出消息转发给所有的Broker；</p>
+<p>4 Router ：用户登录消息转发者，把Gateway转发来的用户登入登出消息转发给所有的Broker；</p>
 
-<p>5 Gateway：所有服务端的入口，接收合法客户端的连接，并把客户端的登录登出消息通过Relay转发给所有的Broker；</p>
+<p>5 Gateway：所有服务端的入口，接收合法客户端的连接，并把客户端的登录登出消息通过Router转发给所有的Broker；</p>
 
 <p>当一个Room中多个Client连接一个Gateway的时候，Broker只会根据Room ID把房间内的消息转发一次给这个Gateway，由Gateway再把消息复制多份分别发送给连接这个Gateway的Room中的所有客户端。 </p>
 </blockquote>
@@ -145,16 +145,16 @@ kbd {
 
 <ul>
 <li>1 系统只转发房间内的聊天消息，每个节点收到后立即转发出去，不存储任何房间内的聊天消息，不考虑消息丢失以及消息重复的问题；</li>
-<li>2 系统固定地由一个Proxy、三个Broker和一个Relay构成；</li>
+<li>2 系统固定地由一个Proxy、三个Broker和一个Router构成；</li>
 <li>3 Proxy接收后端发送来的房间消息，然后按照一定的负载均衡算法把消息发往某个Broker，Broker则把消息发送到所有与Room有关系的接口机Gateway；</li>
-<li>4 Relay接收Gateway转发来的某个Room内某成员在这个Gateway的登出或者登录消息，然后把消息发送到所有Broker；</li>
-<li>5 Broker收到Relay转发来的Gateway消息后，更新（添加或者删除）与某Room相关的Gateway集合记录；</li>
+<li>4 Router接收Gateway转发来的某个Room内某成员在这个Gateway的登出或者登录消息，然后把消息发送到所有Broker；</li>
+<li>5 Broker收到Router转发来的Gateway消息后，更新（添加或者删除）与某Room相关的Gateway集合记录；</li>
 <li>6 整个系统的通信链路采用UDP通信方式；</li>
 </ul>
 
 <p>从以上特点，整个消息系统足够简单，<strong>不考虑扩缩容问题</strong>，当系统负载到达极限的时候，就<strong>重新再部署一套系统</strong>以应对后端client的消息压力。</p>
 
-<p>这种处理方式本质是把系统的扩容能力甩锅给了后端Client以及前端Gateway：<strong>每次扩容一个系统，所有Client需要在本地配置文件中添加一个Proxy地址然后全部重启，所有Gateway则需要再本地配置文件添加一个Relay地址然后全部重启。</strong></p>
+<p>这种处理方式本质是把系统的扩容能力甩锅给了后端Client以及前端Gateway：<strong>每次扩容一个系统，所有Client需要在本地配置文件中添加一个Proxy地址然后全部重启，所有Gateway则需要再本地配置文件添加一个Router地址然后全部重启。</strong></p>
 
 <p>这种“幸福我一人，辛苦千万家”的扩容应对方式，必然导致公司内部这套系统的使用者怨声载道，升级之路就是必然的了。</p>
 
@@ -162,23 +162,23 @@ kbd {
 
 <hr>
 
-<p>大道之行也，天下为公，不同的系统有不同的构架，相同的系统总有类似的实现。类似于数据库的分库分表【关于分库分表，目前看到的最好的文章是参考文档1】，其扩展实现核心思想是分Group分Instance。</p>
+<p>大道之行也，天下为公，不同的系统有不同的构架，相同的系统总有类似的实现。类似于数据库的分库分表【关于分库分表，目前看到的最好的文章是参考文档1】，其扩展实现核心思想是分Partition分Replica，但各Replica之间还区分leader（leader-follower，只有leader可接受写请求）和non-leader（所有replica均可接收写请求）两种机制。</p>
 
-<p>从数据角度来看，这套系统接收两种消息：房间聊天消息和用户登录消息。两种消息的交汇之地就是Broker，所以应对扩展的紧要地方就是Broker。</p>
+<p>从数据角度来看，这套系统接收两种消息：Room Message（房间聊天消息）和Gateway Message（用户登录消息）。两种消息的交汇之地就是Broker，所以应对扩展的紧要地方就是Broker，Broker的每个Partition采用non-leader机制，各replica均可接收Gateway Message消息写请求和Room Message转发请求。</p>
 
 <p>首先，当Room Message量加大时可以对Proxy进行水平扩展，多部署Proxy即可因应Room Message的流量。</p>
 
-<p>其次，当Gateway Message量加大时可以对Relay进行水平扩展，多部署Relay即可因应Gateway Message的流量。</p>
+<p>其次，当Gateway Message量加大时可以对Router进行水平扩展，多部署Router即可因应Gateway Message的流量。</p>
 
-<p>最后，两种消息的交汇之地Broker如何扩展呢？可以把若干Broker Instance组成一个Group，因为Gateway Message是在一个Group内广播的，所有Broker Instance都会复制一份Gateway message以组织Room Id和Gateway IP&amp;port的映射关系，因此当Gateway message增加时垂直扩容Group即可。当Room Message量增加时，水平扩容Group内的Broker Instance即可，因为Room Message只会发送到Group内某个Instance上。</p>
+<p>最后，两种消息的交汇之地Broker如何扩展呢？可以把若干Broker Replica组成一个Partition，因为Gateway Message是在一个Partition内广播的，所有Broker Replica都会复制一份Gateway message以组织Room Id和Gateway IP&amp;port的映射关系，因此当Gateway message增加时扩容Partition即可。当Room Message量增加时，水平扩容Partition内的Broker Replica即可，因为Room Message只会发送到Partition内某个Replica上。</p>
 
-<p>从个人经验来看，Room ID的增长以及Room内成员的增加量在一段时间内可以认为是直线增加，而Room Message可能会以指数级增长，所以设计得当的话Group垂直扩容的概率很小，而Group内Instance水平增长的概率几乎是100%。</p>
+<p>从个人经验来看，Room ID的增长以及Room内成员的增加量在一段时间内可以认为是直线增加，而Room Message可能会以指数级增长，所以若设计得当则Partition扩容的概率很小，而Partition内Replica水平增长的概率几乎是100%。</p>
 
-<p>不管是Group垂直扩容还是Group Instance的水平扩容，不可能像系统极简版本那样每次扩容后都需要Client或者Gateway去更新配置文件然后重启，因应之道就是可用zookeeper充当角色的Registriy。通过这个zookeeper注册中心，相关角色扩容的时候在Registry注册后，与之相关的其他模块得到通知即可获取其地址等信息。</p>
+<p>不管是Partition级别的水平扩容还是Partition Replica级别的水平扩容，不可能像系统极简版本那样每次扩容后都需要Client或者Gateway去更新配置文件然后重启，因应之道就是可用zookeeper充当角色的Registriy。通过这个zookeeper注册中心，相关角色扩容的时候在Registry注册后，与之相关的其他模块得到通知即可获取其地址等信息。</p>
 
 <p>分析完毕，与之相对的架构图如下：</p>
 
-<p><img src="../pic/pubsub-scalable.png" alt=""></p>
+<p><img src="../pic/pubsub_scalable.png" alt=""></p>
 
 <p>各个模块详细流程说明如下：</p>
 
@@ -186,25 +186,25 @@ kbd {
 <li><p>1 client启动的时候先从Registy上get到Proxy注册路径/pubsub/proxy下所有的Proxy，并watch这个路径，然后采用相关负载均衡算法把消息转发给某个Proxy;</p>
 
 <p>当/pubsub/proxy下有新的实例信息的时候，Regitsty会通知给Client;</p></li>
-<li><p>2 Proxy启动时读取/pubsub/group<em>num的值（譬如为2），接着读取路径/pubsub/broker/group0和/pubsub/broker/group1下所有的Broker实例，同时watch注册中心的路径/pubsub/group</em>num的值的改变，最后把自身信息注册到Registry路径/pubsub/proxy下；</p>
+<li><p>2 Proxy启动时读取/pubsub/broker/partition<em>num的值（譬如为2），接着读取路径/pubsub/broker/Partition0和/pubsub/broker/Partition1下所有的Broker实例，同时watch注册中心的路径/pubsub/broker/partition</em>num的值的改变，最后把自身信息注册到Registry路径/pubsub/proxy下；</p>
 
-<p>当/pubsub/group_num的值发生改变的时候(譬如值改为4)，意味着pubsub系统发生了垂直扩展，Proxy要及时读新group路径（如/pubsub/broker/group2和/pubsub/broker/group3）下的实例，并watch这些路径，关注相应Group下实例的改变；</p>
+<p>当/pubsub/broker/partition_num的值发生改变的时候(譬如值改为4)，意味着pubsub系统发生了垂直扩展，Proxy要及时读新Partition路径（如/pubsub/broker/Partition2和/pubsub/broker/Partition3）下的实例，并watch这些路径，关注相应Partition下实例的改变；</p>
 
 <p>之所以Proxy在获取Registry下所有当前的Broker实例信息后再注册自身信息，是因为此时它才具有转发消息的资格。</p>
 
-<p>Proxy转发某个Room消息时候，先根据约定的哈希算法以Room ID为参数把Room Message发送到某个Broker Group【譬如Room ID % Broker Group number】，然后再根据Group内Broker总数和哈希算法【譬如Room ID % Broker number】把消息转发到Broker Group内某个Broker实例；</p></li>
-<li><p>3 Broker启动之时先把自身信息注册到Registry路径/pubsub/broker/relay_group(x)下，然后从Relay Database里把自身所在的Broker Group所应该负责的Room ID到某Gateway映射数据加载进来，待加载完毕数据后再把自身注册到Registry路径/pubsub/broker/group(x)下；</p>
+<p>Proxy转发某个Room消息时候，先根据约定的哈希算法以Room ID为参数把Room Message发送到某个Broker Partition【譬如Room ID % Broker Partition number】，然后再根据Partition内Broker总数和哈希算法【譬如Room ID % Broker number】把消息转发到Broker Partition内某个Broker实例；</p></li>
+<li><p>3 Broker启动之时先把自身信息注册到Registry路径/pubsub/router<em>broker/router</em>partition(x)下，然后从Database中把自身所在的Broker Partition所应该负责的Room ID到某Gateway映射数据加载进来，待加载完毕数据后再把自身注册到Registry路径/pubsub/broker/partition(x)下；</p>
 
-<p>注意Broker之所以先注册然后再加载Database中的数据，是为了在加载数据的时候同时接收Relay转发来的Gateway Message，但是在数据加载完前这些受到的数据先被缓存起来，待映射关系加载完后就把这些数据重放一遍；</p>
+<p>注意Broker之所以先注册然后再加载Database中的数据，是为了在加载数据的时候同时接收Router转发来的Gateway Message，但是在数据加载完前这些受到的数据先被缓存起来，待映射关系加载完后就把这些数据重放一遍；</p>
 
-<p>Broker之所以要针对relay和proxy分别注册两个路径，是为了在加载完毕映射关系前不对Proxy提供转发消息的服务，同时也方便Broker Group应对的消息量增大时进行水平扩展；</p>
+<p>Broker之所以要针对Router和proxy分别注册两个路径/pubsub/router_broker/和/pubsub/broker/，是为了在加载完毕映射关系前不对Proxy提供转发消息的服务，同时也方便Broker Partition应对的消息量增大时进行水平扩展；</p>
 
-<p>当Broker发生垂直扩展的时候，新的Group个数必须是2的幂，只有新Group内所有Broker Instance都加载实例完毕，再更改/pubsub/group_num的值；</p>
+<p>当Broker发生垂直扩展的时候，新的Partition个数必须是2的幂，只有新Partition内所有Broker Replica都加载实例完毕，再更改/pubsub/broker/partition_num的值；</p>
 
-<p>老的Broker也要watch路径/pubsub/group_num的值，当这个值增加的时候，它需要清洗不再由自身负责的路由映射数据；</p></li>
-<li><p>4 Relay启动之时先读取/pubsub/group<em>num的值（譬如为2），接着读取路径/pubsub/broker/relay</em>group0和/pubsub/broker/relay<em>group1下所有的Broker实例，同时watch注册中心的路径/pubsub/group</em>num的值的改变，，并watch注册中心路径pubsub/broker/group0和/pubsub/broker/group1下所有的Broker实例，最后把自身信息注册到Registry路径/pubsub/relay下；</p>
+<p>老的Broker也要watch路径/pubsub/broker/partition_num的值，当这个值增加的时候，它需要清洗不再由自身负责的路由映射数据；</p></li>
+<li><p>4 Router启动之时先读取/pubsub/broker/partition<em>num的值（譬如为2），接着读取路径/pubsub/broker</em>router/router<em>partition0和/pubsub/broker</em>router/router<em>partition1下所有的Broker实例，同时watch注册中心的路径/pubsub/broker/partition</em>num的值的改变，并watch注册中心路径/pubsub/broker/partition0和/pubsub/broker/partition1下所有的Broker实例，最后把自身信息注册到Registry路径/pubsub/router下；</p>
 
-<p>Relay工作流程与Proxy相似，不同之处在于：收到Gateway Message后先把数据写入Database中，然后把Message发送给Room ID对应的group内所有Broker Instance。</p></li>
+<p>Router工作流程与Proxy相似，不同之处在于：收到Gateway Message后先把数据写入Database中，然后把Message发送给Room ID对应的Partition内所有Broker Replica。</p></li>
 </ul>
 
 <h3 id="toc_3">3 系统稳定性</h3>
@@ -231,9 +231,9 @@ kbd {
 
 <p>为了保证各个组件的高可用，系统引入了另一种评估方法：每个层次都给后端组件发送心跳包，通过心跳包的延迟和成功率判断其下一级组件的当前的可用状态。</p>
 
-<p>譬如proxy定时给每个group内每个broker发送心跳，可以依据心跳的成功率来快速判断broker是否处于“假死”状态（最近业务就遇到过broker进程还活着，但是对任何收到的消息都不处理的情况）。</p>
+<p>譬如proxy定时给每个Partition内每个broker发送心跳，可以依据心跳的成功率来快速判断broker是否处于“假死”状态（最近业务就遇到过broker进程还活着，但是对任何收到的消息都不处理的情况）。</p>
 
-<p>同时依靠心跳包的延迟还可以判断broker的处理能力，基于此值做同一group内多broker端的负载均衡。</p>
+<p>同时依靠心跳包的延迟还可以判断broker的处理能力，基于此延迟值可在同一Partition内多broker端进行负载均衡。</p>
 
 <h3 id="toc_6">4 消息可靠性</h3>
 
@@ -256,11 +256,61 @@ kbd {
 
 <p>正常的消息在pubsub系统中传输时，Proxy会根据消息的Room ID传递给固定的Broker，以保证消息的有序性。</p>
 
-<h3 id="toc_7">5 总结</h3>
+<h3 id="toc_7">5 Router</h3>
 
 <hr>
 
-<p>这套pubsub系统，只考虑了消息的传递，尚需完善，有一下task lisk：</p>
+<p>当线上需要部署多套pubsub系统的时候，Gateway需要把同样的Room Message复制多份转发给多套pubsub系统，会增大Gateway压力，可以把Router单独独立部署，然后把Room Message向所有的pubsub系统转发。</p>
+
+<p>Router系统原有流程是：Gateway按照Room ID把消息转发给某个Router，然后Router把消息转发给下游Broker实例。新部署一套pubsub系统的时候，新系统Broker的schema需要通过一套约定机制通知Router，使得Router自身逻辑过于复杂。</p>
+
+<p><img src="../pic/pubsub_router.png" alt=""></p>
+
+<p>重构后的Router也采用分Partition分Replica设计，但是Partition内部各Replica之间采用leader机制，以减少Gateway写压力；各Router Replica不会主动把Gateway Message内容push给各Broker，而是各Broker主动通过心跳包形式Router Partition内某个follower Replica注册，而后此Replica才会把消息转发到这个Broker上。</p>
+
+<p>类似于Broker，Router Partition也以2倍扩容方式进行Partition水平扩展。</p>
+
+<p>Router Partition leader收到Gateway Message后，只有leader可以把数据写入Database，leader把Gateway Message转发给各个follower，因此Partition内没有数据一致性的问题，则leader election的方法就简洁如此：Parition ID最小的Router为leader。同时约定Broker只能向follower发送心跳消息，以降低消息转发过程的延迟。</p>
+
+<p>整体系统有以下约定：</p>
+
+<blockquote>
+<p>只有leader可接收Gateway Message；</p>
+
+<p>只有leader可把数据写入Database；</p>
+
+<p>Broker只能向follower发送心跳，心跳包内有Broker的Partition Number（总体Partition个数）和Partition ID等信息；</p>
+</blockquote>
+
+<p>独立Router架构下，Router和Broker新的详细流程说明如下：</p>
+
+<ul>
+<li><p>1 Router启动之时先从Database之中读取自身Partition（譬如是0）应该负责的数据，然后向Registry路径/pubsub/router/router<em>partition0注册，获取Registry返回的给自身分配的Partition ID，然后从/pubsub/router/router</em>partition0下获取同Partition其他成员，并watch这个路径以观察Partition内replica的变动情况；</p>
+
+<p>不管是Router第一次启动还是进行Partition扩容，只有当新的Paritition内所有Replica都启动完毕后，才能修改/pubsub/router/partition_num的值，Gateway在这个值发送变动后才会给新Partition转发其应该负责的Gateway Message；</p>
+
+<p>leader首先注册，所以其ID肯定最小，当follower注册的时候，leader会得到通知，然后把Gateway Message数据转发给各follower；Gateway按照约定哈数算法【RoomID % RouterPartitonNumber】把消息转发给Partition leader，leader收到消息后立即转发给所有follower，然后异步把数据固化到Database；</p>
+
+<p>follower收到Broker的心跳后，在内存中存下Broker的信息，当心跳超时后把Broker信息从本地内存中删除之；当Partition内leader因为网络分区或者假死或者挂掉等原因导致某follower被选举为新的leader后，如果收到Broker发来的心跳请求，则回复错误信息，但是会继续给各Broker转发Gateway Message，直至全部Broker因为心跳超时被从本地内存中删除；</p>
+
+<p>follower向Broker转发消息的时候，需要对消息进行过滤：按照约定哈希算法【RoomID % BrokerPartitionNumber】计算消息的HashID，然后判断HashID与Broker的PartitionID是否相等，等则转发；</p></li>
+<li><p>2 Broker启动之时从/pubsub/router/partition_num获取RouterPartitionNum，再从Registry获取所有Partiton的各个follower，然后向与自身所在的BrokerPartitionID有有映射关系的Router Partition的某个follower发送心跳请求，待Router follower返回心跳响应成功信息后，在从Database中把自身所在的Broker Partition所应该负责的Room ID到某Gateway映射数据加载进来，待加载完毕数据后再把自身注册到Registry路径/pubsub/broker/partition(x)下；</p>
+
+<p>BrokerPartitionNumber可以小于或者等于或者倍增于RouterPartitionNumber，两个集群可以分别进行扩展，互不影响。譬如BrokerPartitionNumber=4而RouterPartitionNumber=2，则Broker Partition 3只需要向Router Partition 1的某个follower发送心跳消息即可；若BrokerPartitionNumber=4而RouterPartitionNumber=8，则Broker Partition 3需要向Router Partition 3的某个follower发送心跳消息的同时，还需要向Router Partition 7的某个follower发送心跳，以获取全量的Gateway Message。</p>
+
+<p>Broker需要关注/pubsub/router/partition<em>num和/pubsub/broker/partition</em>num的值的变化，当router或者broker进行parition水平扩展的时候，Broker需要及时重新构建与Router之间的对应关系，及时变动发送心跳的Router follower对象。</p>
+
+<p>当Router Partition内leader死掉或者发送心跳包的follower对象死掉（无论是注册中心通知还是心跳包超时）或者follower升级为leader（无论是注册中心通知还是通过心跳包带回的错误标识），broker要及时变动发送心跳的Router follower对象。</p></li>
+</ul>
+
+<p>另外，Gateway使用UDP通信方式向Router发送Gateway Message，如若这个Message丢失则此Gateway上该Room内所有成员一段时间内（当有新的成员在当前Gateway上加入room
+时会产生新的Gateway Message）都无法再接收消息，为了保证消息的可靠性，可以使用这样一个约束解决问题：<font color=blue><strong>在此Gateway上登录的某Room内的人数少于3时，Gateway会把Gateway Message复制两份重复发送给某个Partition leader。</strong></font>因Gateway Message消息处理的幂等性，重复Gateway Message并不会导致Room Message发送错误，只在极少概率的情况下会导致Gateway收到消息的时候Room内已经没有成员在此Gateway登录，此时Gateway会把消息丢弃不作处理。</p>
+
+<h3 id="toc_8">6 总结</h3>
+
+<hr>
+
+<p>这套pubsub系统尚有以下task lisk需完善：</p>
 
 <ul>
 <li>1 消息以UDP链路传递，不可靠【2018/01/29解决之】；</li>
@@ -272,13 +322,13 @@ kbd {
 
 <p>此记。</p>
 
-<h2 id="toc_8">参考文档</h2>
+<h2 id="toc_9">参考文档</h2>
 
 <ul>
-<li>1 <a href="http://blog.csdn.net/bluishglc/article/details/7970268">一种支持自由规划无须数据迁移和修改路由代码的Sharding扩容方案</a></li>
+<li>1 <a href="http://blog.csdn.net/bluishglc/article/details/7970268">一种支持自由规划无须数据迁移和修改路由代码的Replicaing扩容方案</a></li>
 </ul>
 
-<h2 id="toc_9">扒粪者-于雨氏</h2>
+<h2 id="toc_10">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>于雨氏，2017/12/31，初作此文于丰台金箱堂。</p>
@@ -286,6 +336,8 @@ kbd {
 <p>于雨氏，2018/01/16，于海淀添加“系统稳定性”一节。</p>
 
 <p>于雨氏，2018/01/29，于海淀添加“消息可靠性”一节。</p>
+
+<p>于雨氏，2018/02/11，于海淀添加“Router”一节。</p>
 </blockquote>
 
 
@@ -309,7 +361,6 @@ dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js'; dsq.setAttribute('da
 </script>
 <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
 <script id="dsq-count-scr" src='//' + disqus_shortname + '.disqus.com/count.js' async></script>
-
 
 
 </body>
