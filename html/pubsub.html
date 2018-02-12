@@ -183,28 +183,28 @@ kbd {
 <p>各个模块详细流程说明如下：</p>
 
 <ul>
-<li><p>1 client启动的时候先从Registy上get到Proxy注册路径/pubsub/proxy下所有的Proxy，并watch这个路径，然后采用相关负载均衡算法把消息转发给某个Proxy;</p>
+<li><p>1 client启动的时候先从Registy上获取Proxy注册路径/pubsub/proxy下所有的Proxy，并watch这个路径，然后采用相关负载均衡算法把消息转发给某个Proxy;</p>
 
 <p>当/pubsub/proxy下有新的实例信息的时候，Regitsty会通知给Client;</p></li>
-<li><p>2 Proxy启动时读取/pubsub/broker/partition<em>num的值（譬如为2），接着读取路径/pubsub/broker/Partition0和/pubsub/broker/Partition1下所有的Broker实例，同时watch注册中心的路径/pubsub/broker/partition</em>num的值的改变，最后把自身信息注册到Registry路径/pubsub/proxy下；</p>
+<li><p>2 Proxy启动时读取/pubsub/broker/partition<em>num的值（譬如为2），接着读取路径/pubsub/broker/partition(x)下所有的Broker实例，同时watch注册中心的路径/pubsub/broker/partition</em>num的值的改变，最后把自身信息注册到Registry路径/pubsub/proxy下；</p>
 
-<p>当/pubsub/broker/partition_num的值发生改变的时候(譬如值改为4)，意味着pubsub系统发生了垂直扩展，Proxy要及时读新Partition路径（如/pubsub/broker/Partition2和/pubsub/broker/Partition3）下的实例，并watch这些路径，关注相应Partition下实例的改变；</p>
+<p>当/pubsub/broker/partition_num的值发生改变的时候(譬如值改为4)，意味着Router Partition进行了扩展，Proxy要及时读新Partition路径（如/pubsub/broker/Partition2和/pubsub/broker/Partition3）下的实例，并watch这些路径，关注相应Partition下实例的改变；</p>
 
 <p>之所以Proxy在获取Registry下所有当前的Broker实例信息后再注册自身信息，是因为此时它才具有转发消息的资格。</p>
 
-<p>Proxy转发某个Room消息时候，先根据约定的哈希算法以Room ID为参数把Room Message发送到某个Broker Partition【譬如Room ID % Broker Partition number】，然后再根据Partition内Broker总数和哈希算法【譬如Room ID % Broker number】把消息转发到Broker Partition内某个Broker实例；</p></li>
-<li><p>3 Broker启动之时先把自身信息注册到Registry路径/pubsub/router<em>broker/router</em>partition(x)下，然后从Database中把自身所在的Broker Partition所应该负责的Room ID到某Gateway映射数据加载进来，待加载完毕数据后再把自身注册到Registry路径/pubsub/broker/partition(x)下；</p>
+<p>Proxy转发某个Room消息时候，只发送给处于Running状态的Broker。Proxy先根据约定的哈希算法以Room ID为参数把Room Message发送到某个Broker Partition【譬如Room ID % Broker Partition number】，然后再根据Partition内Broker总数和哈希算法【譬如Room ID % Broker number】把消息转发到Broker Partition内某个Broker实例；</p></li>
+<li><p>3 Broker启动之时先把自身信息注册到Registry路径/pubsub/broker/router_partition(x)下，状态设置为Init，然后从Database中把自身所在的Broker Partition所应该负责的Room ID到某Gateway映射数据加载进来，待加载完毕数据后把自身所在的Registry中的状态修改为Running；</p>
 
 <p>注意Broker之所以先注册然后再加载Database中的数据，是为了在加载数据的时候同时接收Router转发来的Gateway Message，但是在数据加载完前这些受到的数据先被缓存起来，待映射关系加载完后就把这些数据重放一遍；</p>
 
-<p>Broker之所以要针对Router和proxy分别注册两个路径/pubsub/router_broker/和/pubsub/broker/，是为了在加载完毕映射关系前不对Proxy提供转发消息的服务，同时也方便Broker Partition应对的消息量增大时进行水平扩展；</p>
+<p>Broker之所以区分状态，是为了在加载完毕映射关系前不对Proxy提供转发消息的服务，同时也方便Broker Partition应对的消息量增大时进行水平扩展；</p>
 
-<p>当Broker发生垂直扩展的时候，新的Partition个数必须是2的幂，只有新Partition内所有Broker Replica都加载实例完毕，再更改/pubsub/broker/partition_num的值；</p>
+<p>当Broker发生Partition扩展的时候，新的Partition个数必须是2的幂，只有新Partition内所有Broker Replica都加载实例完毕，再更改/pubsub/broker/partition_num的值；</p>
 
 <p>老的Broker也要watch路径/pubsub/broker/partition_num的值，当这个值增加的时候，它需要清洗不再由自身负责的路由映射数据；</p></li>
-<li><p>4 Router启动之时先读取/pubsub/broker/partition<em>num的值（譬如为2），接着读取路径/pubsub/broker</em>router/router<em>partition0和/pubsub/broker</em>router/router<em>partition1下所有的Broker实例，同时watch注册中心的路径/pubsub/broker/partition</em>num的值的改变，并watch注册中心路径/pubsub/broker/partition0和/pubsub/broker/partition1下所有的Broker实例，最后把自身信息注册到Registry路径/pubsub/router下；</p>
+<li><p>4 Router启动之时先读取/pubsub/broker/partition<em>num的值（譬如为2），接着读取路径/pubsub/router/partition(x)下所有的Broker实例，同时watch注册中心路径/pubsub/broker下所有的Broker实例和partition</em>num的值，最后把自身信息注册到Registry路径/pubsub/router下；</p>
 
-<p>Router工作流程与Proxy相似，不同之处在于：收到Gateway Message后先把数据写入Database中，然后把Message发送给Room ID对应的Partition内所有Broker Replica。</p></li>
+<p>Router工作流程与Proxy相似，不同之处在于：收到Gateway Message后先把数据写入Database中，然后把Message发送给Room ID对应的Partition内所有Broker Replica，保证Partition下所有replica拥有同样的路由映射数据。</p></li>
 </ul>
 
 <h3 id="toc_3">3 系统稳定性</h3>
@@ -266,11 +266,11 @@ kbd {
 
 <p><img src="../pic/pubsub_router.png" alt=""></p>
 
-<p>重构后的Router也采用分Partition分Replica设计，Partition内部各Replica之间采用non-leader机制；各Router Replica不会主动把Gateway Message内容push给各Broker，而是各Broker主动通过心跳包形式Router Partition内某个Replica注册，而后此Replica才会把消息转发到这个Broker上。</p>
+<p>重构后的Router也采用分Partition分Replica设计，Partition内部各Replica之间采用non-leader机制；各Router Replica不会主动把Gateway Message内容push给各Broker，而是各Broker主动通过心跳包形式向Router Partition内某个Replica注册，而后此Replica才会把消息转发到这个Broker上。</p>
 
 <p>类似于Broker，Router Partition也以2倍扩容方式进行Partition水平扩展，并通过一定机制保证扩容或者Partition内部各个实例停止运行或者新启动时，尽力保证数据的一致性。</p>
 
-<p>Router Replica收到Gateway Message后，replica先把Gateway Message转发给Partition内各个peer replica，然后再转发给各个订阅者。转发消息的同时异步写入Database。</p>
+<p>Router Replica收到Gateway Message后，replica先把Gateway Message转发给Partition内各个peer replica，然后再转发给各个订阅者。Router转发消息的同时异步把消息数据写入Database。</p>
 
 <p>独立Router架构下，下面分别详述Gateway、Router和Broker三个相关模块的详细流程。</p>
 
@@ -283,10 +283,15 @@ kbd {
 <ul>
 <li>1 从Registry路径/pubsub/router/partition(x)下获取每个Partition的各个replica；</li>
 <li>2 从Registry路径/pubsub/router/partition_num获取当前有效的Router Partition Number；</li>
-<li>3 启动一个线程关注Registry上的Broker路径/pubsub/router，以实时获取Router Partition Number，以及Partition扩容以及Partition内部replica的变动情况：或新加入或死掉；</li>
-<li>4 启动一个线程定时读取以上两个路径的值，以定时轮询的策略观察Router Partition Number变动，以及Router内各Partition的变动情况，作为实时策略的补充；</li>
-<li>5 定时向各个Partition replica发送心跳，以探测其活性，以保证不向超时的replica转发Gateway Message；</li>
-<li>6 依据规则向每个Partition的replica转发Gateway Message。</li>
+<li><p>3 启动一个线程关注Registry上的Broker路径/pubsub/router，以实时获取以下信息：</p>
+
+<div><pre><code class="language-none">Router Partition Number；
+新的Router Partition（此时发生了扩容）；
+Partition内新的replica（Partition内发生了replica扩容）；
+Parition内某replica挂掉的信息；</code></pre></div></li>
+<li><p>4 启动一个线程定时读取以上两个路径的值，以定时轮询的策略观察Router Partition Number变动，以及Router内各Partition的变动情况，作为实时策略的补充；</p></li>
+<li><p>5 定时向各个Partition replica发送心跳，以探测其活性，以保证不向超时的replica转发Gateway Message；</p></li>
+<li><p>6 依据规则向每个Partition的replica转发Gateway Message。</p></li>
 </ul>
 
 <p>第六步的规则决定了Gateway Message的目的Partition和replica，规则内容有：</p>
@@ -296,7 +301,7 @@ kbd {
 
 <blockquote>
 <blockquote>
-<p>这里之所以不采用condition(RouterPartitionID = RoomID % RouterPartitionNumber)，是考虑到当Router进行2倍扩容的时候当所有新的Partition的所有Replica都启动完毕且数据一致时才会修改Registry路径/pubsub/router/partition<em>num的值，按照规则的计算公式才能保证新Partition的各个Replica在启动过程中就可以得到Gateway Message，也即此时每个Gateway Message会被发送到两个Partition。
+<p>这里之所以不采用直接hash方式(RouterPartitionID = RoomID % RouterPartitionNumber)获取Router Partition，是考虑到当Router进行2倍扩容的时候当所有新的Partition的所有Replica都启动完毕且数据一致时才会修改Registry路径/pubsub/router/partition<em>num的值，按照规则的计算公式才能保证新Partition的各个Replica在启动过程中就可以得到Gateway Message，也即此时每个Gateway Message会被发送到两个Router Partition。
 当Router扩容完毕，修改Registry路径/pubsub/router/partition</em>num的值后，此时新集群进入稳定期，每个Gateway Message只会被发送固定的一个Partition，condition(RoomID % RouterPartitionNumber == RouterPartitionID % RouterPartitionNumber)等效于condition(RouterPartitionID = RoomID % RouterPartitionNumber)。</p>
 </blockquote>
 </blockquote>
@@ -314,6 +319,8 @@ kbd {
 
 <hr>
 
+<p>Router系统部署之前，先设置Registry路径/pubsub/router/partition_num的值为1。</p>
+
 <p>Router详细流程如下：</p>
 
 <ul>
@@ -322,18 +329,24 @@ kbd {
 <li>3 注册完毕会收到Gateway发来的Gateway Message，先缓存到队列GatewayMessageQueue；</li>
 <li>4 从Registry路径/pubsub/router/partition(x)下获取每个Partition的各个replica；</li>
 <li>5 从Registry路径/pubsub/router/partition_num获取当前有效的Router Partition Number；</li>
-<li>6 启动一个线程关注Registry路径/pubsub/router，以实时获取Partition扩容时新添加的replica以及Partition内部replica的变动情况：或新加入或死掉，和当前的RouterPartitionNum；</li>
-<li>7 启动一个线程定时读取Registry路径/pubsub/router下各个子路径的值，以定时轮询的策略观察Router各Partition的变动情况，作为实时策略的补充；</li>
-<li>8 从Dashboard加载数据；</li>
-<li>9 启动一个线程异步处理GatewayMessageQueue内的Gateway Message，把Gateway Message转发给同Partition内其他peer replica，然后转发给BrokerList内每个Broker；</li>
-<li>10 修改Registry路径/pubsub/router/partition3下节点的状态为Running；</li>
-<li>11 接收Broker发来的心跳包，把Broker的信息存入本地BrokerList，然后给Broker发送回包；</li>
-<li>12 启动一个线程检查超时的Broker，把其从BrokerList中剔除；</li>
+<li><p>6 启动一个线程关注Registry路径/pubsub/router，以实时获取以下信息：</p>
+
+<div><pre><code class="language-none">Router Partition Number；
+新的Router Partition（此时发生了扩容）；
+Partition内新的replica（Partition内发生了replica扩容）；
+Parition内某replica挂掉的信息；</code></pre></div></li>
+<li><p>7 启动一个线程定时读取Registry路径/pubsub/router下各个子路径的值，以定时轮询的策略观察Router各Partition的变动情况，作为实时策略的补充；</p></li>
+<li><p>8 从Database加载数据；</p></li>
+<li><p>9 启动一个线程异步处理GatewayMessageQueue内的Gateway Message，把Gateway Message转发给同Partition内其他peer replica，然后转发给BrokerList内每个Broker；</p></li>
+<li><p>10 修改Registry路径/pubsub/router/partition3下节点的状态为Running；</p></li>
+<li><p>11 接收Broker发来的心跳包，把Broker的信息存入本地BrokerList，然后给Broker发送回包；</p></li>
+<li><p>12 启动一个线程检查超时的Broker，把其从BrokerList中剔除；</p></li>
+<li><p>13 当RouterPartitionNum倍增时，Router需要清洗自身缓存数据中不再由自身负责的映射关系数据。</p></li>
 </ul>
 
 <p>另外启动一个进程，当新启动的Partition内所有Replica的状态都是Running的时候，修改Registry路径/pubsub/router/partition_num的值为所有Partition的数目。</p>
 
-<p>Replica向Broker转发消息的时候，需要对消息进行过滤，过滤条件为：RoomID % BrokerPartitionNumber == BrokerReplicaPartitionID。</p>
+<p>Replica向Broker转发消息的时候，需要对消息进行过滤，过滤条件为：RoomID % BrokerPartitionNumber == BrokerReplicaPartitionID % BrokerPartitionNumber。</p>
 
 <h4 id="toc_10">5.3 Broker</h4>
 
@@ -346,25 +359,30 @@ kbd {
 <li>2 向Registry路径/pubsub/broker/partition3注册，设置其状态为Init，注册中心返回的ID作为自身的ID(replicaID)；</li>
 <li>3 从Registry路径/pubsub/router/partition_num获取当前有效的Router Partition Number；</li>
 <li>4 从Registry路径/pubsub/router/partition(x)下获取每个Router Partition的各个replica；</li>
-<li>5 启动一个线程关注Registry路径/pubsub/router，以实时获取Partition扩容时新添加的replica以及Partition内部replica的变动情况：或新加入或死掉，和当前的RouterPartitionNum；</li>
-<li>6 启动一个线程定时读取Registry路径/pubsub/router下各个子路径的值，以定时轮询的策略观察Router各Partition的变动情况，作为实时策略的补充；</li>
-<li>7 依据规则选定目标Router Partition和Router Partition下某个Router replica，向其发送心跳消息，包含BrokerGroupNum、BrokerPartitionID、BrokerHostAddr和精确到秒级的Timestamp，并异步等待所有Router replica的回复，所有Router转发来的Gateway Message放入GatewayMessageQueue；</li>
-<li>8 从Dashboard加载数据；</li>
-<li>9 异步处理GatewayMessageQueue内的Gateway Message；</li>
-<li>10 修改Registry路径/pubsub/router/partition3下节点的状态为Running；</li>
-<li>11 启动一个线程检查超时的Router，某Router超时后更换其所在的Partition内其他Router替换之，定时发送心跳包；</li>
+<li><p>5 启动一个线程关注Registry路径/pubsub/router，以实时获取以下信息：</p>
+
+<div><pre><code class="language-none">Router Partition Number；
+新的Router Partition（此时发生了扩容）；
+Partition内新的replica（Partition内发生了replica扩容）；
+Parition内某replica挂掉的信息；</code></pre></div></li>
+<li><p>6 启动一个线程定时读取Registry路径/pubsub/router下各个子路径的值，以定时轮询的策略观察Router各Partition的变动情况，作为实时策略的补充；</p></li>
+<li><p>7 依据规则选定目标Router Partition和Router Partition下某个Router replica，向其发送心跳消息，包含BrokerGroupNum、BrokerPartitionID、BrokerHostAddr和精确到秒级的Timestamp，并异步等待所有Router replica的回复，所有Router转发来的Gateway Message放入GatewayMessageQueue；</p></li>
+<li><p>8 从Database加载数据；</p></li>
+<li><p>9 异步处理GatewayMessageQueue内的Gateway Message；</p></li>
+<li><p>10 修改Registry路径/pubsub/router/partition3下自身节点的状态为Running；</p></li>
+<li><p>11 启动一个线程检查超时的Router，某Router超时后更换其所在的Partition内其他Router替换之，定时发送心跳包。</p></li>
 </ul>
 
 <p>第7步的规则与5.1节的规则相同。</p>
 
 <p>BrokerPartitionNumber可以小于或者等于或者倍增于RouterPartitionNumber，两个集群可以分别进行扩展，互不影响。譬如BrokerPartitionNumber=4而RouterPartitionNumber=2，则Broker Partition 3只需要向Router Partition 1的某个follower发送心跳消息即可；若BrokerPartitionNumber=4而RouterPartitionNumber=8，则Broker Partition 3需要向Router Partition 3的某个follower发送心跳消息的同时，还需要向Router Partition 7的某个follower发送心跳，以获取全量的Gateway Message。</p>
 
-<p>Broker需要关注/pubsub/router/partition<em>num和/pubsub/broker/partition</em>num的值的变化，当router或者broker进行parition水平扩展的时候，Broker需要及时重新构建与Router之间的对应关系，及时变动发送心跳的Router follower对象。</p>
+<p>Broker需要关注/pubsub/router/partition<em>num和/pubsub/broker/partition</em>num的值的变化，当router或者broker进行parition水平扩展的时候，Broker需要及时重新构建与Router之间的对应关系，及时变动发送心跳的Router replica对象。</p>
 
-<p>当Router Partition内leader死掉或者发送心跳包的follower对象死掉（无论是注册中心通知还是心跳包超时）或者follower升级为leader（无论是注册中心通知还是通过心跳包带回的错误标识），broker要及时变动发送心跳的Router follower对象。</p>
+<p>当Router Partition内replica死掉或者发送心跳包的replica对象死掉（无论是注册中心通知还是心跳包超时），broker要及时变动发送心跳的Router replica对象。</p>
 
 <p>另外，Gateway使用UDP通信方式向Router发送Gateway Message，如若这个Message丢失则此Gateway上该Room内所有成员一段时间内（当有新的成员在当前Gateway上加入room
-时会产生新的Gateway Message）都无法再接收消息，为了保证消息的可靠性，可以使用这样一个约束解决问题：<font color=blue><strong>在此Gateway上登录的某Room内的人数少于3时，Gateway会把Gateway Message复制两份非连续（如以10ms位间隔）重复发送给某个Partition leader。</strong></font>因Gateway Message消息处理的幂等性，重复Gateway Message并不会导致Room Message发送错误，只在极少概率的情况下会导致Gateway收到消息的时候Room内已经没有成员在此Gateway登录，此时Gateway会把消息丢弃不作处理。</p>
+时会产生新的Gateway Message）都无法再接收消息，为了保证消息的可靠性，可以使用这样一个约束解决问题：<font color=blue><strong>在此Gateway上登录的某Room内的人数少于3时，Gateway会把Gateway Message复制两份非连续（如以10ms为时间间隔）重复发送给某个Partition leader。</strong></font>因Gateway Message消息处理的幂等性，重复Gateway Message并不会导致Room Message发送错误，只在极少概率的情况下会导致Gateway收到消息的时候Room内已经没有成员在此Gateway登录，此时Gateway会把消息丢弃不作处理。</p>
 
 <h3 id="toc_11">6 总结</h3>
 
@@ -377,7 +395,6 @@ kbd {
 <li>2 目前的负载均衡算法采用了极简的RoundRobin算法，可以根据成功率和延迟添加基于权重的负载均衡算法实现；</li>
 <li>3 只考虑传递，没有考虑消息的去重，可以根据消息ID实现这个功能【2018/01/29解决之】；</li>
 <li>4 各个模块之间没有考虑心跳方案，整个系统的稳定性依赖于Registry【2018/01/17解决之】；</li>
-<li>5 其他......</li>
 </ul>
 
 <p>此记。</p>
