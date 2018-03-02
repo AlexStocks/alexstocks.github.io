@@ -318,7 +318,7 @@ Broker需要关注/pubsub/router/partition_num和/pubsub/broker/partition_num的
 ### 6 总结 ###
 ---
 
-这套pubsub系统尚有以下task lisk需完善：
+这套pubsub系统尚有以下task list需完善：
 
 - 1 消息以UDP链路传递，不可靠【2018/01/29解决之】；
 - 2 目前的负载均衡算法采用了极简的RoundRobin算法，可以根据成功率和延迟添加基于权重的负载均衡算法实现；
