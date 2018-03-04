@@ -314,8 +314,31 @@ Broker需要关注/pubsub/router/partition_num和/pubsub/broker/partition_num的
         
 另外，Gateway使用UDP通信方式向Router发送Gateway Message，如若这个Message丢失则此Gateway上该Room内所有成员一段时间内（当有新的成员在当前Gateway上加入room
 时会产生新的Gateway Message）都无法再接收消息，为了保证消息的可靠性，可以使用这样一个约束解决问题：<font color=blue>**在此Gateway上登录的某Room内的人数少于3时，Gateway会把Gateway Message复制两份非连续（如以10ms为时间间隔）重复发送给某个Partition leader。**</font>因Gateway Message消息处理的幂等性，重复Gateway Message并不会导致Room Message发送错误，只在极少概率的情况下会导致Gateway收到消息的时候Room内已经没有成员在此Gateway登录，此时Gateway会把消息丢弃不作处理。
+  
+### 6 离线消息 ###
+---
     
-### 6 总结 ###
+前期的系统只考虑了用户在线情况下实时消息的传递，当用户离线时其消息便无法获取。若系统考虑用户离线消息传递，需要考虑如下因素：  
+* 消息固化：保证用户上线时收到其离线期间的消息；   
+* 消息有序：离线消息和在线消息都在一个消息系统传递，给每个消息分配一个ID以区分消息先后顺序，消息顺序越靠后则ID愈大。
+
+离线消息的存储和传输，需要考虑用户的状态以及每条消息的发送状态，整个消息核心链路流程会有大的重构。新消息架构如下图：
+
+![](../pic/pubsub_pixiu.png)
+
+系统名词解释：
+
+> 1 Pi                  : 消息ID存储模块，存储每个人未发送的消息ID有序递增集合；
+>
+> 2 Xiu                 : 消息存储KV模块，存储每个人的消息，给每个消息分配ID，以ID为key，以消息内为value；
+> 
+> 3 Gateway Message(HB) : 
+
+系统内部代号貔貅(貔貅者，雄貔雌貅)，源自上面两个新模块。
+
+这个版本架构流程的核心思想为“消息ID与消息内容分离，消息与用户状态分离”。消息发送流程涉及到模块Client/Proxy/Pi/Xiu，消息推送流程则涉及到模块Pi/Xiu/Broker/Router/Gateway。
+    
+### 7 总结 ###
 ---
 
 这套pubsub系统尚有以下task list需完善：
@@ -324,6 +347,7 @@ Broker需要关注/pubsub/router/partition_num和/pubsub/broker/partition_num的
 - 2 目前的负载均衡算法采用了极简的RoundRobin算法，可以根据成功率和延迟添加基于权重的负载均衡算法实现；
 - 3 只考虑传递，没有考虑消息的去重，可以根据消息ID实现这个功能【2018/01/29解决之】；
 - 4 各个模块之间没有考虑心跳方案，整个系统的稳定性依赖于Registry【2018/01/17解决之】；
+- 5 离线消息【2018/03/03解决之】；
 
 此记。
 
