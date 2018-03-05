@@ -1,4 +1,4 @@
-## 一套高可用的pubsub系统实现
+## 一套高可用pubsub系统实现
 ---
 *written by Alex Stocks on 2017/12/31*
 
