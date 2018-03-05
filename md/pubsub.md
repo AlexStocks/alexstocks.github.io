@@ -15,15 +15,19 @@
 
 > 1 Client : 消息发布者【或者叫做服务端pubsub系统调用者】，publisher；
 >
-> 2 Proxy  : 系统代理，对外统一接口，收集Client发来的消息转发给Broker；
+> 2 Proxy : 系统代理，对外统一接口，收集Client发来的消息转发给Broker；
 >
-> 3 Broker ：系统Server，Broker会根据Gateway message组织Room ID和Gateway IP&port的映射关系，然后把Proxy发来的消息转发到Room中所有成员登录的所有Gateway，；
+> 3 Broker ：系统消息转发Server，Broker 会根据 Gateway Message 组织一个 RoomGatewayList【key为RoomID，value为 Gateway IP:Port 地址列表】，然后把 Proxy 发来的消息转发到 Room 中所有成员登录的所有 Gateway；
 >
 > 4 Router ：用户登录消息转发者，把Gateway转发来的用户登入登出消息转发给所有的Broker；
 >
-> 5 Gateway：所有服务端的入口，接收合法客户端的连接，并把客户端的登录登出消息通过Router转发给所有的Broker；
+> 5 Gateway ：所有服务端的入口，接收合法客户端的连接，并把客户端的登录登出消息通过Router转发给所有的Broker；
 > 
-> 当一个Room中多个Client连接一个Gateway的时候，Broker只会根据Room ID把房间内的消息转发一次给这个Gateway，由Gateway再把消息复制多份分别发送给连接这个Gateway的Room中的所有客户端。 
+> 6 Room Message : Room聊天消息；
+> 
+> 7 Gateway Message : Room内某成员 登录 或者 登出 某Gateway消息，包含用户UIN/RoomID/Gateway地址{IP:Port}等消息；
+
+当一个 Room 中多个 Client 连接一个 Gateway 的时候，Broker只会根据 RoomID 把房间内的消息转发一次给这个Gateway，由Gateway再把消息复制多份分别发送给连接这个 Gateway 的 Room 中的所有用户的客户端。 
 
 这套系统有如下特点：   
 
@@ -51,7 +55,7 @@
 
 其次，当Gateway Message量加大时可以对Router进行水平扩展，多部署Router即可因应Gateway Message的流量。
 
-最后，两种消息的交汇之地Broker如何扩展呢？可以把若干Broker Replica组成一个Partition，因为Gateway Message是在一个Partition内广播的，所有Broker Replica都会复制一份Gateway message以组织Room Id和Gateway IP&port的映射关系，因此当Gateway message增加时扩容Partition即可。当Room Message量增加时，水平扩容Partition内的Broker Replica即可，因为Room Message只会发送到Partition内某个Replica上。
+最后，两种消息的交汇之地Broker如何扩展呢？可以把若干Broker Replica组成一个Partition，因为Gateway Message是在一个Partition内广播的，所有Broker Replica都会有相同的RoomGatewayList 数据，因此当Gateway Message增加时扩容Partition即可。当Room Message量增加时，水平扩容Partition内的Broker Replica即可，因为Room Message只会发送到Partition内某个Replica上。
 
 从个人经验来看，Room ID的增长以及Room内成员的增加量在一段时间内可以认为是直线增加，而Room Message可能会以指数级增长，所以若设计得当则Partition扩容的概率很小，而Partition内Replica水平增长的概率几乎是100%。
 
@@ -110,7 +114,7 @@ Broker详细流程如下：
 - 1 Broker加载配置，获取自身所在Partition的ID（假设为3）；
 - 2 向Registry路径/pubsub/broker/partition3注册，设置其状态为Init，注册中心返回的ID作为自身的ID(replicaID)；
 - 3 接收Router转发来的Gateway Message，放入GatewayMessageQueue；
-- 4 从Database加载数据，把自身所在的Broker Partition所应该负责的Room ID到某Gateway映射数据加载进来；
+- 4 从Database加载数据，把自身所在的Broker Partition所应该负责的 RoomGatewayList 数据加载进来；
 - 5 异步处理GatewayMessageQueue内的Gateway Message，只处理满足规则【PartitionID == RoomID % PartitionNum】的消息，把数据存入本地路由信息缓存；
 - 6 修改Registry路径/pubsub/broker/partition3下自身节点的状态为Running；
 - 7 启动线程实时关注Registry路径/pubsub/broker/partition_num的值；
@@ -119,9 +123,9 @@ Broker详细流程如下：
 - 10 接收Proxy发来的Room Message，依据RoomID从路由信息缓存中查找Room有成员登陆的所有Gateway，把消息转发给这些Gateway；
 
 
-注意Broker之所以先注册然后再加载Database中的数据，是为了在加载数据的时候同时接收Router转发来的Gateway Message，但是在数据加载完前这些受到的数据先被缓存起来，待映射关系加载完后就把这些数据重放一遍；
+注意Broker之所以先注册然后再加载Database中的数据，是为了在加载数据的时候同时接收Router转发来的Gateway Message，但是在数据加载完前这些受到的数据先被缓存起来，待所有 RoomGatewayList 数据加载完后就把这些数据重放一遍；
     
-Broker之所以区分状态，是为了在加载完毕映射关系前不对Proxy提供转发消息的服务，同时也方便Broker Partition应对的消息量增大时进行水平扩展。
+Broker之所以区分状态，是为了在加载完毕 RoomGatewayList 数据前不对Proxy提供转发消息的服务，同时也方便Broker Partition应对的消息量增大时进行水平扩展。
     
 当Broker发生Partition扩展的时候，新的Partition个数必须是2的幂，只有新Partition内所有Broker Replica都加载实例完毕，再更改/pubsub/broker/partition_num的值。
     
@@ -147,9 +151,9 @@ Router详细流程如下：
 
 - 6 定时向各个Broker Partition replica发送心跳，异步等待Broker返回的心跳响应包，以探测其活性，以保证不向超时的replica转发Gateway Message；
 - 7 启动一个线程定时读取Registry上的Broker路径/pubsub/broker下各个子节点的值，以定时轮询的策略观察Broker Partition Number变动，以及各Partition的变动情况，作为实时策略的补充；同时定时检查心跳包超时的Broker，从有效的BrokerList中删除；
-- 8 从Database全量加载路由映射数据放入本地缓存；
+- 8 从Database全量加载路由 RoomGatewayList 数据放入本地缓存；
 - 9 收取Gateway发来的心跳消息，及时返回ack包；
-- 10 收取Gateway转发来的Gateway Message，按照一定规则【BrokerPartitionID % BrokerPartitionNum = RoomID % BrokerPartitionNum】转发给<font color=blue>**某个Broker Partition下所有Broker Replica**</font>，保证Partition下所有replica拥有同样的路由映射数据，再把Message内数据存入本地缓存，当检测到数据不重复的时候把数据异步写入Database； 
+- 10 收取Gateway转发来的Gateway Message，按照一定规则【BrokerPartitionID % BrokerPartitionNum = RoomID % BrokerPartitionNum】转发给<font color=blue>**某个Broker Partition下所有Broker Replica**</font>，保证Partition下所有replica拥有同样的路由 RoomGatewayList 数据，再把Message内数据存入本地缓存，当检测到数据不重复的时候把数据异步写入Database； 
 
 #### 2.5 Gateway
 ---
