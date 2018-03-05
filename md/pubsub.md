@@ -1,13 +1,13 @@
-## 一套高可用的pub/sub系统实现 ##
+## 一套高可用的pubsub系统实现
 ---
 *written by Alex Stocks on 2017/12/31*
 
-### 1 极简实现 ###
+### 1 极简实现
 ---
 
-所谓系统pub/sub，就是一种群聊方式，譬如直播房间内的聊天对应的服务器端就是一个pub/sub系统。
+所谓系统pubsub，就是一种群聊方式，譬如直播房间内的聊天对应的服务器端就是一个pubsub系统。
 
-2017年9月初初步实现了一套极简的pub/sub系统，其大致架构如下：
+2017年9月初初步实现了一套极简的pubsub系统，其大致架构如下：
 		
 ![](../pic/pubsub_simple.png)
     
@@ -40,7 +40,7 @@
 
 这种“幸福我一人，辛苦千万家”的扩容应对方式，必然导致公司内部这套系统的使用者怨声载道，升级之路就是必然的了。
 
-### 2 可扩展 ###
+### 2 可扩展
 ---
 
 大道之行也，天下为公，不同的系统有不同的构架，相同的系统总有类似的实现。类似于数据库的分库分表【关于分库分表，目前看到的最好的文章是参考文档1】，其扩展实现核心思想是分Partition分Replica，但各Replica之间还区分leader（leader-follower，只有leader可接受写请求）和non-leader（所有replica均可接收写请求）两种机制。
@@ -74,7 +74,7 @@ Client详细流程如下：
 - 4 启动一个线程定时轮询获取Registry路径/pubsub/proxy下各个Proxy实例，作为关注策略的补充，以期本地ProxyArray内各个Proxy成员与Registry上的各个Proxy保持一致；定时给各个Proxy发送心跳，异步获取心跳回包；定时清除ProxyArray中心跳超时的Proxy成员；
 - 5 发送消息的时候采用snowflake算法给每个消息分配一个MessageID，然后采用相关负载均衡算法把消息转发给某个Proxy。
 
-#### 2.2 Proxy ###
+#### 2.2 Proxy
 ---
 
 Proxy详细流程如下：
@@ -102,7 +102,7 @@ Proxy详细流程如下：
     
 Proxy转发某个Room消息时候，只发送给处于Running状态的Broker。为Broker Partition内所有replica依据Registry给其分配的replicaID进行递增排序，组成一个Broker Partition Replica Array，规则中BrokerPartitionReplicaNum为Array的size，而BrokerReplicaID为replica在Array中的下标。
        
-#### 2.3 Broker ###
+#### 2.3 Broker
 ---
    
 Broker详细流程如下：
@@ -127,9 +127,9 @@ Broker之所以区分状态，是为了在加载完毕映射关系前不对Proxy
     
 老的Broker也要watch路径/pubsub/broker/partition_num的值，当这个值增加的时候，它也需要清洗本地的路由信息缓存。
 
-Broker的扩容过程犹如细胞分裂，形成中的两个细胞有着完全相同的数据，分裂完成后【Registry路径/pubsub/broker/partition_num的值翻倍】则需要清洗垃圾信息。
+Broker的扩容过程犹如细胞分裂，形成中的两个细胞有着完全相同的数据，分裂完成后【Registry路径/pubsub/broker/partition_num的值翻倍】则需要清洗垃圾信息。这种方法称为翻倍法。
        
-#### 2.4 Router ###
+#### 2.4 Router
 ---
     
 Router详细流程如下：
@@ -151,7 +151,7 @@ Router详细流程如下：
 - 9 收取Gateway发来的心跳消息，及时返回ack包；
 - 10 收取Gateway转发来的Gateway Message，按照一定规则【BrokerPartitionID % BrokerPartitionNum = RoomID % BrokerPartitionNum】转发给<font color=blue>**某个Broker Partition下所有Broker Replica**</font>，保证Partition下所有replica拥有同样的路由映射数据，再把Message内数据存入本地缓存，当检测到数据不重复的时候把数据异步写入Database； 
 
-#### 2.5 Gateway ###
+#### 2.5 Gateway
 ---
     
 Gateway详细流程如下：
@@ -165,12 +165,12 @@ Gateway详细流程如下：
 
 Gateway本地有一个基于共享内存的LRU Cache，存储最近一段时间发送的消息的MessageID。
 
-### 3 系统稳定性 ###
+### 3 系统稳定性
 ---
 
 系统具有了可扩展性仅仅是系统可用的初步，整个系统要保证最低粒度的SLA（0.99），就必须在两个维度对系统的可靠性就行感知：消息延迟和系统内部组件的高可用。
 
-#### 3.1 消息延迟 ####
+#### 3.1 消息延迟
 ---
 
 准确的消息延迟的统计，通用的做法可以基于日志系统对系统所有消息或者以一定概率抽样后进行统计，但限于人力目前没有这样做。
@@ -179,7 +179,7 @@ Gateway本地有一个基于共享内存的LRU Cache，存储最近一段时间�
 
 通过所有消息的平均延迟可以评估系统的整体性能。同时，因为系统消息路由的哈希方式已知，当固定时间内伪Gateway没有收到消息时，就把消息当做发送失败，当某条链路失败一定次数后就可以产生告警了。
 
-#### 3.2 高可用 ####
+#### 3.2 高可用
 ---
 
 上面的方法同时能够检测某个链路是否出问题，但是链路具体出问题的点无法判断，且实时性无法保证。
@@ -191,7 +191,7 @@ Gateway本地有一个基于共享内存的LRU Cache，存储最近一段时间�
 同时依靠心跳包的延迟还可以判断broker的处理能力，基于此延迟值可在同一Partition内多broker端进行负载均衡。
 
 
-### 4 消息可靠性 ###
+### 4 消息可靠性
 ---
 
 公司内部内部原有一个走tcp通道的pubsub系统，但是经过元旦一次大事故（几乎全线崩溃）后，相关业务的一些重要消息改走这套基于UDP的pubsub系统了。这些消息如服务端下达给客户端的游戏动作指令，是不允许丢失的，但其特点是相对于聊天消息来说量非常小（单人1秒最多一个），所以需要在目前UDP链路传递消息的基础之上再构建一个可靠消息链路。
@@ -209,7 +209,7 @@ UDP通信的本质就是伪装的IP通信，TCP自身的稳定性无非是重传
 
 正常的消息在pubsub系统中传输时，Proxy会根据消息的Room ID传递给固定的Broker，以保证消息的有序性。
 
-### 5 多pubsub集群下的独立Router ###
+### 5 Router
 ---
 
 当线上需要部署多套pubsub系统的时候，Gateway需要把同样的Room Message复制多份转发给多套pubsub系统，会增大Gateway压力，可以把Router单独独立部署，然后把Room Message向所有的pubsub系统转发。
@@ -226,7 +226,7 @@ Router Replica收到Gateway Message后，replica先把Gateway Message转发给Pa
 
 独立Router架构下，下面分别详述Gateway、Router和Broker三个相关模块的详细流程。
 
-#### 5.1 Gateway ####
+#### 5.1 Gateway
 ---
 
 Gateway详细流程如下：
@@ -252,7 +252,7 @@ Gateway详细流程如下：
 > 如果Router Partition内某replia满足condition(replicaPartitionID = RoomID % RouterPartitionReplicaNumber)，则把消息转发到此replica。
 >>> replica向Registry注册的时候得到的ID称之为replicaID，Router Parition内所有replica按照replicaID递增排序组成replica数组RouterPartitionReplicaArray，replicaPartitionID即为replica在数组中的下标。
 
-#### 5.2 Router ####
+#### 5.2 Router 
 ---
 
 Router系统部署之前，先设置Registry路径/pubsub/router/partition_num的值为1。
@@ -282,7 +282,7 @@ Broker也采用了分Partition分Replica机制，所以向Broker转发Gateway Me
 
 另外启动一个工具，当水平扩展后新启动的Partition内所有Replica的状态都是Running的时候，修改Registry路径/pubsub/router/partition_num的值为所有Partition的数目。
 
-#### 5.3 Broker ####
+#### 5.3 Broker 
 ---
 
 Broker详细流程如下：
@@ -315,7 +315,7 @@ Broker需要关注/pubsub/router/partition_num和/pubsub/broker/partition_num的
 另外，Gateway使用UDP通信方式向Router发送Gateway Message，如若这个Message丢失则此Gateway上该Room内所有成员一段时间内（当有新的成员在当前Gateway上加入room
 时会产生新的Gateway Message）都无法再接收消息，为了保证消息的可靠性，可以使用这样一个约束解决问题：<font color=blue>**在此Gateway上登录的某Room内的人数少于3时，Gateway会把Gateway Message复制两份非连续（如以10ms为时间间隔）重复发送给某个Partition leader。**</font>因Gateway Message消息处理的幂等性，重复Gateway Message并不会导致Room Message发送错误，只在极少概率的情况下会导致Gateway收到消息的时候Room内已经没有成员在此Gateway登录，此时Gateway会把消息丢弃不作处理。
   
-### 6 离线消息 ###
+### 6 离线消息 
 ---
     
 前期的系统只考虑了用户在线情况下实时消息的传递，当用户离线时其消息便无法获取。若系统考虑用户离线消息传递，需要考虑如下因素：  
@@ -328,16 +328,206 @@ Broker需要关注/pubsub/router/partition_num和/pubsub/broker/partition_num的
 
 系统名词解释：
 
-> 1 Pi                  : 消息ID存储模块，存储每个人未发送的消息ID有序递增集合；
+> 1 Pi : 消息ID存储模块，存储每个人未发送的消息ID有序递增集合；
 >
-> 2 Xiu                 : 消息存储KV模块，存储每个人的消息，给每个消息分配ID，以ID为key，以消息内为value；
+> 2 Xiu : 消息存储KV模块，存储每个人的消息，给每个消息分配ID，以ID为key，以消息内为value；
 > 
-> 3 Gateway Message(HB) : 
+> 3 Gateway Message(HB) : 用户登录登出消息，包括APP保活定时心跳（Hearbeat）消息；
 
 系统内部代号貔貅(貔貅者，雄貔雌貅)，源自上面两个新模块。
 
 这个版本架构流程的核心思想为“消息ID与消息内容分离，消息与用户状态分离”。消息发送流程涉及到模块Client/Proxy/Pi/Xiu，消息推送流程则涉及到模块Pi/Xiu/Broker/Router/Gateway。
     
+下面先细述Pi和Xiu的接口，然后再详述发送和推送流程。
+ 
+#### 6.1 Xiu
+---
+
+Xiu模块功能名称是Message Storage，用户缓存和固化消息，并给消息分配ID。Xiu 集群采用分 Partition 分 Replica 机制，Partition 初始数目须是2的倍数，集群扩容时采用翻倍法。
+
+##### 6.1.1 存储消息
+---
+
+存储消息请求的参数列表为{SnowflakeID，UIN, Message}，其流程如下：   
+
+- 1 接收客户端发来的消息，获取消息接收人ID（UIN）和客户端给消息分配的 SnowflakeID；   
+- 2 检查 `UIN % Xiu_Partition_Num == Xiu_Partition_ID % Xiu_Partition_Num` 添加是否成立【即接收人的消息是否应当由当前Xiu负责】，不成立则返回错误并退出；   
+- 3 检查 SnowflakeID 对应的消息是否已经被存储过，若已经存储过则返回其对应的消息ID然后退出；   
+- 4 给消息分配一个 MsgID；   
+    
+	每个Xiu有自己唯一的 Xiu_Partition_ID，以及一个初始值为0的 Partition_Msg_ID。MsgID = 1B[ Xiu_Partition_ID ] + 1B[ Message Type ] + 6B[ ++ Partition_Msg_ID ]。每次分配的时候 Partition_Msg_ID 都自增加一。
+    
+- 5 以 MsgID 为 key 把消息存入基于共享内存的 Hashtable，并存入消息的 CRC32 hash值和插入时间，把 MsgID 存入一个 LRU list 中；
+   
+	LRU List 自身并不存入共享内存中，当进程重启时，可以根据Hashtable中的数据重构出这个List。把消息存入 Hashtable 中时，如果 Hashtable full，则依据 LRU List 对Hashtable 中的消息进行淘汰。
+
+- 6 把MsgID返回给客户端；
+- 7 把MsgID异步通知给消息固化线程，消息固化线程根据MsgID从Hashtable中读取消息并根据CRC32 hash值判断消息内容是否完整，完整则把消息存入本地RocksDB中；
+
+##### 6.1.2 读取消息
+---    
+
+读取消息请求的参数列表为{UIN, MsgIDList}，其流程为：
+
+- 1 获取请求的 MsgIDList，判断每个MsgID `MsgID{Xiu_Partition_ID} == Xiu_Partition_ID` 条件是否成立，不成立则返回错误并退出；   
+- 2 从 Hashtable 中获取每个 MsgID 对应的消息；   
+- 3 如果 Hashtable 中不存在，则从 RocksDB 中读取 MsgID 对应的消息；
+- 4 读取完毕则把所有获取的消息返回给客户端。
+   
+##### 6.1.3 主从数据同步
+---    
+   
+目前从简，暂定Xiu的副本只有一个。
+
+Xiu节点启动的时候根据自身配置文件中分配的 Xiu_Partition_ID 到Registry路径 /pubsub/xiu/partition_id 下进行注册一个临时有序节点，注册成功则Registry会返回Xiu的节点 ID。
+
+Xiu节点获取 /pubsub/xiu/partition_id 下的所有节点的ID和地址信息，依据 `节点ID最小者为leader` 的原则，即可判定自己的角色。只有leader可接受读写数据请求。
+
+数据同步流程如下：
+
+- 1 follower定时向leader发送心跳信息，心跳信息包含本地最新消息的ID；
+- 2 leader启动一个数据同步线程处理follower的心跳信息，leader的数据同步线程从LRU list中查找 follower_latest_msg_id 之后的N条消息的ID，若获取到则读取消息并同步给follower，获取不到则回复其与leader之间消息差距太大；
+- 3 follower从leader获取到最新一批消息，则存储之；
+- 4 follower若获取leader的消息差距太大响应，则请求leader的agent把RocksDB的固化数据全量同步过来，整理完毕后再次启动与leader之间的数据同步流程。
+
+follower会关注Registry路径  /pubsub/xiu/partition_id 下所有所有节点的变化情况，如果leader挂掉则及时转换身份并接受客户端请求。如果follower 与 leader 之间的心跳超时，则follower删掉 leader 的 Registry 路径节点，及时进行身份转换处理客户端请求。
+
+当leader重启或者follower转换为leader的时候，需要把 Partition_Msg_ID 进行一个大数值增值（譬如增加1000）以防止可能的消息ID乱序情况。
+
+##### 6.1.4 集群扩容
+---    
+
+Xiu 集群扩容采用翻倍法，扩容时新 Partition 的节点启动后工作流程如下：
+
+- 1 向Registry的路径 `/pubsub/xiu/partition_id` 下自己的 node 的 state 为 running，同时注册自己的对外服务地址信息；
+
+另外启动一个工具，当水平扩展后所有新启动的 Partition 内所有 Replica 的状态都是 Running 的时候，修改 Registry 路径 /pubsub/xiu/partition_num 的值为扩容后 Partition 的数目。按照开头的例子，即由2升级为4。
+
+之所以 Xiu 不用像 Broker 和 Router 那样启动的时候向老的 Partition 同步数据，是因为每个 Xiu 分配的 MsgID 中已经带有 Xiu 的 PartitionID 信息，即使集群扩容这个 ID 也不变，根据这个ID也可以定位到其所在的Partition，而不是借助 hash 方法。
+    
+#### 6.2 Pi
+---
+
+Pi 模块功能名称是 Message ID Storage，存储每个用户的 MsgID List。Xiu 集群也采用分 Partition 分 Replica 机制，Partition 初始数目须是2的倍数，集群扩容时采用翻倍法。
+    
+##### 6.2.1 存储消息ID
+---
+
+MsgID 存储的请求参数列表为{UIN，MsgID}，Pi 工作流程如下：
+
+- 1 判断条件 `UIN % Pi_Partition_Num == Pi_Partition_ID % Pi_Partition_Num` 是否成立，若不成立则返回error退出；
+- 2 把 MsgID 插入UIN的 MsgIDList 中，保持 MsgIDList 中所有 MsgID 不重复有序递增，把请求内容写入本地log，给请求者返回成功响应。   
+        
+Pi有专门的日志记录线程，给每个日志操作分配一个 LogID，每个 Log 文件记录一定量的写操作，当文件 size 超过配置的上限后删除之。        
+        
+##### 6.2.2 读取消息ID列表
+---
+    
+读取请求参数列表为{UIN, StartMsgID, MsgIDNum, ExpireFlag}，其意义为获取用户 UIN 自起始ID为 StartMsgID 起（不包括 StartMsgID ）的数目为 MsgIDNum 的消息ID列表，ExpireFlag意思是 所有小于等于 StartMsgID 的消息ID是否删除。 流程如下：
+
+- 1 判断条件 `UIN % Pi_Partition_Num == Pi_Partition_ID % Pi_Partition_Num` 是否成立，若不成立则返回error退出；
+- 2 获取 (StartID, StartMsgID + MsgIDNum] 范围内的所有 MsgID，把结果返回给客户端；
+- 3 如果 ExpireFlag 有效，则删除MsgIDList内所有在 [0, StartMsgID] 范围内的MsgID，把请求内容写入本地log。
+
+##### 6.2.3 主从数据同步
+---    
+   
+同 Xiu 模块，暂定 Pi 的同 Parition 副本只有一个。
+
+Pi 节点启动的时候根据自身配置文件中分配的 Pi_Partition_ID 到Registry路径 /pubsub/pi/partition_id 下进行注册一个临时有序节点，注册成功则 Registry 会返回 Pi 的节点 ID。
+
+Pi 节点获取 /pubsub/pi/partition_id 下的所有节点的ID和地址信息，依据 `节点ID最小者为leader` 的原则，即可判定自己的角色。只有 leader 可接受读写数据请求。
+
+数据同步流程如下：
+
+- 1 follower 定时向 leader 发送心跳信息，心跳信息包含本地最新 LogID；
+- 2 leader 启动一个数据同步线程处理 follower 的心跳信息，根据 follower 汇报的 logID 把此 LogID；
+- 3 follower 从 leader 获取到最新一批 Log，先存储然后重放。
+
+follower 会关注Registry路径  /pubsub/pi/partition_id 下所有节点的变化情况，如果 leader 挂掉则及时转换身份并接受客户端请求。如果follower 与 leader 之间的心跳超时，则follower删掉 leader 的 Registry 路径节点，及时进行身份转换处理客户端请求。
+
+##### 6.2.4 集群扩容
+---    
+
+Pi 集群扩容采用翻倍法。则节点启动后工作流程如下：
+
+- 1 向 Registry 注册，获取 Registry 路径 /pubsub/xiu/partition_num 的值 PartitionNumber；
+- 2 如果发现自己 PartitionID 满足条件 `PartitionID >= PartitionNumber` 时，则意味着当前 Partition 是扩容后的新集群，更新 Registry 中自己状态为start；
+- 3 读取 Registry 路径 /pubsub/xiu 下所有 Parition 的 leader，根据条件 `自身PartitionID % PartitionNumber == PartitionID % PartitionNumber` 寻找对应的老 Partition 的 leader，称之为 parent_leader；
+- 4 缓存收到 Proxy 转发来的用户请求；
+- 5 向 parent_leader 获取log；
+- 6 向 parent_leader 同步内存数据；
+- 7 重放 parent_leader 的log；
+- 8 更新 Registry 中自己的状态为 Running；
+- 9 重放用户请求；
+- 10 当 Registry 路径 /pubsub/xiu/partition_num 的值 PartitionNumber 满足条件 `PartitionID >= PartitionNumber` 时，意味着扩容完成，处理用户请求时要给用户返回响应。
+
+Proxy 会把读写请求参照条件 `UIN % Pi_Partition_Num == Pi_Partition_ID % Pi_Partition_Num` 向相关 partition 的 leader 转发用户请求。假设原来 PartitionNumber 值为2，扩容后值为4，则原来转发给 partition0 的写请求现在需同时转发给 partition0 和 partition2，原来转发给 partition1 的写请求现在需同时转发给 partition1 和 partition3。
+
+另外启动一个工具，当水平扩展后所有新启动的 Partition 内所有 Replica 的状态都是 Running 的时候，修改Registry路径/pubsub/xiu/partition_num的值为扩容后 Partition 的数目。
+
+#### 6.3 数据发送流程
+---
+    
+消息自 PiXiu 的外部客户端（Client，服务端所有使用 PiXiu 提供的服务者统称为客户端）按照一定负载均衡规则发送到 Proxy，然后存入 Xiu 中，把 MsgID 存入 Pi 中。其详细流程如下：   
+
+- 1 Client 依据 snowflake 算法给消息分配 SnowflakeID，依据 `ProxyID = UIN % ProxyNum` 规则把消息发往某个 Proxy；
+- 2 Proxy 收到消息后转发到 Xiu；
+- 3 Proxy 收到 Xiu 返回的响应后，把响应转发给 Client；
+- 4 如果 Proxy 收到 Xiu 返回的响应带有 MsgID，则发起 Pi 写流程，把 MsgID 同步到 Pi 中；
+- 5 如果 Proxy 收到 Xiu 返回的响应带有 MsgID，则给 Broker 发送一个 Notify，告知其某 UIN 的最新 MsgID。
+
+#### 6.4 数据转发流程
+---
+
+转发消息的主体是Broker，原来的在线消息转发流程是它收到 Proxy 转发来的 Message，然后根据用户是否在线然后转发给 Gateway。
+
+PiXiu架构下 Broker 会收到以下类型消息：
+
+* 用户登录消息
+* 用户心跳消息
+* 用户登出消息
+* Notify 消息
+* Ack 消息
+
+Broker流程受这五种消息驱动，下面分别详述其收到这五种消息时的处理流程。
+
+用户登录消息流程如下：
+
+- 1 检查用户的当前状态，若为 OffLine 则把其状态值为在线 OnLine；
+- 2 检查用户的待发送消息队列是否为空，不为空则退出；
+- 3 向 Pi 模块发送获取 N 条消息 ID 的请求 {UIN: uin, StartMsgID: 0, MsgIDNum: N, ExpireFlag: false}，设置用户状态为 GettingMsgIDList 并等待回应；
+- 4 根据 Pi 返回的消息 ID 队列，向 Xiu 发起获取消息请求 {UIN: uin, MsgIDList: msg ID List}，设置用户状态为 GettingMsgList 并等待回应； 
+- 5 Xiu 返回消息列表后，设置状态为 SendingMsg，并向 Gateway 转发消息。
+
+可以把用户心跳消息当做用户登录消息处理。
+
+用户登出消息处理流程如下：
+
+- 1 检查用户状态，如果为 OffLine，则退出；
+- 2 用户状态不为 OffLine 且检查用户已经发送出去的消息列表的最后一条消息的 ID（LastMsgID），向 Pi 发送获取 MsgID 请求{UIN: uin, StartMsgID: LastMsgID, MsgIDNum: 0, ExpireFlag: True}，待 Pi 返回响应后退出。 
+    
+处理 Proxy 发来的 Notify 消息处理流程如下：
+
+- 1 如果用户状态为 OffLine，则退出；
+- 2 更新用户的最新消息 ID（LatestMsgID），如果用户发送消息队列不为空则退出；
+- 3 向 Pi 模块发送获取 N 条消息 ID 的请求 {UIN: uin, StartMsgID: 0, MsgIDNum: N, ExpireFlag: false}，设置用户状态为 GettingMsgIDList 并等待回应；    
+- 4 根据 Pi 返回的消息 ID 队列，向 Xiu 发起获取消息请求 {UIN: uin, MsgIDList: msg ID List}，设置用户状态为 GettingMsgList 并等待回应； 
+- 5 Xiu 返回消息列表后，设置状态为 SendingMsg，并向 Gateway 转发消息。 
+
+所谓 Ack 消息，就是 Broker 经 Gateway 把消息转发给 App 后，App 给Broker的消息回复，告知Broker其最近成功收到消息的 MsgID。
+Ack 消息处理流程如下：
+
+- 1 如果用户状态为 OffLine，则退出；
+- 2 更新 LatestAckMsgID 的值；
+- 3 如果用户发送消息队列不为空，则发送下一个消息后退出；
+- 4 如果 LatestAckMsgID >= LatestMsgID，则退出；
+- 5 向 Pi 模块发送获取 N 条消息 ID 的请求 {UIN: uin, StartMsgID: 0, MsgIDNum: N, ExpireFlag: false}，设置用户状态为 GettingMsgIDList 并等待回应；    
+- 6 根据 Pi 返回的消息 ID 队列，向 Xiu 发起获取消息请求 {UIN: uin, MsgIDList: msg ID List}，设置用户状态为 GettingMsgList 并等待回应； 
+- 7 Xiu 返回消息列表后，设置状态为 SendingMsg，并向 Gateway 转发消息。   
+  
+总体上，PiXiu 转发消息流程采用拉取（pull）转发模型，以上面五种消息为驱动进行状态转换，并作出相应的动作行为。  
+  
 ### 7 总结 ###
 ---
 
@@ -347,7 +537,7 @@ Broker需要关注/pubsub/router/partition_num和/pubsub/broker/partition_num的
 - 2 目前的负载均衡算法采用了极简的RoundRobin算法，可以根据成功率和延迟添加基于权重的负载均衡算法实现；
 - 3 只考虑传递，没有考虑消息的去重，可以根据消息ID实现这个功能【2018/01/29解决之】；
 - 4 各个模块之间没有考虑心跳方案，整个系统的稳定性依赖于Registry【2018/01/17解决之】；
-- 5 离线消息【2018/03/03解决之】；
+- 5 离线消息处理【2018/03/03解决之】；
 
 此记。
 
