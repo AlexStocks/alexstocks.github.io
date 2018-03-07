@@ -394,31 +394,31 @@ exit 1</code></pre></div>
 
 <p>progress有三个状态：probe，replicate和snapshot。</p>
 
-<div><pre><code class="language-none">                            +————————————————————————————————————————————————————————+          
-                            |                  send snapshot                         |          
-                            |                                                        |          
+<div><pre><code class="language-none">                            +————————————————————————————————————————————————————————+
+                            |                  send snapshot                         |
+                            |                                                        |
                   +——————————v—————————+                                  +——————————v—————————+
               +—&gt;       probe          |                                  |      snapshot      |
               |   |  max inflight = 1  &lt;——————————————————————————————————+  max inflight = 0  |
               |   +——————————v—————————+                                  +——————————v—————————+
-              |             |            1. snapshot success                                    
-              |             |               (next=snapshot.index + 1)                           
-              |             |            2. snapshot failure                                    
-              |             |               (no change)                                         
+              |             |            1. snapshot success
+              |             |               (next=snapshot.index + 1)
+              |             |            2. snapshot failure
+              |             |               (no change)
               |             |            3. receives msgAppResp(rej=false&amp;&amp;index&gt;lastsnap.index)
-              |             |               (match=m.index,next=match+1)                        
-receives msgAppResp(rej=true)                                                                   
-(next=match+1)|             |                                                                   
-              |             |                                                                   
-              |             |                                                                   
-              |             |   receives msgAppResp(rej=false&amp;&amp;index&gt;match)                     
-              |             |   (match=m.index,next=match+1)                                    
-              |             |                                                                   
-              |             |                                                                   
-              |             |                                                                   
-              |   +——————————v—————————+                                                        
-              |   |     replicate      |                                                        
-              +—+ | max inflight = n   |                                                        
+              |             |               (match=m.index,next=match+1)
+receives msgAppResp(rej=true)
+(next=match+1)|             |
+              |             |
+              |             |
+              |             |   receives msgAppResp(rej=false&amp;&amp;index&gt;match)
+              |             |   (match=m.index,next=match+1)
+              |             |
+              |             |
+              |             |
+              |   +——————————v—————————+
+              |   |     replicate      |
+              +—+ | max inflight = n   |
                   +——————————v—————————+                                                        </code></pre></div>
 
 <p>如果follower处于probe状态，则leader每个心跳包最多只发送一个“replication message”。leader会缓慢发送“replication message”并探测follower的处理速度。leader收到msgHeartbeatResp或者收到msgAppResp（其中reject值为true）时，leader会发送下 <strong>一个</strong> “replication message”。</p>
@@ -1171,6 +1171,24 @@ physical: 这个标记为true的时候，RPC server端会等待直到物理磁�
 
 <p>2018/01/14日凌晨，于雨氏，参考etcd官方文档重构此文于海淀。</p>
 </blockquote>
+
+<!-- Gitalk start -->
+<link rel="stylesheet" href="https://unpkg.com/gitalk@latest/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk@latest/dist/gitalk.min.js"></script>
+<div id="gitalk-container"></div>
+<script type="text/javascript">
+var gitalk = new Gitalk({
+	clientID: '6211d8b94a8106bed6b0',
+	clientSecret: 'bf77ca26c237eabbd45169e01bf03a5e96a1b26f',
+	repo: 'alexstocks.github.io',
+	owner: 'AlexStocks',
+	admin: ['AlexStocks'],
+	id: 'window.location.pathname',
+	distractionFreeMode: true
+});
+gitalk.render('gitalk-container');
+</script>
+<!-- Gitalk end -->
 
 
 <div id="disqus_thread"></div>
