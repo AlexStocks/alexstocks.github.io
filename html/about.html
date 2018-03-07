@@ -119,11 +119,11 @@ ul, ol {
   padding-left: 30px;
 }
 
-ul li > :first-child, 
-ol li > :first-child, 
-ul li ul:first-of-type, 
-ol li ol:first-of-type, 
-ul li ol:first-of-type, 
+ul li > :first-child,
+ol li > :first-child,
+ul li ul:first-of-type,
+ol li ol:first-of-type,
+ul li ol:first-of-type,
 ol li ul:first-of-type {
   margin-top: 0px;
 }
@@ -514,27 +514,23 @@ img {
 <p>2016/02/05，于雨氏，于金箱堂。</p>
 <p>2016/02/10，于金箱堂，添加了disqus评论功能。</p>
 
-<div id="disqus_thread"></div>
+<!-- Gitalk start -->
+<link rel="stylesheet" href="https://unpkg.com/gitalk@latest/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk@latest/dist/gitalk.min.js"></script>
+<div id="gitalk-container"></div>
 <script type="text/javascript">
-// disqus comment js block, added on 2016/02/10
-// https://segmentfault.com/a/1190000002807674
-var disqus_shortname = 'alexstocks'; // Required - Replace example with your forum shortname
-var disqus_identifier = window.location.pathname; //'a unique identifier for each page where Disqus is present';
-var disqus_title = document.title; // 'a unique title for each page where Disqus is present';
-var disqus_url = document.URL; // window.location.origin + window.location.pathname; // 'a unique URL for each page where Disqus is present';
-var disqus_config = function () {
-this.page.url = window.location.href; // Replace PAGE_URL with your page's canonical URL variable
-this.page.identifier = window.location.pathname; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
-};
-
-(function() {
-var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js'; dsq.setAttribute('data-timestamp', +new Date());
-(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-})();
+var gitalk = new Gitalk({
+	clientID: '6211d8b94a8106bed6b0',
+	clientSecret: 'bf77ca26c237eabbd45169e01bf03a5e96a1b26f',
+	repo: 'alexstocks.github.io',
+	owner: 'AlexStocks',
+	admin: ['AlexStocks'],
+	id: window.location.pathname,
+	distractionFreeMode: true
+});
+gitalk.render('gitalk-container');
 </script>
-<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
-<script id="dsq-count-scr" src='//' + disqus_shortname + '.disqus.com/count.js' async></script>
+<!-- Gitalk end -->
 
 </body>
 </html>

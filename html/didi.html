@@ -118,11 +118,11 @@ ul, ol {
   padding-left: 30px;
 }
 
-ul li > :first-child, 
-ol li > :first-child, 
-ul li ul:first-of-type, 
-ol li ol:first-of-type, 
-ul li ol:first-of-type, 
+ul li > :first-child,
+ol li > :first-child,
+ul li ul:first-of-type,
+ol li ol:first-of-type,
+ul li ol:first-of-type,
 ol li ul:first-of-type {
   margin-top: 0px;
 }
@@ -414,6 +414,7 @@ img {
 <p>于雨氏在原文 [参考文档1] 基础上扒粪后有此新作。2015/11/20，于金箱堂。</p>
 <p>又，把github上的markdown文档 [参考文档2] 转换成html格式而后转移到本网站，并添加了disqus评论功能。2016/02/10，于金箱堂。</p>
 
+<!--
 <div id="disqus_thread"></div>
 <script type="text/javascript">
 // disqus comment js block, added on 2016/02/10
@@ -435,6 +436,25 @@ dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js'; dsq.setAttribute('da
 </script>
 <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
 <script id="dsq-count-scr" src='//' + disqus_shortname + '.disqus.com/count.js' async></script>
+-->
+
+<!-- Gitalk start -->
+<link rel="stylesheet" href="https://unpkg.com/gitalk@latest/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk@latest/dist/gitalk.min.js"></script>
+<div id="gitalk-container"></div>
+<script type="text/javascript">
+var gitalk = new Gitalk({
+	clientID: '6211d8b94a8106bed6b0',
+	clientSecret: 'bf77ca26c237eabbd45169e01bf03a5e96a1b26f',
+	repo: 'alexstocks.github.io',
+	owner: 'AlexStocks',
+	admin: ['AlexStocks'],
+	id: window.location.pathname,
+	distractionFreeMode: true
+});
+gitalk.render('gitalk-container');
+</script>
+<!-- Gitalk end -->
 
 </body>
 </html>
