@@ -96,7 +96,7 @@ Proxy详细流程如下：
 
 - 6 定时向各个Broker Partition replica发送心跳，异步等待Broker返回的心跳响应包，以探测其活性，以保证不向超时的replica转发Room Message；
 - 7 启动一个线程定时读取Registry上的Broker路径/pubsub/broker下各个子节点的值，以定时轮询的策略观察Broker Partition Number变动，以及各Partition的变动情况，作为实时策略的补充；同时定时检查心跳包超时的Broker，从有效的BrokerList中删除；
-- 8 依据规则【BrokerPartitionID = RoomID % BrokerPartitionNum， BrokerReplicaID = roomID % BrokerPartitionReplicaNum】向某个Partition的replica转发Room Message，收到Client的Heatbeat包时要及时给予响应。
+- 8 依据规则【BrokerPartitionID = RoomID % BrokerPartitionNum， BrokerReplicaID = RoomID % BrokerPartitionReplicaNum】向某个Partition的replica转发Room Message，收到Client的Heatbeat包时要及时给予响应。
  
 <font color=blue>**之所以把Room Message和Heartbeat Message放在一个线程处理，是为了防止进程假死这种情况。**</font>
  
@@ -121,7 +121,6 @@ Broker详细流程如下：
 - 8 启动线程定时查询Registry路径/pubsub/broker/partition_num的值；
 - 9 当Registry路径/pubsub/broker/partition_num的值发生改变的时候，依据规则【PartitionID == RoomID % PartitionNum】清洗本地路由信息缓存中每条数据；
 - 10 接收Proxy发来的Room Message，依据RoomID从路由信息缓存中查找Room有成员登陆的所有Gateway，把消息转发给这些Gateway；
-
 
 注意Broker之所以先注册然后再加载Database中的数据，是为了在加载数据的时候同时接收Router转发来的Gateway Message，但是在数据加载完前这些受到的数据先被缓存起来，待所有 RoomGatewayList 数据加载完后就把这些数据重放一遍；
     
@@ -222,7 +221,7 @@ Router系统原有流程是：Gateway按照Room ID把消息转发给某个Router
 
 ![](../pic/pubsub_router.png)
 
-重构后的Router也采用分Partition分Replica设计，Partition内部各Replica之间采用non-leader机制；各Router Replica不会主动把Gateway Message内容push给各Broker，而是各Broker主动通过心跳包形式向Router Partition内某个Replica注册，而后此Replica才会把消息转发到这个Broker上。
+重构后的Router架构参照上图，也采用分Partition分Replica设计，Partition内部各Replica之间采用non-leader机制；各Router Replica不会主动把Gateway Message内容push给各Broker，而是各Broker主动通过心跳包形式向Router Partition内某个Replica注册，而后此Replica才会把消息转发到这个Broker上。
 
 类似于Broker，Router Partition也以2倍扩容方式进行Partition水平扩展，并通过一定机制保证扩容或者Partition内部各个实例停止运行或者新启动时，尽力保证数据的一致性。
 
@@ -256,6 +255,20 @@ Gateway详细流程如下：
 > 如果Router Partition内某replia满足condition(replicaPartitionID = RoomID % RouterPartitionReplicaNumber)，则把消息转发到此replica。
 >>> replica向Registry注册的时候得到的ID称之为replicaID，Router Parition内所有replica按照replicaID递增排序组成replica数组RouterPartitionReplicaArray，replicaPartitionID即为replica在数组中的下标。
 
+##### 5.1.1 Gateway Message数据一致性
+---
+
+Gateway向Router发送的Router Message内容有两种：某user在当前Gateway上进入某Room 和 某user在当前Gateway上退出某Room，数据项分别是UIN（用户ID）、Room ID、Gateway Addr和User Action(Login or Logout。
+
+由于所有消息都是走UDP链路进行转发，则这些消息的顺序就有可能乱序。Gateway可以统一给其发出的所有消息分配一个全局递增的ID【下文称为GatewayMsgID，Gateway Message ID】以保证消息的唯一性和全局有序性。
+
+Gateway向Registry注册临时有序节点时，Registry会给Gateway分配一个ID，Gateway可以用这个ID作为自身的Instance ID【假设这个ID上限是65535】。
+
+GatewayMsgID字长是64bit，其格式如下：
+
+	// 63 -------------------------- 48 47 -------------- 38 37 ------------ 0
+	// |  16bit Gateway Instance ID    |   10bit Reserve    |    38bit自增码  |
+
 #### 5.2 Router 
 ---
 
@@ -278,7 +291,8 @@ Router详细流程如下：
 - 8 启动一个线程异步处理MessageQueue内的Gateway Message，把Gateway Message转发给同Partition内其他peer replica，然后依据规则【RoomID % BrokerPartitionNumber == BrokerReplicaPartitionID % BrokerPartitionNumber】转发给BrokerList内每个Broker；处理Broker发来的心跳包，把Broker的信息存入本地BrokerList，然后给Broker发送回包；
 - 9 修改Registry路径/pubsub/router/partition3下节点的状态为Running；
 - 10 启动一个线程定时读取Registry路径/pubsub/router下各个子路径的值，以定时轮询的策略观察Router各Partition的变动情况，作为实时策略的补充；检查超时的Broker，把其从BrokerList中剔除；
-- 11 当RouterPartitionNum倍增时，Router依据规则【RoomID % BrokerPartitionNumber == BrokerReplicaPartitionID % BrokerPartitionNumber】清洗自身路由信息缓存中数据。
+- 11 当RouterPartitionNum倍增时，Router依据规则【RoomID % BrokerPartitionNumber == BrokerReplicaPartitionID % BrokerPartitionNumber】清洗自身路由信息缓存中数据；
+- 12 Router本地存储每个Gateway的最大GatewayMsgID，收到小于GatewayMsgID的Gateway Message可以丢弃不处理，否则就更新GatewayMsgID并根据上面逻辑进行处理。
 
 之所以把Gateway Message和Heartbeat Message放在一个线程处理，是为了防止进程假死这种情况。
 
@@ -309,6 +323,7 @@ Broker详细流程如下：
 - 10 启动一个线程定时读取Registry路径/pubsub/router下各个子路径的值，以定时轮询的策略观察Router各Partition的变动情况，作为实时策略的补充；定时检查超时的Router，某Router超时后更换其所在的Partition内其他Router替换之，定时发送心跳包；
 - 11 当Registry路径/pubsub/broker/partition_num的值BrokerPartitionNum发生改变的时候，依据规则【PartitionID == RoomID % PartitionNum】清洗本地路由信息缓存中每条数据；
 - 12 接收Proxy发来的Room Message，依据RoomID从路由信息缓存中查找Room有成员登陆的所有Gateway，把消息转发给这些Gateway；
+- 13 Broker本地存储每个Gateway的最大GatewayMsgID，收到小于GatewayMsgID的Gateway Message可以丢弃不处理，否则更新GatewayMsgID并根据上面逻辑进行处理。
 
 BrokerPartitionNumber可以小于或者等于或者大于RouterPartitionNumber，两个数应该均是2的幂，两个集群可以分别进行扩展，互不影响。譬如BrokerPartitionNumber=4而RouterPartitionNumber=2，则Broker Partition 3只需要向Router Partition 1的某个follower发送心跳消息即可；若BrokerPartitionNumber=4而RouterPartitionNumber=8，则Broker Partition 3需要向Router Partition 3的某个follower发送心跳消息的同时，还需要向Router Partition 7的某个follower发送心跳，以获取全量的Gateway Message。
     
@@ -316,8 +331,10 @@ Broker需要关注/pubsub/router/partition_num和/pubsub/broker/partition_num的
 
 当Router Partition内replica死掉或者发送心跳包的replica对象死掉（无论是注册中心通知还是心跳包超时），broker要及时变动发送心跳的Router replica对象。
         
-另外，Gateway使用UDP通信方式向Router发送Gateway Message，如若这个Message丢失则此Gateway上该Room内所有成员一段时间内（当有新的成员在当前Gateway上加入room
+另外，Gateway使用UDP通信方式向Router发送Gateway Message，如若这个Message丢失则此Gateway上该Room内所有成员一段时间内（当有新的成员在当前Gateway上加入Room
 时会产生新的Gateway Message）都无法再接收消息，为了保证消息的可靠性，可以使用这样一个约束解决问题：<font color=blue>**在此Gateway上登录的某Room内的人数少于3时，Gateway会把Gateway Message复制两份非连续（如以10ms为时间间隔）重复发送给某个Partition leader。**</font>因Gateway Message消息处理的幂等性，重复Gateway Message并不会导致Room Message发送错误，只在极少概率的情况下会导致Gateway收到消息的时候Room内已经没有成员在此Gateway登录，此时Gateway会把消息丢弃不作处理。
+  
+传递实时消息pubsub系统的Broker向特定Gateway转发Room Message的时候，会带上Room内在此Gateway上登录的用户列表，Gateway根据这个用户列表下发消息时如果检测到此用户已经下线，在放弃向此用户转发消息的同时，还应该把此用户已经下线的消息发送给Router，当Router把这个消息转发给Broker后，Broker把此用户从用户列表中剔除。<font color=red>**通过这种负反馈机制保证用户状态更新的及时性**</font>。  
   
 ### 6 离线消息 
 ---
@@ -506,10 +523,17 @@ Broker流程受这五种消息驱动，下面分别详述其收到这五种消�
 
 可以把用户心跳消息当做用户登录消息处理。
 
+
+Gateway的用户登出消息产生有三种情况：
+
+- 1 用户主动退出；
+- 2 用户心跳超时；
+- 3 给用户转发消息时发生网络错误；
+
 用户登出消息处理流程如下：
 
 - 1 检查用户状态，如果为 OffLine，则退出；
-- 2 用户状态不为 OffLine 且检查用户已经发送出去的消息列表的最后一条消息的 ID（LastMsgID），向 Pi 发送获取 MsgID 请求{UIN: uin, StartMsgID: LastMsgID, MsgIDNum: 0, ExpireFlag: True}，待 Pi 返回响应后退出。 
+- 2 用户状态不为 OffLine 且检查用户已经发送出去的消息列表的最后一条消息的 ID（LastMsgID），向 Pi 发送获取 MsgID 请求{UIN: uin, StartMsgID: LastMsgID, MsgIDNum: 0, ExpireFlag: True}，待 Pi 返回响应后退出；
     
 处理 Proxy 发来的 Notify 消息处理流程如下：
 
@@ -560,3 +584,5 @@ Ack 消息处理流程如下：
 > 于雨氏，2018/02/11，于海淀添加“Router”一节，并重新格式化全文。
 > 
 > 于雨氏，2018/03/05，于海淀添加“PiXiu”一节。
+> 
+> 于雨氏，2018/03/14，于海淀添加负反馈机制、根据Gateway Message ID保证Gateway Message数据一致性 和 Gateway用户退出消息产生机制 等三个细节。
