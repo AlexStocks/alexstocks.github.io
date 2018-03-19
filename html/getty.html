@@ -239,17 +239,17 @@ echo_clie 31729 alex    9u  IPv4 0xa5d288135c97569d      0t0  UDP localhost:6341
 
 <p>但是为何发生读超时错误则毫无头绪。</p>
 
-<p>2018/03/07 日测试 TCP compression 的时候发现启动 compression 后，程序 CPU 也会很快跑到 100%，进一步追查后发现函数 <a href="https://github.com/alexstocks/getty/blob/master/conn.go#L228">getty/conn.go:gettyTCPConn::read</a> 里面的 log 有很多 “io timeout” error。当时查到这个错误很疑惑，因为我已经在 TCP read 之前进行了超时设置【SetReadDeadline】，难道启动 compression 会导致超时设置失效？</p>
+<p>2018/03/07 日测试 TCP compression 的时候发现启动 compression 后，程序 CPU 也会很快跑到 100%，进一步追查后发现函数 <a href="https://github.com/alexstocks/getty/blob/master/conn.go#L228">getty/conn.go:gettyTCPConn::read</a> 里面的 log 有很多 “io timeout” error。当时查到这个错误很疑惑，因为我已经在 TCP read 之前进行了超时设置【SetReadDeadline】，难道启动 compression 会导致超时设置失效使得socket成了非阻塞的socket？</p>
 
 <p>于是在 <a href="https://github.com/alexstocks/getty/blob/master/conn.go#L228">getty/conn.go:gettyTCPConn::read</a> 中添加了一个逻辑：启用 TCP compression 的时不再设置超时时间【默认情况下tcp connection是永久阻塞的】，CPU 100% 的问题很快就得到了解决。</p>
 
-<p>至于为何 <code>启用 TCP compression 会导致 SetDeadline 失效</code>，囿于个人能力和精力，待将来追查出结果后再在此补充之。</p>
+<p>至于为何 <code>启用 TCP compression 会导致 SetDeadline 失效使得socket成了非阻塞的socket</code>，囿于个人能力和精力，待将来追查出结果后再在此补充之。</p>
 
 <h4 id="toc_9">2.2 Websocket compression</h4>
 
 <hr>
 
-<p>TCP compression 的问题解决后，个人猜想 Websocket compression 程序遇到的问题或许也跟 <code>启用 TCP compression 会导致 SetDeadline 失效</code> 有关。</p>
+<p>TCP compression 的问题解决后，个人猜想 Websocket compression 程序遇到的问题或许也跟 <code>启用 TCP compression 会导致 SetDeadline 失效使得socket成了非阻塞的socket</code> 有关。</p>
 
 <p>于是借鉴 TCP 的解决方法，在 <a href="https://github.com/alexstocks/getty/blob/master/conn.go#L527">getty/conn.go:gettyWSConn::read</a> 直接把超时设置关闭，然后 CPU 100% 被解决，且程序运转正常。</p>
 

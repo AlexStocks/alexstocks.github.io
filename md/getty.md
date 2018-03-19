@@ -118,16 +118,16 @@ Go 语言 UDP 编程也对 connected UDP 和 unconnected UDP 进行了明确区�
 	
 但是为何发生读超时错误则毫无头绪。
 
-2018/03/07 日测试 TCP compression 的时候发现启动 compression 后，程序 CPU 也会很快跑到 100%，进一步追查后发现函数 [getty/conn.go:gettyTCPConn::read](https://github.com/alexstocks/getty/blob/master/conn.go#L228) 里面的 log 有很多 “io timeout” error。当时查到这个错误很疑惑，因为我已经在 TCP read 之前进行了超时设置【SetReadDeadline】，难道启动 compression 会导致超时设置失效？
+2018/03/07 日测试 TCP compression 的时候发现启动 compression 后，程序 CPU 也会很快跑到 100%，进一步追查后发现函数 [getty/conn.go:gettyTCPConn::read](https://github.com/alexstocks/getty/blob/master/conn.go#L228) 里面的 log 有很多 “io timeout” error。当时查到这个错误很疑惑，因为我已经在 TCP read 之前进行了超时设置【SetReadDeadline】，难道启动 compression 会导致超时设置失效使得socket成了非阻塞的socket？
 
 于是在 [getty/conn.go:gettyTCPConn::read](https://github.com/alexstocks/getty/blob/master/conn.go#L228) 中添加了一个逻辑：启用 TCP compression 的时不再设置超时时间【默认情况下tcp connection是永久阻塞的】，CPU 100% 的问题很快就得到了解决。
 
-至于为何 `启用 TCP compression 会导致 SetDeadline 失效`，囿于个人能力和精力，待将来追查出结果后再在此补充之。
+至于为何 `启用 TCP compression 会导致 SetDeadline 失效使得socket成了非阻塞的socket`，囿于个人能力和精力，待将来追查出结果后再在此补充之。
 
 #### 2.2 Websocket compression
 ---
 
-TCP compression 的问题解决后，个人猜想 Websocket compression 程序遇到的问题或许也跟 `启用 TCP compression 会导致 SetDeadline 失效` 有关。
+TCP compression 的问题解决后，个人猜想 Websocket compression 程序遇到的问题或许也跟 `启用 TCP compression 会导致 SetDeadline 失效使得socket成了非阻塞的socket` 有关。
 
 于是借鉴 TCP 的解决方法，在 [getty/conn.go:gettyWSConn::read](https://github.com/alexstocks/getty/blob/master/conn.go#L527) 直接把超时设置关闭，然后 CPU 100% 被解决，且程序运转正常。
 
