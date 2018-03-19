@@ -1,4 +1,4 @@
-## getty readme
+## getty 开发日志
 ---
 *written by Alex Stocks on 2018/03/19*
 
@@ -64,30 +64,77 @@ connected UDP 的两次发送过程如下：
 
 2017年5月7日 我曾用 [python 程序](https://github.com/alexStocks/python-practice/blob/master/tcp_udp_http_ws/udp/client.py) 对二者之间的性能做过测试，如果 client 和 server 都部署在本机，测试结果显示发送 100 000 量的 UDP datagram packet 时，connected UDP 比 unconnected UDP 少用了 2 / 13 的时间。
 
+这个测试的另一个结论是：不管是 connected UDP 还是 unconnected UDP，如果启用了 SetTimeout，则会增大发送延迟。
+
 #### 1.3 Go UDP
 ---
 
-Go 语言 UDP 编程也对 connected UDP 和 unconnected UDP 进行了明确区分，参考文档2 详细地列明了如何使用相关 API，根据这篇文档个人也写一个 [程序](https://github.com/alexstocks/go-practice/blob/master/udp-tcp-http/udp/connected-udp.go) 测试这些 API，测试结论如下：
- 
-    1 connected UDP 读写方法是 Read 和 Write；
-    2 unconnected UDP 读写方法是 ReadFromUDP 和 WriteToUDP（以及 ReadFrom 和 WriteTo)；
-    3 unconnected UDP 可以调用 Read，只是无法获取 peer addr；
-    4 connected UDP 可以调用 ReadFromUDP（填写的地址会被忽略）
-    5 connected UDP 不能调用 WriteToUDP，"即使是相同的目标地址也不可以"，否则会得到错误 "use of WriteTo with pre-connected connection"；
-    6 unconnected UDP 更不能调用Write, "因为不知道目标地址", error:"write: destination address requiredsmallnestMBP:udp smallnest"；
-    7 connected UDP 可以调用 WriteMsgUDP，但是地址必须为 nil；
-    8 unconnected UDP 可以调用 WriteMsgUDP，但是必须填写 peer endpoint address。
+Go 语言 UDP 编程也对 connected UDP 和 unconnected UDP 进行了明确区分，参考文档2 详细地列明了如何使用相关 API，根据这篇文档个人也写一个 [程序](https://github.com/alexstocks/go-practice/blob/master/udp-tcp-http/udp/connected-udp.go) 测试这些 API，测试结论如下：   
 
-    总体来说对Read比较宽容，对
+	* 1 connected UDP 读写方法是 Read 和 Write；
+	* 2 unconnected UDP 读写方法是 ReadFromUDP 和 WriteToUDP（以及 ReadFrom 和 WriteTo)；
+	* 3 unconnected UDP 可以调用 Read，只是无法获取 peer addr；
+	* 4 connected UDP 可以调用 ReadFromUDP（填写的地址会被忽略）
+	* 5 connected UDP 不能调用 WriteToUDP，”即使是相同的目标地址也不可以”，否则会得到错误 “use of WriteTo with pre-connected connection”；
+	* 6 unconnected UDP 不能调用 Write, “因为不知道目标地址”, error:”write: destination address requiredsmallnestMBP:udp smallnest”；
+	* 7 connected UDP 可以调用 WriteMsgUDP，但是地址必须为 nil；
+	* 8 unconnected UDP 可以调用 WriteMsgUDP，但是必须填写 peer endpoint address。
+
+综上结论，读统一使用 ReadFromUDP，写则统一使用 WriteMsgUDP。
 
 #### 1.4 Getty UDP
 ---
 
+版本 v0.8.1 Getty 中添加 connected UDP 支持时，其连接函数 [dialUDP](https://github.com/alexstocks/getty/blob/master/client.go#L141) 这是简单调用了 net.DialUDP 函数，导致昨日（20180318 22:19 pm）测试的时候遇到一个怪现象：把 peer UDP endpoint 关闭，local udp endpoint 进行 connect 时 net.DialUDP 函数返回成功，然后 lsof 命令查验结果时看到确实存在这个单链接：
 
-### 总结
+	COMMAND     PID USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+	echo_clie 31729 alex    9u  IPv4 0xa5d288135c97569d      0t0  UDP localhost:63410->localhost:10000
+
+然后当 net.UDPConn 进行 read 动作的时候，会得到错误 “read: connection refused”。
+
+于是模仿C语言中对 TCP client connect 成功与否判断方法，对 [dialUDP](https://github.com/alexstocks/getty/blob/master/client.go#L141) 改进如下：
+
+	* 1 net.DialUDP 成功之后，判断其是否是自连接，是则退出；
+	* 2 connected UDP 向对端发送一个无用的 datagram packet【”ping”字符串，对端会应其非正确 datagram 而丢弃】，失败则退出；
+	* 3 connected UDP 发起读操作，如果对端返回 “read: connection refused” 则退出，否则就判断为 connect 成功。
+
+### 2 Compression
 ---
 
-本文总结了getty近期开发过程中遇到的一些问题，囿于个人水平只能给出一些打补丁式的解决方法。
+去年给 getty 添加了 TCP/Websocket compression 支持，Websocket 库使用的是 [gorilla/websocket](https://github.com/gorilla/websocket/)，[Go 官网](https://godoc.org/golang.org/x/net/websocket)也推荐这个库，因为自 `This package("golang.org/x/net/websocket") currently lacks some features`。
+
+
+#### 2.1 TCP compression
+---
+
+最近在对 Websocket compression 进行测试的时候，发现 CPU 很容易就跑到 100%，且程序启动后很快就 panic 退出了。
+
+根据 panic 信息提示查到 [gorilla/websocket/conn.go:ReadMsg](https://github.com/gorilla/websocket/blob/master/conn.go#L1018) 函数调用 [gorilla/websocket/conn.go:NextReader](https://github.com/gorilla/websocket/blob/master/conn.go#L928) 后就立即 panic 退出了。panic 的 `表层原因` 到是很容易查明：
+
+* 1 [gorrilla/websocket:Conn::advanceFrame](https://github.com/gorilla/websocket/blob/master/conn.go#L768) 遇到读超时错误（io timeout）;
+* 2 [gorrilla/websocket:ConnConn.readErr](https://github.com/gorilla/websocket/blob/master/conn.go#L941)记录这个error；
+* 3 [gorilla/websocket/conn.go:Conn::NextReader](https://github.com/gorilla/websocket/blob/master/conn.go#L959)开始读取之前则[检查这个错误](https://github.com/gorilla/websocket/blob/master/conn.go#L938)，如以前发生过错误则不再读取 websocket frame，并对[gorrilla/websocket:ConnConn.readErr累积计数](https://github.com/gorilla/websocket/blob/master/conn.go#L957)；
+* 4 [当gorrilla/websocket:ConnConn.readErr数值大于 1000](https://github.com/gorilla/websocket/blob/master/conn.go#L958) 的时候，程序就会panic 退出。
+	
+但是为何发生读超时错误则毫无头绪。
+
+2018/03/07 日测试 TCP compression 的时候发现启动 compression 后，程序 CPU 也会很快跑到 100%，进一步追查后发现函数 [getty/conn.go:gettyTCPConn::read](https://github.com/alexstocks/getty/blob/master/conn.go#L228) 里面的 log 有很多 “io timeout” error。当时查到这个错误很疑惑，因为我已经在 TCP read 之前进行了超时设置【SetReadDeadline】，难道启动 compression 会导致超时设置失效？
+
+于是在 [getty/conn.go:gettyTCPConn::read](https://github.com/alexstocks/getty/blob/master/conn.go#L228) 中添加了一个逻辑：启用 TCP compression 的时不再设置超时时间【默认情况下tcp connection是永久阻塞的】，CPU 100% 的问题很快就得到了解决。
+
+至于为何 `启用 TCP compression 会导致 SetDeadline 失效`，囿于个人能力和精力，待将来追查出结果后再在此补充之。
+
+#### 2.2 Websocket compression
+---
+
+TCP compression 的问题解决后，个人猜想 Websocket compression 程序遇到的问题或许也跟 `启用 TCP compression 会导致 SetDeadline 失效` 有关。
+
+于是借鉴 TCP 的解决方法，在 [getty/conn.go:gettyWSConn::read](https://github.com/alexstocks/getty/blob/master/conn.go#L527) 直接把超时设置关闭，然后 CPU 100% 被解决，且程序运转正常。
+
+## 总结
+---
+
+本文总结了 getty 近期开发过程中遇到的一些问题，囿于个人水平只能给出目前自认为最好的解决方法【如何你有更好的实现，请留言】。
 
 随着getty若有新的 improvement 或者新 feature，我会及时补加此文。
 
