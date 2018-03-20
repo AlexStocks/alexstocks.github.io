@@ -95,7 +95,7 @@ Go 语言 UDP 编程也对 connected UDP 和 unconnected UDP 进行了明确区�
 于是模仿C语言中对 TCP client connect 成功与否判断方法，对 [dialUDP](https://github.com/alexstocks/getty/blob/master/client.go#L141) 改进如下：
 
 	* 1 net.DialUDP 成功之后，判断其是否是自连接，是则退出；
-	* 2 connected UDP 向对端发送一个无用的 datagram packet【”ping”字符串，对端会应其非正确 datagram 而丢弃】，失败则退出；
+	* 2 connected UDP 向对端发送一个无用的 datagram packet【”ping”字符串，对端会因其非正确 datagram 而丢弃】，失败则退出；
 	* 3 connected UDP 发起读操作，如果对端返回 “read: connection refused” 则退出，否则就判断为 connect 成功。
 
 ### 2 Compression
