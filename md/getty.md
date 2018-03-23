@@ -6,7 +6,7 @@
 ### 0 说明
 ---
 
-[getty](https://github.com/alexstocks/getty)是一个go语言实现的网络层引擎，可以处理TCP/dup/websocket三种网络协议。
+[getty](https://github.com/alexstocks/getty)是一个go语言实现的网络层引擎，可以处理TCP/UDP/websocket三种网络协议。
 
 2016年6月我在上海做一个即时通讯项目时，接口层的底层网络驱动是当时的同事[sanbit](https://github.com/sanbit)写的，原始网络层实现了TCP Server，其命名规范学习了著名的netty。当时这个引擎比较简洁，随着我对这个项目的改进这个网络层引擎也就随之进化了（添加了TCP Client、抽象出了 TCP connection 和 TCP session），至2016年8月份（又添加了websocket）其与原始实现已经大异其趣了，征得原作者和相关领导同意后就放到了github上。
 
