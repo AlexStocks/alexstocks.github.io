@@ -260,6 +260,7 @@ RoundRobinAssignor策略使用有以下要求：
 	- 同一个Consumer Group内每个消费者订阅的主题必须相同。
 
 参照MirrorMaker，这两个要求很好理解。
+* “当消费端成为瓶颈时，最简单的方法是增加 topic的分区数量，从而增加消费端的并行度。” - 参考文档15。
 
 ##### 5.2.4 Os & Jvm & Mem #####
 ---
@@ -331,6 +332,7 @@ num.streams则是指定consumers的个数。经个人测试，共两个kafka top
 - 12 [Kafka Mirror Maker Best Practices](https://community.hortonworks.com/articles/79891/kafka-mirror-maker-best-practices.html)
 - 13 [百亿访问量的监控平台如何炼成？](http://www.sohu.com/a/211335858_262549)
 - 14 [Kafka为Consumer分派分区：RangeAssignor和RoundRobinAssignor](http://blog.csdn.net/zhanyuanlin/article/details/76021614)
+- 15 [饶军谈Kafka未来规划](http://mp.weixin.qq.com/s/VXCOFSn8mSgXUPzEda_jdw)
 
 ## 扒粪者-于雨氏 ##
 
