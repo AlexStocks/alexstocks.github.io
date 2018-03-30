@@ -276,6 +276,23 @@ RocksDB 的每个 SST 文件都包含一个 Bloom filter。Bloom Filter 只对�
 	BlockBasedTableOptions::cache_index_and_filter_blocks=true
 
 一般情况下不要修改 filter 相关参数。如果需要修改，相关设置上面已经说过，此处不再多谈，详细内容见参考文档 7。
+
+#### 1.19 Time to Live
+--- 
+
+RocksDB 在进行 compact 的时候，会删除被标记为删除的数据，会删除重复 key 的老版本的数据，也会删除过期的数据。数据过期时间由 API `DBWithTTL::Open(const Options& options, const std::string& name, StackableDB** dbptr, int32_t ttl = 0, bool read_only = false)` 的 ttl 参数设定。
+
+TTL 的使用有以下注意事项：
+
+* 1 TTL 其值单位是秒，如果 TTL 值为 0 或者负数，则 TTL 值为 `infinity`，即永不过期；
+* 2 每个 kv 被插入数据文件中的时候会带上创建时的机器 `(int32_t)Timestamp` 时间值；
+* 3 compaction 时如果 kv 满足条件 `Timestamp+ttl<time_now`，则会被淘汰掉；
+* 4 Get/Iterator 的时候可能返回过期的 kv（compact 任务还未执行）；
+* 5 不同的 `DBWithTTL::Open` 可能会带上不同的 TTL 值，此时 kv 以最大的 TTL 值为准；
+* 6 如果 `DBWithTTL::Open` 的参数 `read_only` 为 true，则不会触发 compact 任务，不会有过期数据被删除。
+
+
+
 	
 ### 2 [RocksDB Memory](https://github.com/facebook/rocksdb/wiki/Memory-usage-in-RocksDB) 
 ---
@@ -487,9 +504,11 @@ RocksDB 的 compaction 策略分为 `Universal Compaction` 和 `Leveled Compacti
 #### 5.1 Leveled  Compaction
 ---
 
-compaction 的触发条件是文件个数和文件大小。L0 的触发条件是 sst 文件个数（level0_file_num_compaction_trigger 控制），触发 compaction score 是 L0 sst 文件个数与 level0_file_num_compaction_trigger 的比值。L1 ~ LN 的触发条件则是 sst 文件的大小。
+compaction 的触发条件是文件个数和文件大小。L0 的触发条件是 sst 文件个数（level0_file_num_compaction_trigger 控制），触发 compaction score 是 L0 sst 文件个数与 level0_file_num_compaction_trigger 的比值或者所有文件的 size 超过 max_bytes_for_level_base。L1 ~ LN 的触发条件则是 sst 文件的大小。
 
-L1 ~ LN 每个 level 的最大容量由 `max_bytes_for_level_base` 和`max_bytes_for_level_multiplier` 决定，其 compaction score 就是当前总容量与设定的最大容量之比，如果某 level 满足 compaction 的条件则会被加入 compaction 队列。
+如果 `level_compaction_dynamic_level_bytes` 为 false，L1 ~ LN 每个 level 的最大容量由 `max_bytes_for_level_base` 和`max_bytes_for_level_multiplier` 决定，其 compaction score 就是当前总容量与设定的最大容量之比，如果某 level 满足 compaction 的条件则会被加入 compaction 队列。
+
+如果 `level_compaction_dynamic_level_bytes` 为 true，则 `Target_Size(Ln-1) = Target_Size(Ln) / max_bytes_for_level_multiplier`，此时如果某 level 计算出来的 target 值小于 `max_bytes_for_level_base / max_bytes_for_level_multiplier`，则 RocksDB 不会再这个 level 存储任何 sst 数据。
 
 大致的 compaction 流程大致为：
 
@@ -517,6 +536,47 @@ RocksDB 还支持一种 FIFO 的 compaction。FIFO 顾名思义就是先进先�
 
 整个 compaction 是 LSM-tree 数据结构的核心，也是rocksDB的核心，详细内容请阅读参考文档8 和 参考文档9。
 
+### 6 FAQ
+---
+
+官方 wiki 【参考文档 11】提供了一份 FAQ，下面节选一些比较有意义的建议，其他内容请移步官方文档。
+
+- 1 如果机器崩溃后重启，则 RocksDB 能够恢复的数据是同步写【WriteOptions.sync=true】调用 `DB::SyncWAL()` 之前的数据 或者已经被写入 L0 的 memtable 的数据都是安全的。
+- 2 可以通过 `GetIntProperty(cf_handle, “rocksdb.estimate-num-keys")` 获取一个 column family 中大概的 key 的个数；
+- 3 可以通过 `GetAggregatedIntProperty(“rocksdb.estimate-num-keys", &num_keys)` 获取整个 RocksDB 中大概的 key 的总数，之所以只能获取一个大概数值是因为 RocksDB 的磁盘文件有重复 key，而且 compact 的时候会进行 key 的淘汰，所以无法精确获取；
+- 4 Put()/Write()/Get()/NewIterator() 这几个 API 都是线程安全的；
+- 5 多个进程可以同时打开同一个 RocksDB 文件，但是其中只能有一个写进程，其他的都只能通过 `DB::OpenForReadOnly()` 对 RocksDB 进行只读访问；
+- 6 当进程中还有线程在对 RocksDB 进行 读、写或者手工 compaction 的时候，不能强行关闭它。
+- 7 RocksDB 本身不建议使用大 key，但是它支持的 key 的最大长度是 8MB，value 的最大长度是 3GB。
+- 8 RocksDB 最佳实践：一个线程进行写，且以顺序方式写；以 batch 方式把数据写入 RocksDB；使用 vector memtable；确保 `options.max_background_flushes` 最少为 4；插入数据之前设置关闭自动 compact，把 `options.level0_file_num_compaction_trigger/options.level0_slowdown_writes_trigger/options.level0_stop_writes_trigger` 三个值放大，数据插入后再启动调用 compact 函数进行 compaction 操作。 
+    如果调用了`Options::PrepareForBulkLoad()`，后面三个方法会被自动启用。 
+- 9 关闭 RocksDB 对象时，如果是通过 DestroyDB() 去关闭时，这个 RocksDB 还正被另一个进程访问，则会造成不可预料的后果；
+- 10 可以通过 `DBOptions::db_paths/DBOptions::db_log_dir/DBOptions::wal_dir` 三个参数分别存储 RocksDB 的数据，这种情况下如果要释放 RocksDB 的数据可以通过 DestroyDB() 这个 API 去执行删除任务；
+- 11 当 `BackupOptions::backup_log_files` 或者 `flush_before_backup` 的值为 true 的时候，如果程序调用 `CreateNewBackup()` 则 RocksDB 会创建 `point-in-time snapshot`，RocksDB进行数据备份的时候不会影响正常的读写逻辑；
+- 12 RocksDB 启动之后不能修改 `prefix extractor`；
+- 13 SstFileWriter API 可以用来创建 SST 文件，如果这些 SST 文件被添加到别的 RocksDB 数据库发生 key range 重叠，则会导致数据错乱；
+- 14 编译 RocksDB 的 gcc 版本 最低是 4.7，推荐 4.8 以上；
+- 15 单个文件系统如 ext3 或者 xfs 可以使用多个磁盘，然后让 RocksDB 在这个文件系统上运行进而使用多个磁盘；
+- 16 使用多磁盘时，RAID 的 stripe size 不能小于 64kb，推荐使用1MB；
+- 17 RocksDB 可以针对每个 SST 文件通过 `ColumnFamilyOptions::bottommost_compression` 使用不同的压缩的方法；
+- 18 当多个 Handle 指向同一个 Column Family 时，其中一个线程通过 DropColumnFamily() 删除一个 CF 的时候，其引用计数会减一，直至为 0 时整个 CF 会被删除；
+- 19 RocksDB 接受一个写请求的时候，可能因为 compact 会导致 RocksDB 多次读取数据文件进行数据合并操作；
+- 20 RocksDB 不直接支持数据的复制，但是提供了 API GetUpdatesSince() 供用户调用以获取某个时间点以后更新的 kv；
+- 21 Options 的 block_size 是指 block 的内存空间大小，与数据是否压缩无关；
+- 22 options.prefix_extractor 一旦启用，就无法继续使用 Prev() 和 SeekToLast() 两个 API，可以把 ReadOptions.total_order_seek 设置为 true，以禁用 `prefix iterating`；
+- 23 当 BlockBaseTableOptions::cache_index_and_filter_blocks 的值为 true 时，在进行 Get() 调用的时候相应数据的 bloom filter 和 index block 会被放进 LRU cache 中，如果这个参数为 false 则只有 memtable 的 index 和 bloom filter 会被放进内存中；
+- 24 当调用 Put() 或者 Write() 时参数 WriteOptions.sync 的值为 true，则本次写以前的所有 WriteOptions.disableWAL 为 false 的写的内容都会被固化到磁盘上；
+- 25 禁用 WAL 时，DB::Flush() 只对单个 Column Family 的数据固化操作是原子的，对多个 Column Family 的数据操作则不是原子的，官方考虑将来会支持这个 feature；
+- 26 当使用自定义的 comparators 或者 merge operators 时，ldb 工具就无法读取 sst 文件数据；
+- 27 RocksDB 执行前台的 Get() 和 Write() 任务遇到错误时，它会返回 rocksdb::IOError 具体值；
+- 28 RocksDB 执行后台任务遇到错误时 且 options.paranoid_checks 值为 true，则 RocksDB 会自动进入只读模式；
+- 29 RocksDB 一个线程执行 compact 的时候，这个任务是不可取消的；
+- 30 RocksDB 一个线程执行 compact 任务的时候，可以在另一个线程调用 CancelAllBackgroundWork(db, true) 以中断正在执行的 compact 任务；
+- 31 当多个进程打开一个 RocksDB 时，如果指定的 compact 方式不一样，则后面的进程会打开失败；
+- 32 Column Family 使用场景：(1) 不同的 Column Family 可以使用不同的 setting/comparators/compression types/merge operators/compaction filters；(2) 对数据进行逻辑隔离，方便分别删除；(3) 一个 Column Family 存储 metadata，另一个存储 data；
+- 33 使用一个 RocksDB 就是使用一个物理存储系统，使用一个 Column Family 则是使用一个逻辑存储系统，二者主要区别体现在 数据备份、原子写以及写性能表现上。DB 是数据备份和复制以及 checkpoint 的基本单位，但是 Column Family 则利用 BatchWrite，因为这个操作是可以跨 Column Family 的，而且多个 Column Family 可以共享同一个 WAL，多个 DB 则无法做到这一点。
+- 34 RocksDB 不支持多列。
+
 ## 参考文档 ##
 ---
 
@@ -529,6 +589,8 @@ RocksDB 还支持一种 FIFO 的 compaction。FIFO 顾名思义就是先进先�
 - 7 [Bloom Filter](https://github.com/facebook/rocksdb/wiki/RocksDB-Bloom-Filter)
 - 8 [Universal Compaction](https://github.com/facebook/rocksdb/wiki/Universal-Compaction)
 - 9 [Leveled Compaction](https://github.com/facebook/rocksdb/wiki/Leveled-Compaction)
+- 10 [Time to Live](https://github.com/facebook/rocksdb/wiki/Time-to-Live)
+- 11 [RocksDB-FAQ](https://github.com/facebook/rocksdb/wiki/RocksDB-FAQ)
 
 ## 扒粪者-于雨氏 ##
 
