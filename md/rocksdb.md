@@ -16,9 +16,15 @@ RocksDB 的优点此处无需多说，它的一个 feature 是其有很多优化
 
 通过参考文档 5，RocksDB 是一个快速存储系统，它会充分挖掘 Flash or RAM 硬件的读写特性，支持单个 KV 的读写以及批量读写。RocksDB 自身采用的一些数据结构如 LSM/SKIPLIST 等结构使得其有读放大、写放大和空间使用放大的问题。
 
-RocksDB 的 LSM 体现在多 level 文件格式上，最热最新的数据尽在 L0 层，最冷最老的数据尽在 LN层。
+![](../pic/log_structured_merge_tree.png)
+
+LSM 大致结构如上图所示。LSM树而且通过批量存储技术规避磁盘随机写入问题。 LSM树的设计思想非常朴素, 它的原理是把一颗大树拆分成N棵小树， 它首先写入到内存中（内存没有寻道速度的问题，随机写的性能得到大幅提升），在内存中构建一颗有序小树，随着小树越来越大，内存的小树会flush到磁盘上。磁盘中的树定期可以做merge操作，合并成一棵大树，以优化读性能。RocksDB 的 LSM 体现在多 level 文件格式上，最热最新的数据尽在 L0 层，数据在内存中，最冷最老的数据尽在 LN层，数据在磁盘或者固态盘上。
+
+![](../pic/rocksdb_arch.png)
 
 RocksDB的三种基本文件格式是 memtable/sstfile/logfile，memtable 是一种内存文件数据系统，新写数据会被写进 memtable，部分请求内容会被写进 logfile。logfile 是一种有利于顺序写的文件系统。memtable 的内存空间被填满之后，会有一部分老数据被转移到 sstfiile 里面，这些数据对应的 logfile 里的 log 就会被安全删除。sstfile 中的内容是有序的。
+
+上图所示，所有 Column Family 共享一个 WAL 文件，但是每个 Column Family 有自己单独的 memtable & ssttable(sstfile)，即 log 共享而数据分离。
 
 一个进程对一个 DB 同时只能创建一个 rocksdb::DB 对象，所有线程共享之。这个对象内部有锁机制保证访问安全，多个线程同时进行 Get/Put/Fetch Iteration 都没有问题，但是如果直接 Iteration 或者 WriteBatch 则需要额外的锁同步机制保护 Iterator 或者 WriteBatch 对象。
 
@@ -355,6 +361,8 @@ block cache、index & filter 都是读 buffer，而 memtable 则是写 buffer，
 
 RocksDB 的读流程分为逻辑读(logical read)和物理读(physical read)。逻辑读通常是对 cache【Block Cache & Table Cache】进行读取，物理读就是直接读磁盘。
 
+![](../pic/rocksdb_read_process.png)
+
 参考文档 12 详细描述了 LeveDB（RocksDB）的读流程，转述如下：
 
 * 在MemTable中查找，无法命中转到下一流程；
@@ -368,7 +376,7 @@ RocksDB 的读流程分为逻辑读(logical read)和物理读(physical read)。�
   对于 L1 层以及 L1 层以上层级的文件，每个 SSTable 没有交叠，可以使用二分查找快速找到 key 所在的 Level 以及 SSTfile。
 
 
-至于写流程，请参阅 ### 5 Compaction & Flush 章节内容。
+至于写流程，请参阅 ### 5 Flush & Compaction 章节内容。
 
 #### 2.6 memory pool
 --- 
@@ -529,12 +537,15 @@ RocksDB 内部有一个 batch-commit 机制，通过一次 commit 批量地在�
 ### 5 Flush & Compaction
 ---
 
-RocksDB 的内存数据在 memtable 中存着，有 active-memtable 和 immutable-memtable 两种。active-memtable 是当前被写操作使用的 memtable，当 active-memtable 空间写满之后( Options.write_buffer_size 控制其内存空间大小 )这个空间会被标记为 readonly 成为 immutable-memtable。
+RocksDB 的内存数据在 memtable 中存着，有 active-memtable 和 immutable-memtable 两种。active-memtable 是当前被写操作使用的 memtable，当 active-memtable 空间写满之后( Options.write_buffer_size 控制其内存空间大小 )这个空间会被标记为 readonly 成为 immutable-memtable。memtable 实质上是一种有序 SkipList，所以写过程其实是写 WAL 日志和数据插入 SkipList 的过程。
 
-immutable-memtable 被写入 L0 的过程被称为 flush 或者 minor compaction。flush 的触发条件是 immutable memtable数量超过 min_write_buffer_number_to_merge。flush 过程以 column family 为单位，一个 column family 会使用一个或者多个 immutable-memtable，flush 会一次把所有这些文件合并后写入磁盘的 L0 sst 文件中。
+![](../pic/rocksdb_write_process.png)
+
+RocksDB 的数据删除过程跟写过程相同，只不过 插入的数据是 “key:删除标记”。
+
+immutable-memtable 被写入 L0 的过程被称为 flush 或者 minor compaction。flush 的触发条件是 immutable memtable数量超过 min_write_buffer_number_to_merge。flush 过程以 column family 为单位，一个 column family 会使用一个或者多个 immutable-memtable，flush 会一次把所有这些文件合并后写入磁盘的 L0 sstfile 中。
 
 在 compaction 过程中如果某个被标记为删除的 key 在某个 snapshot 中存在，则会被一直保留，直到 snapshot 不存在才会被删除。
-
 
 RocksDB 的 compaction 策略分为 `Universal Compaction` 和 `Leveled Compaction` 两种。两种策略分别有不同的使用场景，下面分两个章节详述。
 
@@ -543,9 +554,55 @@ RocksDB 的 compaction 策略分为 `Universal Compaction` 和 `Leveled Compacti
 
 compaction 的触发条件是文件个数和文件大小。L0 的触发条件是 sst 文件个数（level0_file_num_compaction_trigger 控制），触发 compaction score 是 L0 sst 文件个数与 level0_file_num_compaction_trigger 的比值或者所有文件的 size 超过 max_bytes_for_level_base。L1 ~ LN 的触发条件则是 sst 文件的大小。
 
-如果 `level_compaction_dynamic_level_bytes` 为 false，L1 ~ LN 每个 level 的最大容量由 `max_bytes_for_level_base` 和`max_bytes_for_level_multiplier` 决定，其 compaction score 就是当前总容量与设定的最大容量之比，如果某 level 满足 compaction 的条件则会被加入 compaction 队列。
+如果 `level_compaction_dynamic_level_bytes` 为 false，L1 ~ LN 每个 level 的最大容量由 `max_bytes_for_level_base` 和 `max_bytes_for_level_multiplier` 决定，其 compaction score 就是当前总容量与设定的最大容量之比，如果某 level 满足 compaction 的条件则会被加入 compaction 队列。
 
 如果 `level_compaction_dynamic_level_bytes` 为 true，则 `Target_Size(Ln-1) = Target_Size(Ln) / max_bytes_for_level_multiplier`，此时如果某 level 计算出来的 target 值小于 `max_bytes_for_level_base / max_bytes_for_level_multiplier`，则 RocksDB 不会再这个 level 存储任何 sst 数据。
+
+##### 5.1.1 Compaction Score
+---
+
+compact 流程的 Compaction Score，不同 level 的计算方法不一样，下面先列出 L0 的计算方法。其中 num 代表未 compact 文件的数目。
+
+| Param    | Value | Description | Score |
+| :------- | :---- | :---------- | :---- |
+| level0_file_num_compaction_trigger | 4 | num 为 4 时，达到 compact 条件 | num < 20 时 Score = num / 4 |
+| level0_slowdown_writes_trigger | 20 | num 为 20 时，RocksDB 会减慢写入速度 | 20 <= num && num < 24 时 Score = 10000 |
+| level0_stop_writes_trigger | 24 | num 为 24 时，RocksDB 停止写入文件，尽快对 L0 进行 compact | 24 <= num 时 Score = 1000000 |
+
+对于 L1+ 层，score = Level_Bytes / Target_Size。
+
+##### 5.1.2 Level Max Bytes
+---
+
+每个 level 容量总大小的计算前文已经提过，
+
+| Param    | Value | Description |
+| :------- | :---- | :---------- |
+| max_bytes_for_level_base | 10485760 | L1 总大小 |
+| max_bytes_for_level_multiplier | 10 | 最大乘法因子 |
+| max_bytes_for_level_multiplier_addtl[2…6] | 1 | L2 ~ L6 总大小调整参数 |
+
+
+每个 level 的总大小计算公式为 `Level_max_bytes[N] = Level_max_bytes[N-1] * max_bytes_for_level_multiplier^(N-1)*max_bytes_for_level_multiplier_additional[N-1]`。
+
+##### 5.1.3 compact file
+---
+
+上面详述了 compact level 的选择，但是每个 level 具体的 compact 文件对象，
+
+L0 层所有文件会被选做 compact 对象，因为它们有很高的概率所有文件的 key range 发生重叠。
+
+对于 L1+ 层的文件，先对所有文件的大小进行排序以选出最大文件。
+
+LevelDB 的文件选取过程如下：
+
+LN 中每个文件都一个 seek 数值，其默认值非零，每次访问后这个数值减 1，其值越小说明访问越频繁。sst 文件的策略如下：
+
+* 1 选择 seek 次数为 0 的文件进行 merge，如果没有 seek 次数为 0 的文件，则从第一个文件开始进行 compact；
+* 2 一次 compact 后记录本次结束的 key，下次 compact 开始时以这个 key 为起始继续进行 compact。
+
+##### 5.1.4 compaction
+---
 
 大致的 compaction 流程大致为：
 
@@ -555,11 +612,10 @@ compaction 的触发条件是文件个数和文件大小。L0 的触发条件是
 * 4 从 level + 1 中选取出于 (minkey, maxkey) 用重叠的 sst 文件，有重叠的文件则把文件与 level 中的文件进行合并（merge - sort）作为目标文件，没有重叠文件则把原始文件作为目标文件；
 * 5 对目标文件进行压缩后放入 level + 1 中。
 
-LN 中每个文件都一个 seek 数值，其默认值非零，每次访问后这个数值减 1，其值越小说明访问越频繁。步骤 2 中提到的选择 sst 文件的策略如下：
+##### 5.1.5 并行 Compact
+---
 
-* 1 选择 seek 次数为 0 的文件进行 merge，如果没有 seek 次数为 0 的文件，则从第一个文件开始进行 compact；
-* 3 一次 compact 后记录本次结束的 key，下次 compact 开始时以这个 key 为起始继续进行 compact。
-
+参数 max_background_compactions 大于 1 时，RocksDB 会进行并行 Compact，但并行 Compact 不能作用到L0 层文件。
 
 #### 5.2 Universal Compaction
 ---

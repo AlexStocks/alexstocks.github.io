@@ -121,7 +121,7 @@ kbd {
 
 <p>近日在写一个分布式 KV DB，存储层使用了 RocksDB。</p>
 
-<p>RocksDB 的优点此处无需多说，它的 feature 是其有很多优化选项用于对 RocksDB 进行调优。欲熟悉这些参数，必须对其背后的原理有所了解，本文主要整理一些 RocksDB 的 wiki 文档，以备自己参考之用。</p>
+<p>RocksDB 的优点此处无需多说，它的一个 feature 是其有很多优化选项用于对 RocksDB 进行调优。欲熟悉这些参数，必须对其背后的原理有所了解，本文主要整理一些 RocksDB 的 wiki 文档，以备自己参考之用。</p>
 
 <h3 id="toc_2">1 <a href="https://github.com/facebook/rocksdb/wiki/Basic-Operations">Basic Operations</a></h3>
 
@@ -131,7 +131,15 @@ kbd {
 
 <p>通过参考文档 5，RocksDB 是一个快速存储系统，它会充分挖掘 Flash or RAM 硬件的读写特性，支持单个 KV 的读写以及批量读写。RocksDB 自身采用的一些数据结构如 LSM/SKIPLIST 等结构使得其有读放大、写放大和空间使用放大的问题。</p>
 
+<p><img src="../pic/log_structured_merge_tree.png" alt=""></p>
+
+<p>LSM 大致结构如上图所示。LSM树而且通过批量存储技术规避磁盘随机写入问题。 LSM树的设计思想非常朴素, 它的原理是把一颗大树拆分成N棵小树， 它首先写入到内存中（内存没有寻道速度的问题，随机写的性能得到大幅提升），在内存中构建一颗有序小树，随着小树越来越大，内存的小树会flush到磁盘上。磁盘中的树定期可以做merge操作，合并成一棵大树，以优化读性能。RocksDB 的 LSM 体现在多 level 文件格式上，最热最新的数据尽在 L0 层，数据在内存中，最冷最老的数据尽在 LN层，数据在磁盘或者固态盘上。</p>
+
+<p><img src="../pic/rocksdb_arch.png" alt=""></p>
+
 <p>RocksDB的三种基本文件格式是 memtable/sstfile/logfile，memtable 是一种内存文件数据系统，新写数据会被写进 memtable，部分请求内容会被写进 logfile。logfile 是一种有利于顺序写的文件系统。memtable 的内存空间被填满之后，会有一部分老数据被转移到 sstfiile 里面，这些数据对应的 logfile 里的 log 就会被安全删除。sstfile 中的内容是有序的。</p>
+
+<p>上图所示，所有 Column Family 共享一个 WAL 文件，但是每个 Column Family 有自己单独的 memtable &amp; ssttable(sstfile)，即 log 共享而数据分离。</p>
 
 <p>一个进程对一个 DB 同时只能创建一个 rocksdb::DB 对象，所有线程共享之。这个对象内部有锁机制保证访问安全，多个线程同时进行 Get/Put/Fetch Iteration 都没有问题，但是如果直接 Iteration 或者 WriteBatch 则需要额外的锁同步机制保护 Iterator 或者 WriteBatch 对象。</p>
 
@@ -499,7 +507,48 @@ db-&gt;GetProperty(“rocksdb.cur-size-all-mem-tables”, &amp;out);</code></pre
 
 <div><pre><code class="language-none">table_options.block_cache-&gt;GetPinnedUsage();</code></pre></div>
 
-<h3 id="toc_27">3 <a href="https://github.com/facebook/rocksdb/wiki/Block-Cache">Block Cache</a></h3>
+<h4 id="toc_27">2.5 读流程</h4>
+
+<hr>
+
+<p>RocksDB 的读流程分为逻辑读(logical read)和物理读(physical read)。逻辑读通常是对 cache【Block Cache &amp; Table Cache】进行读取，物理读就是直接读磁盘。</p>
+
+<p><img src="../pic/rocksdb_read_process.png" alt=""></p>
+
+<p>参考文档 12 详细描述了 LeveDB（RocksDB）的读流程，转述如下：</p>
+
+<ul>
+<li>在MemTable中查找，无法命中转到下一流程；</li>
+<li>在immutable_memtable中查找，查找不中转到下一流程；</li>
+<li><p>在第0层SSTable中查找，无法命中转到下一流程；</p>
+
+<p>对于L0 的文件，RocksDB 采用遍历的方法查找，所以为了查找效率 RocksDB 会控制 L0 的文件个数。</p></li>
+<li><p>在剩余SSTable中查找。</p>
+
+<p>对于 L1 层以及 L1 层以上层级的文件，每个 SSTable 没有交叠，可以使用二分查找快速找到 key 所在的 Level 以及 SSTfile。</p></li>
+</ul>
+
+<p>至于写流程，请参阅 ### 5 Flush &amp; Compaction 章节内容。</p>
+
+<h4 id="toc_28">2.6 memory pool</h4>
+
+<hr>
+
+<p>RocksDB 写入时间长了以后，可能会不定时出现较大的写毛刺，可能有两个地方导致 RocksDB 会出现较大的写延时：获取 mutex 时可能出现几十毫秒延迟 和 将数据写入 memtable 时候可能出现几百毫秒延时。</p>
+
+<p>获取 mutex 出现的延迟是因为 flush/compact 线程与读写线程竞争导致的，可以通过调整线程数量降低毛刺时间。</p>
+
+<p>至于写入 memtable 时候出现的写毛刺时间，解决方法一就是使用大的 page cache，禁用系统 swap 以及配置 min<em>free</em>kbytes、dirty<em>ratio、dirty</em>background_ratio 等参数来调整系统的内存回收策略，更基础的方法是使用内存池。</p>
+
+<p>采用内存池时，memtable 的内存分配和回收流程图如下：</p>
+
+<p><img src="../pic/rocksdb_mempool.png" alt=""></p>
+
+<p>使用内存池时，RocksDB 的内容分配代码模块如下：</p>
+
+<p><img src="../pic/rocksdb_mempool_arena.png" alt=""></p>
+
+<h3 id="toc_29">3 <a href="https://github.com/facebook/rocksdb/wiki/Block-Cache">Block Cache</a></h3>
 
 <hr>
 
@@ -567,13 +616,13 @@ table_options.block_cache = sim_cache;</code></pre></div>
 
 <p>大概只有容量的 2% 会被用于测算。</p>
 
-<h3 id="toc_28">4 <a href="https://github.com/facebook/rocksdb/wiki/Column-Families">Column Families</a></h3>
+<h3 id="toc_30">4 <a href="https://github.com/facebook/rocksdb/wiki/Column-Families">Column Families</a></h3>
 
 <hr>
 
 <p>RocksDB 3.0 以后添加了一个 Column Family【后面简称 CF】 的feature，每个 kv 存储之时都必须指定其所在的 CF。RocksDB为了兼容以往版本，默认创建一个 “default” 的CF。存储 kv 时如果不指定 CF，RocksDB 会把其存入 “default” CF 中。</p>
 
-<h4 id="toc_29">4.1 Option</h4>
+<h4 id="toc_31">4.1 Option</h4>
 
 <hr>
 
@@ -589,7 +638,7 @@ table_options.block_cache = sim_cache;</code></pre></div>
 
 <p>RocksDB 会在磁盘上依据 LSM 算法对多级磁盘文件进行 compaction，这会影响写性能，拖慢程序性能，可以通过 <code>WriteOptions.low_pri = true</code> 降低 compaction 的优先级。</p>
 
-<h4 id="toc_30">4.2 <a href="https://github.com/facebook/rocksdb/wiki/Set-Up-Options">Set Up Option</a></h4>
+<h4 id="toc_32">4.2 <a href="https://github.com/facebook/rocksdb/wiki/Set-Up-Options">Set Up Option</a></h4>
 
 <hr>
 
@@ -650,7 +699,7 @@ table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
 
 <p>上面只是罗列了一些优化选项，这些选项也只能在进程启动的时候设定。更多的选项请详细阅读参考文档1。</p>
 
-<h4 id="toc_31">4.3 WriteOption &amp; Persistence</h4>
+<h4 id="toc_33">4.3 WriteOption &amp; Persistence</h4>
 
 <hr>
 
@@ -660,27 +709,130 @@ table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
 
 <p>RocksDB 内部有一个 batch-commit 机制，通过一次 commit 批量地在一次 sync 操作里把所有 transactions log 写入磁盘。</p>
 
-<h3 id="toc_32">5 Flush &amp; Compaction</h3>
+<h3 id="toc_34">5 Flush &amp; Compaction</h3>
 
 <hr>
 
-<p>RocksDB 的内存数据在 memtable 中存着，有 active-memtable 和 immutable-memtable 两种。active-memtable 是当前被写操作使用的 memtable，当 active-memtable 空间写满之后( Options.write<em>buffer</em>size 控制其内存空间大小 )这个空间会被标记为 readonly 成为 immutable-memtable。</p>
+<p>RocksDB 的内存数据在 memtable 中存着，有 active-memtable 和 immutable-memtable 两种。active-memtable 是当前被写操作使用的 memtable，当 active-memtable 空间写满之后( Options.write<em>buffer</em>size 控制其内存空间大小 )这个空间会被标记为 readonly 成为 immutable-memtable。memtable 实质上是一种有序 SkipList，所以写过程其实是写 WAL 日志和数据插入 SkipList 的过程。</p>
 
-<p>immutable-memtable 被写入 L0 的过程被称为 flush 或者 minor compaction。flush 的触发条件是 immutable memtable数量超过 min<em>write</em>buffer<em>number</em>to_merge。flush 过程以 column family 为单位，一个 column family 会使用一个或者多个 immutable-memtable，flush 会一次把所有这些文件合并后写入磁盘的 L0 sst 文件中。</p>
+<p><img src="../pic/rocksdb_write_process.png" alt=""></p>
+
+<p>RocksDB 的数据删除过程跟写过程相同，只不过 插入的数据是 “key:删除标记”。</p>
+
+<p>immutable-memtable 被写入 L0 的过程被称为 flush 或者 minor compaction。flush 的触发条件是 immutable memtable数量超过 min<em>write</em>buffer<em>number</em>to_merge。flush 过程以 column family 为单位，一个 column family 会使用一个或者多个 immutable-memtable，flush 会一次把所有这些文件合并后写入磁盘的 L0 sstfile 中。</p>
 
 <p>在 compaction 过程中如果某个被标记为删除的 key 在某个 snapshot 中存在，则会被一直保留，直到 snapshot 不存在才会被删除。</p>
 
 <p>RocksDB 的 compaction 策略分为 <code>Universal Compaction</code> 和 <code>Leveled Compaction</code> 两种。两种策略分别有不同的使用场景，下面分两个章节详述。</p>
 
-<h4 id="toc_33">5.1 Leveled  Compaction</h4>
+<h4 id="toc_35">5.1 Leveled  Compaction</h4>
 
 <hr>
 
 <p>compaction 的触发条件是文件个数和文件大小。L0 的触发条件是 sst 文件个数（level0<em>file</em>num<em>compaction</em>trigger 控制），触发 compaction score 是 L0 sst 文件个数与 level0<em>file</em>num<em>compaction</em>trigger 的比值或者所有文件的 size 超过 max<em>bytes</em>for<em>level</em>base。L1 ~ LN 的触发条件则是 sst 文件的大小。</p>
 
-<p>如果 <code>level_compaction_dynamic_level_bytes</code> 为 false，L1 ~ LN 每个 level 的最大容量由 <code>max_bytes_for_level_base</code> 和<code>max_bytes_for_level_multiplier</code> 决定，其 compaction score 就是当前总容量与设定的最大容量之比，如果某 level 满足 compaction 的条件则会被加入 compaction 队列。</p>
+<p>如果 <code>level_compaction_dynamic_level_bytes</code> 为 false，L1 ~ LN 每个 level 的最大容量由 <code>max_bytes_for_level_base</code> 和 <code>max_bytes_for_level_multiplier</code> 决定，其 compaction score 就是当前总容量与设定的最大容量之比，如果某 level 满足 compaction 的条件则会被加入 compaction 队列。</p>
 
 <p>如果 <code>level_compaction_dynamic_level_bytes</code> 为 true，则 <code>Target_Size(Ln-1) = Target_Size(Ln) / max_bytes_for_level_multiplier</code>，此时如果某 level 计算出来的 target 值小于 <code>max_bytes_for_level_base / max_bytes_for_level_multiplier</code>，则 RocksDB 不会再这个 level 存储任何 sst 数据。</p>
+
+<h5 id="toc_36">5.1.1 Compaction Score</h5>
+
+<hr>
+
+<p>compact 流程的 Compaction Score，不同 level 的计算方法不一样，下面先列出 L0 的计算方法。其中 num 代表未 compact 文件的数目。</p>
+
+<table>
+<thead>
+<tr>
+<th style="text-align: left">Param</th>
+<th style="text-align: left">Value</th>
+<th style="text-align: left">Description</th>
+<th style="text-align: left">Score</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td style="text-align: left">level0<em>file</em>num<em>compaction</em>trigger</td>
+<td style="text-align: left">4</td>
+<td style="text-align: left">num 为 4 时，达到 compact 条件</td>
+<td style="text-align: left">num &lt; 20 时 Score = num / 4</td>
+</tr>
+<tr>
+<td style="text-align: left">level0<em>slowdown</em>writes_trigger</td>
+<td style="text-align: left">20</td>
+<td style="text-align: left">num 为 20 时，RocksDB 会减慢写入速度</td>
+<td style="text-align: left">20 &lt;= num &amp;&amp; num &lt; 24 时 Score = 10000</td>
+</tr>
+<tr>
+<td style="text-align: left">level0<em>stop</em>writes_trigger</td>
+<td style="text-align: left">24</td>
+<td style="text-align: left">num 为 24 时，RocksDB 停止写入文件，尽快对 L0 进行 compact</td>
+<td style="text-align: left">24 &lt;= num 时 Score = 1000000</td>
+</tr>
+</tbody>
+</table>
+
+<p>对于 L1+ 层，score = Level<em>Bytes / Target</em>Size。</p>
+
+<h5 id="toc_37">5.1.2 Level Max Bytes</h5>
+
+<hr>
+
+<p>每个 level 容量总大小的计算前文已经提过，</p>
+
+<table>
+<thead>
+<tr>
+<th style="text-align: left">Param</th>
+<th style="text-align: left">Value</th>
+<th style="text-align: left">Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td style="text-align: left">max<em>bytes</em>for<em>level</em>base</td>
+<td style="text-align: left">10485760</td>
+<td style="text-align: left">L1 总大小</td>
+</tr>
+<tr>
+<td style="text-align: left">max<em>bytes</em>for<em>level</em>multiplier</td>
+<td style="text-align: left">10</td>
+<td style="text-align: left">最大乘法因子</td>
+</tr>
+<tr>
+<td style="text-align: left">max<em>bytes</em>for<em>level</em>multiplier_addtl[2…6]</td>
+<td style="text-align: left">1</td>
+<td style="text-align: left">L2 ~ L6 总大小调整参数</td>
+</tr>
+</tbody>
+</table>
+
+<p>每个 level 的总大小计算公式为 <code>Level_max_bytes[N] = Level_max_bytes[N-1] * max_bytes_for_level_multiplier^(N-1)*max_bytes_for_level_multiplier_additional[N-1]</code>。</p>
+
+<h5 id="toc_38">5.1.3 compact file</h5>
+
+<hr>
+
+<p>上面详述了 compact level 的选择，但是每个 level 具体的 compact 文件对象，</p>
+
+<p>L0 层所有文件会被选做 compact 对象，因为它们有很高的概率所有文件的 key range 发生重叠。</p>
+
+<p>对于 L1+ 层的文件，先对所有文件的大小进行排序以选出最大文件。</p>
+
+<p>LevelDB 的文件选取过程如下：</p>
+
+<p>LN 中每个文件都一个 seek 数值，其默认值非零，每次访问后这个数值减 1，其值越小说明访问越频繁。sst 文件的策略如下：</p>
+
+<ul>
+<li>1 选择 seek 次数为 0 的文件进行 merge，如果没有 seek 次数为 0 的文件，则从第一个文件开始进行 compact；</li>
+<li>2 一次 compact 后记录本次结束的 key，下次 compact 开始时以这个 key 为起始继续进行 compact。</li>
+</ul>
+
+<h5 id="toc_39">5.1.4 compaction</h5>
+
+<hr>
 
 <p>大致的 compaction 流程大致为：</p>
 
@@ -692,7 +844,13 @@ table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
 <li>5 对目标文件进行压缩后放入 level + 1 中。</li>
 </ul>
 
-<h4 id="toc_34">5.2 Universal Compaction</h4>
+<h5 id="toc_40">5.1.5 并行 Compact</h5>
+
+<hr>
+
+<p>参数 max<em>background</em>compactions 大于 1 时，RocksDB 会进行并行 Compact，但并行 Compact 不能作用到L0 层文件。</p>
+
+<h4 id="toc_41">5.2 Universal Compaction</h4>
 
 <hr>
 
@@ -712,7 +870,30 @@ table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
 
 <p>整个 compaction 是 LSM-tree 数据结构的核心，也是rocksDB的核心，详细内容请阅读参考文档8 和 参考文档9。</p>
 
-<h3 id="toc_35">6 FAQ</h3>
+<h3 id="toc_42">6 磁盘文件</h3>
+
+<p>参考文档 12 列举了 RocksDB 磁盘上数据文件的种类：</p>
+
+<div><pre><code class="language-none">* db的操作日志
+* 存储实际数据的SSTable文件
+* DB的元信息Manifest文件
+* 记录当前正在使用的Manifest文件，它的内容就是当前的manifest文件名
+* 系统的运行日志，记录系统的运行信息或者错误日志。
+* 临时数据库文件，repair时临时生成的。</code></pre></div>
+
+<p>manifest 文件记载了所有SSTable文件的key的范围、level级别。</p>
+
+<h4 id="toc_43">6.1 log 文件</h4>
+
+<p><img src="../pic/rocksdb_log_block_record.png" alt=""></p>
+
+<p>如上图，log 文件的逻辑单位是 Record，物理单位是 block，每个 Record 可以存在于一个 block 中，也可以占用多个 block。Record 的详细结构见上图文字部分，其 type 字段的意义见下图。</p>
+
+<p><img src="../pic/rocksdb_log_record.png" alt=""></p>
+
+<p>从上图可见 Record type的意义：如果某 KV 过长则可以用多 Record 存储。</p>
+
+<h3 id="toc_44">7 FAQ</h3>
 
 <hr>
 
@@ -765,7 +946,7 @@ table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
 <li>43 对于一个离线 DB 可以通过 &quot;sst<em>dump --show</em>properties --command=none&quot; 命令获取特定 sst 文件的 index &amp; filter 的 size，对于正在运行的 DB 可以通过读取 DB 的属性 &quot;kAggregatedTableProperties&quot; 或者调用 DB::GetPropertiesOfAllTables() 获取 DB 的 index &amp; filter 的 size。</li>
 </ul>
 
-<h2 id="toc_36">参考文档</h2>
+<h2 id="toc_45">参考文档</h2>
 
 <hr>
 
@@ -781,9 +962,10 @@ table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
 <li>9 <a href="https://github.com/facebook/rocksdb/wiki/Leveled-Compaction">Leveled Compaction</a></li>
 <li>10 <a href="https://github.com/facebook/rocksdb/wiki/Time-to-Live">Time to Live</a></li>
 <li>11 <a href="https://github.com/facebook/rocksdb/wiki/RocksDB-FAQ">RocksDB-FAQ</a></li>
+<li>12 <a href="https://note.youdao.com/share/?id=60b7e3aa14a01c85d05ee8a7e4d16c46&amp;type=note#/">设计思路和主要知识点</a></li>
 </ul>
 
-<h2 id="toc_37">扒粪者-于雨氏</h2>
+<h2 id="toc_46">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>2018/03/28，于雨氏，初作此文于海淀。</p>
@@ -819,6 +1001,8 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
+
 
 </body>
 
