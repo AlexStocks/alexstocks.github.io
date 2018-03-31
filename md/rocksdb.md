@@ -635,19 +635,27 @@ RocksDB 还支持一种 FIFO 的 compaction。FIFO 顾名思义就是先进先�
 整个 compaction 是 LSM-tree 数据结构的核心，也是rocksDB的核心，详细内容请阅读参考文档8 和 参考文档9。
 
 ### 6 磁盘文件
+---
 
 参考文档 12 列举了 RocksDB 磁盘上数据文件的种类：
 
 	* db的操作日志
-	* 存储实际数据的SSTable文件
-	* DB的元信息Manifest文件
-	* 记录当前正在使用的Manifest文件，它的内容就是当前的manifest文件名
+	* 存储实际数据的 SSTable 文件
+	* DB的元信息 Manifest 文件
+	* 记录当前正在使用的 Manifest 文件，它的内容就是当前的 manifest 文件名
 	* 系统的运行日志，记录系统的运行信息或者错误日志。
-	* 临时数据库文件，repair时临时生成的。
+	* 临时数据库文件，repair 时临时生成的。
 
-manifest 文件记载了所有SSTable文件的key的范围、level级别。
+manifest 文件记载了所有 SSTable 文件的 key 的范围、level 级别等数据。
+
+![](../pic/leveldb_arch.png)
+
+上面是 leveldb 的架构图，可以作为参考，明白各种文件的作用。
 
 #### 6.1 log 文件 
+---
+
+log 文件就是 WAL。
 
 ![](../pic/rocksdb_log_block_record.png)
 
@@ -656,6 +664,125 @@ manifest 文件记载了所有SSTable文件的key的范围、level级别。
 ![](../pic/rocksdb_log_record.png)
 
 从上图可见 Record type的意义：如果某 KV 过长则可以用多 Record 存储。
+
+#### 6.2 Manifest 文件 
+---
+
+RocksDB 整个 LSM 树的信息需要常驻内容，以让 RocksDB 快速进行 kv 查找或者进行 compaction 任务，RocksDB 会用文件把这些信息固化下来，这个文件就是 Manifest 文件。RocksDB 称 Manifest 文件记录了 DB 状态变化的事务性日志，也就是说它记录了所有改变 DB 状态的操作。主要内容有事务性日志和数据库状态的变化。
+
+RocksDB 的函数 VersionSet::LogAndApply 是对 Manifest 文件的更新操作，所以可以通过定位这个函数出现的位置来跟踪 Manifest 的记录内容。
+
+Manifest 文件作为事务性日志文件，只要数据库有变化，Manifest都会记录。其内容 size 超过设定值后会被 VersionSet::WriteSnapShot 重写。
+
+RocksDB 进程 Crash 后 Reboot 的过程中，会首先读取 Manifest 文件在内存中重建 LSM 树，然后根据 WAL 日志文件恢复 memtable 内容。
+
+![](../pic/leveldb_manifest.jpg)
+
+上图是 leveldb 的 Manifest 文件结构，这个 Manifest 文件有以下文件内容： 
+
+* coparator名、log编号、前一个log编号、下一个文件编号、上一个序列号，这些都是日志、sstable文件使用到的重要信息，这些字段不一定必然存在；
+* 其次是compact点，可能有多个，写入格式为{kCompactPointer, level, internal key}
+* 其后是删除文件，可能有多个，格式为{kDeletedFile, level, file number}。
+* 最后是新文件，可能有多个，格式为{kNewFile, level, file number, file size, min key, max key}。
+
+#### 6.3 SSTfile  
+---
+
+![](../pic/leveldb_sst_file.png)
+
+见参考文档12，SSTtable 大致分为几个部分：
+
+* 数据块 Data Block，直接存储有序键值对；
+* Meta Block，存储Filter相关信息；
+* Meta Index Block，对Meta Block的索引，它只有一条记录，key是meta index的名字（也就是Filter的名字），value为指向meta index的位置；
+* Index Block，是对Data Block的索引，对于其中的每个记录，其key >=Data Block最后一条记录的key，同时<其后Data Block的第一条记录的key；value是指向data index的位置信息；
+* Footer，指向各个分区的位置和大小。
+
+block 结构如下图：
+
+![](../pic/leveldb_sst_block.jpg)
+
+record 结构如下图：
+
+![](../pic/leveldb_sst_record.jpg)
+
+Footer 结构如下图：
+
+![](../pic/leveldb_sst_footer.jpg)
+
+#### 6.4 memtable  
+---
+
+memtable 中存储了一些 metadata 和 data，data 在 skiplist 中存储。metadata 数据如下（源自参考文档 12）：
+
+* 当前日志句柄；
+* 版本管理器、当前的版本信息（对应 compaction）和对应的持久化文件标示；
+* 当前的全部db配置信息比如 comparator 及其对应的 memtable 指针；
+* 当前的状态信息以决定是否需要持久化 memtable 和合并 sstable；
+* sstable 文件集合的信息。
+
+#### 6.5 VersionSet  
+---
+
+RocksDB 的 Version 表示一个版本的 metadata，其主要内容是 FileMetaData 指针的二维数组，分层记录了所有的SST文件信息。
+
+FileMetaData 数据结构用来维护一个文件的元信息，包括文件大小，文件编号，最大最小值，引用计数等信息，其中引用计数记录了被不同的Version引用的个数，保证被引用中的文件不会被删除。
+
+Version中还记录了触发 Compaction 相关的状态信息，这些信息会在读写请求或 Compaction 过程中被更新。在 CompactMemTable 和 BackgroundCompaction 过程中会导致新文件的产生和旧文件的删除，每当这个时候都会有一个新的对应的Version生成，并插入 VersionSet 链表头部，LevelDB 用 VersionEdit 来表示这种相邻 Version 的差值。
+
+![](../pic/leveldb_versionset.png)
+
+VersionSet 结构如上图所示，它是一个 Version 构成的双向链表，这些Version按时间顺序先后产生，记录了当时的元信息，链表头指向当前最新的Version，同时维护了每个Version的引用计数，被引用中的Version不会被删除，其对应的SST文件也因此得以保留，通过这种方式，使得LevelDB可以在一个稳定的快照视图上访问文件。
+
+VersionSet中除了Version的双向链表外还会记录一些如LogNumber，Sequence，下一个SST文件编号的状态信息。
+
+#### 6.4 MetaData Restore  
+---
+
+本节内容节选自参考文档 12。
+
+为了避免进程崩溃或机器宕机导致的数据丢失，LevelDB 需要将元信息数据持久化到磁盘，承担这个任务的就是 Manifest 文件，每当有新的Version产生都需要更新 Manifest。
+
+![](../pic/leveldb_version_manifest.png)
+
+新增数据正好对应于VersionEdit内容，也就是说Manifest文件记录的是一组VersionEdit值，在Manifest中的一次增量内容称作一个Block。
+
+![](../pic/leveldb_manifest_block_item.png)
+
+Manifest Block 的详细结构如上图所示。
+
+![](../pic/leveldb_data_restore.png)
+
+上图最上面的流程显示了恢复元信息的过程，也就是一次应用 VersionEdit 的过程，这个过程会有大量的临时 Version 产生，但这种方法显然太过于耗费资源，LevelDB 引入 VersionSet::Builder 来避免这种中间变量，方法是先将所有的VersoinEdit内容整理到VersionBuilder中，然后一次应用产生最终的Version，详细流程如上图下边流程所示。
+
+数据恢复的详细流程如下：
+
+* 依次读取Manifest文件中的每一个Block， 将从文件中读出的Record反序列化为VersionEdit；
+* 将每一个的VersionEdit Apply到VersionSet::Builder中，之后从VersionSet::Builder的信息中生成Version；
+* 计算compaction_level_、compaction_score_；
+* 将新生成的Version挂到VersionSet中，并初始化VersionSet的manifest_file_number_， next_file_number_，last_sequence_，log_number_，prev_log_number_ 信息；
+
+
+#### 6.5 Snapshot  
+---
+
+RocksDB 每次进行更新操作就会把更新内容写入 Manifest 文件，同时它会更新版本号。
+
+版本号是一个 8 字节的证书，每个 key 更新的时，除了新数据被写入数据文件，同时记录下 RocksDB 的版本号。RocksDB 的 Snapshot 数据仅仅是逻辑数据，并没有对应的真实存在的物理数据，仅仅对应一下当前 RocksDB 的全局版本号而已，只要 Snapshot 存在，每个 key 对应版本号的数据在后面的更新、删除、合并时会一并存在，不会被删除，以保证数据一致性。 
+
+#### 6.6 Backup
+---
+
+RocksDB 提供了 point-of-time 数据备份功能，其大致流程如下：
+
+* 禁止删除文件（sst 文件和 log 文件）；
+* 将 RocksDB 中的所有的 sst/Manifest/配置/CURRENT 文件备份到指定目录；
+* 允许删除文件。
+
+sst 文件只有在 compact 时才会被删除，所以禁止删除就相当于禁止了 compaction。别的 RocksDB 在获取这些备份数据文件后会依据 Manifest 文件重构 LSM 结构的同时，也能恢复出 WAL 文件，进而重构出当时的 memtable 文件。
+
+在进行 Backup 的过程中，写操作是不会被阻塞的，所以 WAL 文件内容会在 backup 过程中发生改变。RocksDB 的 flush_before_backup 选项用来控制在 backup 时是否也拷贝 WAL，其值为 true 则不拷贝。
+
 
 ### 7 FAQ
 ---
