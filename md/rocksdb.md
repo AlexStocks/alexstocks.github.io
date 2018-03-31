@@ -7,7 +7,7 @@
 
 近日在写一个分布式 KV DB，存储层使用了 RocksDB。
 
-RocksDB 的优点此处无需多说，它的 feature 是其有很多优化选项用于对 RocksDB 进行调优。欲熟悉这些参数，必须对其背后的原理有所了解，本文主要整理一些 RocksDB 的 wiki 文档，以备自己参考之用。
+RocksDB 的优点此处无需多说，它的一个 feature 是其有很多优化选项用于对 RocksDB 进行调优。欲熟悉这些参数，必须对其背后的原理有所了解，本文主要整理一些 RocksDB 的 wiki 文档，以备自己参考之用。
 
 ### 1 [Basic Operations](https://github.com/facebook/rocksdb/wiki/Basic-Operations) 
 ---
@@ -15,6 +15,8 @@ RocksDB 的优点此处无需多说，它的 feature 是其有很多优化选项
 先介绍一些 RocksDB 的基本操作和基本架构。
 
 通过参考文档 5，RocksDB 是一个快速存储系统，它会充分挖掘 Flash or RAM 硬件的读写特性，支持单个 KV 的读写以及批量读写。RocksDB 自身采用的一些数据结构如 LSM/SKIPLIST 等结构使得其有读放大、写放大和空间使用放大的问题。
+
+RocksDB 的 LSM 体现在多 level 文件格式上，最热最新的数据尽在 L0 层，最冷最老的数据尽在 LN层。
 
 RocksDB的三种基本文件格式是 memtable/sstfile/logfile，memtable 是一种内存文件数据系统，新写数据会被写进 memtable，部分请求内容会被写进 logfile。logfile 是一种有利于顺序写的文件系统。memtable 的内存空间被填满之后，会有一部分老数据被转移到 sstfiile 里面，这些数据对应的 logfile 里的 log 就会被安全删除。sstfile 中的内容是有序的。
 
@@ -291,8 +293,6 @@ TTL 的使用有以下注意事项：
 * 5 不同的 `DBWithTTL::Open` 可能会带上不同的 TTL 值，此时 kv 以最大的 TTL 值为准；
 * 6 如果 `DBWithTTL::Open` 的参数 `read_only` 为 true，则不会触发 compact 任务，不会有过期数据被删除。
 
-
-
 	
 ### 2 [RocksDB Memory](https://github.com/facebook/rocksdb/wiki/Memory-usage-in-RocksDB) 
 ---
@@ -349,6 +349,24 @@ block cache、index & filter 都是读 buffer，而 memtable 则是写 buffer，
 	
 <!---C++--->
     table_options.block_cache->GetPinnedUsage();
+    
+#### 2.5 读流程
+---    
+
+参考文档 12 详细描述了 LeveDB（RocksDB）的读流程，转述如下：
+
+* 在MemTable中查找，无法命中转到下一流程；
+* 在immutable_memtable中查找，查找不中转到下一流程；
+* 在第0层SSTable中查找，无法命中转到下一流程；
+   
+  对于L0 的文件，RocksDB 采用遍历的方法查找，所以为了查找效率 RocksDB 会控制 L0 的文件个数。
+ 
+* 在剩余SSTable中查找。
+
+  对于 L1 层以及 L1 层以上层级的文件，每个 SSTable 没有交叠，可以使用二分查找快速找到 key 所在的 Level 以及 SSTfile。
+
+
+至于写流程，请参阅 ### 5 Compaction & Flush 章节内容。
 
 ### 3 [Block Cache](https://github.com/facebook/rocksdb/wiki/Block-Cache) 
 ---
@@ -518,6 +536,11 @@ compaction 的触发条件是文件个数和文件大小。L0 的触发条件是
 * 4 从 level + 1 中选取出于 (minkey, maxkey) 用重叠的 sst 文件，有重叠的文件则把文件与 level 中的文件进行合并（merge - sort）作为目标文件，没有重叠文件则把原始文件作为目标文件；
 * 5 对目标文件进行压缩后放入 level + 1 中。
 
+LN 中每个文件都一个 seek 数值，其默认值非零，每次访问后这个数值减 1，其值越小说明访问越频繁。步骤 2 中提到的选择 sst 文件的策略如下：
+
+* 1 选择 seek 次数为 0 的文件进行 merge，如果没有 seek 次数为 0 的文件，则从第一个文件开始进行 compact；
+* 3 一次 compact 后记录本次结束的 key，下次 compact 开始时以这个 key 为起始继续进行 compact。
+
 
 #### 5.2 Universal Compaction
 ---
@@ -536,7 +559,30 @@ RocksDB 还支持一种 FIFO 的 compaction。FIFO 顾名思义就是先进先�
 
 整个 compaction 是 LSM-tree 数据结构的核心，也是rocksDB的核心，详细内容请阅读参考文档8 和 参考文档9。
 
-### 6 FAQ
+### 6 磁盘文件
+
+参考文档 12 列举了 RocksDB 磁盘上数据文件的种类：
+
+	* db的操作日志
+	* 存储实际数据的SSTable文件
+	* DB的元信息Manifest文件
+	* 记录当前正在使用的Manifest文件，它的内容就是当前的manifest文件名
+	* 系统的运行日志，记录系统的运行信息或者错误日志。
+	* 临时数据库文件，repair时临时生成的。
+
+manifest 文件记载了所有SSTable文件的key的范围、level级别。
+
+#### 6.1 log 文件 
+
+![](../pic/rocksdb_log_block_record.png)
+
+如上图，log 文件的逻辑单位是 Record，物理单位是 block，每个 Record 可以存在于一个 block 中，也可以占用多个 block。Record 的详细结构见上图文字部分，其 type 字段的意义见下图。
+
+![](../pic/rocksdb_log_record.png)
+
+从上图可见 Record type的意义：如果某 KV 过长则可以用多 Record 存储。
+
+### 7 FAQ
 ---
 
 官方 wiki 【参考文档 11】提供了一份 FAQ，下面节选一些比较有意义的建议，其他内容请移步官方文档。
@@ -600,6 +646,7 @@ RocksDB 还支持一种 FIFO 的 compaction。FIFO 顾名思义就是先进先�
 - 9 [Leveled Compaction](https://github.com/facebook/rocksdb/wiki/Leveled-Compaction)
 - 10 [Time to Live](https://github.com/facebook/rocksdb/wiki/Time-to-Live)
 - 11 [RocksDB-FAQ](https://github.com/facebook/rocksdb/wiki/RocksDB-FAQ)
+- 12 [设计思路和主要知识点](https://note.youdao.com/share/?id=60b7e3aa14a01c85d05ee8a7e4d16c46&type=note#/)
 
 ## 扒粪者-于雨氏 ##
 
