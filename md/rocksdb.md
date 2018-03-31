@@ -612,10 +612,14 @@ LN 中每个文件都一个 seek 数值，其默认值非零，每次访问后�
 * 4 从 level + 1 中选取出于 (minkey, maxkey) 用重叠的 sst 文件，有重叠的文件则把文件与 level 中的文件进行合并（merge - sort）作为目标文件，没有重叠文件则把原始文件作为目标文件；
 * 5 对目标文件进行压缩后放入 level + 1 中。
 
-##### 5.1.5 并行 Compact
+##### 5.1.5 并行 Compact 与 sub-compact
 ---
 
-参数 max_background_compactions 大于 1 时，RocksDB 会进行并行 Compact，但并行 Compact 不能作用到L0 层文件。
+参数 max_background_compactions 大于 1 时，RocksDB 会进行并行 Compact，但 L0 和 L1 层的 Compaction 任务不能进行并行。
+
+![](../pic/rocksdb_subcompaction.png)
+
+一次 compaction 只能 compact 一个或者多个文件，这会约束整体 compaction 速度。用户可以设置 max_subcompactions 参数大于 1，RocksDB 如上图一样尝试把一个文件拆为多个 sub，然后启动多个线程执行 sub-compact。
 
 #### 5.2 Universal Compaction
 ---

@@ -844,11 +844,15 @@ table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
 <li>5 对目标文件进行压缩后放入 level + 1 中。</li>
 </ul>
 
-<h5 id="toc_40">5.1.5 并行 Compact</h5>
+<h5 id="toc_40">5.1.5 并行 Compact 与 sub-compact</h5>
 
 <hr>
 
-<p>参数 max<em>background</em>compactions 大于 1 时，RocksDB 会进行并行 Compact，但并行 Compact 不能作用到L0 层文件。</p>
+<p>参数 max<em>background</em>compactions 大于 1 时，RocksDB 会进行并行 Compact，但 L0 和 L1 层的 Compaction 任务不能进行并行。</p>
+
+<p><img src="../pic/rocksdb_subcompaction.png" alt=""></p>
+
+<p>一次 compaction 只能 compact 一个或者多个文件，这会约束整体 compaction 速度。用户可以设置 max_subcompactions 参数大于 1，RocksDB 如上图一样尝试把一个文件拆为多个 sub，然后启动多个线程执行 sub-compact。</p>
 
 <h4 id="toc_41">5.2 Universal Compaction</h4>
 
@@ -1114,7 +1118,6 @@ table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
 <blockquote>
 <p>2018/03/28，于雨氏，初作此文于海淀。</p>
 </blockquote>
-
 
 <!-- baidu statistic start -->
 <script>
