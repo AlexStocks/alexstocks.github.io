@@ -740,7 +740,7 @@ VersionSet 结构如上图所示，它是一个 Version 构成的双向链表，
 
 VersionSet中除了Version的双向链表外还会记录一些如LogNumber，Sequence，下一个SST文件编号的状态信息。
 
-#### 6.4 MetaData Restore  
+#### 6.6 MetaData Restore  
 ---
 
 本节内容节选自参考文档 12。
@@ -767,14 +767,14 @@ Manifest Block 的详细结构如上图所示。
 * 将新生成的Version挂到VersionSet中，并初始化VersionSet的manifest_file_number_， next_file_number_，last_sequence_，log_number_，prev_log_number_ 信息；
 
 
-#### 6.5 Snapshot  
+#### 6.7 Snapshot  
 ---
 
 RocksDB 每次进行更新操作就会把更新内容写入 Manifest 文件，同时它会更新版本号。
 
 版本号是一个 8 字节的证书，每个 key 更新的时，除了新数据被写入数据文件，同时记录下 RocksDB 的版本号。RocksDB 的 Snapshot 数据仅仅是逻辑数据，并没有对应的真实存在的物理数据，仅仅对应一下当前 RocksDB 的全局版本号而已，只要 Snapshot 存在，每个 key 对应版本号的数据在后面的更新、删除、合并时会一并存在，不会被删除，以保证数据一致性。 
 
-#### 6.6 Backup
+#### 6.8 Backup
 ---
 
 RocksDB 提供了 point-of-time 数据备份功能，其大致流程如下：

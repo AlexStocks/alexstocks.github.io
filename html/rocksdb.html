@@ -988,7 +988,7 @@ table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
 
 <p>VersionSet中除了Version的双向链表外还会记录一些如LogNumber，Sequence，下一个SST文件编号的状态信息。</p>
 
-<h4 id="toc_48">6.4 MetaData Restore</h4>
+<h4 id="toc_48">6.6 MetaData Restore</h4>
 
 <hr>
 
@@ -1017,7 +1017,7 @@ table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
 <li>将新生成的Version挂到VersionSet中，并初始化VersionSet的manifest<em>file</em>number<em>， next</em>file<em>number</em>，last<em>sequence</em>，log<em>number</em>，prev<em>log</em>number_ 信息；</li>
 </ul>
 
-<h4 id="toc_49">6.5 Snapshot</h4>
+<h4 id="toc_49">6.7 Snapshot</h4>
 
 <hr>
 
@@ -1025,7 +1025,7 @@ table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
 
 <p>版本号是一个 8 字节的证书，每个 key 更新的时，除了新数据被写入数据文件，同时记录下 RocksDB 的版本号。RocksDB 的 Snapshot 数据仅仅是逻辑数据，并没有对应的真实存在的物理数据，仅仅对应一下当前 RocksDB 的全局版本号而已，只要 Snapshot 存在，每个 key 对应版本号的数据在后面的更新、删除、合并时会一并存在，不会被删除，以保证数据一致性。 </p>
 
-<h4 id="toc_50">6.6 Backup</h4>
+<h4 id="toc_50">6.8 Backup</h4>
 
 <hr>
 
