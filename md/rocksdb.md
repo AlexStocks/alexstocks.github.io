@@ -353,6 +353,8 @@ block cache、index & filter 都是读 buffer，而 memtable 则是写 buffer，
 #### 2.5 读流程
 ---    
 
+RocksDB 的读流程分为逻辑读(logical read)和物理读(physical read)。逻辑读通常是对 cache【Block Cache & Table Cache】进行读取，物理读就是直接读磁盘。
+
 参考文档 12 详细描述了 LeveDB（RocksDB）的读流程，转述如下：
 
 * 在MemTable中查找，无法命中转到下一流程；
@@ -367,6 +369,23 @@ block cache、index & filter 都是读 buffer，而 memtable 则是写 buffer，
 
 
 至于写流程，请参阅 ### 5 Compaction & Flush 章节内容。
+
+#### 2.6 memory pool
+--- 
+
+RocksDB 写入时间长了以后，可能会不定时出现较大的写毛刺，可能有两个地方导致 RocksDB 会出现较大的写延时：获取 mutex 时可能出现几十毫秒延迟 和 将数据写入 memtable 时候可能出现几百毫秒延时。
+
+获取 mutex 出现的延迟是因为 flush/compact 线程与读写线程竞争导致的，可以通过调整线程数量降低毛刺时间。
+
+至于写入 memtable 时候出现的写毛刺时间，解决方法一就是使用大的 page cache，禁用系统 swap 以及配置 min_free_kbytes、dirty_ratio、dirty_background_ratio 等参数来调整系统的内存回收策略，更基础的方法是使用内存池。
+
+采用内存池时，memtable 的内存分配和回收流程图如下：
+
+![](../pic/rocksdb_mempool.png)
+
+使用内存池时，RocksDB 的内容分配代码模块如下：
+
+![](../pic/rocksdb_mempool_arena.png)
 
 ### 3 [Block Cache](https://github.com/facebook/rocksdb/wiki/Block-Cache) 
 ---
