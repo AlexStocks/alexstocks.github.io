@@ -194,10 +194,10 @@ etcdctl --endpoints=“http://localhost:2379“ cluster-health</code></pre></div
 
 <p>参考文档7#Update advertise peer URLs#给出了更改这个参数的方法：</p>
 
-<blockquote>
-<p>1 执行命令 <strong>etcdctl member update a8266ecf031671f3 http://10.0.1.10:2380</strong> 以告知cluster内其他成员这个节点的新地址；
-2 更改节点配置，重启节点，以恢复节点的quorum。</p>
-</blockquote>
+<ul>
+<li>1 执行命令 <strong>etcdctl member update a8266ecf031671f3 http://10.0.1.10:2380</strong> 以告知cluster内其他成员这个节点的新地址；</li>
+<li>2 更改节点配置，重启节点，以恢复节点的quorum。</li>
+</ul>
 
 <h3 id="toc_5">1.3 添加一个节点</h3>
 
@@ -205,23 +205,22 @@ etcdctl --endpoints=“http://localhost:2379“ cluster-health</code></pre></div
 
 <p>具体详细步骤见参考文档7#Add a New Member#一节，下面给出操作过程：</p>
 
-<blockquote>
-<p>1 ETCDCTL<em>API=3 etcdctl --endpoints=http://192.168.11.1:2379,http://192.168.11.1:12379,http://192.168.11.1:22379 member add etcd</em>node3 --peer-urls=http://192.168.11.1:32379</p>
+<ul>
+<li><p>1 ETCDCTL<em>API=3 etcdctl --endpoints=http://192.168.11.1:2379,http://192.168.11.1:12379,http://192.168.11.1:22379 member add etcd</em>node3 --peer-urls=http://192.168.11.1:32379</p>
 
-<div><pre><code class="language-none">ETCD_NAME=&quot;etcd_node3&quot;
-ETCD_INITIAL_CLUSTER=&quot;etcd_node1=http://192.168.11.1:12380,etcd_node2=http://192.168.11.1:22380,etcd_node0=http://192.168.11.1:2380,etcd_node3=http://192.168.11.1:32379&quot;
-ETCD_INITIAL_CLUSTER_STATE=&quot;existing&quot;</code></pre></div>
-
-<p>2 etcd --name=etcd<em>node3 \
-    --data-dir=/tmp/etcd/etcd</em>node3/./data/ \
-    --wal-dir=/tmp/etcd/etcd<em>node3/./wal/ \
-    --listen-peer-urls=http://192.168.11.100:32380 \
-    --initial-advertise-peer-urls=http://192.168.11.100:32380 \
-    --listen-client-urls=http://192.168.11.100:32379,http://127.0.0.1:32379 \
-    --advertise-client-urls=http://192.168.11.100:32379 \
-    --initial-cluster-state=existing \
-    --initial-cluster=&quot;etcd</em>node2=http://192.168.11.100:22380,etcd<em>node1=http://192.168.11.100:12380,etcd</em>node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380&quot;</p>
-</blockquote>
+<p>ETCD<em>NAME=&quot;etcd</em>node3&quot;
+ ETCD<em>INITIAL</em>CLUSTER=&quot;etcd<em>node1=http://192.168.11.1:12380,etcd</em>node2=http://192.168.11.1:22380,etcd<em>node0=http://192.168.11.1:2380,etcd</em>node3=http://192.168.11.1:32379&quot;
+ ETCD<em>INITIAL</em>CLUSTER_STATE=&quot;existing&quot;</p></li>
+<li><p>2 etcd --name=etcd<em>node3 \
+--data-dir=/tmp/etcd/etcd</em>node3/./data/ \
+--wal-dir=/tmp/etcd/etcd<em>node3/./wal/ \
+--listen-peer-urls=http://192.168.11.100:32380 \
+--initial-advertise-peer-urls=http://192.168.11.100:32380 \
+--listen-client-urls=http://192.168.11.100:32379,http://127.0.0.1:32379 \
+--advertise-client-urls=http://192.168.11.100:32379 \
+--initial-cluster-state=existing \
+--initial-cluster=&quot;etcd</em>node2=http://192.168.11.100:22380,etcd<em>node1=http://192.168.11.100:12380,etcd</em>node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380&quot;</p></li>
+</ul>
 
 <p>一定要注意，”initial-cluster”里面一定要有新成员的peer地址。参考文档7#Strict Reconfiguration Check Mode#提到：etcdctl执行完毕”etcdctl member add“后，etcd cluster就把这个还未存在的node算进quorum了，<strong>第二步必须准确完成</strong>。</p>
 
@@ -303,19 +302,19 @@ exit 1</code></pre></div>
 
 <p>有作证明的测试过程1如下：</p>
 
-<blockquote>
-<p>1 部署一个静态集群；
-2 以kill方式杀死一个成员，然后clear掉数据，重启失败；</p>
-</blockquote>
+<ul>
+<li>1 部署一个静态集群；</li>
+<li>2 以kill方式杀死一个成员，然后clear掉数据，重启失败；</li>
+</ul>
 
 <p>此时etcd的log显示一个critical级别错误log “etcdmain: member 7f198dd1e26bed5a has already been bootstrapped”。</p>
 
 <p>有作证明的测试过程2如下：</p>
 
-<blockquote>
-<p>1 部署一个静态集群；
-2 以kill方式杀死一个成员，然后给成员一个新名称，重启失败；</p>
-</blockquote>
+<ul>
+<li>1 部署一个静态集群；</li>
+<li>2 以kill方式杀死一个成员，然后给成员一个新名称，重启失败；</li>
+</ul>
 
 <p>此时etcd的log给出critical级别错误log“etcdmain: couldn&#39;t find local name &quot;etcd_node3&quot; in the initial cluster configuration”。</p>
 
@@ -327,24 +326,24 @@ exit 1</code></pre></div>
 
 <p>当动态集群启动后，集群内成员间即可相互通信，不依赖于原静态集群。有作证明的测试过程如下：</p>
 
-<blockquote>
-<p>1 部署一个静态集群；
-2 以discovery方式在静态集群之上再部署一个动态集群；
-3 杀掉静态集群各个成员；
-4 通过etcdctl查看动态集群成员列表以及集群状态，成员不变，集群状态是healthy；
-5 向动态集群添加新成员失败；
-6 杀掉一个动态集群成员，再重新启动后成功加入动态集群；
-7 杀掉一个动态集群成员，清空其data<em>dir和wal</em>dir下数据，再重新启动后加入动态集群失败；</p>
-</blockquote>
+<ul>
+<li>1 部署一个静态集群；</li>
+<li>2 以discovery方式在静态集群之上再部署一个动态集群；</li>
+<li>3 杀掉静态集群各个成员；</li>
+<li>4 通过etcdctl查看动态集群成员列表以及集群状态，成员不变，集群状态是healthy；</li>
+<li>5 向动态集群添加新成员失败；</li>
+<li>6 杀掉一个动态集群成员，再重新启动后成功加入动态集群；</li>
+<li>7 杀掉一个动态集群成员，清空其data<em>dir和wal</em>dir下数据，再重新启动后加入动态集群失败；</li>
+</ul>
 
 <p>只要动态集群现有成员的数据还在，就能保证动态集群自身的稳定运行【参考文档6#Do not use public discovery service for runtime reconfiguration#也证实了这点】。又有作证明的测试过程如下：</p>
 
-<blockquote>
-<p>1 部署一个静态集群；
-2 以discovery方式在静态集群之上再部署一个动态集群；
-3 杀掉动态集群各个成员，清空各个成员数据，然后分别启动之，这些成员加入动态集群失败；
-4 修改各个成员的name，然后再启动，加入动态集群成功；</p>
-</blockquote>
+<ul>
+<li>1 部署一个静态集群；</li>
+<li>2 以discovery方式在静态集群之上再部署一个动态集群；</li>
+<li>3 杀掉动态集群各个成员，清空各个成员数据，然后分别启动之，这些成员加入动态集群失败；</li>
+<li>4 修改各个成员的name，然后再启动，加入动态集群成功；</li>
+</ul>
 
 <p>上面最后一步启动的各个节点，其实是以新node的身份加入了原动态集群。</p>
 
@@ -425,7 +424,7 @@ receives msgAppResp(rej=true)
               |   +——————————v—————————+
               |   |     replicate      |
               +—+ | max inflight = n   |
-                  +——————————v—————————+                                                        </code></pre></div>
+                  +——————————v—————————+</code></pre></div>
 
 <p>如果follower处于probe状态，则leader每个心跳包最多只发送一个“replication message”。leader会缓慢发送“replication message”并探测follower的处理速度。leader收到msgHeartbeatResp或者收到msgAppResp（其中reject值为true）时，leader会发送下 <strong>一个</strong> “replication message”。</p>
 
@@ -444,7 +443,7 @@ receives msgAppResp(rej=true)
 <blockquote>
 <ol>
 <li><p>限制message的max size。这个值是可以通过相关参数进行限定的，限定后可以降低探测follower接收速度的成本；</p></li>
-<li><p>当follower处于replicate状态时候，限定每次批量发送消息的数目。leader在网络层之上有一个发送buffer，通过类似于tcp的发送窗口的算法动态调整buffer的大小，以防止leader由于发包过快导致follower大量地丢包，提高发送成功率。 </p></li>
+<li><p>当follower处于replicate状态时候，限定每次批量发送消息的数目。leader在网络层之上有一个发送buffer，通过类似于tcp的发送窗口的算法动态调整buffer的大小，以防止leader由于发包过快导致follower大量地丢包，提高发送成功率。</p></li>
 </ol>
 </blockquote>
 
@@ -665,11 +664,11 @@ Finished defragmenting etcd member[127.0.0.1:2379]</code></pre></div>
 
 <p>参考文档16#Client Request Timeout#提到当前各种请求的超时参数还不能被修改，这里也给出了各个类型的超时参数：</p>
 
-<blockquote>
-<p>1 Get: 不可设置，应为get请求底层处理是异步的；
-2 Watch: 不可设置，除非用户主动取消或者连接中断；
-3 Delete, Put, Post, QuorumGet: 默认5s，官方认为5s能够满足绝对部分情况下的超时要求；</p>
-</blockquote>
+<ul>
+<li>1 Get: 不可设置，应为get请求底层处理是异步的；</li>
+<li>2 Watch: 不可设置，除非用户主动取消或者连接中断；</li>
+<li>3 Delete, Put, Post, QuorumGet: 默认5s，官方认为5s能够满足绝对部分情况下的超时要求；</li>
+</ul>
 
 <p>其他情况下如果发生超时的情况，则可能有两种原因：处理请求的server不能提供正常服务，或者集群失去了quorum。</p>
 
@@ -690,16 +689,13 @@ Finished defragmenting etcd member[127.0.0.1:2379]</code></pre></div>
     int64 lease = 6;
 }</code></pre></div>
 
-<p>各个字段意义如下：</p>
-
-<blockquote>
-<p>key是字节数组，不可为空；
-value也是字节数组；
-version则是key的版本，一个删除动作会把这个值清零，每次更新则会让其值增一；
-Create<em>Revision key创建时候的revision；
-Mod</em>Revision key最近一次修改时的revision；
-Lease 与key关联的Lease，如果其值为0则说明没有关联的Lease；</p>
-</blockquote>
+<p>各个字段意义如下：
+- key是字节数组，不可为空；
+- value也是字节数组；
+- version则是key的版本，一个删除动作会把这个值清零，每次更新则会让其值增一；
+- Create<em>Revision key创建时候的revision；
+- Mod</em>Revision key最近一次修改时的revision；
+- Lease 与key关联的Lease，如果其值为0则说明没有关联的Lease；</p>
 
 <p>revision是MVCC中的概念，是etcd中cluster级别的计数器，每次修改操作都会让其自增，可以认为是全局逻辑时钟(global logical clock)，对所有修改操作进行排序：revision越大说明其值越新，etcd对key索引使用B+树方式进行组织。etcd每个key都有很多revision（修订版本），每次事务操作都会创建一个revision，老的revision在etcd进行compaction操作的时候会被清除。create<em>revision会在使用<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/mutex.go">mutex lock</a>的时候使用，Mod</em>Revision与<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/stm.go">事务</a>操作和<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/election.go">leader选举</a>有关。</p>
 
@@ -744,20 +740,20 @@ Lease 与key关联的Lease，如果其值为0则说明没有关联的Lease；</p
 
 <p>各个字段含义如下：</p>
 
-<blockquote>
-<p>Key, Range<em>End - key range；
-Limit - 返回key的数目的最大值，如果为0则说明没有限制；
-Revision - key修改的时间点(point-in-time)，如果其值为0则是获取最新的kv，如果指定的revision已经被compact掉则etcd返回ErrCompacted错误；
-Sort</em>Order - 请求的排序方式；
-Sort<em>Target - kv的排序方式；
-Serializable - sets the range request to use serializable member-local reads. By default, Range is linearizable; it reflects the current consensus of the cluster. For better performance and availability, in exchange for possible stale reads, a serializable range request is served locally without needing to reach consensus with other nodes in the cluster.
-Keys</em>Only - 只返回key，无需返回Value；
-Count<em>Only - 只返回range内key的数目；
-Min</em>Mod<em>Revision - 最低mod revision值，Mod</em>Revision低于这个值的kv会被过滤掉；
-Max<em>Mod</em>Revision - 最大mod revision值，Mod<em>Revision高于这个值的kv会被过滤掉；
-Min</em>Create<em>Revision - 最低create revision值，Mod</em>Revision低于这个值的kv会被过滤掉；
-Max<em>Create</em>Revision - 最高create revision值，Mod_Revision高于这个值的kv会被过滤掉。</p>
-</blockquote>
+<ul>
+<li>Key, Range_End - key range；</li>
+<li>Limit - 返回key的数目的最大值，如果为0则说明没有限制；</li>
+<li>Revision - key修改的时间点(point-in-time)，如果其值为0则是获取最新的kv，如果指定的revision已经被compact掉则etcd返回ErrCompacted错误；</li>
+<li>Sort_Order - 请求的排序方式；</li>
+<li>Sort_Target - kv的排序方式；</li>
+<li>Serializable - sets the range request to use serializable member-local reads. By default, Range is linearizable; it reflects the current consensus of the cluster. For better performance and availability, in exchange for possible stale reads, a serializable range request is served locally without needing to reach consensus with other nodes in the cluster.</li>
+<li>Keys_Only - 只返回key，无需返回Value；</li>
+<li>Count_Only - 只返回range内key的数目；</li>
+<li>Min<em>Mod</em>Revision - 最低mod revision值，Mod_Revision低于这个值的kv会被过滤掉；</li>
+<li>Max<em>Mod</em>Revision - 最大mod revision值，Mod_Revision高于这个值的kv会被过滤掉；</li>
+<li>Min<em>Create</em>Revision - 最低create revision值，Mod_Revision低于这个值的kv会被过滤掉；</li>
+<li>Max<em>Create</em>Revision - 最高create revision值，Mod_Revision高于这个值的kv会被过滤掉。</li>
+</ul>
 
 <p>Range请求的响应定义如下：</p>
 
@@ -777,15 +773,15 @@ message RangeResponse {
 
 <p>各个字段含义如下：</p>
 
-<blockquote>
-<p>Cluster<em>ID - etcd cluster ID；
-Member</em>ID - 返回响应的cluster member的ID；
-Revision - 获取当前系统最新的kv Revision；
-Raft<em>Term - 这个字段可用于检测当前集群是否已经选举出一个新的leader；
-Kvs - 请求返回结果，如果Count</em>Only为true，则这个结果为空；
-More - 是否有更多值，如果limit为true；
-Count - Count_Only为true时候的结果。</p>
-</blockquote>
+<ul>
+<li>Cluster_ID - etcd cluster ID；</li>
+<li>Member_ID - 返回响应的cluster member的ID；</li>
+<li>Revision - 获取当前系统最新的kv Revision；</li>
+<li>Raft_Term - 这个字段可用于检测当前集群是否已经选举出一个新的leader；</li>
+<li>Kvs - 请求返回结果，如果Count_Only为true，则这个结果为空；</li>
+<li>More - 是否有更多值，如果limit为true；</li>
+<li>Count - Count_Only为true时候的结果。</li>
+</ul>
 
 <h3 id="toc_33">7.3 Put</h3>
 
@@ -804,14 +800,14 @@ Count - Count_Only为true时候的结果。</p>
 
 <p>各个字段含义如下：</p>
 
-<blockquote>
-<p>Key - KV对的key；
-Value - KV对的value；
-Lease - KV对的超时lease ID，默认值为0；
-Prev<em>Kv - 如果为true，则response会返回update前的kv值；
-Ignore</em>Value - 不更新当前key的value，当key不存在的时候返回一个error；
-Ignore_Lease - 不更新key的lease，当key不存在的时候返回一个error。</p>
-</blockquote>
+<ul>
+<li>Key - KV对的key；</li>
+<li>Value - KV对的value；</li>
+<li>Lease - KV对的超时lease ID，默认值为0；</li>
+<li>Prev_Kv - 如果为true，则response会返回update前的kv值；</li>
+<li>Ignore_Value - 不更新当前key的value，当key不存在的时候返回一个error；</li>
+<li>Ignore_Lease - 不更新key的lease，当key不存在的时候返回一个error。</li>
+</ul>
 
 <p>响应定义如下：</p>
 
@@ -820,9 +816,9 @@ Ignore_Lease - 不更新key的lease，当key不存在的时候返回一个error�
   mvccpb.KeyValue prev_kv = 2;
 }</code></pre></div>
 
-<blockquote>
-<p>prev<em>kv：Reqeuest中的prev</em>kv被设置为true的时候，这个结果就是update前的kv值；</p>
-</blockquote>
+<ul>
+<li>prev<em>kv：Reqeuest中的prev</em>kv被设置为true的时候，这个结果就是update前的kv值；</li>
+</ul>
 
 <h3 id="toc_34">7.4 Delete Range</h3>
 
@@ -836,10 +832,10 @@ Ignore_Lease - 不更新key的lease，当key不存在的时候返回一个error�
   bool prev_kv = 3;
 }</code></pre></div>
 
-<blockquote>
-<p>Key, Range<em>End - key range；
-Prev</em>Kv - 如果设置为true，则返回删除前的kv结果；</p>
-</blockquote>
+<ul>
+<li>Key, Range_End - key range；</li>
+<li>Prev_Kv - 如果设置为true，则返回删除前的kv结果；</li>
+</ul>
 
 <p>响应定义如下：</p>
 
@@ -849,10 +845,10 @@ Prev</em>Kv - 如果设置为true，则返回删除前的kv结果；</p>
   repeated mvccpb.KeyValue prev_kvs = 3;
 }</code></pre></div>
 
-<blockquote>
-<p>Deleted - 被删除的kv数目；
-Prev<em>Kv - 如果请求中的prev</em>kv被设为true，则响应中就返回被删除的kv值数组；</p>
-</blockquote>
+<ul>
+<li>Deleted - 被删除的kv数目；</li>
+<li>Prev<em>Kv - 如果请求中的prev</em>kv被设为true，则响应中就返回被删除的kv值数组；</li>
+</ul>
 
 <h3 id="toc_35">7.4 Transaction</h3>
 
@@ -898,12 +894,12 @@ Prev<em>Kv - 如果请求中的prev</em>kv被设为true，则响应中就返回�
   }
 }</code></pre></div>
 
-<blockquote>
-<p>Result - 逻辑比较类型，如相等、小于或者大于；
-Target - 有待被比较的kv的某个字段，如kye的version、创建 revision、修改revision或者value；
-Key - 用于比较操作的key；
-Target_Union - 附带比较对象，如给定的key的版本、给定key的创建revision、最后的修改revision和key的value。</p>
-</blockquote>
+<ul>
+<li>Result - 逻辑比较类型，如相等、小于或者大于；</li>
+<li>Target - 有待被比较的kv的某个字段，如kye的version、创建 revision、修改revision或者value；</li>
+<li>Key - 用于比较操作的key；</li>
+<li>Target_Union - 附带比较对象，如给定的key的版本、给定key的创建revision、最后的修改revision和key的value。</li>
+</ul>
 
 <p>定义了比较算子后，事务请求还需要一连串的子请求操作，定义如下：</p>
 
@@ -916,11 +912,11 @@ Target_Union - 附带比较对象，如给定的key的版本、给定key的创�
   }
 }</code></pre></div>
 
-<blockquote>
-<p>Request<em>Range - 一个RangeRequest；
-Request</em>Put - 一个PutRequest，keys中每个key都必须唯一不能重复；
-Request<em>Delete</em>Range - 一个DeleteRangeRequest，其操作的key也必须在整个事务中唯一。</p>
-</blockquote>
+<ul>
+<li>Request_Range - 一个RangeRequest；</li>
+<li>Request_Put - 一个PutRequest，keys中每个key都必须唯一不能重复；</li>
+<li>Request<em>Delete</em>Range - 一个DeleteRangeRequest，其操作的key也必须在整个事务中唯一。</li>
+</ul>
 
 <p>最终事务请求定义如下：</p>
 
@@ -930,11 +926,11 @@ Request<em>Delete</em>Range - 一个DeleteRangeRequest，其操作的key也必�
   repeated RequestOp failure = 3;
 }</code></pre></div>
 
-<blockquote>
-<p>Compare - 一个比较算子序列；
-Success - 如果比较成功，则处理这个请求对象序列，响应的结果就是对这些子请求处理的结果；
-Failure - 如果比较失败，则处理这个请求对象序列，响应的结果就是对这些子请求处理的结果。</p>
-</blockquote>
+<ul>
+<li>Compare - 一个比较算子序列；</li>
+<li>Success - 如果比较成功，则处理这个请求对象序列，响应的结果就是对这些子请求处理的结果；</li>
+<li>Failure - 如果比较失败，则处理这个请求对象序列，响应的结果就是对这些子请求处理的结果。</li>
+</ul>
 
 <p>事务响应定义如下：</p>
 
@@ -944,10 +940,10 @@ Failure - 如果比较失败，则处理这个请求对象序列，响应的结�
   repeated ResponseOp responses = 3;
 }</code></pre></div>
 
-<blockquote>
-<p>Succeeded - 算子比较的结果，success则为true，fail则为false；
-Responses - 对所有子请求的处理结果。</p>
-</blockquote>
+<ul>
+<li>Succeeded - 算子比较的结果，success则为true，fail则为false；</li>
+<li>Responses - 对所有子请求的处理结果。</li>
+</ul>
 
 <p>ResponseOp定义如下:</p>
 
@@ -979,25 +975,21 @@ Responses - 对所有子请求的处理结果。</p>
   KeyValue prev_kv = 3;
 }</code></pre></div>
 
-<blockquote>
-<p>Type - event type，PUT则下面会给出新增加的value，DELETE则指出key已被删除；</p>
-
-<p>KV - KeyValue是event相关的value，如果type是PUT则KV是当前更新后的kv对，如果kv.Version值为1则说明kv是新创建的。如果type是DELETE，则KV的revision就是delete动作发生时的revision；</p>
-
-<p>Prev_KV - event动作发生前的kv值，为了节省带宽，如果请求中没有特别指明，这个值内容为空。</p>
-</blockquote>
+<ul>
+<li>Type - event type，PUT则下面会给出新增加的value，DELETE则指出key已被删除；</li>
+<li>KV - KeyValue是event相关的value，如果type是PUT则KV是当前更新后的kv对，如果kv.Version值为1则说明kv是新创建的。如果type是DELETE，则KV的revision就是delete动作发生时的revision；</li>
+<li>Prev_KV - event动作发生前的kv值，为了节省带宽，如果请求中没有特别指明，这个值内容为空。</li>
+</ul>
 
 <p>Watch是一个长久运行的请求，基于gRPC的stream进行stream数据的传输。</p>
 
 <p>Watch对event作出了如下三项保证:</p>
 
-<blockquote>
-<p>有序 - event依据revision进行排序，一个event投递一次后就不会再次被投递；</p>
-
-<p>可靠 - 一系列event通知如a/b/c的发生时间a &lt; b &lt; c，则只会依次收到a、b和c，不会只收到a和c；</p>
-
-<p>原子 - 一次操作产生一个revision，server发出一个event，事务的结果也仅仅产生一次event通知。</p>
-</blockquote>
+<ul>
+<li>有序 - event依据revision进行排序，一个event投递一次后就不会再次被投递；</li>
+<li>可靠 - 一系列event通知如a/b/c的发生时间a &lt; b &lt; c，则只会依次收到a、b和c，不会只收到a和c；</li>
+<li>原子 - 一次操作产生一个revision，server发出一个event，事务的结果也仅仅产生一次event通知。</li>
+</ul>
 
 <p>基于一次gRPC stream连接，可以发出如下watch创建请求：</p>
 
@@ -1015,13 +1007,13 @@ Responses - 对所有子请求的处理结果。</p>
   bool prev_kv = 6;
 }</code></pre></div>
 
-<blockquote>
-<p>Key, Range<em>End - 被观察的key的range[key, range</em>end)，如果range<em>end没有设置，则只有参数key被观察，如果 range</em>end等同于&#39;\0&#39;， 则大于等于参数key的所有key都将被观察；
-Start<em>Revision - 观察的其实的revision，如果不设置则是最新的revision；
-Progress</em>Notify - 如果设置为true，则etcd将定期发送不带任何事件的空WatchResponse。当一个watch连接断开后，客户端进行重连时候会指定开始的revision，server会根据当前系统的负载决定把发送watch event的频率；
-Filters - event过滤器，server给watch客户端发送通知的时候，会先把相关事件过滤掉；
-Prev_Kv - 如果设置为true，则被创建的观察者在事件发生前获取上一次的kv，如果上一次的kv在etcd compaction的时候被删除掉，则不会返回任何值。</p>
-</blockquote>
+<ul>
+<li>Key, Range<em>End - 被观察的key的range[key, range</em>end)，如果range<em>end没有设置，则只有参数key被观察，如果 range</em>end等同于&#39;\0&#39;， 则大于等于参数key的所有key都将被观察；</li>
+<li>Start_Revision - 观察的其实的revision，如果不设置则是最新的revision；</li>
+<li>Progress_Notify - 如果设置为true，则etcd将定期发送不带任何事件的空WatchResponse。当一个watch连接断开后，客户端进行重连时候会指定开始的revision，server会根据当前系统的负载决定把发送watch event的频率；</li>
+<li>Filters - event过滤器，server给watch客户端发送通知的时候，会先把相关事件过滤掉；</li>
+<li>Prev_Kv - 如果设置为true，则被创建的观察者在事件发生前获取上一次的kv，如果上一次的kv在etcd compaction的时候被删除掉，则不会返回任何值。</li>
+</ul>
 
 <p>watch的响应内容定义如下：</p>
 
@@ -1035,13 +1027,13 @@ Prev_Kv - 如果设置为true，则被创建的观察者在事件发生前获取
   repeated mvccpb.Event events = 11;
 }</code></pre></div>
 
-<blockquote>
-<p>Watch<em>ID - 和watch相关的watcher ID；
-Created - 如果请求是WatchCreateRequest，则这个值为true，所有发送给同一个watch的event都带有同样的watch</em>id；
-Canceled - 如果请求是WatchCancelRequest，则这个值为true，这个Response之后watcher不会再收到任何response；
-Compact_Revision - 如果watcher试图观察一个旧的不存在的revision时候，server会返回当前存在的最小的有效revision。如果watcher根不是server发出的watch通知的时候，server会发出这个通知并断开watch连接。
-Events - 针对同一个watch ID返回的一批有序的event集合。</p>
-</blockquote>
+<ul>
+<li>Watch_ID - 和watch相关的watcher ID；</li>
+<li>Created - 如果请求是WatchCreateRequest，则这个值为true，所有发送给同一个watch的event都带有同样的watch_id；</li>
+<li>Canceled - 如果请求是WatchCancelRequest，则这个值为true，这个Response之后watcher不会再收到任何response；</li>
+<li>Compact_Revision - 如果watcher试图观察一个旧的不存在的revision时候，server会返回当前存在的最小的有效revision。如果watcher根不是server发出的watch通知的时候，server会发出这个通知并断开watch连接。</li>
+<li>Events - 针对同一个watch ID返回的一批有序的event集合。</li>
+</ul>
 
 <p>如果一个watcher想停止watch，则可以发出如下请求：</p>
 
@@ -1049,9 +1041,9 @@ Events - 针对同一个watch ID返回的一批有序的event集合。</p>
    int64 watch_id = 1;
 }</code></pre></div>
 
-<blockquote>
-<p>Watch_ID - 要取消的watcher的ID，server后面就不会再更多的event。</p>
-</blockquote>
+<ul>
+<li>Watch_ID - 要取消的watcher的ID，server后面就不会再更多的event。</li>
+</ul>
 
 <h3 id="toc_37">7.5 Lease</h3>
 
@@ -1066,10 +1058,10 @@ Events - 针对同一个watch ID返回的一批有序的event集合。</p>
   int64 ID = 2;
 }</code></pre></div>
 
-<blockquote>
-<p>TTL - 一个以秒为单位的超时时间；
-ID - Lease ID，如果值为0，则etcd会进行赋值。</p>
-</blockquote>
+<ul>
+<li>TTL - 一个以秒为单位的超时时间；</li>
+<li>ID - Lease ID，如果值为0，则etcd会进行赋值。</li>
+</ul>
 
 <p>server创建lease成功后，会返回如下的响应：</p>
 
@@ -1079,10 +1071,10 @@ ID - Lease ID，如果值为0，则etcd会进行赋值。</p>
   int64 TTL = 3;
 }</code></pre></div>
 
-<blockquote>
-<p>ID - etcd为lease分配的ID；
-TTL - 以秒为单位的lease时间；</p>
-</blockquote>
+<ul>
+<li>ID - etcd为lease分配的ID；</li>
+<li>TTL - 以秒为单位的lease时间；</li>
+</ul>
 
 <p>撤销租约请求如下：</p>
 
@@ -1090,9 +1082,9 @@ TTL - 以秒为单位的lease时间；</p>
   int64 ID = 1;
 }</code></pre></div>
 
-<blockquote>
-<p>ID - 将要撤销的lease ID，请求成功后，所有ID相关的key都会被删除。</p>
-</blockquote>
+<ul>
+<li>ID - 将要撤销的lease ID，请求成功后，所有ID相关的key都会被删除。</li>
+</ul>
 
 <p>如果客户端想要对一个lease进行续约，可以发出如下请求：</p>
 
@@ -1100,9 +1092,9 @@ TTL - 以秒为单位的lease时间；</p>
   int64 ID = 1;
 }</code></pre></div>
 
-<blockquote>
-<p>ID - 续约的lease ID。</p>
-</blockquote>
+<ul>
+<li>ID - 续约的lease ID。</li>
+</ul>
 
 <p>应答消息体定义如下：</p>
 
@@ -1112,10 +1104,10 @@ TTL - 以秒为单位的lease时间；</p>
   int64 TTL = 3;
 }</code></pre></div>
 
-<blockquote>
-<p>ID - 续约的ID；
-TTL - 剩余的TTL，以秒为单位。</p>
-</blockquote>
+<ul>
+<li>ID - 续约的ID；</li>
+<li>TTL - 剩余的TTL，以秒为单位。</li>
+</ul>
 
 <h3 id="toc_38">7.6 Compact</h3>
 
@@ -1128,10 +1120,10 @@ TTL - 剩余的TTL，以秒为单位。</p>
   bool physical = 2;
 }</code></pre></div>
 
-<blockquote>
-<p>revision: 小于revision值的历史数据都会被清理；
-physical: 这个标记为true的时候，RPC server端会等待直到物理磁盘的历史数据被整理完毕再给客户端响应。</p>
-</blockquote>
+<ul>
+<li>revision: 小于revision值的历史数据都会被清理；</li>
+<li>physical: 这个标记为true的时候，RPC server端会等待直到物理磁盘的历史数据被整理完毕再给客户端响应。</li>
+</ul>
 
 <p>响应消息体定义如下：</p>
 
@@ -1210,6 +1202,8 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
+
 
 </body>
 
