@@ -517,6 +517,8 @@ etcd的compaction仅仅是合并一些文件并进行过去数据的删除，但
 
 如果客户端请求超时多次发生，系统管理员应该去检查系统的运行情况。
 
+github.com/coreos/etcd/clientv3/config.go:Config::DialTimeout 意为创建client的首次连接超时，Client 创建成功后就不用关心其底层连接状态了，其底层会不断检查链接状态，失败则尝试重连。
+
 ### 7.2 KV ###
 ---
 
@@ -905,6 +907,18 @@ server创建lease成功后，会返回如下的响应：
 
 - ID - 续约的ID；
 - TTL - 剩余的TTL，以秒为单位。
+
+github.com/coreos/etcd/clientv3/lease.go:Lease 接口提供了以下一些功能函数：
+
+* Grante: 创建一个 lease 对象； 
+* Revoke: 释放一个 lease 对象；
+* TimeToLive: 获取 lease 剩余的 TTL 时间；
+* Leases: 列举 etcd 中的所有 lease；
+* KeepAlive: 自动定时对 lease 续约；
+* KeepAliveOnce: 为 lease 续约一次，代码注释中说大部分情况下都应该使用 KeepAlive；
+* Close: 关闭当前客户端建立的所有 lease；
+
+Put 函数和 KeepAlive 函数都有一个 Lease 对象，如果在进行 Put 或者 KeepAlive 之前 Lease 已经过期，则 etcd 会返回 error。
 
 ### 7.6 Compact ###
 ---
