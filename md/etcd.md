@@ -238,6 +238,12 @@ etcd v3基于grpc提供了REST接口，提供了PUT/DELETE/GET等类似HTTP的�
 
 参考文档3说别指望一个proxy对系统性能提高有大的帮助，参考文档8的#Limitions#指出有些情况下还可能造成watch返回的结果不正确。
 
+参考文档25 提到 zetcd 有一个 `cross-checking` 工作模式。在 cross-checking 模式下，zetcd 同时连接 zookeeper 集群和 etcd 集群，zookeeper 集群称为 oracle，etcd 集群称为 candidate。每次读写请求，zetcd 都会同时发往 zookeeper 和 etcd，以 zookeeper 的响应检验 etcd 的响应，若二者响应结果不一致则可以把结果以 log 形式记录下来。假设有一个 zookeeper 单节点伪集群 `localhost:2182`，错误日志输出到 stderr，则 cross-checking 模式启动命令如下：
+
+	zetcd --zkaddr 0.0.0.0:2181 --endpoints localhost:2379 --debug-zkbridge localhost:2182  --debug-oracle zk --logtostderr -v 9
+	
+上面命令行中 flag 参数 `-zkbridge` 用来指定一个 ZooKeeper 集群，`-oracle zk` 用来启用 `cross-checking` 工作模式。
+
 至于zetcd如何使用本文不再详述。
 
 ### 4.3 Raft ###
@@ -946,9 +952,12 @@ server创建lease成功后，会返回如下的响应：
 - 22 [etcdctl](https://github.com/coreos/etcd/blob/master/etcdctl/README.md#alarm-disarm)
 - 23 [data_model](https://github.com/coreos/etcd/blob/master/Documentation/learning/data_model.md)
 - 24 [Progress](https://github.com/coreos/etcd/blob/master/raft/design.md)
+- 25 [zetcd readme](https://github.com/coreos/zetcd/blob/master/README.md)
 
 ## 扒粪者-于雨氏 ##
 
 > 2018/01/09，于雨氏，初作此文于海淀。
 > 
 > 2018/01/14日凌晨，于雨氏，参考etcd官方文档重构此文于海淀。
+>
+> 2018/04/03，于雨氏，与海淀补充 zetcd `Cross-checking` 小节。

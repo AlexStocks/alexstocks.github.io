@@ -376,6 +376,12 @@ exit 1</code></pre></div>
 
 <p>参考文档3说别指望一个proxy对系统性能提高有大的帮助，参考文档8的#Limitions#指出有些情况下还可能造成watch返回的结果不正确。</p>
 
+<p>参考文档25 提到 zetcd 有一个 <code>cross-checking</code> 工作模式。在 cross-checking 模式下，zetcd 同时连接 zookeeper 集群和 etcd 集群，zookeeper 集群称为 oracle，etcd 集群称为 candidate。每次读写请求，zetcd 都会同时发往 zookeeper 和 etcd，以 zookeeper 的响应检验 etcd 的响应，若二者响应结果不一致则可以把结果以 log 形式记录下来。假设有一个 zookeeper 单节点伪集群 <code>localhost:2182</code>，错误日志输出到 stderr，则 cross-checking 模式启动命令如下：</p>
+
+<div><pre><code class="language-none">zetcd --zkaddr 0.0.0.0:2181 --endpoints localhost:2379 --debug-zkbridge localhost:2182  --debug-oracle zk --logtostderr -v 9</code></pre></div>
+
+<p>上面命令行中 flag 参数 <code>-zkbridge</code> 用来指定一个 ZooKeeper 集群，<code>-oracle zk</code> 用来启用 <code>cross-checking</code> 工作模式。</p>
+
 <p>至于zetcd如何使用本文不再详述。</p>
 
 <h3 id="toc_14">4.3 Raft</h3>
@@ -1162,6 +1168,7 @@ physical: 这个标记为true的时候，RPC server端会等待直到物理磁�
 <li>22 <a href="https://github.com/coreos/etcd/blob/master/etcdctl/README.md#alarm-disarm">etcdctl</a></li>
 <li>23 <a href="https://github.com/coreos/etcd/blob/master/Documentation/learning/data_model.md">data_model</a></li>
 <li>24 <a href="https://github.com/coreos/etcd/blob/master/raft/design.md">Progress</a></li>
+<li>25 <a href="https://github.com/coreos/zetcd/blob/master/README.md">zetcd readme</a></li>
 </ul>
 
 <h2 id="toc_40">扒粪者-于雨氏</h2>
@@ -1170,6 +1177,8 @@ physical: 这个标记为true的时候，RPC server端会等待直到物理磁�
 <p>2018/01/09，于雨氏，初作此文于海淀。</p>
 
 <p>2018/01/14日凌晨，于雨氏，参考etcd官方文档重构此文于海淀。</p>
+
+<p>2018/04/03，于雨氏，与海淀补充 zetcd <code>Cross-checking</code> 小节。</p>
 </blockquote>
 
 <!-- baidu statistic start -->
