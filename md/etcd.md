@@ -665,7 +665,7 @@ PutReqeust定义如下：
 	}
 
 - Key, Range_End - key range；
-- Prev_Kv - 如果设置为true，则返回删除前的kv结果；
+- Prev_kv - 如果设置为true，则返回删除前的kv结果；
 
 响应定义如下：
 
@@ -676,7 +676,7 @@ PutReqeust定义如下：
 	}
 
 - Deleted - 被删除的kv数目；
-- Prev_Kv - 如果请求中的prev_kv被设为true，则响应中就返回被删除的kv值数组；
+- Prev_kv - 如果请求中的prev_kv被设为true，则响应中就返回被删除的kv值数组；
 
 ### 7.4 Transaction ###
 ---
@@ -825,7 +825,7 @@ Watch对event作出了如下三项保证:
 - Start_Revision - 观察的其实的revision，如果不设置则是最新的revision；
 - Progress_Notify - 如果设置为true，则etcd将定期发送不带任何事件的空WatchResponse。当一个watch连接断开后，客户端进行重连时候会指定开始的revision，server会根据当前系统的负载决定把发送watch event的频率；
 - Filters - event过滤器，server给watch客户端发送通知的时候，会先把相关事件过滤掉；
-- Prev_Kv - 如果设置为true，则被创建的观察者在事件发生前获取上一次的kv，如果上一次的kv在etcd compaction的时候被删除掉，则不会返回任何值。
+- Prev_kv - 如果设置为true，则被创建的观察者在事件发生前获取上一次的kv，如果上一次的kv在etcd compaction的时候被删除掉，则不会返回任何值。
 
 watch的响应内容定义如下：
 
