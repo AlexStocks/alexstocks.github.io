@@ -689,13 +689,16 @@ Finished defragmenting etcd member[127.0.0.1:2379]</code></pre></div>
     int64 lease = 6;
 }</code></pre></div>
 
-<p>各个字段意义如下：
-- key是字节数组，不可为空；
-- value也是字节数组；
-- version则是key的版本，一个删除动作会把这个值清零，每次更新则会让其值增一；
-- Create<em>Revision key创建时候的revision；
-- Mod</em>Revision key最近一次修改时的revision；
-- Lease 与key关联的Lease，如果其值为0则说明没有关联的Lease；</p>
+<p>各个字段意义如下：</p>
+
+<ul>
+<li>key是字节数组，不可为空；</li>
+<li>value也是字节数组；</li>
+<li>version则是key的版本，一个删除动作会把这个值清零，每次更新则会让其值增一；</li>
+<li>Create_Revision key创建时候的revision；</li>
+<li>Mod_Revision key最近一次修改时的revision；</li>
+<li>Lease 与key关联的Lease，如果其值为0则说明没有关联的Lease；</li>
+</ul>
 
 <p>revision是MVCC中的概念，是etcd中cluster级别的计数器，每次修改操作都会让其自增，可以认为是全局逻辑时钟(global logical clock)，对所有修改操作进行排序：revision越大说明其值越新，etcd对key索引使用B+树方式进行组织。etcd每个key都有很多revision（修订版本），每次事务操作都会创建一个revision，老的revision在etcd进行compaction操作的时候会被清除。create<em>revision会在使用<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/mutex.go">mutex lock</a>的时候使用，Mod</em>Revision与<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/stm.go">事务</a>操作和<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/election.go">leader选举</a>有关。</p>
 
@@ -1202,8 +1205,6 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
-
-
 
 </body>
 
