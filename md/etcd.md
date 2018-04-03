@@ -640,7 +640,7 @@ PutReqeust定义如下：
 - Key - KV对的key；
 - Value - KV对的value；
 - Lease - KV对的超时lease ID，默认值为0；
-- Prev_Kv - 如果为true，则response会返回update前的kv值；
+- Prev_kv - 如果为true，则response会返回update前的kv值；
 - Ignore_Value - 不更新当前key的value，当key不存在的时候返回一个error；
 - Ignore_Lease - 不更新key的lease，当key不存在的时候返回一个error。
 
