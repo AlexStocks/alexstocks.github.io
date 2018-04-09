@@ -251,6 +251,21 @@ etcd v3基于grpc提供了REST接口，提供了PUT/DELETE/GET等类似HTTP的�
 ### 4.3 Raft ###
 ---
 
+
+[参考文档27](https://yuerblog.cc/yuerblog.cc/2017/12/10/principle-about-etcd-v3/) 提到 Raft 协议内容如下：
+
+	+ 每次写入都是在一个事务（tx）中完成的。
+	+ 一个事务（tx）可以包含若干put（写入K-V键值对）操作。
+	+ etcd集群有一个leader，写入请求都会提交给它。
+	+ leader先将数据保存成日志形式，并定时的将日志发往其他节点保存。
+	+ 当超过1/2节点成功保存了日志，则leader会将tx最终提交（也是一条日志）。
+	+ 一旦leader提交tx，则会在下一次心跳时将提交记录发送给其他节点，其他节点也会提交。
+	+ leader宕机后，剩余节点协商找到拥有最大已提交tx ID（必须是被超过半数的节点已提交的）的节点作为新leader。
+
+	最重要的是：
+	+ Raft中，后提交的事务ID>先提交的事务ID，每个事务ID都是唯一的。
+	+ 无论客户端是在哪个etcd节点提交，整个集群对外表现出数据视图最终都是一样的。
+
 etcd通过boltdb的MVCC保证单机数据一致性，通过raft保证集群数据的一致性。参考文档15#Operation#提到，raft的quorum一致性算法说来也就一句话：集群中至少(n+1)/2个节点都能对一个外部写操作或者内部集群成员更新达成共识。这个模型能够完全规避脑裂现象的发生。
 
 如果raft集群中有处于unhealthy状态的node，需要先把它剔除掉，然后才能进行替换操作。但是添加一个新的node是一件非常高风险的操作：如果一个3节点的etcd集群有一个unhealthy node，此时没有先把unhealthy node剔除掉，而新添加节点时可能由于配置不当或者其他原因导致新的node添加失败，则新集群理论上node number为4而当前quorum只可能达到2，失去consensus的集群对任何操作都无法达成共识。
@@ -305,10 +320,108 @@ progress有三个状态：probe，replicate和snapshot。
 
 leader向follower发送数据的方式类同于kafka每个topic partition级别leader向follower同步数据的过程。二者之间进行数据同步的时候，可以通过下面两个步骤进行流量控制：
 
-> 1. 限制message的max size。这个值是可以通过相关参数进行限定的，限定后可以降低探测follower接收速度的成本；
->
-> 2. 当follower处于replicate状态时候，限定每次批量发送消息的数目。leader在网络层之上有一个发送buffer，通过类似于tcp的发送窗口的算法动态调整buffer的大小，以防止leader由于发包过快导致follower大量地丢包，提高发送成功率。
++ 1. 限制message的max size。这个值是可以通过相关参数进行限定的，限定后可以降低探测follower接收速度的成本；
++ 2. 当follower处于replicate状态时候，限定每次批量发送消息的数目。leader在网络层之上有一个发送buffer，通过类似于tcp的发送窗口的算法动态调整buffer的大小，以防止leader由于发包过快导致follower大量地丢包，提高发送成功率。
 
+### 4.3.1 MVCC ###
+---
+
+etcd 在内存中维护了一个 btree（B树）纯内存索引，就和 MySQL 的索引一样，它是有序的。
+
+在这个btree中，整个k-v存储大概就是这样：
+
+	type treeIndex struct {
+		sync.RWMutex
+		tree *btree.BTree
+	} 
+
+当存储大量的K-V时，因为用户的value一般比较大，全部放在内存btree里内存耗费过大，所以etcd将用户value保存在磁盘中。
+
+etcd在事件模型（watch 机制）上与ZooKeeper完全不同，每次数据变化都会通知，并且通知里携带有变化后的数据内容，其基础就是自带 MVCC 的 bboltdb 存储引擎。
+
+MVCC 下面是几条预备知识：
+
++ 每个tx事务有唯一事务ID，在etcd中叫做main ID，全局递增不重复。
++ 一个tx可以包含多个修改操作（put和delete），每一个操作叫做一个revision（修订），共享同一个main ID。
++ 一个tx内连续的多个修改操作会被从0递增编号，这个编号叫做sub ID。
++ 每个revision由（main ID，sub ID）唯一标识。
+
+revision 定义如下：
+
+	// A revision indicates modification of the key-value space.
+	// The set of changes that share same main revision changes the key-value space atomically.
+	type revision struct {
+		// main is the main revision of a set of changes that happen atomically.
+		main int64
+	
+		// sub is the the sub revision of a change in a set of changes that happen
+		// atomically. Each change has different increasing sub revision in that
+		// set.
+		sub int64
+	} 
+
+内存索引中，每个原始key会关联一个key_index结构，里面维护了多版本信息：
+
+	type keyIndex struct {
+		key         []byte   // key字段就是用户的原始key
+		modified    revision // modified字段记录这个key的最后一次修改对应的revision信息
+		generations []generation // 多版本（历史修改）
+	} 
+
+	// generation contains multiple revisions of a key.
+	type generation struct {
+		ver     int64
+		created revision // 记录了引起本次key创建的revision信息
+		revs    []revision
+	} 
+
+key 初始创建的时候，generations[0]会被创建，当用户继续更新这个key的时候，generations[0].revs数组会不断追加记录本次的revision信息（main，sub）。在bbolt中，每个revision将作为key，即序列化（revision.main+revision.sub）作为key。因此，我们先通过内存btree在keyIndex.generations[0].revs中找到最后一条revision，即可去bbolt中读取对应的数据。如果我们持续更新同一个key，那么generations[0].revs就会一直变大，这怎么办呢？在多版本中的，一般采用compact来压缩历史版本，即当历史版本到达一定数量时，会删除一些历史版本，只保存最近的一些版本。
+
+<font color=blue>**keyIndex 中的 generations 数组不会在一个数组的 index 上不断膨胀下去，一旦发生删除就会结束当前的Generation，生成新的Generation。同时 version 也会归零，每次 put 操作会让其从 1 重新开始增长。**</font>
+
+put操作的 bboltdb 的key由 main+sub 构成：
+
+<!--- golang --->
+	ibytes := newRevBytes()
+	idxRev := revision{main: rev, sub: int64(len(tw.changes))}
+	revToBytes(idxRev, ibytes)
+	
+delete 操作的 key 由 main+sub+”t” 构成：	
+
+<!--- golang --->
+	idxRev := revision{main: tw.beginRev + 1, sub: int64(len(tw.changes))}
+	revToBytes(idxRev, ibytes)
+	ibytes = appendMarkTombstone(ibytes)
+	
+	
+	// appendMarkTombstone appends tombstone mark to normal revision bytes.
+	func appendMarkTombstone(b []byte) []byte {
+		if len(b) != revBytesLen {
+		    plog.Panicf(“cannot append mark to non normal revision bytes”)
+		}
+		return append(b, markTombstone)
+	}
+	
+	// isTombstone checks whether the revision bytes is a tombstone.
+	func isTombstone(b []byte) bool {
+		return len(b) == markedRevBytesLen && b[markBytePosition] == markTombstone
+	} 
+
+bbolt中存储的value是这样一个json序列化后的结构，包括key创建时的revision（对应某一代generation的created），本次更新版本，sub ID（Version ver），Lease ID（租约ID）：
+
+<!--- golang --->
+	kv := mvccpb.KeyValue{
+	    Key:            key,
+	    Value:          value,
+	    CreateRevision: c,
+	    ModRevision:    rev,
+	    Version:        ver,  // version is the version of the key. A deletion resets the version to zero and any modification of the key increases its version.
+	    Lease:          int64(leaseID),
+	} 
+
+总结来说：内存btree维护的是用户key => keyIndex的映射，keyIndex内维护多版本的revision信息，而revision可以映射到磁盘bbolt中的用户value。
+
+!! 注意：本小节选自 [参考文档 27](https://yuerblog.cc/2017/12/10/principle-about-etcd-v3)。
 
 ## 5 运行环境 ##
 ---
@@ -623,7 +736,20 @@ Range请求的响应定义如下：
 - More - 是否有更多值，如果limit为true；
 - Count - Count_Only为true时候的结果。
 
-### 7.3 Put ###
+[参考文档26](https://yuerblog.cc/2017/12/12/etcd-v3-sdk-usage) 提到 Get 操作时的 etcd Range 机制：
+
+	我们通过一个特别的Get选项，获取/test目录下的所有孩子：
+
+	rangeResp, err := kv.Get(context.TODO(), "/test/", clientv3.WithPrefix())
+	WithPrefix()是指查找以/test/为前缀的所有key，因此可以模拟出查找子目录的效果。
+
+	我们知道etcd是一个有序的k-v存储，因此/test/为前缀的key总是顺序排列在一起。
+
+	withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一个key range，[“/test/”, “/test0”)，为什么呢？因为比/大的字符是’0’，所以以/test0作为范围的末尾，就可以扫描到所有的/test/打头的key了。
+
+	在之前，我Put了一个/testxxx干扰项，因为不符合/test/前缀（注意末尾的/），所以就不会被这次Get获取到。但是，如果我查询的前缀是/test，那么/testxxx也会被扫描到，这就是etcd k-v模型导致的，编程时一定要特别注意。
+
+### 7.4 Put ###
 ---
 
 PutReqeust定义如下：
@@ -655,7 +781,7 @@ PutReqeust定义如下：
 
 - prev_kv：Reqeuest中的prev_kv被设置为true的时候，这个结果就是update前的kv值；
 
-### 7.4 Delete Range ###
+### 7.5 Delete Range ###
 ---
 
 删除则可以删除一定范围内的kv对，请求定义如下：
@@ -680,7 +806,8 @@ PutReqeust定义如下：
 - Deleted - 被删除的kv数目；
 - Prev_kv - 如果请求中的prev_kv被设为true，则响应中就返回被删除的kv值数组；
 
-### 7.4 Transaction ###
+
+### 7.6 Transaction ###
 ---
 
 事务是在kv存储引擎之上的一种原子的If/Then/Else构建实现，它提供了一种在一组kv之上的一批请求的原子完成能力（就是一个原来多个请求现在一个事务请求内完成），能够防止意外的并行更新，构建原子的compare-and-swap操作，提供了一种更高级的并行控制能力。
@@ -778,7 +905,7 @@ ResponseOp定义如下:
 
 ResponseOp的成员与RequestOp对应，此处就不在一一列举解释了。
 
-### 7.4 Watch ###
+### 7.7 Watch ###
 ---
 
 Watch API提供了一组基于事件的接口，用于异步获取key的变化后的通知。etcd会把key的每一次变化都通知给观察者，而不像zookeeper那样只通知最近一次的变化。
@@ -855,7 +982,7 @@ watch的响应内容定义如下：
 
 - Watch_ID - 要取消的watcher的ID，server后面就不会再更多的event。
 
-### 7.5 Lease ###
+### 7.8 Lease ###
 ---
 
 Lease提供了对租约的支持。cluster保证了lease时间内kv的有效性，当lease到期而客户端没有对lease进行续约时，lease就超时了。每个kv只能绑定到一个lease之上，当lease超时后，相关的所有kv都会被删除，每个key的每个watcher都会收到delete event。
@@ -920,7 +1047,7 @@ github.com/coreos/etcd/clientv3/lease.go:Lease 接口提供了以下一些功能
 
 Put 函数和 KeepAlive 函数都有一个 Lease 对象，如果在进行 Put 或者 KeepAlive 之前 Lease 已经过期，则 etcd 会返回 error。
 
-### 7.6 Compact ###
+### 7.9 Compact ###
 ---
 
 可以通过api进行过往数据（历史数据）的整理（compaction），否则一直增长下午磁盘会被沾满且影响etcd性能和集群的稳定性，请求消息体定义如下：
@@ -967,6 +1094,8 @@ Put 函数和 KeepAlive 函数都有一个 Lease 对象，如果在进行 Put �
 - 23 [data_model](https://github.com/coreos/etcd/blob/master/Documentation/learning/data_model.md)
 - 24 [Progress](https://github.com/coreos/etcd/blob/master/raft/design.md)
 - 25 [zetcd readme](https://github.com/coreos/zetcd/blob/master/README.md)
+- 26 [etcd v3客户端用法](https://yuerblog.cc/2017/12/12/etcd-v3-sdk-usage)
+- 27 [etcd v3原理分析](https://yuerblog.cc/2017/12/10/principle-about-etcd-v3)
 
 ## 扒粪者-于雨氏 ##
 
@@ -975,3 +1104,5 @@ Put 函数和 KeepAlive 函数都有一个 Lease 对象，如果在进行 Put �
 > 2018/01/14日凌晨，于雨氏，参考etcd官方文档重构此文于海淀。
 >
 > 2018/04/03，于雨氏，与海淀补充 zetcd `Cross-checking` 小节。
+> 
+> 2018/04/09，于雨氏，与海淀补充 zetcd `MVCC` 小节。
