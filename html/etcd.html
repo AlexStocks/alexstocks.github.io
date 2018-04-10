@@ -872,10 +872,10 @@ Finished defragmenting etcd member[127.0.0.1:2379]</code></pre></div>
 <li>Serializable - sets the range request to use serializable member-local reads. By default, Range is linearizable; it reflects the current consensus of the cluster. For better performance and availability, in exchange for possible stale reads, a serializable range request is served locally without needing to reach consensus with other nodes in the cluster.</li>
 <li>Keys_Only - 只返回key，无需返回Value；</li>
 <li>Count_Only - 只返回range内key的数目；</li>
-<li>Min<em>Mod</em>Revision - 最低mod revision值，Mod_Revision低于这个值的kv会被过滤掉；</li>
-<li>Max<em>Mod</em>Revision - 最大mod revision值，Mod_Revision高于这个值的kv会被过滤掉；</li>
-<li>Min<em>Create</em>Revision - 最低create revision值，Mod_Revision低于这个值的kv会被过滤掉；</li>
-<li>Max<em>Create</em>Revision - 最高create revision值，Mod_Revision高于这个值的kv会被过滤掉。</li>
+<li>Min_Mod_Revision - 最低mod revision值，Mod_Revision低于这个值的kv会被过滤掉；</li>
+<li>Max_Mod_Revision - 最大mod revision值，Mod_Revision高于这个值的kv会被过滤掉；</li>
+<li>Min_Create_Revision - 最低create revision值，Mod_Revision低于这个值的kv会被过滤掉；</li>
+<li>Max_Create_Revision - 最高create revision值，Mod_Revision高于这个值的kv会被过滤掉。</li>
 </ul>
 
 <p>Range请求的响应定义如下：</p>
@@ -953,7 +953,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 }</code></pre></div>
 
 <ul>
-<li>prev<em>kv：Reqeuest中的prev</em>kv被设置为true的时候，这个结果就是update前的kv值；</li>
+<li>prev_kv：Reqeuest中的 prev_kv 被设置为true的时候，这个结果就是update前的kv值；</li>
 </ul>
 
 <h3 id="toc_35">7.5 Delete Range</h3>
@@ -983,7 +983,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <ul>
 <li>Deleted - 被删除的kv数目；</li>
-<li>Prev<em>kv - 如果请求中的prev</em>kv被设为true，则响应中就返回被删除的kv值数组；</li>
+<li>Prev_kv - 如果请求中的prev_kv被设为true，则响应中就返回被删除的kv值数组；</li>
 </ul>
 
 <h3 id="toc_36">7.6 Transaction</h3>
@@ -1051,7 +1051,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 <ul>
 <li>Request_Range - 一个RangeRequest；</li>
 <li>Request_Put - 一个PutRequest，keys中每个key都必须唯一不能重复；</li>
-<li>Request<em>Delete</em>Range - 一个DeleteRangeRequest，其操作的key也必须在整个事务中唯一。</li>
+<li>Request_Delete_Range - 一个DeleteRangeRequest，其操作的key也必须在整个事务中唯一。</li>
 </ul>
 
 <p>最终事务请求定义如下：</p>
@@ -1144,7 +1144,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 }</code></pre></div>
 
 <ul>
-<li>Key, Range<em>End - 被观察的key的range[key, range</em>end)，如果range<em>end没有设置，则只有参数key被观察，如果 range</em>end等同于&#39;\0&#39;， 则大于等于参数key的所有key都将被观察；</li>
+<li>Key, Range_End - 被观察的key的range[key, range_end)，如果 range_end 没有设置，则只有参数key被观察，如果 range_end 等同于&#39;\0&#39;， 则大于等于参数 key 的所有 key 都将被观察；</li>
 <li>Start_Revision - 观察的其实的revision，如果不设置则是最新的revision；</li>
 <li>Progress_Notify - 如果设置为true，则etcd将定期发送不带任何事件的空WatchResponse。当一个watch连接断开后，客户端进行重连时候会指定开始的revision，server会根据当前系统的负载决定把发送watch event的频率；</li>
 <li>Filters - event过滤器，server给watch客户端发送通知的时候，会先把相关事件过滤掉；</li>
@@ -1326,7 +1326,6 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>2018/04/09，于雨氏，与海淀补充 zetcd <code>MVCC</code> 小节。</p>
 </blockquote>
-
 
 <!-- baidu statistic start -->
 <script>

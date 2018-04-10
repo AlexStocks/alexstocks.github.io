@@ -651,8 +651,8 @@ github.com/coreos/etcd/clientv3/config.go:Config::DialTimeout 意为创建client
 - key是字节数组，不可为空；
 - value也是字节数组；
 - version则是key的版本，一个删除动作会把这个值清零，每次更新则会让其值增一；
-- Create_Revision key创建时候的revision；
-- Mod_Revision key最近一次修改时的revision；
+- Create\_Revision key创建时候的revision；
+- Mod\_Revision key最近一次修改时的revision；
 - Lease 与key关联的Lease，如果其值为0则说明没有关联的Lease；
 
 revision是MVCC中的概念，是etcd中cluster级别的计数器，每次修改操作都会让其自增，可以认为是全局逻辑时钟(global logical clock)，对所有修改操作进行排序：revision越大说明其值越新，etcd对key索引使用B+树方式进行组织。etcd每个key都有很多revision（修订版本），每次事务操作都会创建一个revision，老的revision在etcd进行compaction操作的时候会被清除。create_revision会在使用[mutex lock](https://github.com/coreos/etcd/blob/master/clientv3/concurrency/mutex.go)的时候使用，Mod_Revision与[事务](https://github.com/coreos/etcd/blob/master/clientv3/concurrency/stm.go)操作和[leader选举](https://github.com/coreos/etcd/blob/master/clientv3/concurrency/election.go)有关。
@@ -662,7 +662,7 @@ revision也与watch有关，当watch的client与server闪断重连后，etcd根�
 ### 7.3 Range ###
 ---
 
-etcd允许一次以range形式操作多个key。etcd对数据的组织不像zookeeper那样以目录层次结构的方式进行，而只有一个层级，range的形式是[a, b)，即[key, key_end)。如果key_end为空则请求只有key；如果range是[key, key+0x1)则是请求以key为前缀的所有key；如果key_end是’\0’，则请求所有大于等于key的所有key。
+etcd允许一次以range形式操作多个key。etcd对数据的组织不像zookeeper那样以目录层次结构的方式进行，而只有一个层级，range的形式是[a, b)，即[key, key_end)。如果key_end为空则请求只有key；如果range是[key, key+0x1)则是请求以key为前缀的所有key；如果key\_end是’\0’，则请求所有大于等于key的所有key。
 
 Range请求定义如下：
 
@@ -700,15 +700,15 @@ Range请求定义如下：
 - Key, Range_End - key range；
 - Limit - 返回key的数目的最大值，如果为0则说明没有限制；
 - Revision - key修改的时间点(point-in-time)，如果其值为0则是获取最新的kv，如果指定的revision已经被compact掉则etcd返回ErrCompacted错误；
-- Sort_Order - 请求的排序方式；
-- Sort_Target - kv的排序方式；
+- Sort\_Order - 请求的排序方式；
+- Sort\_Target - kv的排序方式；
 - Serializable - sets the range request to use serializable member-local reads. By default, Range is linearizable; it reflects the current consensus of the cluster. For better performance and availability, in exchange for possible stale reads, a serializable range request is served locally without needing to reach consensus with other nodes in the cluster.
-- Keys_Only - 只返回key，无需返回Value；
-- Count_Only - 只返回range内key的数目；
-- Min_Mod_Revision - 最低mod revision值，Mod_Revision低于这个值的kv会被过滤掉；
-- Max_Mod_Revision - 最大mod revision值，Mod_Revision高于这个值的kv会被过滤掉；
-- Min_Create_Revision - 最低create revision值，Mod_Revision低于这个值的kv会被过滤掉；
-- Max_Create_Revision - 最高create revision值，Mod_Revision高于这个值的kv会被过滤掉。
+- Keys\_Only - 只返回key，无需返回Value；
+- Count\_Only - 只返回range内key的数目；
+- Min\_Mod\_Revision - 最低mod revision值，Mod\_Revision低于这个值的kv会被过滤掉；
+- Max\_Mod\_Revision - 最大mod revision值，Mod\_Revision高于这个值的kv会被过滤掉；
+- Min\_Create\_Revision - 最低create revision值，Mod\_Revision低于这个值的kv会被过滤掉；
+- Max\_Create\_Revision - 最高create revision值，Mod\_Revision高于这个值的kv会被过滤掉。
 
 Range请求的响应定义如下：
 
@@ -779,7 +779,7 @@ PutReqeust定义如下：
 	  mvccpb.KeyValue prev_kv = 2;
 	}
 
-- prev_kv：Reqeuest中的prev_kv被设置为true的时候，这个结果就是update前的kv值；
+- prev_kv：Reqeuest中的 prev\_kv 被设置为true的时候，这个结果就是update前的kv值；
 
 ### 7.5 Delete Range ###
 ---
@@ -804,7 +804,7 @@ PutReqeust定义如下：
 	}
 
 - Deleted - 被删除的kv数目；
-- Prev_kv - 如果请求中的prev_kv被设为true，则响应中就返回被删除的kv值数组；
+- Prev\_kv - 如果请求中的prev\_kv被设为true，则响应中就返回被删除的kv值数组；
 
 
 ### 7.6 Transaction ###
@@ -853,7 +853,7 @@ PutReqeust定义如下：
 - Result - 逻辑比较类型，如相等、小于或者大于；
 - Target - 有待被比较的kv的某个字段，如kye的version、创建 revision、修改revision或者value；
 - Key - 用于比较操作的key；
-- Target_Union - 附带比较对象，如给定的key的版本、给定key的创建revision、最后的修改revision和key的value。
+- Target\_Union - 附带比较对象，如给定的key的版本、给定key的创建revision、最后的修改revision和key的value。
 
 定义了比较算子后，事务请求还需要一连串的子请求操作，定义如下：
 
@@ -866,9 +866,9 @@ PutReqeust定义如下：
 	  }
 	}
 
-- Request_Range - 一个RangeRequest；
-- Request_Put - 一个PutRequest，keys中每个key都必须唯一不能重复；
-- Request_Delete_Range - 一个DeleteRangeRequest，其操作的key也必须在整个事务中唯一。
+- Request\_Range - 一个RangeRequest；
+- Request\_Put - 一个PutRequest，keys中每个key都必须唯一不能重复；
+- Request\_Delete\_Range - 一个DeleteRangeRequest，其操作的key也必须在整个事务中唯一。
 
 最终事务请求定义如下：
 
@@ -950,7 +950,7 @@ Watch对event作出了如下三项保证:
 	  bool prev_kv = 6;
 	}
 
-- Key, Range_End - 被观察的key的range[key, range_end)，如果range_end没有设置，则只有参数key被观察，如果 range_end等同于'\0'， 则大于等于参数key的所有key都将被观察；
+- Key, Range\_End - 被观察的key的range[key, range\_end)，如果 range\_end 没有设置，则只有参数key被观察，如果 range\_end 等同于'\0'， 则大于等于参数 key 的所有 key 都将被观察；
 - Start_Revision - 观察的其实的revision，如果不设置则是最新的revision；
 - Progress_Notify - 如果设置为true，则etcd将定期发送不带任何事件的空WatchResponse。当一个watch连接断开后，客户端进行重连时候会指定开始的revision，server会根据当前系统的负载决定把发送watch event的频率；
 - Filters - event过滤器，server给watch客户端发送通知的时候，会先把相关事件过滤掉；
