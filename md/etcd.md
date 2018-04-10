@@ -903,7 +903,7 @@ ResponseOp定义如下:
 	  }
 	}
 
-ResponseOp的成员与RequestOp对应，此处就不在一一列举解释了。
+ResponseOp的成员与RequestOp对应，此处就不再一一列举解释了。
 
 ### 7.7 Watch ###
 ---
