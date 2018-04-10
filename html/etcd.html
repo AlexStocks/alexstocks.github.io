@@ -363,6 +363,8 @@ exit 1</code></pre></div>
 
 <p>etcd所有的数据同步都是在一个唯一的“复制组”（consistent replication group）里进行的。当进行少量GB级别的数据排序时，etcd还是能够胜任这个工作的，每次改动leader都会给这个动作分配一个cluster级别的唯一ID【revision ID】，这个ID是全局单调递增的。唯一的“复制组”意味着etcd cluster的数据是不能扩展或者说是不能分区(sharding)的，如果需要通过多raft group提供sharding的能力就只能使用NewSQL而非etcd了。</p>
 
+<p><a href="http://dockone.io/article/801">参考文档28</a>一文中，etcd 的作者李响提到：<code>Consul是个full stack的工具。etcd只是一个简单的一致性kv。我们认为能把一致性kv这件事情完整的做好已经不容易了。我们希望上层的系统可以在etcd上搭建，而不是让etcd本身服务最终用户。另外在某些程度上而言，Consul并不着重保证自身的稳定性和可靠性。HashiCorp自己的调度系统nomad也并没有采用Consul。这些差别导致了很多设计、实现上的不同。</code></p>
+
 <h3 id="toc_13">4.2 zookeeper</h3>
 
 <hr>
@@ -383,7 +385,27 @@ exit 1</code></pre></div>
 
 <p>至于zetcd如何使用本文不再详述。</p>
 
-<h3 id="toc_14">4.3 Raft</h3>
+<p><a href="http://dockone.io/article/801">参考文档28</a>一文中，etcd 的作者李响提到：<code>etcd和ZooKeeper的设计理念和方向不太一样。目前etcd着重于go stack和cloud infra领域。很多上层系统例如Kubernetes、CloudFoundry、Mesos等都对稳定性、扩展性有更高的要求。由于理念的不同，导致了很多设计的不同。比如etcd会支持稳定的watch而不是简单的one time trigger watch，因为很多调度系统是需要得到完整历史记录的。etcd支持mvcc，因为可能有协同系统需要无锁操作等等。在性能上今后etcd可能也要做更多工作，因为container infra有更多的大规模场景。</code></p>
+
+<h3 id="toc_14">4.3 etcd v2 &amp; v3</h3>
+
+<hr>
+
+<p>etcd 最新版本是 v3，与其以前的 v2 版本有很大不同，<a href="http://dockone.io/article/801">参考文档28</a> 提到 <code>etcd 3主要解决如下几个问题：多版本键值（MVCC）、迷你事务（mini transcation）、更稳定的watch、大数据规模、大用户watch、性能优化。</code></p>
+
+<p>etcd v2支持CompareAndSwap这个原子性操作。CompareAndSwap首先对一个key进行值比较，如果比较结果一致才会进行下一步的赋值操作。像利用x86的CAS实现锁一样，利用CompareAndSwap可以实现分布式的锁系统。但是这个 feature 在 v3 中移除了。</p>
+
+<p>v3 与 v2 的主要对比，<a href="http://dockone.io/article/801">参考文档28</a> 罗列如下：</p>
+
+<ul>
+<li><p>mini transaction支持原子性比较多个键值并且操作多个键值。之前的CompareAndSwap实际上一个针对单个key的mini transaction。一个简单的例子是 Tx(compare: A=1 &amp;&amp; B=2, success: C = 3, D = 3, fail: C = 0, D = 0)。当etcd收到这条transcation请求，etcd会原子性的判断A和B当前的值和期待的值。如果判断成功，C和D的值会被设置为3。</p></li>
+<li><p>etcd 2保存了一个仅保存了1000个历史更改，如果watch过慢就无法得到之前的变更。etcd 3为了支持多纪录，采用了历史记录为主索引的存储结构。etcd3可以存储上十万个纪录，进行快速查询并且支持根据用户的要求进行compaction。</p></li>
+<li><p>etcd 2和其它类似开源一致性系统一样最多只能数十万级别的key。主要原因是一致性系统都采用了基于log的复制。log不能无限增长，所以在某一时刻系统需要做一个完整的snapshot并且将snapshot存储到磁盘。在存储snapshot之后才能将之前的log丢弃。每次存储完整的snapshot是非常没有效率的，但是对于一致性系统来说设计增量snapshot以及传输同步大量数据都是非常繁琐的。etcd 3通过对raft和存储系统的重构，能够很好的支持增量snapshot和传输相对较大的snapshot。目前etcd 3可以存储百万到千万级别的key。</p></li>
+<li><p>另外一个问题是支持大规模watch。我们主要工作是减小每个watch带来的资源消耗。首先我们利用了HTTP/2的multiple stream per tcp connection，这样同一个client的不同watch可以share同一个tcp connection。另一方面我们对于同一个用户的不同watch只使用一个go routine来serve，这样再一次减轻了server的资源消耗。【v2 每个watch都会占用一个tcp资源和一个go routine资源，大概要消耗30-40kb。】</p></li>
+<li><p>我们在性能方面也做了很多相关的优化。etcd 3目前的性能远强于etcd 2，我们相信etcd 3的性能在不进行特殊优化的情况下就可以足够应付绝大部分的使用。在一个由3台8核节点组成的的云服务器上，<font color=red><strong>etcd 3可以做到每秒数万次的写操作和十万次读操作</strong></font>。</p></li>
+</ul>
+
+<h3 id="toc_15">4.4 Raft</h3>
 
 <hr>
 
@@ -459,7 +481,7 @@ receives msgAppResp(rej=true)
 <li>2. 当follower处于replicate状态时候，限定每次批量发送消息的数目。leader在网络层之上有一个发送buffer，通过类似于tcp的发送窗口的算法动态调整buffer的大小，以防止leader由于发包过快导致follower大量地丢包，提高发送成功率。</li>
 </ul>
 
-<h3 id="toc_15">4.3.1 MVCC</h3>
+<h4 id="toc_16">4.4.1 MVCC</h4>
 
 <hr>
 
@@ -565,7 +587,7 @@ func isTombstone(b []byte) bool {
 
 <p>!! 注意：本小节选自 <a href="https://yuerblog.cc/2017/12/10/principle-about-etcd-v3">参考文档 27</a>。</p>
 
-<h2 id="toc_16">5 运行环境</h2>
+<h2 id="toc_17">5 运行环境</h2>
 
 <hr>
 
@@ -590,13 +612,13 @@ func isTombstone(b []byte) bool {
 <p>7 Go: 参考文档16#Best Practices#要求Go的最低版本是1.4。</p>
 </blockquote>
 
-<h3 id="toc_17">5.1 与运行环境有关的faq</h3>
+<h3 id="toc_18">5.1 与运行环境有关的faq</h3>
 
 <hr>
 
 <p>参考文档15列出了一些与运行环境有关的faq，列出如下。</p>
 
-<h4 id="toc_18">5.1.1 “apply entries took too long”</h4>
+<h4 id="toc_19">5.1.1 “apply entries took too long”</h4>
 
 <hr>
 
@@ -606,7 +628,7 @@ func isTombstone(b []byte) bool {
 
 <p>或者有别的一些低速请求如有人要获取所有的key也会导致写请求受影响。</p>
 
-<h4 id="toc_19">5.1.2 “failed to send out heartbeat on time”</h4>
+<h4 id="toc_20">5.1.2 “failed to send out heartbeat on time”</h4>
 
 <hr>
 
@@ -616,13 +638,13 @@ func isTombstone(b []byte) bool {
 
 <p>第三种原因就可能是网速过慢。如果Prometheus显示是网络服务质量不行，譬如延迟太高或者丢包率过高，那就把etcd移到网络不拥堵的情况下就能解决问题。但是如果etcd是跨机房部署的，长延迟就不可避免了，那就需要根据机房间的RTT调整heartbeat-interval，而参数election-timeout则至少是heartbeat-interval的5倍。</p>
 
-<h4 id="toc_20">5.1.3 “snapshotting is taking more than x seconds to finish ...”</h4>
+<h4 id="toc_21">5.1.3 “snapshotting is taking more than x seconds to finish ...”</h4>
 
 <hr>
 
 <p>etcd会把kv snapshot发送给一些比较慢的follow或者进行数据备份。慢的snapshot发送会拖慢系统的性能，其自身也会陷入一种活锁状态：在很慢地收完一个snapshot后还没有处理完，又因为过慢而接收新的snapshot。当发送一个snapshot超过30s并且在1Gbps(千兆)网络环境下使用时间超过一定时间时，etcd就会打印这个日志进行告警。</p>
 
-<h4 id="toc_21">5.1.4 “request ignored (cluster ID mismatch)”</h4>
+<h4 id="toc_22">5.1.4 “request ignored (cluster ID mismatch)”</h4>
 
 <hr>
 
@@ -630,7 +652,7 @@ func isTombstone(b []byte) bool {
 
 <p>避免这个错误的方法就是不要使用老集群的地址。</p>
 
-<h3 id="toc_22">5.2 运营环境参数调优</h3>
+<h3 id="toc_23">5.2 运营环境参数调优</h3>
 
 <hr>
 
@@ -674,13 +696,13 @@ tc filter add dev eth0 parent 1: protocol ip prio 1 u32 match ip dport 2380 0xff
 tc filter add dev eth0 parent 1: protocol ip prio 2 u32 match ip sport 2739 0xffff flowid 1:1
 tc filter add dev eth0 parent 1: protocol ip prio 2 u32 match ip dport 2739 0xffff flowid 1:1</code></pre></div>
 
-<h2 id="toc_23">6 etcd op</h2>
+<h2 id="toc_24">6 etcd op</h2>
 
 <hr>
 
 <p>etcd官方提供了一个万能的工具etcdctl，etcd的op工具都可以借助个工具完成。</p>
 
-<h3 id="toc_24">6.1 snapshot</h3>
+<h3 id="toc_25">6.1 snapshot</h3>
 
 <hr>
 
@@ -706,13 +728,13 @@ $ etcdctl  --endpoints $ENDPOINT —write-out=table snapshot status backup.db
 
 <p>snapshot颇类似于Redis的rdb文件，是某个时刻所以kv数据各自最后revision的最新值，所有历史数据都被compact掉。第5节提到etcd通过相关参数控制下默认每10,000次update后会对制作一个snapshot。</p>
 
-<h3 id="toc_25">6.2 data migration</h3>
+<h3 id="toc_26">6.2 data migration</h3>
 
 <hr>
 
 <p>etcd集群的数据还可以进行数据迁移[migration]，可以采用离线或者在线两种方式，当数据量超过一定量的时候，参考文档13不建议进行在线恢复，建议直接把etcd cluster关停，备份数据然后拷贝到目的地，以离线方式重新启动etcd cluster。</p>
 
-<h4 id="toc_26">6.2.1 离线迁移</h4>
+<h4 id="toc_27">6.2.1 离线迁移</h4>
 
 <hr>
 
@@ -722,7 +744,7 @@ $ etcdctl  --endpoints $ENDPOINT —write-out=table snapshot status backup.db
 
 <p>但是对于v2中的TTL数据，如果数据commited时所在的member的raft index比leader的的index小，则数据迁移后可能导致数据不一致。</p>
 
-<h4 id="toc_27">6.2.2 在线迁移</h4>
+<h4 id="toc_28">6.2.2 在线迁移</h4>
 
 <hr>
 
@@ -734,7 +756,7 @@ $ etcdctl  --endpoints $ENDPOINT —write-out=table snapshot status backup.db
 
 <p>参考文档14#Limitations#提到：当一个集群有超过50MB的v2数据时，数据升级过程可能花费两分钟，如果超过100MB则可能花费更多时间。</p>
 
-<h3 id="toc_28">6.3 data compaction和data defragment</h3>
+<h3 id="toc_29">6.3 data compaction和data defragment</h3>
 
 <hr>
 
@@ -764,19 +786,19 @@ Finished defragmenting etcd member[127.0.0.1:2379]</code></pre></div>
 
 <div><pre><code class="language-none">$ etcdctl defrag --data-dir &lt;path-to-etcd-data-dir&gt;</code></pre></div>
 
-<h3 id="toc_29">6.4 角色控制</h3>
+<h3 id="toc_30">6.4 角色控制</h3>
 
 <hr>
 
 <p>如果etcd被当初一个配置中心，此时角色控制就有必要了。参考文档11详细描述了如何借助etcdctl进行角色控制，不过还有一个更好用的带有UI界面的工具<a href="https://github.com/soyking/e3w">e3w</a>，这个工具的界面是js实现的，通过它就可方便地进行角色创建。</p>
 
-<h2 id="toc_30">7 API</h2>
+<h2 id="toc_31">7 API</h2>
 
 <hr>
 
 <p>参考文档11#Request Size Limitation#提到etcd为了防止一个大包请求把连接通道阻塞住，限制一个请求包大小在1MB以内。</p>
 
-<h3 id="toc_31">7.1 Client Request Timeout</h3>
+<h3 id="toc_32">7.1 Client Request Timeout</h3>
 
 <hr>
 
@@ -794,7 +816,7 @@ Finished defragmenting etcd member[127.0.0.1:2379]</code></pre></div>
 
 <p>github.com/coreos/etcd/clientv3/config.go:Config::DialTimeout 意为创建client的首次连接超时，Client 创建成功后就不用关心其底层连接状态了，其底层会不断检查链接状态，失败则尝试重连。</p>
 
-<h3 id="toc_32">7.2 KV</h3>
+<h3 id="toc_33">7.2 KV</h3>
 
 <hr>
 
@@ -824,7 +846,7 @@ Finished defragmenting etcd member[127.0.0.1:2379]</code></pre></div>
 
 <p>revision也与watch有关，当watch的client与server闪断重连后，etcd根据client上次watch相关的revision，把其后的修改再通知给client。</p>
 
-<h3 id="toc_33">7.3 Range</h3>
+<h3 id="toc_34">7.3 Range</h3>
 
 <hr>
 
@@ -919,7 +941,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 在之前，我Put了一个/testxxx干扰项，因为不符合/test/前缀（注意末尾的/），所以就不会被这次Get获取到。但是，如果我查询的前缀是/test，那么/testxxx也会被扫描到，这就是etcd k-v模型导致的，编程时一定要特别注意。</code></pre></div>
 
-<h3 id="toc_34">7.4 Put</h3>
+<h3 id="toc_35">7.4 Put</h3>
 
 <hr>
 
@@ -956,7 +978,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 <li>prev_kv：Reqeuest中的 prev_kv 被设置为true的时候，这个结果就是update前的kv值；</li>
 </ul>
 
-<h3 id="toc_35">7.5 Delete Range</h3>
+<h3 id="toc_36">7.5 Delete Range</h3>
 
 <hr>
 
@@ -986,7 +1008,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 <li>Prev_kv - 如果请求中的prev_kv被设为true，则响应中就返回被删除的kv值数组；</li>
 </ul>
 
-<h3 id="toc_36">7.6 Transaction</h3>
+<h3 id="toc_37">7.6 Transaction</h3>
 
 <hr>
 
@@ -1093,7 +1115,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>ResponseOp的成员与RequestOp对应，此处就不再一一列举解释了。</p>
 
-<h3 id="toc_37">7.7 Watch</h3>
+<h3 id="toc_38">7.7 Watch</h3>
 
 <hr>
 
@@ -1181,7 +1203,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 <li>Watch_ID - 要取消的watcher的ID，server后面就不会再更多的event。</li>
 </ul>
 
-<h3 id="toc_38">7.8 Lease</h3>
+<h3 id="toc_39">7.8 Lease</h3>
 
 <hr>
 
@@ -1259,7 +1281,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>Put 函数和 KeepAlive 函数都有一个 Lease 对象，如果在进行 Put 或者 KeepAlive 之前 Lease 已经过期，则 etcd 会返回 error。</p>
 
-<h3 id="toc_39">7.9 Compact</h3>
+<h3 id="toc_40">7.9 Compact</h3>
 
 <hr>
 
@@ -1281,7 +1303,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
   ResponseHeader header = 1;
 }</code></pre></div>
 
-<h2 id="toc_40">参考文档</h2>
+<h2 id="toc_41">参考文档</h2>
 
 <hr>
 
@@ -1313,9 +1335,10 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 <li>25 <a href="https://github.com/coreos/zetcd/blob/master/README.md">zetcd readme</a></li>
 <li>26 <a href="https://yuerblog.cc/2017/12/12/etcd-v3-sdk-usage">etcd v3客户端用法</a></li>
 <li>27 <a href="https://yuerblog.cc/2017/12/10/principle-about-etcd-v3">etcd v3原理分析</a></li>
+<li>28 <a href="http://dockone.io/article/801">谈谈CoreOS的etcd</a></li>
 </ul>
 
-<h2 id="toc_41">扒粪者-于雨氏</h2>
+<h2 id="toc_42">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>2018/01/09，于雨氏，初作此文于海淀。</p>
@@ -1324,8 +1347,11 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>2018/04/03，于雨氏，与海淀补充 zetcd <code>Cross-checking</code> 小节。</p>
 
-<p>2018/04/09，于雨氏，与海淀补充 zetcd <code>MVCC</code> 小节。</p>
+<p>2018/04/09，于雨氏，与海淀补充 <code>MVCC</code> 小节。</p>
+
+<p>2018/04/10，于雨氏，与海淀补充 <code>v2 &amp; v3</code> 小节。</p>
 </blockquote>
+
 
 <!-- baidu statistic start -->
 <script>

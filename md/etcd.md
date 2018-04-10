@@ -229,6 +229,8 @@ etcd单节点启动命令如下：
 
 etcd所有的数据同步都是在一个唯一的“复制组”（consistent replication group）里进行的。当进行少量GB级别的数据排序时，etcd还是能够胜任这个工作的，每次改动leader都会给这个动作分配一个cluster级别的唯一ID【revision ID】，这个ID是全局单调递增的。唯一的“复制组”意味着etcd cluster的数据是不能扩展或者说是不能分区(sharding)的，如果需要通过多raft group提供sharding的能力就只能使用NewSQL而非etcd了。
 
+[参考文档28](http://dockone.io/article/801)一文中，etcd 的作者李响提到：`Consul是个full stack的工具。etcd只是一个简单的一致性kv。我们认为能把一致性kv这件事情完整的做好已经不容易了。我们希望上层的系统可以在etcd上搭建，而不是让etcd本身服务最终用户。另外在某些程度上而言，Consul并不着重保证自身的稳定性和可靠性。HashiCorp自己的调度系统nomad也并没有采用Consul。这些差别导致了很多设计、实现上的不同。`
+
 ### 4.2 zookeeper ###
 ---
 
@@ -248,9 +250,30 @@ etcd v3基于grpc提供了REST接口，提供了PUT/DELETE/GET等类似HTTP的�
 
 至于zetcd如何使用本文不再详述。
 
-### 4.3 Raft ###
+[参考文档28](http://dockone.io/article/801)一文中，etcd 的作者李响提到：`etcd和ZooKeeper的设计理念和方向不太一样。目前etcd着重于go stack和cloud infra领域。很多上层系统例如Kubernetes、CloudFoundry、Mesos等都对稳定性、扩展性有更高的要求。由于理念的不同，导致了很多设计的不同。比如etcd会支持稳定的watch而不是简单的one time trigger watch，因为很多调度系统是需要得到完整历史记录的。etcd支持mvcc，因为可能有协同系统需要无锁操作等等。在性能上今后etcd可能也要做更多工作，因为container infra有更多的大规模场景。`
+
+### 4.3 etcd v2 & v3 ###
 ---
 
+etcd 最新版本是 v3，与其以前的 v2 版本有很大不同，[参考文档28](http://dockone.io/article/801) 提到 `etcd 3主要解决如下几个问题：多版本键值（MVCC）、迷你事务（mini transcation）、更稳定的watch、大数据规模、大用户watch、性能优化。`
+
+etcd v2支持CompareAndSwap这个原子性操作。CompareAndSwap首先对一个key进行值比较，如果比较结果一致才会进行下一步的赋值操作。像利用x86的CAS实现锁一样，利用CompareAndSwap可以实现分布式的锁系统。但是这个 feature 在 v3 中移除了。
+
+v3 与 v2 的主要对比，[参考文档28](http://dockone.io/article/801) 罗列如下：
+
++ mini transaction支持原子性比较多个键值并且操作多个键值。之前的CompareAndSwap实际上一个针对单个key的mini transaction。一个简单的例子是 Tx(compare: A=1 && B=2, success: C = 3, D = 3, fail: C = 0, D = 0)。当etcd收到这条transcation请求，etcd会原子性的判断A和B当前的值和期待的值。如果判断成功，C和D的值会被设置为3。
+
++ etcd 2保存了一个仅保存了1000个历史更改，如果watch过慢就无法得到之前的变更。etcd 3为了支持多纪录，采用了历史记录为主索引的存储结构。etcd3可以存储上十万个纪录，进行快速查询并且支持根据用户的要求进行compaction。
+
++ etcd 2和其它类似开源一致性系统一样最多只能数十万级别的key。主要原因是一致性系统都采用了基于log的复制。log不能无限增长，所以在某一时刻系统需要做一个完整的snapshot并且将snapshot存储到磁盘。在存储snapshot之后才能将之前的log丢弃。每次存储完整的snapshot是非常没有效率的，但是对于一致性系统来说设计增量snapshot以及传输同步大量数据都是非常繁琐的。etcd 3通过对raft和存储系统的重构，能够很好的支持增量snapshot和传输相对较大的snapshot。目前etcd 3可以存储百万到千万级别的key。
+
++ 另外一个问题是支持大规模watch。我们主要工作是减小每个watch带来的资源消耗。首先我们利用了HTTP/2的multiple stream per tcp connection，这样同一个client的不同watch可以share同一个tcp connection。另一方面我们对于同一个用户的不同watch只使用一个go routine来serve，这样再一次减轻了server的资源消耗。【v2 每个watch都会占用一个tcp资源和一个go routine资源，大概要消耗30-40kb。】
+
++ 我们在性能方面也做了很多相关的优化。etcd 3目前的性能远强于etcd 2，我们相信etcd 3的性能在不进行特殊优化的情况下就可以足够应付绝大部分的使用。在一个由3台8核节点组成的的云服务器上，<font color=red>**etcd 3可以做到每秒数万次的写操作和十万次读操作**</font>。
+
+
+### 4.4 Raft ###
+---
 
 [参考文档27](https://yuerblog.cc/yuerblog.cc/2017/12/10/principle-about-etcd-v3/) 提到 Raft 协议内容如下：
 
@@ -323,7 +346,7 @@ leader向follower发送数据的方式类同于kafka每个topic partition级别l
 + 1. 限制message的max size。这个值是可以通过相关参数进行限定的，限定后可以降低探测follower接收速度的成本；
 + 2. 当follower处于replicate状态时候，限定每次批量发送消息的数目。leader在网络层之上有一个发送buffer，通过类似于tcp的发送窗口的算法动态调整buffer的大小，以防止leader由于发包过快导致follower大量地丢包，提高发送成功率。
 
-### 4.3.1 MVCC ###
+#### 4.4.1 MVCC ####
 ---
 
 etcd 在内存中维护了一个 btree（B树）纯内存索引，就和 MySQL 的索引一样，它是有序的。
@@ -1096,6 +1119,7 @@ Put 函数和 KeepAlive 函数都有一个 Lease 对象，如果在进行 Put �
 - 25 [zetcd readme](https://github.com/coreos/zetcd/blob/master/README.md)
 - 26 [etcd v3客户端用法](https://yuerblog.cc/2017/12/12/etcd-v3-sdk-usage)
 - 27 [etcd v3原理分析](https://yuerblog.cc/2017/12/10/principle-about-etcd-v3)
+- 28 [谈谈CoreOS的etcd](http://dockone.io/article/801)
 
 ## 扒粪者-于雨氏 ##
 
@@ -1105,4 +1129,6 @@ Put 函数和 KeepAlive 函数都有一个 Lease 对象，如果在进行 Put �
 >
 > 2018/04/03，于雨氏，与海淀补充 zetcd `Cross-checking` 小节。
 > 
-> 2018/04/09，于雨氏，与海淀补充 zetcd `MVCC` 小节。
+> 2018/04/09，于雨氏，与海淀补充 `MVCC` 小节。
+> 
+> 2018/04/10，于雨氏，与海淀补充 `v2 & v3` 小节。
