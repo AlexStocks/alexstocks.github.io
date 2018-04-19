@@ -482,6 +482,8 @@ assert(status.ok());</code></pre></div>
 <div><pre><code class="language-none">std::string out;
 db-&gt;GetProperty(“rocksdb.estimate-table-readers-mem”, &amp;out);</code></pre></div>
 
+<p>​   </p>
+
 <h4 id="toc_25">2.3 Indexes and bloom filters</h4>
 
 <hr>
@@ -538,7 +540,7 @@ db-&gt;GetProperty(“rocksdb.cur-size-all-mem-tables”, &amp;out);</code></pre
 
 <p>获取 mutex 出现的延迟是因为 flush/compact 线程与读写线程竞争导致的，可以通过调整线程数量降低毛刺时间。</p>
 
-<p>至于写入 memtable 时候出现的写毛刺时间，解决方法一就是使用大的 page cache，禁用系统 swap 以及配置 min<em>free</em>kbytes、dirty<em>ratio、dirty</em>background_ratio 等参数来调整系统的内存回收策略，更基础的方法是使用内存池。</p>
+<p>至于写入 memtable 时候出现的写毛刺时间，解决方法一就是使用大的 page cache，禁用系统 swap 以及配置 min_free_kbytes、dirty_ratio、dirty_background_ratio 等参数来调整系统的内存回收策略，更基础的方法是使用内存池。</p>
 
 <p>采用内存池时，memtable 的内存分配和回收流程图如下：</p>
 
@@ -1119,6 +1121,7 @@ table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
 <p>2018/03/28，于雨氏，初作此文于海淀。</p>
 </blockquote>
 
+
 <!-- baidu statistic start -->
 <script>
 var _hmt = _hmt || [];
@@ -1148,6 +1151,8 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
+
 
 </body>
 

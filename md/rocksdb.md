@@ -29,7 +29,7 @@ RocksDB的三种基本文件格式是 memtable/sstfile/logfile，memtable 是一
 一个进程对一个 DB 同时只能创建一个 rocksdb::DB 对象，所有线程共享之。这个对象内部有锁机制保证访问安全，多个线程同时进行 Get/Put/Fetch Iteration 都没有问题，但是如果直接 Iteration 或者 WriteBatch 则需要额外的锁同步机制保护 Iterator 或者 WriteBatch 对象。
 
 #### 1.1 WriteBatch
---- 
+---
 
 单独的 Get/Put/Delete 是原子操作，要么成功要么失败，不存在中间状态。
 
@@ -38,7 +38,7 @@ RocksDB的三种基本文件格式是 memtable/sstfile/logfile，memtable 是一
 WriteBatch 还有一个好处是保持加快吞吐率。
 
 #### 1.2 同步写 与 异步写
---- 
+---
 
 默认情况下，RocksDB 的写是异步的：仅仅把数据写进了操作系统的缓存区就返回了，而这些数据被写进磁盘是一个异步的过程。如果为了数据安全，可以用如下代码把写过程改为同步写：
 
@@ -56,7 +56,7 @@ RocksDB 由于有 WAL 机制保证，所以即使崩溃，其重启后会进行�
 RocksDB 调用 Posix API `fdatasync()` 对数据进行异步写。如果想用 `fsync()` 进行同步写，可以设置 `Options::use_fsync` 为 true。
 
 #### 1.3 Snapshots
---- 
+---
 
 RocksDB 能够保存某个版本的所有数据（可称之为一个 Snapshot）以方便读取操作，创建并读取 Snapshot 方法如下：
 
@@ -73,7 +73,7 @@ RocksDB 能够保存某个版本的所有数据（可称之为一个 Snapshot）
 如果 ReadOptions::snapshot 为 null，则读取的 snapshot 为 RocksDB 当前版本数据的 snapshot。
 
 #### 1.4 Slice
---- 
+---
 
 不管是 `it->key()` 还是 `it->value()`，其值类型都是 `rocksdb::Slice`。 Slice 自身由一个长度字段以及一个指向外部一个内存区域的指针构成，返回 Slice 比返回一个 string 廉价，并不存在内存拷贝的问题。RocksDB 自身会给 key 和 value 添加一个 C-style 的 ‘\0’，所以 slice 的指针指向的内存区域自身作为字符串输出没有问题。
 
@@ -103,7 +103,7 @@ Slice 与 string 之间的转换代码如下：
 当退出 if 语句块后，slice 内部指针指向的内存区域已经不存在，此时再使用导致程序出问题。
 
 #### 1.5 Transactions
---- 
+---
 
 当使用 TransactionDB 或者 OptimisticTransactionDB 的时候，可以使用 RocksDB 的 BEGIN/COMMIT/ROLLBACK 等事务 API。RocksDB 支持活锁或者死等两种事务。
 
@@ -141,20 +141,20 @@ OptimisticTransactionDB 提供了一个更轻量的事务实现，它在进行�
 参考文档 6 详细描述了 `RocksDB` 的 Transactions。
 
 #### 1.6 Column Family
---- 
+---
 
 CF 提供了对 DB 进行逻辑划分开来的方法，用户可以通过 CF 同时对多个 CF 的 KV 进行并行读写的方法，提高了并行度。
 
 
 #### 1.7 MemTable and Table factories
---- 
+---
 
 RocksDB 内存中的数据格式是 skiplist，磁盘则是以 table 形式存储的 SST 文件格式。
 
 table 格式有两种：继承自 leveldb 的文件格式【详见参考文档2】和 PlainTable 格式【详见参考文档3】。PlainTable 格式是针对 低查询延迟 或者低延迟存储媒介如 SSD 特别别优化的一种文件格式。
 
 #### 1.8 Block size
---- 
+---
 
 RocksDB 把相邻的 kye 放到同一个 block 中，block 是数据存储和传递的基本单元。默认 Block 的大小是 4096B，数据未经压缩。
 
@@ -164,7 +164,7 @@ RocksDB 把相邻的 kye 放到同一个 block 中，block 是数据存储和传
 
 
 #### 1.9 Writer Buffer
---- 
+---
 
 `Options::write_buffer_size` 指定了一个写内存 buffer 的大小，当这个 buffer 写满之后数据会被固化到磁盘上。这个值越大批量写入的性能越好。
 
@@ -175,7 +175,7 @@ RocksDB 控制写内存 buffer 数目的参数是 `Options::max_write_buffer_num
 ‘Options::min_write_buffer_number_to_merge’ 设定了把写 buffer 的数据固化到磁盘上时对多少个 buffer 的数据进行合并然后再固化到磁盘上。这个值如果为 1，则 L0 层文件只有一个，这会导致读放大，这个值太小会导致数据固化到磁盘上之前数据去重效果太差劲。
 
 #### 1.10 Key Layout
---- 
+---
 
 在 **1.8** 章节里提到 “block 是数据存储和传递的基本单元”，RocksDB 的数据是一个 range 的 key-value 构成一个 Region，根据局部性原理每次访问一个 Region 的 key 的时候，有很多概率会访问其相邻的 key，每个 Region 的 keys 放在一个 block 里，多个 Region 的 keys 放在多个 block 里。
 
@@ -188,7 +188,7 @@ RocksDB 控制写内存 buffer 数目的参数是 `Options::max_write_buffer_num
 
 
 #### 1.11 Checksums
---- 
+---
 
 Rocksdb 对每个 kv 以及整体数据文件都分别计算了 checksum，以进行数据正确性校验。下面有两个选项对 checksum 的行为进行控制。
 
@@ -198,7 +198,7 @@ Rocksdb 对每个 kv 以及整体数据文件都分别计算了 checksum，以�
 如果 RocksDB 的数据错乱，RocksDB 会尽量把它隔离出来，保证大部分数据的可用性和正确性。
 
 #### 1.12 Approximate Sizes
---- 
+---
 
 `GetApproximateSizes` 方法可以返回一个 key range 的磁盘占用空间大致使用量，示例代码如下：
 
@@ -212,7 +212,7 @@ Rocksdb 对每个 kv 以及整体数据文件都分别计算了 checksum，以�
 上面的 `sizes[0]` 返回 `[a..c)` key range 的磁盘使用量，而 `sizes[1]` 返回 `[x..z)`  key range 的磁盘使用量。 
 
 #### 1.13 Purging WAL files
---- 
+---
 
 一般情况下，RocksDB 会删除一些过时的 WAL 文件，所谓过时就是 WAL 文件里面对应的一些 key 的数据已经被固化到磁盘了。但是 RocksDB 提供了两个选项以实让用户控制 WAL 何时删除：`Options::WAL_ttl_seconds` 和 `Options::WAL_size_limit_MB`，这两个参数分别控制 WAL 文件的超时时间 和 最大文件 size。
 
@@ -224,15 +224,15 @@ Rocksdb 对每个 kv 以及整体数据文件都分别计算了 checksum，以�
 
 如果两个值都不为 0，RocksDB 会每 10 分钟检测所有的 WAL 文件，所有不满足条件的 WAL 文件都会被删除，其中 ttl 参数优先。
 
- 
+
 #### 1.14 Prefix Iterators
---- 
+---
 
 许多 LSM 引擎不支持高效的 RangeScan 操作，因为 Range 操作需要扫描所有的数据文件。一般情况下常规的技术手段是给 key 建立索引，只用遍历 key 就可以了。应用可以通过确认 `prefix_extractor` 指定一个可以的前缀，RocksDB 可以为这些 key prefix 建立 Bloom 索引，以加快查询速度。
 
- 
+
 #### 1.15 Multi-Threaded Compactions
---- 
+---
 
 参考文档 5 的 `Compaction Styles` 一节提到，如果启用 `Level Style Compaction`, L0 存储着 RocksDB 最新的数据，Lmax 存储着比较老的数据，<font color=blue>**L0 里可能存着重复 keys，但是其他层文件则不可能存在重复 key**</font>。每个 compaction 任务都会选择 Ln 层的一个文件以及与其相邻的 Ln+1 层的多个文件进行合并，删除过期 或者 标记为删除 或者 重复 的 key，然后把合并后的文件放入 Ln+1 层。Compaction 过程会导致写放大效应，但是可以节省空间并减少读放大。
 
@@ -241,14 +241,14 @@ Rocksdb 对每个 kv 以及整体数据文件都分别计算了 checksum，以�
 RocksDB 的 compaction 任务线程不宜过多，过多容易导致写请求被 hang 住。
 
 #### 1.16 Incremental Backups and Replication
---- 
+---
 
 RocksDB 的 API `GetUpdatesSince` 可以让调用者从 transaction log 获知最近被更新的 key（原文意为用 tail 方式读取 transaction log），通过这个 API 可以进行数据的增量备份。
 
 RocksDB 在进行数据备份时候，可以调用 API `DisableFileDeletions` 停止删除文件操作，调用 API `GetLiveFiles/GetSortedWalFiles` 以检索活跃文件列表，然后进行数据备份。备份工作完成以后在调用 API `EnableFileDeletions` 让 RocksDB 再启动过期文件淘汰工作。
 
 #### 1.17 Thread Pool
---- 
+---
 
 RocksDB 会创建一个 thread pool 与 Env 对象进行关联，线程池中线程的数目可以通过 `Env::SetBackgroundThreads()` 设定。通过这个线程池可以执行 compaction 与 memtable flush 任务。
 
@@ -274,19 +274,19 @@ RocksDB 会创建一个 thread pool 与 Env 对象进行关联，线程池中线
 还有其他一些参数，可详细阅读参考文档4。
 	
 #### 1.18 Bloom Filter
---- 
+---
 
 RocksDB 的每个 SST 文件都包含一个 Bloom filter。Bloom Filter 只对特定的一组 keys 有效，所以只有心的 SST 文件创建的时候才会生成这个 filter。当两个 SST 文件合并的时候，会生成新的 filter 数据。
 
 当 SST 文件加载进内存的时候，filter 也会被加载进内存，当关闭 SST 文件的时候，filter 也会被关闭。如果想让 filter 常驻内存，可以用如下代码设置：
- 
+
 <!---C++--->
 	BlockBasedTableOptions::cache_index_and_filter_blocks=true
 
 一般情况下不要修改 filter 相关参数。如果需要修改，相关设置上面已经说过，此处不再多谈，详细内容见参考文档 7。
 
 #### 1.19 Time to Live
---- 
+---
 
 RocksDB 在进行 compact 的时候，会删除被标记为删除的数据，会删除重复 key 的老版本的数据，也会删除过期的数据。数据过期时间由 API `DBWithTTL::Open(const Options& options, const std::string& name, StackableDB** dbptr, int32_t ttl = 0, bool read_only = false)` 的 ttl 参数设定。
 
@@ -299,7 +299,7 @@ TTL 的使用有以下注意事项：
 * 5 不同的 `DBWithTTL::Open` 可能会带上不同的 TTL 值，此时 kv 以最大的 TTL 值为准；
 * 6 如果 `DBWithTTL::Open` 的参数 `read_only` 为 true，则不会触发 compact 任务，不会有过期数据被删除。
 
-	
+
 ### 2 [RocksDB Memory](https://github.com/facebook/rocksdb/wiki/Memory-usage-in-RocksDB) 
 ---
 
@@ -334,10 +334,10 @@ filter是 bloom filter 的实现，如果假阳率是 1%，每个key占用 10 bi
 	std::string out;
 	db->GetProperty(“rocksdb.estimate-table-readers-mem”, &out);
 	
-	
+​	
 #### 2.3 Indexes and bloom filters
 ---
-	
+
 block cache、index & filter 都是读 buffer，而 memtable 则是写 buffer，所有 kv 首先都会被写进 memtable，其 size 是 `write_buffer_size`。 memtable 占用的空间越大，则写放大效应越小，因为数据在内存被整理好，磁盘上就越少的内容会被 compaction。如果 memtable 磁盘空间增大，则 L1 size 也就随之增大，L1 空间大小受 `max_bytes_for_level_base` option 控制。
 
 可以通过如下代码获取 memtable 内存量大小：
@@ -357,7 +357,7 @@ block cache、index & filter 都是读 buffer，而 memtable 则是写 buffer，
     table_options.block_cache->GetPinnedUsage();
     
 #### 2.5 读流程
----    
+---
 
 RocksDB 的读流程分为逻辑读(logical read)和物理读(physical read)。逻辑读通常是对 cache【Block Cache & Table Cache】进行读取，物理读就是直接读磁盘。
 
@@ -368,9 +368,9 @@ RocksDB 的读流程分为逻辑读(logical read)和物理读(physical read)。�
 * 在MemTable中查找，无法命中转到下一流程；
 * 在immutable_memtable中查找，查找不中转到下一流程；
 * 在第0层SSTable中查找，无法命中转到下一流程；
-   
+  
   对于L0 的文件，RocksDB 采用遍历的方法查找，所以为了查找效率 RocksDB 会控制 L0 的文件个数。
- 
+
 * 在剩余SSTable中查找。
 
   对于 L1 层以及 L1 层以上层级的文件，每个 SSTable 没有交叠，可以使用二分查找快速找到 key 所在的 Level 以及 SSTfile。
@@ -379,13 +379,13 @@ RocksDB 的读流程分为逻辑读(logical read)和物理读(physical read)。�
 至于写流程，请参阅 ### 5 Flush & Compaction 章节内容。
 
 #### 2.6 memory pool
---- 
+---
 
 RocksDB 写入时间长了以后，可能会不定时出现较大的写毛刺，可能有两个地方导致 RocksDB 会出现较大的写延时：获取 mutex 时可能出现几十毫秒延迟 和 将数据写入 memtable 时候可能出现几百毫秒延时。
 
 获取 mutex 出现的延迟是因为 flush/compact 线程与读写线程竞争导致的，可以通过调整线程数量降低毛刺时间。
 
-至于写入 memtable 时候出现的写毛刺时间，解决方法一就是使用大的 page cache，禁用系统 swap 以及配置 min_free_kbytes、dirty_ratio、dirty_background_ratio 等参数来调整系统的内存回收策略，更基础的方法是使用内存池。
+至于写入 memtable 时候出现的写毛刺时间，解决方法一就是使用大的 page cache，禁用系统 swap 以及配置 min\_free\_kbytes、dirty\_ratio、dirty\_background\_ratio 等参数来调整系统的内存回收策略，更基础的方法是使用内存池。
 
 采用内存池时，memtable 的内存分配和回收流程图如下：
 
@@ -421,9 +421,9 @@ Cache 有两种：LRUCache 和 BlockCache。Block 分为很多 Shard，以减小
 	
 默认情况下RocksDB用的是 LRUCache，大小是 8MB， 每个 shard 单独维护自己的 LRU list 和独立的 
 ，以及自己的 Mutex。
- 
+
  RocksDB还提高了一个 ClockCache，每个 shard 有自己的一个 circular list，有一个 clock handle 会轮询这个 circular list，寻找过时的 kv，如果 entry 中的 kv 已经被访问过则可以继续存留，相对于 LRU 好处是无 mutex lock，circular list 本质是 tbb::concurrent_hash_map，从 benchmark 来看，二者命中率相似，但吞吐率 Clock 比 LRU 稍高。
- 
+
 Block Cache初始化之时相关参数：
 
 * capacity 总的内存使用量
@@ -513,7 +513,7 @@ CF 的 write buffer 的最大 size。最差情况下 RocksDB 使用的内存量�
 
 
 一个可能的优化设定如下：
- 
+
 <!---C++--->
 	cf_options.level_compaction_dynamic_level_bytes = true;
 	options.max_background_compactions = 4;
