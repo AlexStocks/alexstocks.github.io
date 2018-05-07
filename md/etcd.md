@@ -28,21 +28,21 @@ etcd还提供了一个客户端工具[etcdctl](https://github.com/coreos/etcd/bl
 etcd单节点启动命令如下：
 
 	etcd --name=${name} \
-        --data-dir=${data_dir} \
-        --wal-dir=${wal_dir} \
-        --auto-compaction-retention=1 \
-        --snapshot-count=5000  \
-        --quota-backend-bytes=$((160*1024*1024*1024)) \
-        --heartbeat-interval=100 \
-        --election-timeout=500 \
-        --max-request-bytes 1536 \
-        --initial-advertise-peer-urls http://${ip}:${peer_port} \
-        --listen-peer-urls http://${ip}:${peer_port} \
-        --listen-client-urls http://${ip}:${client_port},http://127.0.0.1:${client_port} \
-        --advertise-client-urls http://${ip}:${client_port} \
-        --initial-cluster-token ${cluster_name} \
-        --initial-cluster etcd_node0=http://${ip}:${peer_port},etcd_node1=http://${peer1_ip}:${peer1_peer_port},etcd_node2=http://${peer2_ip}:${peer2_peer_port} \
-        --initial-cluster-state new  >> ${log_dir}/${name}.log 2>&1 &
+	    --data-dir=${data_dir} \
+	    --wal-dir=${wal_dir} \
+	    --auto-compaction-retention=1 \
+	    --snapshot-count=5000  \
+	    --quota-backend-bytes=$((160*1024*1024*1024)) \
+	    --heartbeat-interval=100 \
+	    --election-timeout=500 \
+	    --max-request-bytes 1536 \
+	    --initial-advertise-peer-urls http://${ip}:${peer_port} \
+	    --listen-peer-urls http://${ip}:${peer_port} \
+	    --listen-client-urls http://${ip}:${client_port},http://127.0.0.1:${client_port} \
+	    --advertise-client-urls http://${ip}:${client_port} \
+	    --initial-cluster-token ${cluster_name} \
+	    --initial-cluster etcd_node0=http://${ip}:${peer_port},etcd_node1=http://${peer1_ip}:${peer1_peer_port},etcd_node2=http://${peer2_ip}:${peer2_peer_port} \
+	    --initial-cluster-state new  >> ${log_dir}/${name}.log 2>&1 &
 
 各个参数的详细意义见参考文档17，下面列出一些主要参数的含义如下：
 
@@ -103,15 +103,15 @@ etcd单节点启动命令如下：
 一定要注意，”initial-cluster”里面一定要有新成员的peer地址。参考文档7#Strict Reconfiguration Check Mode#提到：etcdctl执行完毕”etcdctl member add“后，etcd cluster就把这个还未存在的node算进quorum了，**第二步必须准确完成**。
 
 	如果仅仅通过命令”etcdctl member add“添加一个节点，但是不添加实际节点，然后就通过”etcdctl member remove“删除，则会得到如下结果：
-
+	
 	$ ETCDCTL_API=3 etcdctl --endpoints=http://192.168.11.100:2379,http://192.168.11.100:12379,http://192.168.11.100:22379 member add    etcd_node3 --peer-urls=http://192.168.11.100:32380
 	Member e9cfc62cee5f30d1 added to cluster 63e8b43e8a1af9bc
-
+	
 	ETCD_NAME=“etcd_node3”
 	ETCD_INITIAL_CLUSTER=“etcd_node2=http://192.168.11.100:22380,etcd_node1=http://192.168.11.100:12380,etcd_node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380”
 	ETCD_INITIAL_ADVERTISE_PEER_URLS=“http://192.168.11.100:32380”
 	ETCD_INITIAL_CLUSTER_STATE=“existing”
-
+	
 	$ etcdctl member remove 63e8b43e8a1af9bc
 	Couldn't find a member in the cluster with an ID of 63e8b43e8a1af9bc.
 
@@ -149,20 +149,20 @@ etcd单节点启动命令如下：
 动态集群etcd单节点启动命令如下：
 
     etcd --name=${name} \
-	    --data-dir=${data_dir} \
-	    --wal-dir=${wal_dir} \
-	    --auto-compaction-retention=1 \
-	    --snapshot-count=5000  \
-	    --quota-backend-bytes=$((160*1024*1024*1024)) \
-	    --heartbeat-interval=100 \
-	    --election-timeout=500 \
-	    --max-request-bytes 1536 \
-	    --initial-advertise-peer-urls http://${ip}:${peer_port} \
-	    --listen-peer-urls http://${ip}:${peer_port} \
-	    --listen-client-urls http://${ip}:${client_port},http://127.0.0.1:${client_port} \
-	    --advertise-client-urls http://${ip}:${client_port} \
-	    --discovery http://localhost:2379/v2/keys/discovery/testdiscoverycluster \
-	    --initial-cluster-token ${cluster_name} >> ${log_dir}/${name}.log 2>&1 &
+        --data-dir=${data_dir} \
+        --wal-dir=${wal_dir} \
+        --auto-compaction-retention=1 \
+        --snapshot-count=5000  \
+        --quota-backend-bytes=$((160*1024*1024*1024)) \
+        --heartbeat-interval=100 \
+        --election-timeout=500 \
+        --max-request-bytes 1536 \
+        --initial-advertise-peer-urls http://${ip}:${peer_port} \
+        --listen-peer-urls http://${ip}:${peer_port} \
+        --listen-client-urls http://${ip}:${client_port},http://127.0.0.1:${client_port} \
+        --advertise-client-urls http://${ip}:${client_port} \
+        --discovery http://localhost:2379/v2/keys/discovery/testdiscoverycluster \
+        --initial-cluster-token ${cluster_name} >> ${log_dir}/${name}.log 2>&1 &
 
 可见不需要再指定集群内的各个成员，只需要指定discovery channel即可。
 
@@ -220,7 +220,7 @@ etcd单节点启动命令如下：
 
 目前etcd的同类产品很多，既有通过zab协议实现paxos的zookeeper，也有kafka自身在topic的partition级别实现的类似于raft的一致性的coordinator。关于etcd与同类产品的比较详见[参考文档21](https://github.com/coreos/etcd/blob/master/Documentation/learning/why.md)。
 
-### 4.1 consul ###
+### 4.1 consul & Eureka ###
 ---
 
 文章开头提及了zookeeper，并给出了二者特性的一些比较，这里再补充下consul的相关特性。consul自身是一个端到端的服务发现框架。它包括了监控检查、失败探测和DNS能力支持。它也提供了一个性能一般的存储引擎以及一组复杂的API接口，Consule 0.7的存储引擎的可扩展性不好，当key的数目达到百万级的时候，其延迟和内存压力急剧上升。它竟然没有KV接口，而且不提供多版本key支持，没有条件事务(conditional transactions)支持，也没有流式watch功能支持。
@@ -230,6 +230,8 @@ etcd单节点启动命令如下：
 etcd所有的数据同步都是在一个唯一的“复制组”（consistent replication group）里进行的。当进行少量GB级别的数据排序时，etcd还是能够胜任这个工作的，每次改动leader都会给这个动作分配一个cluster级别的唯一ID【revision ID】，这个ID是全局单调递增的。唯一的“复制组”意味着etcd cluster的数据是不能扩展或者说是不能分区(sharding)的，如果需要通过多raft group提供sharding的能力就只能使用NewSQL而非etcd了。
 
 [参考文档28](http://dockone.io/article/801)一文中，etcd 的作者李响提到：`Consul是个full stack的工具。etcd只是一个简单的一致性kv。我们认为能把一致性kv这件事情完整的做好已经不容易了。我们希望上层的系统可以在etcd上搭建，而不是让etcd本身服务最终用户。另外在某些程度上而言，Consul并不着重保证自身的稳定性和可靠性。HashiCorp自己的调度系统nomad也并没有采用Consul。这些差别导致了很多设计、实现上的不同。`
+
+[参考文档29](http://calvin1978.blogcn.com/articles/routing.html)提到：`Netflix 家也有个 Eureka，目前的版本基于RESTFul的API， 所以推送能力比前几家弱，靠着默认定时30秒的刷新，Server间要数据同步，Client与Server要数据同步，文档里说最多两分钟才保证通知到所有客户端，与ZK们秒级的推送速度相差甚远。对于脑裂的情况，Eureka的态度是宁愿保留坏数据，不要丢失好数据，见仁见智。`。
 
 ### 4.2 zookeeper ###
 ---
@@ -284,7 +286,7 @@ v3 与 v2 的主要对比，[参考文档28](http://dockone.io/article/801) 罗�
 	+ 当超过1/2节点成功保存了日志，则leader会将tx最终提交（也是一条日志）。
 	+ 一旦leader提交tx，则会在下一次心跳时将提交记录发送给其他节点，其他节点也会提交。
 	+ leader宕机后，剩余节点协商找到拥有最大已提交tx ID（必须是被超过半数的节点已提交的）的节点作为新leader。
-
+	
 	最重要的是：
 	+ Raft中，后提交的事务ID>先提交的事务ID，每个事务ID都是唯一的。
 	+ 无论客户端是在哪个etcd节点提交，整个集群对外表现出数据视图最终都是一样的。
@@ -390,7 +392,7 @@ revision 定义如下：
 		modified    revision // modified字段记录这个key的最后一次修改对应的revision信息
 		generations []generation // 多版本（历史修改）
 	} 
-
+	
 	// generation contains multiple revisions of a key.
 	type generation struct {
 		ver     int64
@@ -416,7 +418,7 @@ delete 操作的 key 由 main+sub+”t” 构成：
 	revToBytes(idxRev, ibytes)
 	ibytes = appendMarkTombstone(ibytes)
 	
-	
+​	
 	// appendMarkTombstone appends tombstone mark to normal revision bytes.
 	func appendMarkTombstone(b []byte) []byte {
 		if len(b) != revBytesLen {
@@ -516,7 +518,7 @@ Heartbeat Interval一般取值集群中两个peer之间RTT最大值，取值范�
 
 	# Command line arguments:
 	$ etcd —heartbeat-interval=100 —election-timeout=500
-
+	
 	# Environment variables:
 	$ ETCD_HEARTBEAT_INTERVAL=100 ETCD_ELECTION_TIMEOUT=500 etcd
 
@@ -524,7 +526,7 @@ etcd底层的存储引擎boltdb采用了MVCC机制，会把一个key的所有upd
 
 	# Command line arguments:
 	$ etcd —snapshot-count=5000
-
+	
 	# Environment variables:
 	$ ETCD_SNAPSHOT_COUNT=5000 etcd
 
@@ -702,7 +704,7 @@ Range请求定义如下：
 		MOD = 3;
 		VALUE = 4;
 	  }
-
+	
 	  bytes key = 1;
 	  bytes range_end = 2;
 	  int64 limit = 3;
@@ -741,7 +743,7 @@ Range请求的响应定义如下：
 	  int64 revision = 3;
 	  uint64 raft_term = 4;
 	}
-
+	
 	message RangeResponse {
 	  ResponseHeader header = 1;
 	  repeated mvccpb.KeyValue kvs = 2;
@@ -762,14 +764,14 @@ Range请求的响应定义如下：
 [参考文档26](https://yuerblog.cc/2017/12/12/etcd-v3-sdk-usage) 提到 Get 操作时的 etcd Range 机制：
 
 	我们通过一个特别的Get选项，获取/test目录下的所有孩子：
-
+	
 	rangeResp, err := kv.Get(context.TODO(), "/test/", clientv3.WithPrefix())
 	WithPrefix()是指查找以/test/为前缀的所有key，因此可以模拟出查找子目录的效果。
-
+	
 	我们知道etcd是一个有序的k-v存储，因此/test/为前缀的key总是顺序排列在一起。
-
+	
 	withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一个key range，[“/test/”, “/test0”)，为什么呢？因为比/大的字符是’0’，所以以/test0作为范围的末尾，就可以扫描到所有的/test/打头的key了。
-
+	
 	在之前，我Put了一个/testxxx干扰项，因为不符合/test/前缀（注意末尾的/），所以就不会被这次Get获取到。但是，如果我查询的前缀是/test，那么/testxxx也会被扫描到，这就是etcd k-v模型导致的，编程时一定要特别注意。
 
 ### 7.4 Put ###
@@ -964,7 +966,7 @@ Watch对event作出了如下三项保证:
 	  bytes range_end = 2;
 	  int64 start_revision = 3;
 	  bool progress_notify = 4;
-
+	
 	  enum FilterType {
 	    NOPUT = 0;
 	    NODELETE = 1;
@@ -987,7 +989,7 @@ watch的响应内容定义如下：
 	  bool created = 3;
 	  bool canceled = 4;
 	  int64 compact_revision = 5;
-
+	
 	  repeated mvccpb.Event events = 11;
 	}
 
@@ -1120,6 +1122,7 @@ Put 函数和 KeepAlive 函数都有一个 Lease 对象，如果在进行 Put �
 - 26 [etcd v3客户端用法](https://yuerblog.cc/2017/12/12/etcd-v3-sdk-usage)
 - 27 [etcd v3原理分析](https://yuerblog.cc/2017/12/10/principle-about-etcd-v3)
 - 28 [谈谈CoreOS的etcd](http://dockone.io/article/801)
+- 29 [服务化之－负载均衡与路由的设计](http://calvin1978.blogcn.com/articles/routing.html)
 
 ## 扒粪者-于雨氏 ##
 

@@ -353,7 +353,7 @@ exit 1</code></pre></div>
 
 <p>目前etcd的同类产品很多，既有通过zab协议实现paxos的zookeeper，也有kafka自身在topic的partition级别实现的类似于raft的一致性的coordinator。关于etcd与同类产品的比较详见<a href="https://github.com/coreos/etcd/blob/master/Documentation/learning/why.md">参考文档21</a>。</p>
 
-<h3 id="toc_12">4.1 consul</h3>
+<h3 id="toc_12">4.1 consul &amp; Eureka</h3>
 
 <hr>
 
@@ -364,6 +364,8 @@ exit 1</code></pre></div>
 <p>etcd所有的数据同步都是在一个唯一的“复制组”（consistent replication group）里进行的。当进行少量GB级别的数据排序时，etcd还是能够胜任这个工作的，每次改动leader都会给这个动作分配一个cluster级别的唯一ID【revision ID】，这个ID是全局单调递增的。唯一的“复制组”意味着etcd cluster的数据是不能扩展或者说是不能分区(sharding)的，如果需要通过多raft group提供sharding的能力就只能使用NewSQL而非etcd了。</p>
 
 <p><a href="http://dockone.io/article/801">参考文档28</a>一文中，etcd 的作者李响提到：<code>Consul是个full stack的工具。etcd只是一个简单的一致性kv。我们认为能把一致性kv这件事情完整的做好已经不容易了。我们希望上层的系统可以在etcd上搭建，而不是让etcd本身服务最终用户。另外在某些程度上而言，Consul并不着重保证自身的稳定性和可靠性。HashiCorp自己的调度系统nomad也并没有采用Consul。这些差别导致了很多设计、实现上的不同。</code></p>
+
+<p><a href="http://calvin1978.blogcn.com/articles/routing.html">参考文档29</a>提到：<code>Netflix 家也有个 Eureka，目前的版本基于RESTFul的API， 所以推送能力比前几家弱，靠着默认定时30秒的刷新，Server间要数据同步，Client与Server要数据同步，文档里说最多两分钟才保证通知到所有客户端，与ZK们秒级的推送速度相差甚远。对于脑裂的情况，Eureka的态度是宁愿保留坏数据，不要丢失好数据，见仁见智。</code>。</p>
 
 <h3 id="toc_13">4.2 zookeeper</h3>
 
@@ -554,18 +556,18 @@ revToBytes(idxRev, ibytes)</code></pre></div>
 
 <div><pre><code class="language-none">idxRev := revision{main: tw.beginRev + 1, sub: int64(len(tw.changes))}
 revToBytes(idxRev, ibytes)
-ibytes = appendMarkTombstone(ibytes)
+ibytes = appendMarkTombstone(ibytes)</code></pre></div>
 
+<p>​<br>
+    // appendMarkTombstone appends tombstone mark to normal revision bytes.
+    func appendMarkTombstone(b []byte) []byte {
+        if len(b) != revBytesLen {
+            plog.Panicf(“cannot append mark to non normal revision bytes”)
+        }
+        return append(b, markTombstone)
+    }</p>
 
-// appendMarkTombstone appends tombstone mark to normal revision bytes.
-func appendMarkTombstone(b []byte) []byte {
-    if len(b) != revBytesLen {
-        plog.Panicf(“cannot append mark to non normal revision bytes”)
-    }
-    return append(b, markTombstone)
-}
-
-// isTombstone checks whether the revision bytes is a tombstone.
+<div><pre><code class="language-none">// isTombstone checks whether the revision bytes is a tombstone.
 func isTombstone(b []byte) bool {
     return len(b) == markedRevBytesLen &amp;&amp; b[markBytePosition] == markTombstone
 } </code></pre></div>
@@ -1336,6 +1338,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 <li>26 <a href="https://yuerblog.cc/2017/12/12/etcd-v3-sdk-usage">etcd v3客户端用法</a></li>
 <li>27 <a href="https://yuerblog.cc/2017/12/10/principle-about-etcd-v3">etcd v3原理分析</a></li>
 <li>28 <a href="http://dockone.io/article/801">谈谈CoreOS的etcd</a></li>
+<li>29 <a href="http://calvin1978.blogcn.com/articles/routing.html">服务化之－负载均衡与路由的设计</a></li>
 </ul>
 
 <h2 id="toc_42">扒粪者-于雨氏</h2>
@@ -1382,6 +1385,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 
 
