@@ -672,7 +672,7 @@ log 文件就是 WAL。
 #### 6.2 Manifest 文件 
 ---
 
-RocksDB 整个 LSM 树的信息需要常驻内容，以让 RocksDB 快速进行 kv 查找或者进行 compaction 任务，RocksDB 会用文件把这些信息固化下来，这个文件就是 Manifest 文件。RocksDB 称 Manifest 文件记录了 DB 状态变化的事务性日志，也就是说它记录了所有改变 DB 状态的操作。主要内容有事务性日志和数据库状态的变化。
+RocksDB 整个 LSM 树的信息需要常驻内存，以让 RocksDB 快速进行 kv 查找或者进行 compaction 任务，RocksDB 会用文件把这些信息固化下来，这个文件就是 Manifest 文件。RocksDB 称 Manifest 文件记录了 DB 状态变化的事务性日志，也就是说它记录了所有改变 DB 状态的操作。主要内容有事务性日志和数据库状态的变化。
 
 RocksDB 的函数 VersionSet::LogAndApply 是对 Manifest 文件的更新操作，所以可以通过定位这个函数出现的位置来跟踪 Manifest 的记录内容。
 
@@ -688,6 +688,23 @@ RocksDB 进程 Crash 后 Reboot 的过程中，会首先读取 Manifest 文件�
 * 其次是compact点，可能有多个，写入格式为{kCompactPointer, level, internal key}
 * 其后是删除文件，可能有多个，格式为{kDeletedFile, level, file number}。
 * 最后是新文件，可能有多个，格式为{kNewFile, level, file number, file size, min key, max key}。
+
+RocksDB MANIFEST文件所保存的数据基本是来自于VersionEdit这个结构，MANIFEST包含了两个文件，一个log文件一个包含最新MANIFEST文件名的文件，Manifest的log文件名是这样 MANIFEST-(seqnumber)，这个seq会一直增长，只有当 超过了指定的大小之后，MANIFEST会刷新一个新的文件，当新的文件刷新到磁盘(并且文件名更新)之后，老的文件会被删除掉，这里可以认为每一次MANIFEST的更新都代表一次snapshot，其结构描述如下：
+
+    MANIFEST = { CURRENT, MANIFEST-<seq-no>* }  
+    CURRENT = File pointer to the latest manifest log 
+    MANIFEST-<seq no> = Contains snapshot of RocksDB state and subsequent modifications
+
+在RocksDB中任意时间存储引擎的状态都会保存为一个Version(也就是SST的集合)，而每次对Version的修改都是一个VersionEdit,而最终这些VersionEdit就是 组成manifest-log文件的内容。
+
+下面就是MANIFEST的log文件的基本构成:
+
+    version-edit      = Any RocksDB state change
+    version           = { version-edit* }
+    manifest-log-file = { version, version-edit* }
+                      = { version-edit* }
+
+关于 VersionSet 相关代码分析见[参考文档13](https://yq.aliyun.com/articles/594728?spm=a2c4e.11157919.spm-cont-list.17.302c27aeDR3OyC)。
 
 #### 6.3 SSTfile  
 ---
@@ -853,6 +870,7 @@ sst 文件只有在 compact 时才会被删除，所以禁止删除就相当于�
 - 10 [Time to Live](https://github.com/facebook/rocksdb/wiki/Time-to-Live)
 - 11 [RocksDB-FAQ](https://github.com/facebook/rocksdb/wiki/RocksDB-FAQ)
 - 12 [设计思路和主要知识点](https://note.youdao.com/share/?id=60b7e3aa14a01c85d05ee8a7e4d16c46&type=note#/)
+- 13 [RocksDB · MANIFEST文件介绍](https://yq.aliyun.com/articles/594728?spm=a2c4e.11157919.spm-cont-list.17.302c27aeDR3OyC)
 
 ## 扒粪者-于雨氏 ##
 
