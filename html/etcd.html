@@ -357,7 +357,7 @@ exit 1</code></pre></div>
 
 <hr>
 
-<p>文章开头提及了zookeeper，并给出了二者特性的一些比较，这里再补充下consul的相关特性。consul自身是一个端到端的服务发现框架。它包括了监控检查、失败探测和DNS能力支持。它也提供了一个性能一般的存储引擎以及一组复杂的API接口，Consule 0.7的存储引擎的可扩展性不好，当key的数目达到百万级的时候，其延迟和内存压力急剧上升。它竟然没有KV接口，而且不提供多版本key支持，没有条件事务(conditional transactions)支持，也没有流式watch功能支持。</p>
+<p>文章开头提及了zookeeper，并给出了二者特性的一些比较，这里再补充下consul的相关特性。consul自身是一个端到端的服务发现框架。它包括了监控检查、失败探测和DNS能力支持。它也提供了一个性能一般的存储引擎以及一组复杂的API接口，Consul 0.7的存储引擎的可扩展性不好，当key的数目达到百万级的时候，其延迟和内存压力急剧上升。它竟然没有KV接口，而且不提供多版本key支持，没有条件事务(conditional transactions)支持，也没有流式watch功能支持。</p>
 
 <p>当然consul和etcd的使用目的不一样，用于解决不同使用场景下的相关问题。如果单纯从存储角度来看，当然选择etcd。如果需要端到端的服务发现能力，etcd的特性就不够突出了，可以选择Kubernetes、Consul和SmartStack。</p>
 
