@@ -400,7 +400,7 @@ RocksDB 写入时间长了以后，可能会不定时出现较大的写毛刺，
 
 Block Cache 是 RocksDB 的数据的缓存，这个缓存可以在多个 RocksDB 的实例下缓存。一般默认的Block Cache 中存储的值是未压缩的，而用户可以再指定一个 Block Cache，里面的数据可以是压缩的。用户访问数据先访问默认的 BC，待无法保证后再访问用户 Cache，用户 Cache 的数据可以直接存入 page cache 中。
 
-Cache 有两种：LRUCache 和 BlockCache。Block 分为很多 Shard，以减小竞争，所以 shard 大小均匀一致相等，默认 Cache 有 64 个 shards，每个 shard 大小不超过 512k，总大小是 8M，类别是 LRU。
+Cache 有两种：LRUCache 和 BlockCache。Block 分为很多 Shard，以减小竞争，所以 shard 大小均匀一致相等，默认 Cache 最多有 64 个 shards，每个 shard 的 最小 size 为 512k，总大小是 8M，类别是 LRU。
 
 <!---C++--->
 	std::shared_ptr<Cache> cache = NewLRUCache(capacity);
