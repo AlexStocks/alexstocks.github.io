@@ -43,8 +43,8 @@ WriteBatch 还有一个好处是保持加快吞吐率。
 默认情况下，RocksDB 的写是异步的：仅仅把数据写进了操作系统的缓存区就返回了，而这些数据被写进磁盘是一个异步的过程。如果为了数据安全，可以用如下代码把写过程改为同步写：
 
 <!---C++--->
-	rocksdb::WriteOptions write_options;
-	write_options.sync = true;
+	rocksdb::WriteOptions write_options;   
+	write_options.sync = true;   
 	db->Put(write_options, …);
 
 这个选项会启用 Posix 系统的 `fsync(...) or fdatasync(...) or msync(..., MS_SYNC)` 等函数。
@@ -61,12 +61,12 @@ RocksDB 调用 Posix API `fdatasync()` 对数据进行异步写。如果想用 `
 RocksDB 能够保存某个版本的所有数据（可称之为一个 Snapshot）以方便读取操作，创建并读取 Snapshot 方法如下：
 
 <!---C++--->
-	rocksdb::ReadOptions options;
-	options.snapshot = db->GetSnapshot();
-	… apply some updates to db …
-	rocksdb::Iterator* iter = db->NewIterator(options);
-	… read using iter to view the state when the snapshot was created …
-	delete iter;
+	rocksdb::ReadOptions options;   
+	options.snapshot = db->GetSnapshot();   
+	… apply some updates to db ….  
+	rocksdb::Iterator* iter = db->NewIterator(options);   
+	… read using iter to view the state when the snapshot was created ….  
+	delete iter;   
 	db->ReleaseSnapshot(options.snapshot);
 
 
