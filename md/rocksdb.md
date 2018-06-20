@@ -150,7 +150,7 @@ table 格式有两种：继承自 leveldb 的文件格式【详见参考文档2�
 #### 1.8 Block size
 ---
 
-RocksDB 把相邻的 kye 放到同一个 block 中，block 是数据存储和传递的基本单元。默认 Block 的大小是 4096B，数据未经压缩。
+RocksDB 把相邻的 key 放到同一个 block 中，block 是数据存储和传递的基本单元。默认 Block 的大小是 4096B，数据未经压缩。
 
 经常进行 bulk scan 操作的用户可能希望增大 block size，而经常进行单 key 读写的用户则可能希望减小其值，官方建议这个值减小不要低于 1KB 的下限，变大也不要超过 `a few megabytes`。启用压缩也可以起到增大 block size 的好处。
 
@@ -304,7 +304,7 @@ RocksDB的内存大致有如下四个区：
 #### 2.1 Block Cache
 ---
 
-Block Cache 存储一些缓存数据，它的下一层是操作系统的 Page Cache。
+第三节详述了 Block Cache，这里只给出总结性描述：它存储一些读缓存数据，它的下一层是操作系统的 Page Cache。
 
 #### 2.2 Indexes and bloom filters
 ---
@@ -405,7 +405,7 @@ Cache 有两种：LRUCache 和 BlockCache。Block 分为很多 Shard，以减小
 
 	table_options.no_block_cache = true;
 
-默认情况下RocksDB用的是 LRUCache，大小是 8MB， 每个 shard 单独维护自己的 LRU list 和独立的 
+默认情况下RocksDB用的是 LRUCache，大小是 8MB， 每个 shard 单独维护自己的 LRU list 和独立的 hash table
 ，以及自己的 Mutex。
 
  RocksDB还提高了一个 ClockCache，每个 shard 有自己的一个 circular list，有一个 clock handle 会轮询这个 circular list，寻找过时的 kv，如果 entry 中的 kv 已经被访问过则可以继续存留，相对于 LRU 好处是无 mutex lock，circular list 本质是 tbb::concurrent_hash_map，从 benchmark 来看，二者命中率相似，但吞吐率 Clock 比 LRU 稍高。
