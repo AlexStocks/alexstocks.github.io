@@ -405,8 +405,7 @@ Cache 有两种：LRUCache 和 BlockCache。Block 分为很多 Shard，以减小
 
 	table_options.no_block_cache = true;
 
-默认情况下RocksDB用的是 LRUCache，大小是 8MB， 每个 shard 单独维护自己的 LRU list 和独立的 hash table
-，以及自己的 Mutex。
+默认情况下RocksDB用的是 LRUCache，大小是 8MB， 每个 shard 单独维护自己的 LRU list 和独立的 hash table，以及自己的 Mutex。
 
  RocksDB还提高了一个 ClockCache，每个 shard 有自己的一个 circular list，有一个 clock handle 会轮询这个 circular list，寻找过时的 kv，如果 entry 中的 kv 已经被访问过则可以继续存留，相对于 LRU 好处是无 mutex lock，circular list 本质是 tbb::concurrent_hash_map，从 benchmark 来看，二者命中率相似，但吞吐率 Clock 比 LRU 稍高。
 
