@@ -295,9 +295,9 @@ etcd通过boltdb的MVCC保证单机数据一致性，通过raft保证集群数�
 
 如果raft集群中有处于unhealthy状态的node，需要先把它剔除掉，然后才能进行替换操作。但是添加一个新的node是一件非常高风险的操作：如果一个3节点的etcd集群有一个unhealthy node，此时没有先把unhealthy node剔除掉，而新添加节点时可能由于配置不当或者其他原因导致新的node添加失败，则新集群理论上node number为4而当前quorum只可能达到2，失去consensus的集群对任何操作都无法达成共识。
 
-如果按照正确的操作步骤，先提出unhealthy node，此时n为2而quorum为2，添加新节点后n为3，及时添加新节点失败也不会导致集群不可用。
+如果按照正确的操作步骤，先剔除 unhealthy node，此时 n 为 2 而 quorum 为 2，添加新节点后 n 为 3，及时添加新节点失败也不会导致集群不可用。
 
-etcd通过设置配置文件中[strict-reconfig-check选项](https://github.com/coreos/etcd/blob/15bfc1b36162805e8a90ae747d955667870c2f95/etcd.conf.yml.sample#L70)为true，禁止任何危及quorum的行为。如果用户把这个选项设为false，则添加一个新节点就轻松多了，结果就是集群数据不一致，大部分情况下会收到"disk geometry corruption”之类的error log。
+etcd通过设置配置文件中 [strict-reconfig-check选项](https://github.com/coreos/etcd/blob/15bfc1b36162805e8a90ae747d955667870c2f95/etcd.conf.yml.sample#L70) 为true，禁止任何危及quorum的行为。如果用户把这个选项设为false，则添加一个新节点就轻松多了，结果就是集群数据不一致，大部分情况下会收到 "disk geometry corruption” 之类的error log。
 
 etcd内部的raft实现见[参考文档24](https://github.com/coreos/etcd/blob/master/raft/design.md)。leader会存储所有follower对自身log数据的progress（复制进度），leader根据每个follower的progress向其发送”replication message”，replication message是msgApp外加上log数据。progress有两个比较重要的属性：match和next。match是leader知道的follower对自身数据的最新复制进度【或者说就是follower最新的log entry set index】，如果leader对follower的复制进度一无所知则这个值为0，next则是将要发送给follower的下一个log entry set的序号range end。
 
@@ -417,8 +417,7 @@ delete 操作的 key 由 main+sub+”t” 构成：
 	idxRev := revision{main: tw.beginRev + 1, sub: int64(len(tw.changes))}
 	revToBytes(idxRev, ibytes)
 	ibytes = appendMarkTombstone(ibytes)
-	
-​	
+	​
 	// appendMarkTombstone appends tombstone mark to normal revision bytes.
 	func appendMarkTombstone(b []byte) []byte {
 		if len(b) != revBytesLen {

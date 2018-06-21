@@ -429,7 +429,7 @@ exit 1</code></pre></div>
 
 <p>如果raft集群中有处于unhealthy状态的node，需要先把它剔除掉，然后才能进行替换操作。但是添加一个新的node是一件非常高风险的操作：如果一个3节点的etcd集群有一个unhealthy node，此时没有先把unhealthy node剔除掉，而新添加节点时可能由于配置不当或者其他原因导致新的node添加失败，则新集群理论上node number为4而当前quorum只可能达到2，失去consensus的集群对任何操作都无法达成共识。</p>
 
-<p>如果按照正确的操作步骤，先提出unhealthy node，此时n为2而quorum为2，添加新节点后n为3，及时添加新节点失败也不会导致集群不可用。</p>
+<p>如果按照正确的操作步骤，先剔除 unhealthy node，此时 n 为 2 而 quorum 为 2，添加新节点后 n 为 3，及时添加新节点失败也不会导致集群不可用。</p>
 
 <p>etcd通过设置配置文件中<a href="https://github.com/coreos/etcd/blob/15bfc1b36162805e8a90ae747d955667870c2f95/etcd.conf.yml.sample#L70">strict-reconfig-check选项</a>为true，禁止任何危及quorum的行为。如果用户把这个选项设为false，则添加一个新节点就轻松多了，结果就是集群数据不一致，大部分情况下会收到&quot;disk geometry corruption”之类的error log。</p>
 
@@ -556,18 +556,17 @@ revToBytes(idxRev, ibytes)</code></pre></div>
 
 <div><pre><code class="language-none">idxRev := revision{main: tw.beginRev + 1, sub: int64(len(tw.changes))}
 revToBytes(idxRev, ibytes)
-ibytes = appendMarkTombstone(ibytes)</code></pre></div>
+ibytes = appendMarkTombstone(ibytes)
+​
+// appendMarkTombstone appends tombstone mark to normal revision bytes.
+func appendMarkTombstone(b []byte) []byte {
+    if len(b) != revBytesLen {
+        plog.Panicf(“cannot append mark to non normal revision bytes”)
+    }
+    return append(b, markTombstone)
+}
 
-<p>​<br>
-    // appendMarkTombstone appends tombstone mark to normal revision bytes.
-    func appendMarkTombstone(b []byte) []byte {
-        if len(b) != revBytesLen {
-            plog.Panicf(“cannot append mark to non normal revision bytes”)
-        }
-        return append(b, markTombstone)
-    }</p>
-
-<div><pre><code class="language-none">// isTombstone checks whether the revision bytes is a tombstone.
+// isTombstone checks whether the revision bytes is a tombstone.
 func isTombstone(b []byte) bool {
     return len(b) == markedRevBytesLen &amp;&amp; b[markBytePosition] == markTombstone
 } </code></pre></div>
