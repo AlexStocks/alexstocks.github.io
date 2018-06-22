@@ -492,6 +492,30 @@ receives msgAppResp(rej=true)
 <li>4. Raft 中正确向其中添加一个节点的算法是支持 Joint Consensus 算法， “虽然我知道理论上面 100% 的事情怎么做，但为了更加简单，我可以稍微放低一点要求。  TiKV 和 etcd 现在都是没有用 joint consensus 的，但我们现在在开始添加 Learner，后面如果真的遇到了其他的 corner case，会不会考虑一下，没准也不是不可能的事情。”<a href="http://www.sohu.com/a/204912012_505827">参考文档30</a>。</li>
 </ul>
 
+<p><a href="http://www.sohu.com/a/202861958_736949">参考文档31</a> 给出了Etcd Raft 正常工作流程优化的几个关键点如下：</p>
+
+<ul>
+<li><p>Pipeline</p>
+
+<p>Raft 工作流程分为Propose，Append，Broadcast 和 Apply。客户发起交易，我们叫做 Propose，然后我们记录交易，这个叫做 Append，再就是通知其他网点，这个叫做 Broadcast，等我们最后知道大部分网点都确认了这笔交易记录，我们就执行交易，也就是 Apply。 </p>
+
+<p>对于客户 A，操作是 Propose，Append，Broadcast， Apply，对于客户 B 也是一样的流程，之前我们必须等 A 完成了，才能处理 B。当 A 在 Append 之后，我们就可以开始处理 B 的 Propose 了。我们只要保证的是所有银行网点的交易记录是一致有序的，那么我们就一定能保证最终所有银行的数据是一致的，所以只要 A Append 了，B 开始 Propose，B Append 的时候交易记录一定在 A 的后面，这样记录就一定是有序的了。</p>
+
+<p>当 A 执行完 Append 之后，我们就能立刻开始处理 B，而当 B Append 之后，我们也可以立刻处理下一个用户 C，这样整个流程就是一个像水流那样源源不断流动的了，这不就是一个 Pipeline 了。</p></li>
+<li><p>Batch</p>
+
+<p>如果很多客户同时要发起交易，那么我们可以将这些交易记录，用一个消息发送过去到其他网点，这样我们就不需要一个一个的发送消息了，这就是 Batch。</p>
+
+<p>各个网点之间距离还是有点远的，消息传递的时间开销还是有点大的。使用 Batch 可以减少消息的发送次数，自然就能提高效率了。</p></li>
+<li><p>Leader 并发写盘   </p>
+
+<p>整个 Raft 的流程：Leader 收到 Propose，Append Log，然后 Broadcast Log，等收到 Follower 的回复确定 Log 被 Committed 之后，开始 Apply。而对应的 Follower，在收到 Log 之后，先 Append Log，然后给 Leader reply 消息，等下次 Leader 发过来的消息知道 Log 被 Committed 了，就可以 Apply 了。</p>
+
+<p>当用户在 Leader 网点进行交易的时候，原来我们的流程是 Propose，Append，然后在 Broadcast，但现在，我们在 Propose 之后，就可以直接 Broadcast，同时 Append，这两个步骤在 Leader 网点是可以同时处理的。即使 Broadcast 先进行，Leader 网点这边仍然需要在 Append 之后确保这笔记录被大多数网点确认了。</p>
+
+<p>Leader 网点必须知道大部分网点都收到了交易记录，才能认为是 Committed，然后继续处理。如果 Follower 网点这边也直接先回复消息，在 Append，就可能出现一种情况，在 Append 之前，Follower 网点出现了问题，导致 Append 不成功。那么极端情况下面就会出现，Leader 认为记录都已经被大部分节点接受了，但实际并没有，我们就很可能面临数据丢失的问题了。所以 leader 可以先发起 Broadcast 然后再进行 Append，但是 follower 必须先 Append 然后再 Broadcast。</p></li>
+</ul>
+
 <h4 id="toc_16">4.4.1 MVCC</h4>
 
 <hr>
@@ -1348,6 +1372,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 <li>28 <a href="http://dockone.io/article/801">谈谈CoreOS的etcd</a></li>
 <li>29 <a href="http://calvin1978.blogcn.com/articles/routing.html">服务化之－负载均衡与路由的设计</a></li>
 <li>30 <a href="http://www.sohu.com/a/204912012_505827">Raft 之 Membership Change</a></li>
+<li>31 <a href="http://www.sohu.com/a/202861958_736949">深入浅出 Raft - Optimization</a></li>
 </ul>
 
 <h2 id="toc_42">扒粪者-于雨氏</h2>
@@ -1363,7 +1388,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>2018/04/10，于雨氏，与海淀补充 <code>v2 &amp; v3</code> 小节。</p>
 
-<p>2018/06/22，于雨氏，与海淀给 <code>Raft</code> 小节补充 learner 相关内容。 </p>
+<p>2018/06/22，于雨氏，与海淀给 <code>Raft</code> 小节补充 <code>learner 以及 Pipeline &amp; Batch &amp; leader Append</code>  相关内容。 </p>
 </blockquote>
 
 
