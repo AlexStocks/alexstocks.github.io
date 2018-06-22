@@ -431,7 +431,7 @@ exit 1</code></pre></div>
 
 <p>如果按照正确的操作步骤，先剔除 unhealthy node，此时 n 为 2 而 quorum 为 2，添加新节点后 n 为 3，及时添加新节点失败也不会导致集群不可用。</p>
 
-<p>etcd通过设置配置文件中<a href="https://github.com/coreos/etcd/blob/15bfc1b36162805e8a90ae747d955667870c2f95/etcd.conf.yml.sample#L70">strict-reconfig-check选项</a>为true，禁止任何危及quorum的行为。如果用户把这个选项设为false，则添加一个新节点就轻松多了，结果就是集群数据不一致，大部分情况下会收到&quot;disk geometry corruption”之类的error log。</p>
+<p>etcd通过设置配置文件中 <a href="https://github.com/coreos/etcd/blob/15bfc1b36162805e8a90ae747d955667870c2f95/etcd.conf.yml.sample#L70">strict-reconfig-check选项</a> 为true，禁止任何危及quorum的行为。如果用户把这个选项设为false，则添加一个新节点就轻松多了，结果就是集群数据不一致，大部分情况下会收到 &quot;disk geometry corruption” 之类的error log。</p>
 
 <p>etcd内部的raft实现见<a href="https://github.com/coreos/etcd/blob/master/raft/design.md">参考文档24</a>。leader会存储所有follower对自身log数据的progress（复制进度），leader根据每个follower的progress向其发送”replication message”，replication message是msgApp外加上log数据。progress有两个比较重要的属性：match和next。match是leader知道的follower对自身数据的最新复制进度【或者说就是follower最新的log entry set index】，如果leader对follower的复制进度一无所知则这个值为0，next则是将要发送给follower的下一个log entry set的序号range end。</p>
 
@@ -470,7 +470,7 @@ receives msgAppResp(rej=true)
 
 <p>当follower处于replicate状态时，leader会一次尽量多地把批量“replication message”发送给follower，并把“next”取值为当前log entry set的最大值，以让follower尽可能快地跟上leader的最新数据。</p>
 
-<p>当follower的log entry set与leader的log entry set相差甚巨的时候，leader会把follower的状态置为snapshot，然后以msgSnap请求方式向其发送snapshot数据，发送完后leader就等待follower直到超时或者成功或者失败或者连接中断。当follower接收完毕snapshot数据后，就会回到probe状态。</p>
+<p>当follower的log entry set与leader的log entry set相差甚巨的时候，leader会把follower的状态置为snapshot，然后以msgSnap请求方式向其发送snapshot数据，发送完后leader就等待follower直到超时或者成功或者失败或者连接中断。当follower接收完毕snapshot数据后，就会回到probe状态。<a href="http://www.sohu.com/a/204912012_505827">参考文档30</a> 中提到接收 snapshot 的 follower 此时的角色是 learner 。</p>
 
 <p>当follower处于snapshot状态时候，leader不再发送“replication message”给follower。</p>
 
@@ -481,6 +481,15 @@ receives msgAppResp(rej=true)
 <ul>
 <li>1. 限制message的max size。这个值是可以通过相关参数进行限定的，限定后可以降低探测follower接收速度的成本；</li>
 <li>2. 当follower处于replicate状态时候，限定每次批量发送消息的数目。leader在网络层之上有一个发送buffer，通过类似于tcp的发送窗口的算法动态调整buffer的大小，以防止leader由于发包过快导致follower大量地丢包，提高发送成功率。</li>
+</ul>
+
+<p>在 Raft 进行 “membership change” 的时候，一定要注意以下几个 key point ：</p>
+
+<ul>
+<li>1. 原来的 Quorum 中有处于崩溃状态的 follower，一定要先把这个节点从 Quorum 中删除；</li>
+<li>2. learner 没有 vote 权限，不算入 Quorum；</li>
+<li>3. 一次向一个 Quorom 中最多添加一个 node；</li>
+<li>4. Raft 中正确向其中添加一个节点的算法是支持 Joint Consensus 算法， “虽然我知道理论上面 100% 的事情怎么做，但为了更加简单，我可以稍微放低一点要求。  TiKV 和 etcd 现在都是没有用 joint consensus 的，但我们现在在开始添加 Learner，后面如果真的遇到了其他的 corner case，会不会考虑一下，没准也不是不可能的事情。”<a href="http://www.sohu.com/a/204912012_505827">参考文档30</a>。</li>
 </ul>
 
 <h4 id="toc_16">4.4.1 MVCC</h4>
@@ -1338,6 +1347,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 <li>27 <a href="https://yuerblog.cc/2017/12/10/principle-about-etcd-v3">etcd v3原理分析</a></li>
 <li>28 <a href="http://dockone.io/article/801">谈谈CoreOS的etcd</a></li>
 <li>29 <a href="http://calvin1978.blogcn.com/articles/routing.html">服务化之－负载均衡与路由的设计</a></li>
+<li>30 <a href="http://www.sohu.com/a/204912012_505827">Raft 之 Membership Change</a></li>
 </ul>
 
 <h2 id="toc_42">扒粪者-于雨氏</h2>
@@ -1352,6 +1362,8 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 <p>2018/04/09，于雨氏，与海淀补充 <code>MVCC</code> 小节。</p>
 
 <p>2018/04/10，于雨氏，与海淀补充 <code>v2 &amp; v3</code> 小节。</p>
+
+<p>2018/06/22，于雨氏，与海淀给 <code>Raft</code> 小节补充 learner 相关内容。 </p>
 </blockquote>
 
 
