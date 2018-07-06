@@ -18,7 +18,7 @@ RocksDB 的优点此处无需多说，它的一个 feature 是其有很多优化
 
 ![](../pic/log_structured_merge_tree.png)
 
-LSM 大致结构如上图所示。LSM树而且通过批量存储技术规避磁盘随机写入问题。 LSM树的设计思想非常朴素, 它的原理是把一颗大树拆分成N棵小树， 它首先写入到内存中（内存没有寻道速度的问题，随机写的性能得到大幅提升），在内存中构建一颗有序小树，随着小树越来越大，内存的小树会flush到磁盘上。磁盘中的树定期可以做merge操作，合并成一棵大树，以优化读性能。RocksDB 的 LSM 体现在多 level 文件格式上，最热最新的数据尽在 L0 层，数据在内存中，最冷最老的数据尽在 LN层，数据在磁盘或者固态盘上。
+LSM 大致结构如上图所示。LSM树而且通过批量存储技术规避磁盘随机写入问题。 LSM树的设计思想非常朴素, 它的原理是把一颗大树拆分成N棵小树， 它首先写入到内存中（内存没有寻道速度的问题，随机写的性能得到大幅提升），在内存中构建一颗有序小树，随着小树越来越大，内存的小树会flush到磁盘上。磁盘中的树定期可以做merge操作，合并成一棵大树，以优化读性能【读数据的过程可能需要从内存memtable到磁盘sstfile读取多次，称之为读放大】。RocksDB 的 LSM 体现在多 level 文件格式上，最热最新的数据尽在 L0 层，数据在内存中，最冷最老的数据尽在 LN层，数据在磁盘或者固态盘上。
 
 ![](../pic/rocksdb_arch.png)
 
@@ -48,7 +48,7 @@ WriteBatch 还有一个好处是保持加快吞吐率。
 
 这个选项会启用 Posix 系统的 `fsync(...) or fdatasync(...) or msync(..., MS_SYNC)` 等函数。
 
-异步写的吞吐率是同步写的一千多倍。异步写的缺点是机器或者操作系统崩溃时可能丢掉最近一批写请求发出的由操作系统缓存的数据，但是 RocksDB 自身崩溃并不会导致数据丢失。而机器或者操作系统崩溃的概率比较低，所以大部分情况下可以认为异步写是安全的。
+<font color=red> 异步写的吞吐率是同步写的一千多倍。异步写的缺点是机器或者操作系统崩溃时可能丢掉最近一批写请求发出的由操作系统缓存的数据，但是 RocksDB 自身崩溃并不会导致数据丢失。而机器或者操作系统崩溃的概率比较低，所以大部分情况下可以认为异步写是安全的。</font>
 
 RocksDB 由于有 WAL 机制保证，所以即使崩溃，其重启后会进行写重放保证数据一致性。如果不在乎数据安全性，可以把 `write_option.disableWAL` 设置为 true，加快写吞吐率。
 
@@ -60,7 +60,7 @@ RocksDB 调用 Posix API `fdatasync()` 对数据进行异步写。如果想用 `
 RocksDB 能够保存某个版本的所有数据（可称之为一个 Snapshot）以方便读取操作，创建并读取 Snapshot 方法如下：
 
 
-	​rocksdb::ReadOptions options;   
+	rocksdb::ReadOptions options;   
 	options.snapshot = db->GetSnapshot();   
 	… apply some updates to db ….  
 	rocksdb::Iterator* iter = db->NewIterator(options);   
@@ -272,7 +272,7 @@ RocksDB 的每个 SST 文件都包含一个 Bloom filter。Bloom Filter 只对�
 
 当 SST 文件加载进内存的时候，filter 也会被加载进内存，当关闭 SST 文件的时候，filter 也会被关闭。如果想让 filter 常驻内存，可以用如下代码设置：
 
-​	BlockBasedTableOptions::cache_index_and_filter_blocks=true
+​	BlockBasedTableOptions::cache\_index\_and\_filter\_blocks=true
 
 一般情况下不要修改 filter 相关参数。如果需要修改，相关设置上面已经说过，此处不再多谈，详细内容见参考文档 7。
 
@@ -370,7 +370,7 @@ RocksDB 的读流程分为逻辑读(logical read)和物理读(physical read)。�
 #### 2.6 memory pool
 ---
 
-RocksDB 写入时间长了以后，可能会不定时出现较大的写毛刺，可能有两个地方导致 RocksDB 会出现较大的写延时：获取 mutex 时可能出现几十毫秒延迟 和 将数据写入 memtable 时候可能出现几百毫秒延时。
+不管 RocksDB 有多少 column family，一个 DB 只有一个 WriteController，一旦 DB 中一个 column family 发生堵塞，那么就会阻塞其他 column family 的写。RocksDB 写入时间长了以后，可能会不定时出现较大的写毛刺，可能有两个地方导致 RocksDB 会出现较大的写延时：获取 mutex 时可能出现几十毫秒延迟 和 将数据写入 memtable 时候可能出现几百毫秒延时。
 
 获取 mutex 出现的延迟是因为 flush/compact 线程与读写线程竞争导致的，可以通过调整线程数量降低毛刺时间。
 
@@ -407,7 +407,7 @@ Cache 有两种：LRUCache 和 BlockCache。Block 分为很多 Shard，以减小
 
 默认情况下RocksDB用的是 LRUCache，大小是 8MB， 每个 shard 单独维护自己的 LRU list 和独立的 hash table，以及自己的 Mutex。
 
- RocksDB还提高了一个 ClockCache，每个 shard 有自己的一个 circular list，有一个 clock handle 会轮询这个 circular list，寻找过时的 kv，如果 entry 中的 kv 已经被访问过则可以继续存留，相对于 LRU 好处是无 mutex lock，circular list 本质是 tbb::concurrent_hash_map，从 benchmark 来看，二者命中率相似，但吞吐率 Clock 比 LRU 稍高。
+ RocksDB还提供了一个 ClockCache，每个 shard 有自己的一个 circular list，有一个 clock handle 会轮询这个 circular list，寻找过时的 kv，如果 entry 中的 kv 已经被访问过则可以继续存留，相对于 LRU 好处是无 mutex lock，circular list 本质是 tbb::concurrent_hash_map，从 benchmark 来看，二者命中率相似，但吞吐率 Clock 比 LRU 稍高。
 
 Block Cache初始化之时相关参数：
 
@@ -481,7 +481,7 @@ CF 的 write buffer 的最大 size。最差情况下 RocksDB 使用的内存量�
 	
 	BlockBasedTableFactory(table_options));
 
-本进程的所有的 DB 所有的 CF 所有的 table_options 都必须使用同一个 cahce 对象，或者让所有的 DB 所有的 CF 使用同一个 table_options。
+本进程的所有的 DB 所有的 CF 所有的 table\_options 都必须使用同一个 cahce 对象，或者让所有的 DB 所有的 CF 使用同一个 table\_options。
 
 * `cf_options.compression, cf_options.bottonmost_compression`
 
@@ -992,4 +992,5 @@ sst 文件只有在 compact 时才会被删除，所以禁止删除就相当于�
 ## 扒粪者-于雨氏 ##
 
 > 2018/03/28，于雨氏，初作此文于海淀。
+> 
 > 2018/07/06，添加 5.4 节 `Merge Operator`。
