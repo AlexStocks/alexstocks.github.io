@@ -461,7 +461,7 @@ RocksDB 会在磁盘上依据 LSM 算法对多级磁盘文件进行 compaction�
 #### 4.2 [Set Up Option](https://github.com/facebook/rocksdb/wiki/Set-Up-Options)
 ---
 
-RocksDB 有很多选项以为专门的目的进行以后，但是大部分情况下不需要进行特殊的优化。这里只列出一个常用的优化选项。
+RocksDB 有很多选项以专门的目的进行设置，但是大部分情况下不需要进行特殊的优化。这里只列出一个常用的优化选项。
 
 * `cf_options.write_buffer_size`
 
@@ -515,7 +515,7 @@ Put 函数的参数 WriteOptions 里有一个选项可以指明是否需要把�
 
 RocksDB 内部有一个 batch-commit 机制，通过一次 commit 批量地在一次 sync 操作里把所有 transactions log 写入磁盘。
 
-### 5 Flush & Compaction
+### 5 Flush & Compaction & Merge
 ---
 
 RocksDB 的内存数据在 memtable 中存着，有 active-memtable 和 immutable-memtable 两种。active-memtable 是当前被写操作使用的 memtable，当 active-memtable 空间写满之后( Options.write_buffer_size 控制其内存空间大小 )这个空间会被标记为 readonly 成为 immutable-memtable。memtable 实质上是一种有序 SkipList，所以写过程其实是写 WAL 日志和数据插入 SkipList 的过程。
@@ -619,7 +619,142 @@ RocksDB 还支持一种 FIFO 的 compaction。FIFO 顾名思义就是先进先�
 
 整个 compaction 是 LSM-tree 数据结构的核心，也是rocksDB的核心，详细内容请阅读参考文档8 和 参考文档9。
 
+#### 5.4 Merge
+---
+
+RocksDB 自身之提供了 Put/Delete/Get 等接口，若需要在现有值上进行修改操作【或者成为增量更新】，可以借助这三个操作进行以下操作实现之：
+
++ 调用 Get 接口然后获取其值；
++ 在内存中修改这个值；
++ 调用 Put 接口写回 RocksDB。
+
+如果希望整个过程是原子操作，就需要借助 RocksDB 的 Merge 接口了。[参考文档14](https://www.jianshu.com/p/e13338a3f161) 给出了 RocksDB Merge 接口定义如下： 
+
++ 1 封装了read - modify - write语义，对外统一提供简单的抽象接口；
++ 2 减少用户重复触发Get操作引入的性能损耗；
++ 3 通过决定合并操作的时间和方式，来优化后端性能，并达到并不改变底层更新的语义；
++ 4 渐进式的更新，来均摊更新带来带来的性能损耗，以得到渐进式的性能提升。
+
+RocksDB 提供了一个 MergeOperator 作为 Merge 接口，其中一个子类 AssociativeMergeOperator 可在大部分场景下使用，其定义如下：
+
+    // The simpler, associative merge operator.
+    class AssociativeMergeOperator : public MergeOperator {
+     public:
+      virtual ~AssociativeMergeOperator() {}
+    
+      // Gives the client a way to express the read -> modify -> write semantics
+      // key:           (IN) 操作对象 KV 的 key
+      // existing_value:(IN) 操作对象 KV 的 value，如果为 null 则意味着 KV 不存在
+      // value:         (IN) 新值，用于替换/更新 @existing_value 
+      // new_value:    (OUT) 客户端负责把 merge 后的新值填入这个变量
+      // logger:        (IN) Client could use this to log errors during merge.
+      //
+      // Return true on success.
+      // All values passed in will be client-specific values. So if this method
+      // returns false, it is because client specified bad data or there was
+      // internal corruption. The client should assume that this will be treated
+      // as an error by the library.
+      virtual bool Merge(const Slice& key,
+                         const Slice* existing_value,
+                         const Slice& value,
+                         std::string* new_value,
+                         Logger* logger) const = 0;
+    
+     private:
+      // Default implementations of the MergeOperator functions
+      virtual bool FullMergeV2(const MergeOperationInput& merge_in,
+                               MergeOperationOutput* merge_out) const override;
+    
+      virtual bool PartialMerge(const Slice& key,
+                                const Slice& left_operand,
+                                const Slice& right_operand,
+                                std::string* new_value,
+                                Logger* logger) const override;
+    };
+
+
+
+RocksDB AssociativeMergeOperator 被称为关联性 Merge Operator，[参考文档14](https://www.jianshu.com/p/e13338a3f161)  给出了关联性的定义：
+
++ 调用Put接口写入RocksDB的数据的格式和Merge接口是相同的
++ 用用户自定义的merge操作，可以将多个merge操作数合并成一个
+
+` **MergeOperator还可以用于非关联型数据类型的更新。** 例如，在RocksDB中保存json字符串，即Put接口写入data的格式为合法的json字符串。而Merge接口只希望更新json中的某个字段。所以代码可能是这样`：
+
+    // Put/store the json string into to the database
+    db_->Put(put_option_, "json_obj_key",
+             "{ employees: [ {first_name: john, last_name: doe}, {first_name: adam, last_name: smith}] }");
+    // Use a pre-defined "merge operator" to incrementally update the value of the json string
+    db_->Merge(merge_option_, "json_obj_key", "employees[1].first_name = lucy");
+    db_->Merge(merge_option_, "json_obj_key", "employees[0].last_name = dow");
+ `AssociativeMergeOperator无法处理这种场景，因为它假设Put和Merge的数据格式是关联的。我们需要区分Put和Merge的数据格式，也无法把多个merge操作数合并成一个。这时候就需要Generic MergeOperator。`
+
+    // The Merge Operator
+    //
+    // Essentially, a MergeOperator specifies the SEMANTICS of a merge, which only
+    // client knows. It could be numeric addition, list append, string
+    // concatenation, edit data structure, ... , anything.
+    // The library, on the other hand, is concerned with the exercise of this
+    // interface, at the right time (during get, iteration, compaction...)
+    class MergeOperator {
+     public:
+      virtual ~MergeOperator() {}
+    
+      // Gives the client a way to express the read -> modify -> write semantics
+      // key:         (IN) The key that's associated with this merge operation.
+      // existing:    (IN) null indicates that the key does not exist before this op
+      // operand_list:(IN) the sequence of merge operations to apply, front() first.
+      // new_value:  (OUT) Client is responsible for filling the merge result here
+      // logger:      (IN) Client could use this to log errors during merge.
+      //
+      // Return true on success. Return false failure / error / corruption.
+      // 用于对已有的值做Put或Delete操作
+      virtual bool FullMerge(const Slice& key,
+                             const Slice* existing_value,
+                             const std::deque<std::string>& operand_list,
+                             std::string* new_value,
+                             Logger* logger) const = 0;
+    
+      // This function performs merge(left_op, right_op)
+      // when both the operands are themselves merge operation types.
+      // Save the result in *new_value and return true. If it is impossible
+      // or infeasible to combine the two operations, return false instead.
+      // 如果连续多次对一个 key 进行操作，则可以可以借助 PartialMerge 将两个操作数合并.
+      virtual bool PartialMerge(const Slice& key,
+                                const Slice& left_operand,
+                                const Slice& right_operand,
+                                std::string* new_value,
+                                Logger* logger) const = 0;
+    
+      // The name of the MergeOperator. Used to check for MergeOperator
+      // mismatches (i.e., a DB created with one MergeOperator is
+      // accessed using a different MergeOperator)
+      virtual const char* Name() const = 0;
+    };
+
++ **工作原理**
+
+当调用DB::Put()和DB:Merge()接口时, 并不需要立刻计算最后的结果. RocksDB将计算的动作延后触发, 例如在下一次用户调用Get, 或者RocksDB决定做Compaction时. 所以, 当merge的动作真正开始做的时候, 可能积压(stack)了多个操作数需要处理. 这种情况就需要MergeOperator::FullMerge来对existing_value和一个操作数序列进行计算, 得到最终的值.
+
++ **PartialMerge 和 Stacking**
+
+有时候, 在调用FullMerge之前, 可以先对某些merge操作数进行合并处理, 而不是将它们保存起来, 这就是PartialMerge的作用: 将两个操作数合并为一个, 减少FullMerge的工作量.
+当遇到两个merge操作数时, RocksDB总是先会尝试调用用户的PartialMerge方法来做合并, 如果PartialMerge返回false才会保存操作数. 当遇到Put/Delete操作, 就会调用FullMerge将已存在的值和操作数序列传入, 计算出最终的值.
+
++ **使用Associative Merge的场景**
+
+merge 操作数的格式和Put相同
+多个顺序的merge操作数可以合并成一个
+
++ **使用Generic Merge的场景**
+
+merge 操作数的格式和Put不同
+当多个merge操作数可以合并时，PartialMerge()方法返回true
+
+*!!!: 本节文字摘抄自 [参考文档14](https://www.jianshu.com/p/e13338a3f161)  。
+
 ### 6 磁盘文件
+
 ---
 
 参考文档 12 列举了 RocksDB 磁盘上数据文件的种类：
@@ -852,7 +987,9 @@ sst 文件只有在 compact 时才会被删除，所以禁止删除就相当于�
 - 11 [RocksDB-FAQ](https://github.com/facebook/rocksdb/wiki/RocksDB-FAQ)
 - 12 [设计思路和主要知识点](https://note.youdao.com/share/?id=60b7e3aa14a01c85d05ee8a7e4d16c46&type=note#/)
 - 13 [RocksDB · MANIFEST文件介绍](https://yq.aliyun.com/articles/594728?spm=a2c4e.11157919.spm-cont-list.17.302c27aeDR3OyC)
+- 14 [RocksDB. Merge Operator](https://www.jianshu.com/p/e13338a3f161)
 
 ## 扒粪者-于雨氏 ##
 
 > 2018/03/28，于雨氏，初作此文于海淀。
+> 2018/07/06，添加 5.4 节 `Merge Operator`。
