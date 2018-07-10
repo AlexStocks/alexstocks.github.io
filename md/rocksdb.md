@@ -249,19 +249,21 @@ RocksDB 会创建一个 thread pool 与 Env 对象进行关联，线程池中线
 
 相关代码示例如下：
 
-    #include “rocksdb/env.h”
-    #include “rocksdb/db.h”
-    
-    auto env = rocksdb::Env::Default();
-    env->SetBackgroundThreads(2, rocksdb::Env::LOW);
-    env->SetBackgroundThreads(1, rocksdb::Env::HIGH);
-    rocksdb::DB* db;
-    rocksdb::Options options;
-    options.env = env;
-    options.max_background_compactions = 2;
-    options.max_background_flushes = 1;
-    rocksdb::Status status = rocksdb::DB::Open(options, “/tmp/testdb”, &db);
-    assert(status.ok());
+```c++
+#include “rocksdb/env.h”
+#include “rocksdb/db.h”
+
+auto env = rocksdb::Env::Default();
+env->SetBackgroundThreads(2, rocksdb::Env::LOW);
+env->SetBackgroundThreads(1, rocksdb::Env::HIGH);
+rocksdb::DB* db;
+rocksdb::Options options;
+options.env = env;
+options.max_background_compactions = 2;
+options.max_background_flushes = 1;
+rocksdb::Status status = rocksdb::DB::Open(options, “/tmp/testdb”, &db);
+assert(status.ok());
+```
 
 还有其他一些参数，可详细阅读参考文档4。
 	
@@ -270,9 +272,11 @@ RocksDB 会创建一个 thread pool 与 Env 对象进行关联，线程池中线
 
 RocksDB 的每个 SST 文件都包含一个 Bloom filter。Bloom Filter 只对特定的一组 keys 有效，所以只有新的 SST 文件创建的时候才会生成这个 filter。当两个 SST 文件合并的时候，会生成新的 filter 数据。
 
-当 SST 文件加载进内存的时候，filter 也会被加载进内存，当关闭 SST 文件的时候，filter 也会被关闭。如果想让 filter 常驻内存，可以用如下代码设置：
+当 SST 文件加载进内存的时候，filter 也会被加载进内存，当关闭 SST 文件的时候，filter 也会被关闭。如果想让 filter 常驻内存，可以用如下代码设置：    
 
-​	BlockBasedTableOptions::cache\_index\_and\_filter\_blocks=true
+```c++
+BlockBasedTableOptions::cache_index_and_filter_blocks=true
+```
 
 一般情况下不要修改 filter 相关参数。如果需要修改，相关设置上面已经说过，此处不再多谈，详细内容见参考文档 7。
 
@@ -321,10 +325,10 @@ filter是 bloom filter 的实现，如果假阳率是 1%，每个key占用 10 bi
 
 可以通过如下代码获取 index & filter 内存量大小：
 	
-​	std::string out;
-
-​	db->GetProperty(“rocksdb.estimate-table-readers-mem”, &out);
-	
+```c++
+	std::string out;
+	db->GetProperty(“rocksdb.estimate-table-readers-mem”, &out);
+```
 
 #### 2.3 Indexes and bloom filters
 ---
@@ -332,10 +336,12 @@ filter是 bloom filter 的实现，如果假阳率是 1%，每个key占用 10 bi
 block cache、index & filter 都是读 buffer，而 memtable 则是写 buffer，所有 kv 首先都会被写进 memtable，其 size 是 `write_buffer_size`。 memtable 占用的空间越大，则写放大效应越小，因为数据在内存被整理好，磁盘上就越少的内容会被 compaction。如果 memtable 磁盘空间增大，则 L1 size 也就随之增大，L1 空间大小受 `max_bytes_for_level_base` option 控制。
 
 可以通过如下代码获取 memtable 内存量大小：
-	
-​	std::string out;
+
+```c++
+	std::string out;
 	db->GetProperty(“rocksdb.cur-size-all-mem-tables”, &out);
-	
+```
+
 #### 2.4 Blocks pinned by iterators
 ---
 
@@ -343,8 +349,10 @@ block cache、index & filter 都是读 buffer，而 memtable 则是写 buffer，
 
 可以通过如下代码获取 Pin Blocks 内存量大小：
 	
-​    table_options.block_cache->GetPinnedUsage();
-    
+```c++
+	table_options.block_cache->GetPinnedUsage();
+```
+
 #### 2.5 读流程
 ---
 
@@ -391,19 +399,25 @@ Block Cache 是 RocksDB 的数据的缓存，这个缓存可以在多个 RocksDB
 
 Cache 有两种：LRUCache 和 BlockCache。Block 分为很多 Shard，以减小竞争，所以 shard 大小均匀一致相等，默认 Cache 最多有 64 个 shards，每个 shard 的 最小 size 为 512k，总大小是 8M，类别是 LRU。
 
+```c++
 	std::shared_ptr<Cache> cache = NewLRUCache(capacity);  
 	BlockedBasedTableOptions table_options;  
 	table_options.block_cache = cache;  
 	Options options;  
 	options.table_factory.reset(new BlockedBasedTableFactory(table_options));  
+```
 
 这个 Cache 是不压缩数据的，用户可以设置压缩数据 BlockCache，方法如下：
 
-	table_options.block_cache_compressed = cache;
+```c++
+table_options.block_cache_compressed = cache;
+```
 
 如果 Cache 为 nullptr，则RocksDB会创建一个，如果想禁用 Cache，可以设置如下 Option：
 
-	table_options.no_block_cache = true;
+```c++
+table_options.no_block_cache = true;
+```
 
 默认情况下RocksDB用的是 LRUCache，大小是 8MB， 每个 shard 单独维护自己的 LRU list 和独立的 hash table，以及自己的 Mutex。
 
