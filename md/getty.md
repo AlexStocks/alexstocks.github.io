@@ -69,7 +69,7 @@ connected UDP 的两次发送过程如下：
 #### 1.3 Go UDP
 ---
 
-Go 语言 UDP 编程也对 connected UDP 和 unconnected UDP 进行了明确区分，参考文档2 详细地列明了如何使用相关 API，根据这篇文档个人也写一个 [程序](https://github.com/alexstocks/go-practice/blob/master/udp-tcp-http/udp/connected-udp.go) 测试这些 API，测试结论如下：   
+Go 语言 UDP 编程也对 connected UDP 和 unconnected UDP 进行了明确区分，参考文档2 详细地列明了如何使用相关 API，根据这篇文档个人也写一个 [程序](https://github.com/alexstocks/go-practice/blob/master/udp-tcp-http/udp/connected-udp.go) 测试这些 API，测试结论如下：
 
 	* 1 connected UDP 读写方法是 Read 和 Write；
 	* 2 unconnected UDP 读写方法是 ReadFromUDP 和 WriteToUDP（以及 ReadFrom 和 WriteTo)；
@@ -115,7 +115,7 @@ Go 语言 UDP 编程也对 connected UDP 和 unconnected UDP 进行了明确区�
 * 2 [gorrilla/websocket:ConnConn.readErr](https://github.com/gorilla/websocket/blob/master/conn.go#L941)记录这个error；
 * 3 [gorilla/websocket/conn.go:Conn::NextReader](https://github.com/gorilla/websocket/blob/master/conn.go#L959)开始读取之前则[检查这个错误](https://github.com/gorilla/websocket/blob/master/conn.go#L938)，如以前发生过错误则不再读取 websocket frame，并对[gorrilla/websocket:ConnConn.readErr累积计数](https://github.com/gorilla/websocket/blob/master/conn.go#L957)；
 * 4 [当gorrilla/websocket:ConnConn.readErr数值大于 1000](https://github.com/gorilla/websocket/blob/master/conn.go#L958) 的时候，程序就会panic 退出。
-	
+
 但是为何发生读超时错误则毫无头绪。
 
 2018/03/07 日测试 TCP compression 的时候发现启动 compression 后，程序 CPU 也会很快跑到 100%，进一步追查后发现函数 [getty/conn.go:gettyTCPConn::read](https://github.com/alexstocks/getty/blob/master/conn.go#L228) 里面的 log 有很多 “io timeout” error。当时查到这个错误很疑惑，因为我已经在 TCP read 之前进行了超时设置【SetReadDeadline】，难道启动 compression 会导致超时设置失效使得socket成了非阻塞的socket？
@@ -135,12 +135,16 @@ TCP compression 的问题解决后，个人猜想 Websocket compression 程序�
 
 本节与 getty 无关，仅仅是在使用 unix socket 过程中遇到一些 keypoint 的记录。
 
-#### 3.1 reliable 
+#### 3.1 reliable
 
 unix socket datagram 形式的包也是可靠的，每次写必然要求对应一次读，否则写方会被阻塞。如果是 stream 形式，则 buffer 没有满之前，写者是不会被阻塞的。datagram 的优势在于 api 简单。
 
 ```
-Unix sockets are reliable. If the reader doesn't read, the writer blocks. If the socket is a datagram socket, each write is paired with a read. If the socket is a stream socket, the kernel may buffer some bytes between the writer and the reader, but when the buffer is full, the writer will block. Data is never discarded, except for buffered data if the reader closes the connection before reading the buffer. 
+Unix sockets are reliable. If the reader doesn't read, the writer blocks. If the socket is a datagram socket, each write is paired with a read. If the socket is a stream socket, the kernel may buffer some bytes between the writer and the reader, but when the buffer is full, the writer will block. Data is never discarded, except for buffered data if the reader closes the connection before reading the buffer.  ---[Do UNIX Domain Sockets Overflow?](https://unix.stackexchange.com/questions/283323/do-unix-domain-sockets-overflow)
+```
+```
+On most UNIX implementations, UNIX domain datagram sockets are always reliable and don't reorder
+       datagrams.   ---[man 7 socketpair](http://www.man7.org/linux/man-pages/man7/unix.7.html)
 ```
 
 
@@ -148,18 +152,15 @@ Unix sockets are reliable. If the reader doesn't read, the writer blocks. If the
 
 #### 3.2  buffer size
 
-datagram 形式的 unix socket 的单个 datagram 包最大长度是 130688 B。   
-
- // https://stackoverflow.com/questions/4729315/what-is-the-max-size-of-af-unix-datagram-message-that-can-be-sent-in-linux
+datagram 形式的 unix socket 的单个 datagram 包最大长度是 130688 B。
 
 ```
-it looks like AF_UNIX sockets don't support scatter/gather on current Linux. it is a fixed size 130688 B
+AF_UNIX SOCK_DATAGRAM/SOCK_SEQPACKET datagrams need contiguous memory. Contiguous physical memory is hard to find, and the allocation fails. The max size actually is 130688 B.  --- [the max size of AF_UNIX datagram message that can be sent in linux](https://stackoverflow.com/questions/4729315/what-is-the-max-size-of-af-unix-datagram-message-that-can-be-sent-in-linux)
+```
+```
+It looks like AF_UNIX sockets don't support scatter/gather on current Linux. it is a fixed size 130688 B.                      --- [Difference between UNIX domain STREAM and DATAGRAM sockets?](https://stackoverflow.com/questions/13953912/difference-between-unix-domain-stream-and-datagram-sockets)
 
 ```
-
-​                                                                 --- [Difference between UNIX domain STREAM and DATAGRAM sockets?](https://stackoverflow.com/questions/13953912/difference-between-unix-domain-stream-and-datagram-sockets)
-
- 
 
 ## 总结
 ---

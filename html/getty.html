@@ -186,7 +186,7 @@ kbd {
 
 <hr>
 
-<p>Go 语言 UDP 编程也对 connected UDP 和 unconnected UDP 进行了明确区分，参考文档2 详细地列明了如何使用相关 API，根据这篇文档个人也写一个 <a href="https://github.com/alexstocks/go-practice/blob/master/udp-tcp-http/udp/connected-udp.go">程序</a> 测试这些 API，测试结论如下：   </p>
+<p>Go 语言 UDP 编程也对 connected UDP 和 unconnected UDP 进行了明确区分，参考文档2 详细地列明了如何使用相关 API，根据这篇文档个人也写一个 <a href="https://github.com/alexstocks/go-practice/blob/master/udp-tcp-http/udp/connected-udp.go">程序</a> 测试这些 API，测试结论如下：</p>
 
 <div><pre><code class="language-none">* 1 connected UDP 读写方法是 Read 和 Write；
 * 2 unconnected UDP 读写方法是 ReadFromUDP 和 WriteToUDP（以及 ReadFrom 和 WriteTo)；
@@ -261,20 +261,21 @@ echo_clie 31729 alex    9u  IPv4 0xa5d288135c97569d      0t0  UDP localhost:6341
 
 <p>unix socket datagram 形式的包也是可靠的，每次写必然要求对应一次读，否则写方会被阻塞。如果是 stream 形式，则 buffer 没有满之前，写者是不会被阻塞的。datagram 的优势在于 api 简单。</p>
 
-<div><pre><code class="language-none">Unix sockets are reliable. If the reader doesn&#39;t read, the writer blocks. If the socket is a datagram socket, each write is paired with a read. If the socket is a stream socket, the kernel may buffer some bytes between the writer and the reader, but when the buffer is full, the writer will block. Data is never discarded, except for buffered data if the reader closes the connection before reading the buffer. </code></pre></div>
+<div><pre><code class="language-none">Unix sockets are reliable. If the reader doesn&#39;t read, the writer blocks. If the socket is a datagram socket, each write is paired with a read. If the socket is a stream socket, the kernel may buffer some bytes between the writer and the reader, but when the buffer is full, the writer will block. Data is never discarded, except for buffered data if the reader closes the connection before reading the buffer.  ---[Do UNIX Domain Sockets Overflow?](https://unix.stackexchange.com/questions/283323/do-unix-domain-sockets-overflow)</code></pre></div>
+
+<div><pre><code class="language-none">On most UNIX implementations, UNIX domain datagram sockets are always reliable and don&#39;t reorder
+       datagrams.   ---[man 7 socketpair](http://www.man7.org/linux/man-pages/man7/unix.7.html)</code></pre></div>
 
 <p>​                                                                                                                          ---<a href="https://unix.stackexchange.com/questions/283323/do-unix-domain-sockets-overflow">Do UNIX Domain Sockets Overflow?</a></p>
 
 <h4 id="toc_12">3.2  buffer size</h4>
 
-<p>datagram 形式的 unix socket 的单个 datagram 包最大长度是 130688 B。   </p>
+<p>datagram 形式的 unix socket 的单个 datagram 包最大长度是 130688 B。</p>
 
-<p>// https://stackoverflow.com/questions/4729315/what-is-the-max-size-of-af-unix-datagram-message-that-can-be-sent-in-linux</p>
+<div><pre><code class="language-none">AF_UNIX SOCK_DATAGRAM/SOCK_SEQPACKET datagrams need contiguous memory. Contiguous physical memory is hard to find, and the allocation fails. The max size actually is 130688 B.  --- [the max size of AF_UNIX datagram message that can be sent in linux](https://stackoverflow.com/questions/4729315/what-is-the-max-size-of-af-unix-datagram-message-that-can-be-sent-in-linux)</code></pre></div>
 
-<div><pre><code class="language-none">it looks like AF_UNIX sockets don&#39;t support scatter/gather on current Linux. it is a fixed size 130688 B
+<div><pre><code class="language-none">It looks like AF_UNIX sockets don&#39;t support scatter/gather on current Linux. it is a fixed size 130688 B.                      --- [Difference between UNIX domain STREAM and DATAGRAM sockets?](https://stackoverflow.com/questions/13953912/difference-between-unix-domain-stream-and-datagram-sockets)
 </code></pre></div>
-
-<p>​                                                                 --- <a href="https://stackoverflow.com/questions/13953912/difference-between-unix-domain-stream-and-datagram-sockets">Difference between UNIX domain STREAM and DATAGRAM sockets?</a></p>
 
 <h2 id="toc_13">总结</h2>
 
@@ -302,6 +303,7 @@ echo_clie 31729 alex    9u  IPv4 0xa5d288135c97569d      0t0  UDP localhost:6341
 
 <p>于雨氏，2018/07/19，于海淀 “硅谷”， 补充 “unix socket” 一节。</p>
 </blockquote>
+
 
 
 <!-- baidu statistic start -->
@@ -333,7 +335,6 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
-
 
 
 
