@@ -63,7 +63,7 @@
 	    14857.84 Msgs/s
 
    此次测试sink目的地kafka和sink均在本机上，通过iostat -x 1命令可以看到，参数wkB/s高峰可达155136.00，低峰则仅为42.00，均衡值为78613.20。
-  
+
 
 ## 3 flume中并行运行多个流 ##
 ---
@@ -85,7 +85,22 @@
 
 [参考文档3](http://www.freebuf.com/sectool/168471.html)提到 flume 的实时监控文件原理：	`Source 线程在检测有新的更新，会一直读取推向 Channel，当所有的更新处理完毕，线程会退出。启动一个 Timer 线程。定期3秒重新启动，如此反复。在这个过程中，没有充分利用 Java 的多线程通知机制，每次启动都有一些调度，排队，检测及任务初始化过程。影响性能。`。
 
-## 5 flume注意事项 ##
+## 5 多行日志合并 ##
+---
+
+[参考文档4](https://zhuanlan.zhihu.com/p/31638065) 中提到这么一个问题：`Taildir Source 不支持将多行合并为一个 event，只能一行一行读取文件`，他们自己给出了自己的解决方案[tinawenqiao/flume](https://github.com/tinawenqiao/flume)，其中相关配置如下：
+
+```java
+agent.sources.s3.multiline = true
+agent.sources.s3.multilinePattern = ^AGENT_IP:`
+agent.sources.s3.multilinePatternBelong = previous`
+agent.sources.s3.multilineMatched = false`
+agent.sources.s3.multilineEventTimeoutSeconds = 120`
+agent.sources.s3.multilineMaxBytes = 3145728`
+agent.sources.s3.multilineMaxLines = 3000`
+```
+
+## 6 flume注意事项 ##
 ---
 
 - 1 sink只能有一个，否则日志会被平均输出到各个sink中，而不是每个sink都能得到相同的数据拷贝
@@ -98,6 +113,7 @@
 - 1 [Apache Flume 性能调优 (第一部分)](http://myg0u.com/hadoop/2016/05/04/flume-performance-tuning-part-1.html)
 - 2 [flume1.7 新特性介绍 taildir 介绍](https://my.oschina.net/u/1780960/blog/793783)
 - 3 [借鉴开源框架自研日志收集系统](http://www.freebuf.com/sectool/168471.html)
+- 4 [中国民生银行大数据团队的Flume实践](https://zhuanlan.zhihu.com/p/31638065)
 
 ## 扒粪者-于雨氏 ##
 
@@ -108,4 +124,6 @@
 > 2017/05/10，于雨氏，于丰台住所添加 “实时监控多个log文件” 章节。
 > 
 > 2018/04/21，于雨氏，于海淀添加 “source的Timer机制” 和 “flume 事务机制” 章节。
+> 
+> 2018/08/02，于雨氏，于海淀添加 “多行日志合并” 章节。
 
