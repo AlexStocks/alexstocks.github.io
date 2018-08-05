@@ -230,7 +230,25 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>Proxy转发某个Room消息时候，只发送给处于Running状态的Broker。为Broker Partition内所有replica依据Registry给其分配的replicaID进行递增排序，组成一个Broker Partition Replica Array，规则中BrokerPartitionReplicaNum为Array的size，而BrokerReplicaID为replica在Array中的下标。</p>
 
-<h4 id="toc_5">2.3 Broker</h4>
+<h4 id="toc_5">2.2.1 Pipeline</h4>
+
+<hr>
+
+<p>收到的 Room Message 需要做三部工作：收取 Room Message、消息协议转换和向 Broker 发送消息。</p>
+
+<p>初始系统这三步流程如果均放在一个线程内处理，proxy 的整体吞吐率只有 50k/s，最后的实现方式是按照消息处理的三个步骤以 pipleline 方式做如下流程处理：</p>
+
+<ul>
+<li>1 启动 N 【N == Broker Parition 数目】个消息接收线程和 N 个多写一读形式的无锁队列【称之为消息协议转换队列】，每个消息接收线程分别启动一个 epoll 循环流程收取消息，然后把消息以相应的 hash 算法【队列ID =  UIN % N】写入对应的消息协议转换队列；</li>
+<li>2 启动 N 个线程 和 N * 3 个一写一读的无锁队列【称之为消息发送队列】，每个消息协议专家线程从消息协议转换队列接收到消息并进行协议转换后，根据相应的 hash 算法【队列ID =  UIN % 3N】写入消息发送队列；</li>
+<li>3 启动 3N 个消息发送线程，分别创建与之对应的 Broker 的连接，每个线程单独从对应的某个消息发送队列接收消息然后发送出去。</li>
+</ul>
+
+<p>经过以上流水线改造后，Proxy 的整体吞吐率可达 200k/s。</p>
+
+<p>关于 pipeline 自身的解释，本文不做详述，可以参考<a href="https://mmbiz.qpic.cn/mmbiz_jpg/5WXEuGYZIibCvMNgZ6zymiceCibpUOtGhtUfzVO88C3zxWQeP6Ziau77ib0vTmiczZ667PAXczYticxCWpbsBqNLB6T3Q/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1">此图</a>。</p>
+
+<h4 id="toc_6">2.3 Broker</h4>
 
 <hr>
 
@@ -259,7 +277,7 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>Broker的扩容过程犹如细胞分裂，形成中的两个细胞有着完全相同的数据，分裂完成后【Registry路径/pubsub/broker/partition_num的值翻倍】则需要清洗垃圾信息。这种方法称为翻倍法。</p>
 
-<h4 id="toc_6">2.4 Router</h4>
+<h4 id="toc_7">2.4 Router</h4>
 
 <hr>
 
@@ -283,7 +301,7 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 <li><p>10 收取Gateway转发来的Gateway Message，按照一定规则【BrokerPartitionID % BrokerPartitionNum = RoomID % BrokerPartitionNum】转发给<font color=blue><strong>某个Broker Partition下所有Broker Replica</strong></font>，保证Partition下所有replica拥有同样的路由 RoomGatewayList 数据，再把Message内数据存入本地缓存，当检测到数据不重复的时候把数据异步写入Database； </p></li>
 </ul>
 
-<h4 id="toc_7">2.5 Gateway</h4>
+<h4 id="toc_8">2.5 Gateway</h4>
 
 <hr>
 
@@ -300,13 +318,13 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>Gateway本地有一个基于共享内存的LRU Cache，存储最近一段时间发送的消息的MessageID。</p>
 
-<h3 id="toc_8">3 系统稳定性</h3>
+<h3 id="toc_9">3 系统稳定性</h3>
 
 <hr>
 
 <p>系统具有了可扩展性仅仅是系统可用的初步，整个系统要保证最低粒度的SLA（0.99），就必须在两个维度对系统的可靠性就行感知：消息延迟和系统内部组件的高可用。</p>
 
-<h4 id="toc_9">3.1 消息延迟</h4>
+<h4 id="toc_10">3.1 消息延迟</h4>
 
 <hr>
 
@@ -316,7 +334,7 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>通过所有消息的平均延迟可以评估系统的整体性能。同时，因为系统消息路由的哈希方式已知，当固定时间内伪Gateway没有收到消息时，就把消息当做发送失败，当某条链路失败一定次数后就可以产生告警了。</p>
 
-<h4 id="toc_10">3.2 高可用</h4>
+<h4 id="toc_11">3.2 高可用</h4>
 
 <hr>
 
@@ -328,7 +346,7 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>同时依靠心跳包的延迟还可以判断broker的处理能力，基于此延迟值可在同一Partition内多broker端进行负载均衡。</p>
 
-<h3 id="toc_11">4 消息可靠性</h3>
+<h3 id="toc_12">4 消息可靠性</h3>
 
 <hr>
 
@@ -349,7 +367,7 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>正常的消息在pubsub系统中传输时，Proxy会根据消息的Room ID传递给固定的Broker，以保证消息的有序性。</p>
 
-<h3 id="toc_12">5 Router</h3>
+<h3 id="toc_13">5 Router</h3>
 
 <hr>
 
@@ -367,7 +385,7 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>独立Router架构下，下面分别详述Gateway、Router和Broker三个相关模块的详细流程。</p>
 
-<h4 id="toc_13">5.1 Gateway</h4>
+<h4 id="toc_14">5.1 Gateway</h4>
 
 <hr>
 
@@ -408,7 +426,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 </blockquote>
 </blockquote>
 
-<h5 id="toc_14">5.1.1 Gateway Message数据一致性</h5>
+<h5 id="toc_15">5.1.1 Gateway Message数据一致性</h5>
 
 <hr>
 
@@ -423,7 +441,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 <div><pre><code class="language-none">// 63 -------------------------- 48 47 -------------- 38 37 ------------ 0
 // |  16bit Gateway Instance ID    |   10bit Reserve    |    38bit自增码  |</code></pre></div>
 
-<h4 id="toc_15">5.2 Router</h4>
+<h4 id="toc_16">5.2 Router</h4>
 
 <hr>
 
@@ -456,7 +474,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>另外启动一个工具，当水平扩展后新启动的Partition内所有Replica的状态都是Running的时候，修改Registry路径/pubsub/router/partition_num的值为所有Partition的数目。</p>
 
-<h4 id="toc_16">5.3 Broker</h4>
+<h4 id="toc_17">5.3 Broker</h4>
 
 <hr>
 
@@ -494,7 +512,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>传递实时消息pubsub系统的Broker向特定Gateway转发Room Message的时候，会带上Room内在此Gateway上登录的用户列表，Gateway根据这个用户列表下发消息时如果检测到此用户已经下线，在放弃向此用户转发消息的同时，还应该把此用户已经下线的消息发送给Router，当Router把这个消息转发给Broker后，Broker把此用户从用户列表中剔除。<font color=red><strong>通过这种负反馈机制保证用户状态更新的及时性</strong></font>。  </p>
 
-<h3 id="toc_17">6 离线消息</h3>
+<h3 id="toc_18">6 离线消息</h3>
 
 <hr>
 
@@ -522,13 +540,13 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>下面先细述Pi和Xiu的接口，然后再详述发送和推送流程。</p>
 
-<h4 id="toc_18">6.1 Xiu</h4>
+<h4 id="toc_19">6.1 Xiu</h4>
 
 <hr>
 
 <p>Xiu模块功能名称是Message Storage，用户缓存和固化消息，并给消息分配ID。Xiu 集群采用分 Partition 分 Replica 机制，Partition 初始数目须是2的倍数，集群扩容时采用翻倍法。</p>
 
-<h5 id="toc_19">6.1.1 存储消息</h5>
+<h5 id="toc_20">6.1.1 存储消息</h5>
 
 <hr>
 
@@ -548,7 +566,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 <li><p>7 把MsgID异步通知给消息固化线程，消息固化线程根据MsgID从Hashtable中读取消息并根据CRC32 hash值判断消息内容是否完整，完整则把消息存入本地RocksDB中；</p></li>
 </ul>
 
-<h5 id="toc_20">6.1.2 读取消息</h5>
+<h5 id="toc_21">6.1.2 读取消息</h5>
 
 <hr>
 
@@ -561,7 +579,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 <li>4 读取完毕则把所有获取的消息返回给客户端。</li>
 </ul>
 
-<h5 id="toc_21">6.1.3 主从数据同步</h5>
+<h5 id="toc_22">6.1.3 主从数据同步</h5>
 
 <hr>
 
@@ -584,7 +602,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>当leader重启或者follower转换为leader的时候，需要把 Partition<em>Msg</em>ID 进行一个大数值增值（譬如增加1000）以防止可能的消息ID乱序情况。</p>
 
-<h5 id="toc_22">6.1.4 集群扩容</h5>
+<h5 id="toc_23">6.1.4 集群扩容</h5>
 
 <hr>
 
@@ -598,13 +616,13 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>之所以 Xiu 不用像 Broker 和 Router 那样启动的时候向老的 Partition 同步数据，是因为每个 Xiu 分配的 MsgID 中已经带有 Xiu 的 PartitionID 信息，即使集群扩容这个 ID 也不变，根据这个ID也可以定位到其所在的Partition，而不是借助 hash 方法。</p>
 
-<h4 id="toc_23">6.2 Pi</h4>
+<h4 id="toc_24">6.2 Pi</h4>
 
 <hr>
 
 <p>Pi 模块功能名称是 Message ID Storage，存储每个用户的 MsgID List。Xiu 集群也采用分 Partition 分 Replica 机制，Partition 初始数目须是2的倍数，集群扩容时采用翻倍法。</p>
 
-<h5 id="toc_24">6.2.1 存储消息ID</h5>
+<h5 id="toc_25">6.2.1 存储消息ID</h5>
 
 <hr>
 
@@ -617,7 +635,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>Pi有专门的日志记录线程，给每个日志操作分配一个 LogID，每个 Log 文件记录一定量的写操作，当文件 size 超过配置的上限后删除之。        </p>
 
-<h5 id="toc_25">6.2.2 读取消息ID列表</h5>
+<h5 id="toc_26">6.2.2 读取消息ID列表</h5>
 
 <hr>
 
@@ -629,7 +647,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 <li>3 如果 ExpireFlag 有效，则删除MsgIDList内所有在 [0, StartMsgID] 范围内的MsgID，把请求内容写入本地log。</li>
 </ul>
 
-<h5 id="toc_26">6.2.3 主从数据同步</h5>
+<h5 id="toc_27">6.2.3 主从数据同步</h5>
 
 <hr>
 
@@ -649,7 +667,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>follower 会关注Registry路径  /pubsub/pi/partition_id 下所有节点的变化情况，如果 leader 挂掉则及时转换身份并接受客户端请求。如果follower 与 leader 之间的心跳超时，则follower删掉 leader 的 Registry 路径节点，及时进行身份转换处理客户端请求。</p>
 
-<h5 id="toc_27">6.2.4 集群扩容</h5>
+<h5 id="toc_28">6.2.4 集群扩容</h5>
 
 <hr>
 
@@ -672,7 +690,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>另外启动一个工具，当水平扩展后所有新启动的 Partition 内所有 Replica 的状态都是 Running 的时候，修改Registry路径/pubsub/xiu/partition_num的值为扩容后 Partition 的数目。</p>
 
-<h4 id="toc_28">6.3 数据发送流程</h4>
+<h4 id="toc_29">6.3 数据发送流程</h4>
 
 <hr>
 
@@ -686,7 +704,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 <li>5 如果 Proxy 收到 Xiu 返回的响应带有 MsgID，则给 Broker 发送一个 Notify，告知其某 UIN 的最新 MsgID。</li>
 </ul>
 
-<h4 id="toc_29">6.4 数据转发流程</h4>
+<h4 id="toc_30">6.4 数据转发流程</h4>
 
 <hr>
 
@@ -756,7 +774,7 @@ Ack 消息处理流程如下：</p>
 
 <p>总体上，PiXiu 转发消息流程采用拉取（pull）转发模型，以上面五种消息为驱动进行状态转换，并作出相应的动作行为。  </p>
 
-<h3 id="toc_30">7 总结</h3>
+<h3 id="toc_31">7 总结</h3>
 
 <hr>
 
@@ -773,13 +791,13 @@ Ack 消息处理流程如下：</p>
 
 <p>此记。</p>
 
-<h2 id="toc_31">参考文档</h2>
+<h2 id="toc_32">参考文档</h2>
 
 <ul>
 <li>1 <a href="http://blog.csdn.net/bluishglc/article/details/7970268">一种支持自由规划无须数据迁移和修改路由代码的Replicaing扩容方案</a></li>
 </ul>
 
-<h2 id="toc_32">扒粪者-于雨氏</h2>
+<h2 id="toc_33">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>于雨氏，2017/12/31，初作此文于丰台金箱堂。</p>
@@ -793,7 +811,10 @@ Ack 消息处理流程如下：</p>
 <p>于雨氏，2018/03/05，于海淀添加“PiXiu”一节。</p>
 
 <p>于雨氏，2018/03/14，于海淀添加负反馈机制、根据Gateway Message ID保证Gateway Message数据一致性 和 Gateway用户退出消息产生机制 等三个细节。</p>
+
+<p>于雨氏，2018/83054，于海淀添加 “pipeline” 一节。</p>
 </blockquote>
+
 
 <!-- baidu statistic start -->
 <script>
@@ -824,6 +845,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 </body>
 
