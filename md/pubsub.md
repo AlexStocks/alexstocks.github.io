@@ -111,13 +111,13 @@ Proxy转发某个Room消息时候，只发送给处于Running状态的Broker。�
 
 收到的 Room Message 需要做三部工作：收取 Room Message、消息协议转换和向 Broker 发送消息。
 
-初始系统这三步流程如果均放在一个线程内处理，proxy 的整体吞吐率只有 50k/s，最后的实现方式是按照消息处理的三个步骤以 pipleline 方式做如下流程处理：
+初始系统这三步流程如果均放在一个线程内处理，proxy 的整体吞吐率只有 50 000 Msg/s，最后的实现方式是按照消息处理的三个步骤以 pipeline 方式做如下流程处理：
 
 + 1 启动 N 【N == Broker Parition 数目】个消息接收线程和 N 个多写一读形式的无锁队列【称之为消息协议转换队列】，每个消息接收线程分别启动一个 epoll 循环流程收取消息，然后把消息以相应的 hash 算法【队列ID =  UIN % N】写入对应的消息协议转换队列；
 + 2 启动 N 个线程 和 N * 3 个一写一读的无锁队列【称之为消息发送队列】，每个消息协议专家线程从消息协议转换队列接收到消息并进行协议转换后，根据相应的 hash 算法【队列ID =  UIN % 3N】写入消息发送队列；
 + 3 启动 3N 个消息发送线程，分别创建与之对应的 Broker 的连接，每个线程单独从对应的某个消息发送队列接收消息然后发送出去。
 
-经过以上流水线改造后，Proxy 的整体吞吐率可达 200k/s。
+经过以上流水线改造后，Proxy 的整体吞吐率可达 200 000 Msg/s。
 
 关于 pipeline 自身的解释，本文不做详述，可以参考[此图](https://mmbiz.qpic.cn/mmbiz_jpg/5WXEuGYZIibCvMNgZ6zymiceCibpUOtGhtUfzVO88C3zxWQeP6Ziau77ib0vTmiczZ667PAXczYticxCWpbsBqNLB6T3Q/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1)。
 
