@@ -1,4 +1,4 @@
-## 分布式系统的数据存储 ##
+## 分布式系统数据存储 ##
 ---
 *written by Alex Stocks on 2016/05/10*
 
@@ -219,26 +219,26 @@ end:
 分布式系统（特别是读多写少的系统）缓存数据的使用者的数据的读取流程一般如下图【源自[参考文档1](https://mp.weixin.qq.com/s/WtRcGWauZJ7gkwz23QIm4A)】所示：
 
 [![](../pic/cache_client_server.webp)](https://mp.weixin.qq.com/s/WtRcGWauZJ7gkwz23QIm4A)
-                        ***3.1 一级cache*** 
+                        ***3.1 一级cache***
 
 整个流程比较简单，正如[参考文档1](https://mp.weixin.qq.com/s/WtRcGWauZJ7gkwz23QIm4A)文中所述: `client请求到server，server先在缓存里找，找到就返回，没有就数据库找，如果找到就回设到缓存然后返回客户端。这里是一个比较简单的模型：一级cache`。
 
 一级 cache 模型简单，但是缺点就是每次数据的获取都必须走网络请求，其 QPS 便必然有一个上限，诚如[参考文档1](https://mp.weixin.qq.com/s/WtRcGWauZJ7gkwz23QIm4A)文中所述: `一级cache有可能不够用，比如说压测的时候我们发现，一个redis在我们的业务情况下支撑到接口的QPS就是一万左右`，文档也给出了一个很好的解决方案---多级缓存，如下图【源自[参考文档1](https://mp.weixin.qq.com/s/WtRcGWauZJ7gkwz23QIm4A)】所示：
 
 [![](../pic/cache_multiple.webp)](https://mp.weixin.qq.com/s/WtRcGWauZJ7gkwz23QIm4A)
-                        ***3.2 多级cache*** 
+                        ***3.2 多级cache***
 
 其工作流程，诚如[参考文档1](https://mp.weixin.qq.com/s/WtRcGWauZJ7gkwz23QIm4A)文中有详细描述: `越靠近上面的缓存就越小，一级就是服务local cache，如果命中就返回数据，如果没有就去L1查，如果查到就更新local cache,并且返回数据。如果L1级也没有就去L2级查，如果查到数据就更新L1 cache/local cache，并返回数据`。
 
 文档1 也给出了如下图所示的多级缓存的整体读写流程：
 
 [![](../pic/cache_multiple_update.webp)](https://mp.weixin.qq.com/s/WtRcGWauZJ7gkwz23QIm4A)
-                        ***3.3 多级cache的读写流程*** 
-                        
+                        ***3.3 多级cache的读写流程***
+
 其实多级缓存有多种实现方案，参考上图并结合上文所述，其中一种实现方案如下：
 
 + 1 DB 使用 Mysql 或者 MongoDB；
-+ 2 二级缓存使用分布式 Redis 集群【譬如 Codis 或者 本人的 [Exocet](https://github.com/penguin-diors/exocet)】； 
++ 2 二级缓存使用分布式 Redis 集群【譬如 Codis 或者 本人的 [Exocet](https://github.com/penguin-diors/exocet)】；
 + 3 一级缓存则是在相关机器上启动一个 Agent；
 + 4 本地缓存[上图中的 APP(cache)] 则是使用者进程空间内的缓存。
 
@@ -279,8 +279,8 @@ end:
 ## 扒粪者-于雨氏 ##
 
 > 2016/05/10，于雨氏，写于魔都张衡路。
-> 
+>
 > 2016/10/20，于雨氏，于魔都张衡路更新文章一些误笔。
-> 
+>
 > 2018/08/05，于雨氏，于帝都西二旗添加 “多级缓存系统” 一节。
 
