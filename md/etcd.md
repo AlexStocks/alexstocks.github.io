@@ -103,15 +103,15 @@ etcd单节点启动命令如下：
 一定要注意，”initial-cluster”里面一定要有新成员的peer地址。参考文档7#Strict Reconfiguration Check Mode#提到：etcdctl执行完毕”etcdctl member add“后，etcd cluster就把这个还未存在的node算进quorum了，**第二步必须准确完成**。
 
 	如果仅仅通过命令”etcdctl member add“添加一个节点，但是不添加实际节点，然后就通过”etcdctl member remove“删除，则会得到如下结果：
-
+	
 	$ ETCDCTL_API=3 etcdctl --endpoints=http://192.168.11.100:2379,http://192.168.11.100:12379,http://192.168.11.100:22379 member add    etcd_node3 --peer-urls=http://192.168.11.100:32380
 	Member e9cfc62cee5f30d1 added to cluster 63e8b43e8a1af9bc
-
+	
 	ETCD_NAME=“etcd_node3”
 	ETCD_INITIAL_CLUSTER=“etcd_node2=http://192.168.11.100:22380,etcd_node1=http://192.168.11.100:12380,etcd_node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380”
 	ETCD_INITIAL_ADVERTISE_PEER_URLS=“http://192.168.11.100:32380”
 	ETCD_INITIAL_CLUSTER_STATE=“existing”
-
+	
 	$ etcdctl member remove 63e8b43e8a1af9bc
 	Couldn't find a member in the cluster with an ID of 63e8b43e8a1af9bc.
 
@@ -286,7 +286,7 @@ v3 与 v2 的主要对比，[参考文档28](http://dockone.io/article/801) 罗�
 	+ 当超过1/2节点成功保存了日志，则leader会将tx最终提交（也是一条日志）。
 	+ 一旦leader提交tx，则会在下一次心跳时将提交记录发送给其他节点，其他节点也会提交。
 	+ leader宕机后，剩余节点协商找到拥有最大已提交tx ID（必须是被超过半数的节点已提交的）的节点作为新leader。
-
+	
 	最重要的是：
 	+ Raft中，后提交的事务ID>先提交的事务ID，每个事务ID都是唯一的。
 	+ 无论客户端是在哪个etcd节点提交，整个集群对外表现出数据视图最终都是一样的。
@@ -409,7 +409,7 @@ revision 定义如下：
 	type revision struct {
 		// main is the main revision of a set of changes that happen atomically.
 		main int64
-
+	
 		// sub is the the sub revision of a change in a set of changes that happen
 		// atomically. Each change has different increasing sub revision in that
 		// set.
@@ -423,7 +423,7 @@ revision 定义如下：
 		modified    revision // modified字段记录这个key的最后一次修改对应的revision信息
 		generations []generation // 多版本（历史修改）
 	}
-
+	
 	// generation contains multiple revisions of a key.
 	type generation struct {
 		ver     int64
@@ -548,7 +548,7 @@ Heartbeat Interval一般取值集群中两个peer之间RTT最大值，取值范�
 
 	# Command line arguments:
 	$ etcd —heartbeat-interval=100 —election-timeout=500
-
+	
 	# Environment variables:
 	$ ETCD_HEARTBEAT_INTERVAL=100 ETCD_ELECTION_TIMEOUT=500 etcd
 
@@ -556,7 +556,7 @@ etcd底层的存储引擎boltdb采用了MVCC机制，会把一个key的所有upd
 
 	# Command line arguments:
 	$ etcd —snapshot-count=5000
-
+	
 	# Environment variables:
 	$ ETCD_SNAPSHOT_COUNT=5000 etcd
 
@@ -734,7 +734,7 @@ Range请求定义如下：
 		MOD = 3;
 		VALUE = 4;
 	  }
-
+	
 	  bytes key = 1;
 	  bytes range_end = 2;
 	  int64 limit = 3;
@@ -773,7 +773,7 @@ Range请求的响应定义如下：
 	  int64 revision = 3;
 	  uint64 raft_term = 4;
 	}
-
+	
 	message RangeResponse {
 	  ResponseHeader header = 1;
 	  repeated mvccpb.KeyValue kvs = 2;
@@ -794,14 +794,14 @@ Range请求的响应定义如下：
 [参考文档26](https://yuerblog.cc/2017/12/12/etcd-v3-sdk-usage) 提到 Get 操作时的 etcd Range 机制：
 
 	我们通过一个特别的Get选项，获取/test目录下的所有孩子：
-
+	
 	rangeResp, err := kv.Get(context.TODO(), "/test/", clientv3.WithPrefix())
 	WithPrefix()是指查找以/test/为前缀的所有key，因此可以模拟出查找子目录的效果。
-
+	
 	我们知道etcd是一个有序的k-v存储，因此/test/为前缀的key总是顺序排列在一起。
-
+	
 	withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一个key range，[“/test/”, “/test0”)，为什么呢？因为比/大的字符是’0’，所以以/test0作为范围的末尾，就可以扫描到所有的/test/打头的key了。
-
+	
 	在之前，我Put了一个/testxxx干扰项，因为不符合/test/前缀（注意末尾的/），所以就不会被这次Get获取到。但是，如果我查询的前缀是/test，那么/testxxx也会被扫描到，这就是etcd k-v模型导致的，编程时一定要特别注意。
 
 ### 7.4 Put ###
@@ -996,7 +996,7 @@ Watch对event作出了如下三项保证:
 	  bytes range_end = 2;
 	  int64 start_revision = 3;
 	  bool progress_notify = 4;
-
+	
 	  enum FilterType {
 	    NOPUT = 0;
 	    NODELETE = 1;
@@ -1006,7 +1006,7 @@ Watch对event作出了如下三项保证:
 	}
 
 - Key, Range\_End - 被观察的key的range[key, range\_end)，如果 range\_end 没有设置，则只有参数key被观察，如果 range\_end 等同于'\0'， 则大于等于参数 key 的所有 key 都将被观察；
-- Start_Revision - 观察的其实的revision，如果不设置则是最新的revision；
+- Start_Revision - 观察的起始的revision，如果不设置则是最新的revision；
 - Progress_Notify - 如果设置为true，则etcd将定期发送不带任何事件的空WatchResponse。当一个watch连接断开后，客户端进行重连时候会指定开始的revision，server会根据当前系统的负载决定把发送watch event的频率；
 - Filters - event过滤器，server给watch客户端发送通知的时候，会先把相关事件过滤掉；
 - Prev_kv - 如果设置为true，则被创建的观察者在事件发生前获取上一次的kv，如果上一次的kv在etcd compaction的时候被删除掉，则不会返回任何值。
@@ -1019,7 +1019,7 @@ watch的响应内容定义如下：
 	  bool created = 3;
 	  bool canceled = 4;
 	  int64 compact_revision = 5;
-
+	
 	  repeated mvccpb.Event events = 11;
 	}
 
