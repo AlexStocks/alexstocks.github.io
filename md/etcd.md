@@ -103,15 +103,15 @@ etcd单节点启动命令如下：
 一定要注意，”initial-cluster”里面一定要有新成员的peer地址。参考文档7#Strict Reconfiguration Check Mode#提到：etcdctl执行完毕”etcdctl member add“后，etcd cluster就把这个还未存在的node算进quorum了，**第二步必须准确完成**。
 
 	如果仅仅通过命令”etcdctl member add“添加一个节点，但是不添加实际节点，然后就通过”etcdctl member remove“删除，则会得到如下结果：
-	
+
 	$ ETCDCTL_API=3 etcdctl --endpoints=http://192.168.11.100:2379,http://192.168.11.100:12379,http://192.168.11.100:22379 member add    etcd_node3 --peer-urls=http://192.168.11.100:32380
 	Member e9cfc62cee5f30d1 added to cluster 63e8b43e8a1af9bc
-	
+
 	ETCD_NAME=“etcd_node3”
 	ETCD_INITIAL_CLUSTER=“etcd_node2=http://192.168.11.100:22380,etcd_node1=http://192.168.11.100:12380,etcd_node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380”
 	ETCD_INITIAL_ADVERTISE_PEER_URLS=“http://192.168.11.100:32380”
 	ETCD_INITIAL_CLUSTER_STATE=“existing”
-	
+
 	$ etcdctl member remove 63e8b43e8a1af9bc
 	Couldn't find a member in the cluster with an ID of 63e8b43e8a1af9bc.
 
@@ -286,7 +286,7 @@ v3 与 v2 的主要对比，[参考文档28](http://dockone.io/article/801) 罗�
 	+ 当超过1/2节点成功保存了日志，则leader会将tx最终提交（也是一条日志）。
 	+ 一旦leader提交tx，则会在下一次心跳时将提交记录发送给其他节点，其他节点也会提交。
 	+ leader宕机后，剩余节点协商找到拥有最大已提交tx ID（必须是被超过半数的节点已提交的）的节点作为新leader。
-	
+
 	最重要的是：
 	+ Raft中，后提交的事务ID>先提交的事务ID，每个事务ID都是唯一的。
 	+ 无论客户端是在哪个etcd节点提交，整个集群对外表现出数据视图最终都是一样的。
@@ -358,25 +358,25 @@ leader向follower发送数据的方式类同于kafka每个topic partition级别l
 [参考文档31](http://www.sohu.com/a/202861958_736949) 给出了Etcd Raft 正常工作流程优化的几个关键点如下：
 
 + Pipeline
-	
-	Raft 工作流程分为Propose，Append，Broadcast 和 Apply。客户发起交易，我们叫做 Propose，然后我们记录交易，这个叫做 Append，再就是通知其他网点，这个叫做 Broadcast，等我们最后知道大部分网点都确认了这笔交易记录，我们就执行交易，也就是 Apply。 
-	
+
+	Raft 工作流程分为Propose，Append，Broadcast 和 Apply。客户发起交易，我们叫做 Propose，然后我们记录交易，这个叫做 Append，再就是通知其他网点，这个叫做 Broadcast，等我们最后知道大部分网点都确认了这笔交易记录，我们就执行交易，也就是 Apply。
+
 	对于客户 A，操作是 Propose，Append，Broadcast， Apply，对于客户 B 也是一样的流程，之前我们必须等 A 完成了，才能处理 B。当 A 在 Append 之后，我们就可以开始处理 B 的 Propose 了。我们只要保证的是所有银行网点的交易记录是一致有序的，那么我们就一定能保证最终所有银行的数据是一致的，所以只要 A Append 了，B 开始 Propose，B Append 的时候交易记录一定在 A 的后面，这样记录就一定是有序的了。
-	
+
 	当 A 执行完 Append 之后，我们就能立刻开始处理 B，而当 B Append 之后，我们也可以立刻处理下一个用户 C，这样整个流程就是一个像水流那样源源不断流动的了，这不就是一个 Pipeline 了。
-	
+
 + Batch
 
 	如果很多客户同时要发起交易，那么我们可以将这些交易记录，用一个消息发送过去到其他网点，这样我们就不需要一个一个的发送消息了，这就是 Batch。
-	
+
 	各个网点之间距离还是有点远的，消息传递的时间开销还是有点大的。使用 Batch 可以减少消息的发送次数，自然就能提高效率了。
-	
-+ Leader 并发写盘	
+
++ Leader 并发写盘
 
 	整个 Raft 的流程：Leader 收到 Propose，Append Log，然后 Broadcast Log，等收到 Follower 的回复确定 Log 被 Committed 之后，开始 Apply。而对应的 Follower，在收到 Log 之后，先 Append Log，然后给 Leader reply 消息，等下次 Leader 发过来的消息知道 Log 被 Committed 了，就可以 Apply 了。
-	
+
 	当用户在 Leader 网点进行交易的时候，原来我们的流程是 Propose，Append，然后在 Broadcast，但现在，我们在 Propose 之后，就可以直接 Broadcast，同时 Append，这两个步骤在 Leader 网点是可以同时处理的。即使 Broadcast 先进行，Leader 网点这边仍然需要在 Append 之后确保这笔记录被大多数网点确认了。
-	
+
 	Leader 网点必须知道大部分网点都收到了交易记录，才能认为是 Committed，然后继续处理。如果 Follower 网点这边也直接先回复消息，在 Append，就可能出现一种情况，在 Append 之前，Follower 网点出现了问题，导致 Append 不成功。那么极端情况下面就会出现，Leader 认为记录都已经被大部分节点接受了，但实际并没有，我们就很可能面临数据丢失的问题了。所以 leader 可以先发起 Broadcast 然后再进行 Append，但是 follower 必须先 Append 然后再 Broadcast。
 
 #### 4.4.1 MVCC ####
@@ -389,7 +389,7 @@ etcd 在内存中维护了一个 btree（B树）纯内存索引，就和 MySQL �
 	type treeIndex struct {
 		sync.RWMutex
 		tree *btree.BTree
-	} 
+	}
 
 当存储大量的K-V时，因为用户的value一般比较大，全部放在内存btree里内存耗费过大，所以etcd将用户value保存在磁盘中。
 
@@ -409,12 +409,12 @@ revision 定义如下：
 	type revision struct {
 		// main is the main revision of a set of changes that happen atomically.
 		main int64
-	
+
 		// sub is the the sub revision of a change in a set of changes that happen
 		// atomically. Each change has different increasing sub revision in that
 		// set.
 		sub int64
-	} 
+	}
 
 内存索引中，每个原始key会关联一个key_index结构，里面维护了多版本信息：
 
@@ -422,14 +422,14 @@ revision 定义如下：
 		key         []byte   // key字段就是用户的原始key
 		modified    revision // modified字段记录这个key的最后一次修改对应的revision信息
 		generations []generation // 多版本（历史修改）
-	} 
-	
+	}
+
 	// generation contains multiple revisions of a key.
 	type generation struct {
 		ver     int64
 		created revision // 记录了引起本次key创建的revision信息
 		revs    []revision
-	} 
+	}
 
 key 初始创建的时候，generations[0]会被创建，当用户继续更新这个key的时候，generations[0].revs数组会不断追加记录本次的revision信息（main，sub）。在bbolt中，每个revision将作为key，即序列化（revision.main+revision.sub）作为key。因此，我们先通过内存btree在keyIndex.generations[0].revs中找到最后一条revision，即可去bbolt中读取对应的数据。如果我们持续更新同一个key，那么generations[0].revs就会一直变大，这怎么办呢？在多版本中的，一般采用compact来压缩历史版本，即当历史版本到达一定数量时，会删除一些历史版本，只保存最近的一些版本。
 
@@ -441,8 +441,8 @@ put操作的 bboltdb 的key由 main+sub 构成：
 	ibytes := newRevBytes()
 	idxRev := revision{main: rev, sub: int64(len(tw.changes))}
 	revToBytes(idxRev, ibytes)
-	
-delete 操作的 key 由 main+sub+”t” 构成：	
+
+delete 操作的 key 由 main+sub+”t” 构成：
 
 <!--- golang --->
 	idxRev := revision{main: tw.beginRev + 1, sub: int64(len(tw.changes))}
@@ -456,11 +456,11 @@ delete 操作的 key 由 main+sub+”t” 构成：
 		}
 		return append(b, markTombstone)
 	}
-	
+
 	// isTombstone checks whether the revision bytes is a tombstone.
 	func isTombstone(b []byte) bool {
 		return len(b) == markedRevBytesLen && b[markBytePosition] == markTombstone
-	} 
+	}
 
 bbolt中存储的value是这样一个json序列化后的结构，包括key创建时的revision（对应某一代generation的created），本次更新版本，sub ID（Version ver），Lease ID（租约ID）：
 
@@ -472,7 +472,7 @@ bbolt中存储的value是这样一个json序列化后的结构，包括key创建
 	    ModRevision:    rev,
 	    Version:        ver,  // version is the version of the key. A deletion resets the version to zero and any modification of the key increases its version.
 	    Lease:          int64(leaseID),
-	} 
+	}
 
 总结来说：内存btree维护的是用户key => keyIndex的映射，keyIndex内维护多版本的revision信息，而revision可以映射到磁盘bbolt中的用户value。
 
@@ -548,7 +548,7 @@ Heartbeat Interval一般取值集群中两个peer之间RTT最大值，取值范�
 
 	# Command line arguments:
 	$ etcd —heartbeat-interval=100 —election-timeout=500
-	
+
 	# Environment variables:
 	$ ETCD_HEARTBEAT_INTERVAL=100 ETCD_ELECTION_TIMEOUT=500 etcd
 
@@ -556,7 +556,7 @@ etcd底层的存储引擎boltdb采用了MVCC机制，会把一个key的所有upd
 
 	# Command line arguments:
 	$ etcd —snapshot-count=5000
-	
+
 	# Environment variables:
 	$ ETCD_SNAPSHOT_COUNT=5000 etcd
 
@@ -734,7 +734,7 @@ Range请求定义如下：
 		MOD = 3;
 		VALUE = 4;
 	  }
-	
+
 	  bytes key = 1;
 	  bytes range_end = 2;
 	  int64 limit = 3;
@@ -773,7 +773,7 @@ Range请求的响应定义如下：
 	  int64 revision = 3;
 	  uint64 raft_term = 4;
 	}
-	
+
 	message RangeResponse {
 	  ResponseHeader header = 1;
 	  repeated mvccpb.KeyValue kvs = 2;
@@ -794,14 +794,14 @@ Range请求的响应定义如下：
 [参考文档26](https://yuerblog.cc/2017/12/12/etcd-v3-sdk-usage) 提到 Get 操作时的 etcd Range 机制：
 
 	我们通过一个特别的Get选项，获取/test目录下的所有孩子：
-	
+
 	rangeResp, err := kv.Get(context.TODO(), "/test/", clientv3.WithPrefix())
 	WithPrefix()是指查找以/test/为前缀的所有key，因此可以模拟出查找子目录的效果。
-	
+
 	我们知道etcd是一个有序的k-v存储，因此/test/为前缀的key总是顺序排列在一起。
-	
+
 	withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一个key range，[“/test/”, “/test0”)，为什么呢？因为比/大的字符是’0’，所以以/test0作为范围的末尾，就可以扫描到所有的/test/打头的key了。
-	
+
 	在之前，我Put了一个/testxxx干扰项，因为不符合/test/前缀（注意末尾的/），所以就不会被这次Get获取到。但是，如果我查询的前缀是/test，那么/testxxx也会被扫描到，这就是etcd k-v模型导致的，编程时一定要特别注意。
 
 ### 7.4 Put ###
@@ -906,7 +906,7 @@ PutReqeust定义如下：
 	}
 
 - Result - 逻辑比较类型，如相等、小于或者大于；
-- Target - 有待被比较的kv的某个字段，如kye的version、创建 revision、修改revision或者value；
+- Target - 有待被比较的kv的某个字段，如key的version、创建 revision、修改revision或者value；
 - Key - 用于比较操作的key；
 - Target\_Union - 附带比较对象，如给定的key的版本、给定key的创建revision、最后的修改revision和key的value。
 
@@ -996,7 +996,7 @@ Watch对event作出了如下三项保证:
 	  bytes range_end = 2;
 	  int64 start_revision = 3;
 	  bool progress_notify = 4;
-	
+
 	  enum FilterType {
 	    NOPUT = 0;
 	    NODELETE = 1;
@@ -1019,7 +1019,7 @@ watch的响应内容定义如下：
 	  bool created = 3;
 	  bool canceled = 4;
 	  int64 compact_revision = 5;
-	
+
 	  repeated mvccpb.Event events = 11;
 	}
 
@@ -1092,7 +1092,7 @@ server创建lease成功后，会返回如下的响应：
 
 github.com/coreos/etcd/clientv3/lease.go:Lease 接口提供了以下一些功能函数：
 
-* Grante: 创建一个 lease 对象； 
+* Grante: 创建一个 lease 对象；
 * Revoke: 释放一个 lease 对象；
 * TimeToLive: 获取 lease 剩余的 TTL 时间；
 * Leases: 列举 etcd 中的所有 lease；
@@ -1163,9 +1163,9 @@ Put 函数和 KeepAlive 函数都有一个 Lease 对象，如果在进行 Put �
 > 2018/01/14日凌晨，于雨氏，参考etcd官方文档重构此文于海淀。
 >
 > 2018/04/03，于雨氏，与海淀补充 zetcd `Cross-checking` 小节。
-> 
+>
 > 2018/04/09，于雨氏，与海淀补充 `MVCC` 小节。
-> 
+>
 > 2018/04/10，于雨氏，与海淀补充 `v2 & v3` 小节。
-> 
-> 2018/06/22，于雨氏，与海淀给 `Raft` 小节补充 `learner 以及 Pipeline & Batch & leader Append`  相关内容。 
+>
+> 2018/06/22，于雨氏，与海淀给 `Raft` 小节补充 `learner 以及 Pipeline & Batch & leader Append`  相关内容。
