@@ -1,19 +1,19 @@
-## 一套高可用pubsub系统实现
+## 一套高可用群聊消息系统实现
 ---
 *written by Alex Stocks on 2017/12/31*
 
 ### 1 极简实现
 ---
 
-所谓系统pubsub，就是一种群聊方式，譬如直播房间内的聊天对应的服务器端就是一个pubsub系统。
+所谓群聊系统消息，就是一种群聊方式，譬如直播房间内的聊天对应的服务器端就是一个群聊消息系统。
 
-2017年9月初初步实现了一套极简的pubsub系统，其大致架构如下：
+2017年9月初初步实现了一套极简的消息系统，其大致架构如下：
 
 ![](../pic/pubsub_simple.png)
 
 系统名词解释：
 
-> 1 Client : 消息发布者【或者叫做服务端pubsub系统调用者】，publisher；
+> 1 Client : 消息发布者【或者叫做服务端群聊消息系统调用者】，publisher；
 >
 > 2 Proxy : 系统代理，对外统一接口，收集Client发来的消息转发给Broker；
 >
@@ -121,6 +121,17 @@ Proxy转发某个Room消息时候，只发送给处于Running状态的Broker。�
 
 关于 pipeline 自身的解释，本文不做详述，可以参考[此图](https://mmbiz.qpic.cn/mmbiz_jpg/5WXEuGYZIibCvMNgZ6zymiceCibpUOtGhtUfzVO88C3zxWQeP6Ziau77ib0vTmiczZ667PAXczYticxCWpbsBqNLB6T3Q/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1)。
 
+#### 2.2.2 大房间消息处理
+---
+
+每个 Room 的人数不均，最简便的解决方法就是给不同人数量级的 Room 各搭建一套消息系统，不用修改任何代码。
+
+然所谓需求推动架构改进，在系统迭代升级过程中遇到了这样一个需求：业务方有一个全国 Room，用于给所有在线用户进行消息推送。针对这个需求，不可能为了一个这样的 Room 单独搭建一套系统，况且这个 Room 的消息量很少。
+
+如果把这个 Room 的消息直接发送给现有系统，它又可能影响其他 Room 的消息发送：消息系统是一个写放大的系统，全国 Room 内有系统所有的在线用户，每次发送都会卡顿其他 Room 的消息发送。
+
+最终的解决方案是：使用类似于分区的方法，把这样的大 Room 映射为 64 个虚拟 Room【称之为 VRoom】。在 Room 号段分配业务线的配合下，给消息系统专门保留了一个号段，用于这种大 Room 的切分，在 Proxy 层依据一个 hash 方法 【 VRoomID = UserID % 64】 把每个 User 分配到相应的 VRoom，其他模块代码不用修改即完成了大 Room 消息的路由。 
+
 #### 2.3 Broker
 ---
 
@@ -212,7 +223,7 @@ Gateway本地有一个基于共享内存的LRU Cache，存储最近一段时间�
 ### 4 消息可靠性
 ---
 
-公司内部内部原有一个走tcp通道的pubsub系统，但是经过元旦一次大事故（几乎全线崩溃）后，相关业务的一些重要消息改走这套基于UDP的pubsub系统了。这些消息如服务端下达给客户端的游戏动作指令，是不允许丢失的，但其特点是相对于聊天消息来说量非常小（单人1秒最多一个），所以需要在目前UDP链路传递消息的基础之上再构建一个可靠消息链路。
+公司内部内部原有一个走tcp通道的群聊消息系统，但是经过元旦一次大事故（几乎全线崩溃）后，相关业务的一些重要消息改走这套基于UDP的群聊消息系统了。这些消息如服务端下达给客户端的游戏动作指令，是不允许丢失的，但其特点是相对于聊天消息来说量非常小（单人1秒最多一个），所以需要在目前UDP链路传递消息的基础之上再构建一个可靠消息链路。
 
 国内某IM大厂的消息系统也是以UDP链路为基础的，他们的做法是消息重试加ack构建了可靠消息稳定传输链路。但是这种做法会降低系统的吞吐率，所以需要独辟蹊径。
 
@@ -225,14 +236,14 @@ UDP通信的本质就是伪装的IP通信，TCP自身的稳定性无非是重传
 - 3 Broker收到后传输给Gateway；
 - 4 Gateway接收到命令消息后根据消息ID进行重复判断，如果重复则丢弃，否则就发送给APP，并缓存之。
 
-正常的消息在pubsub系统中传输时，Proxy会根据消息的Room ID传递给固定的Broker，以保证消息的有序性。
+正常的消息在群聊消息系统中传输时，Proxy会根据消息的Room ID传递给固定的Broker，以保证消息的有序性。
 
 ### 5 Router
 ---
 
-当线上需要部署多套pubsub系统的时候，Gateway需要把同样的Room Message复制多份转发给多套pubsub系统，会增大Gateway压力，可以把Router单独独立部署，然后把Room Message向所有的pubsub系统转发。
+当线上需要部署多套群聊消息系统的时候，Gateway需要把同样的Room Message复制多份转发给多套群聊消息系统，会增大Gateway压力，可以把Router单独独立部署，然后把Room Message向所有的群聊消息系统转发。
 
-Router系统原有流程是：Gateway按照Room ID把消息转发给某个Router，然后Router把消息转发给下游Broker实例。新部署一套pubsub系统的时候，新系统Broker的schema需要通过一套约定机制通知Router，使得Router自身逻辑过于复杂。
+Router系统原有流程是：Gateway按照Room ID把消息转发给某个Router，然后Router把消息转发给下游Broker实例。新部署一套群聊消息系统的时候，新系统Broker的schema需要通过一套约定机制通知Router，使得Router自身逻辑过于复杂。
 
 ![](../pic/pubsub_router.png)
 
@@ -264,11 +275,12 @@ Gateway详细流程如下：
 
 第六步的规则决定了Gateway Message的目的Partition和replica，规则内容有：
 > 如果某Router Partition ID满足condition(RoomID % RouterPartitionNumber == RouterPartitionID % RouterPartitionNumber)，则把消息转发到此Partition；
->>> 这里之所以不采用直接hash方式(RouterPartitionID = RoomID % RouterPartitionNumber)获取Router Partition，是考虑到当Router进行2倍扩容的时候当所有新的Partition的所有Replica都启动完毕且数据一致时才会修改Registry路径/pubsub/router/partition_num的值，按照规则的计算公式才能保证新Partition的各个Replica在启动过程中就可以得到Gateway Message，也即此时每个Gateway Message会被发送到两个Router Partition。
->>> 当Router扩容完毕，修改Registry路径/pubsub/router/partition_num的值后，此时新集群进入稳定期，每个Gateway Message只会被发送固定的一个Partition，condition(RoomID % RouterPartitionNumber == RouterPartitionID % RouterPartitionNumber)等效于condition(RouterPartitionID = RoomID % RouterPartitionNumber)。
+> >> 这里之所以不采用直接hash方式(RouterPartitionID = RoomID % RouterPartitionNumber)获取Router Partition，是考虑到当Router进行2倍扩容的时候当所有新的Partition的所有Replica都启动完毕且数据一致时才会修改Registry路径/pubsub/router/partition_num的值，按照规则的计算公式才能保证新Partition的各个Replica在启动过程中就可以得到Gateway Message，也即此时每个Gateway Message会被发送到两个Router Partition。
+> >> 当Router扩容完毕，修改Registry路径/pubsub/router/partition_num的值后，此时新集群进入稳定期，每个Gateway Message只会被发送固定的一个Partition，condition(RoomID % RouterPartitionNumber == RouterPartitionID % RouterPartitionNumber)等效于condition(RouterPartitionID = RoomID % RouterPartitionNumber)。
 >
 > 如果Router Partition内某replia满足condition(replicaPartitionID = RoomID % RouterPartitionReplicaNumber)，则把消息转发到此replica。
->>> replica向Registry注册的时候得到的ID称之为replicaID，Router Parition内所有replica按照replicaID递增排序组成replica数组RouterPartitionReplicaArray，replicaPartitionID即为replica在数组中的下标。
+>
+> >> replica向Registry注册的时候得到的ID称之为replicaID，Router Parition内所有replica按照replicaID递增排序组成replica数组RouterPartitionReplicaArray，replicaPartitionID即为replica在数组中的下标。
 
 ##### 5.1.1 Gateway Message数据一致性
 ---
@@ -349,7 +361,7 @@ Broker需要关注/pubsub/router/partition_num和/pubsub/broker/partition_num的
 另外，Gateway使用UDP通信方式向Router发送Gateway Message，如若这个Message丢失则此Gateway上该Room内所有成员一段时间内（当有新的成员在当前Gateway上加入Room
 时会产生新的Gateway Message）都无法再接收消息，为了保证消息的可靠性，可以使用这样一个约束解决问题：<font color=blue>**在此Gateway上登录的某Room内的人数少于3时，Gateway会把Gateway Message复制两份非连续（如以10ms为时间间隔）重复发送给某个Partition leader。**</font>因Gateway Message消息处理的幂等性，重复Gateway Message并不会导致Room Message发送错误，只在极少概率的情况下会导致Gateway收到消息的时候Room内已经没有成员在此Gateway登录，此时Gateway会把消息丢弃不作处理。
 
-传递实时消息pubsub系统的Broker向特定Gateway转发Room Message的时候，会带上Room内在此Gateway上登录的用户列表，Gateway根据这个用户列表下发消息时如果检测到此用户已经下线，在放弃向此用户转发消息的同时，还应该把此用户已经下线的消息发送给Router，当Router把这个消息转发给Broker后，Broker把此用户从用户列表中剔除。<font color=red>**通过这种负反馈机制保证用户状态更新的及时性**</font>。
+传递实时消息群聊消息系统的Broker向特定Gateway转发Room Message的时候，会带上Room内在此Gateway上登录的用户列表，Gateway根据这个用户列表下发消息时如果检测到此用户已经下线，在放弃向此用户转发消息的同时，还应该把此用户已经下线的消息发送给Router，当Router把这个消息转发给Broker后，Broker把此用户从用户列表中剔除。<font color=red>**通过这种负反馈机制保证用户状态更新的及时性**</font>。
 
 ### 6 离线消息
 ---
@@ -574,7 +586,7 @@ Ack 消息处理流程如下：
 ### 7 总结 ###
 ---
 
-这套pubsub系统尚有以下task list需完善：
+这套群聊消息系统尚有以下task list需完善：
 
 - 1 消息以UDP链路传递，不可靠【2018/01/29解决之】；
 - 2 目前的负载均衡算法采用了极简的RoundRobin算法，可以根据成功率和延迟添加基于权重的负载均衡算法实现；
@@ -603,3 +615,5 @@ Ack 消息处理流程如下：
 > 于雨氏，2018/03/14，于海淀添加负反馈机制、根据Gateway Message ID保证Gateway Message数据一致性 和 Gateway用户退出消息产生机制 等三个细节。
 >
 > 于雨氏，2018/08/05，于海淀添加 “pipeline” 一节。
+> 
+> 于雨氏，2018/08/28，于海淀添加 “大房间消息处理” 一节。

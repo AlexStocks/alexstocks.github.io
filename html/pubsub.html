@@ -109,7 +109,7 @@ kbd {
 
 <body>
 
-<h2 id="toc_0">一套高可用pubsub系统实现</h2>
+<h2 id="toc_0">一套高可用群聊消息系统实现</h2>
 
 <hr>
 
@@ -119,16 +119,16 @@ kbd {
 
 <hr>
 
-<p>所谓系统pubsub，就是一种群聊方式，譬如直播房间内的聊天对应的服务器端就是一个pubsub系统。</p>
+<p>所谓群聊系统消息，就是一种群聊方式，譬如直播房间内的聊天对应的服务器端就是一个群聊消息系统。</p>
 
-<p>2017年9月初初步实现了一套极简的pubsub系统，其大致架构如下：</p>
+<p>2017年9月初初步实现了一套极简的消息系统，其大致架构如下：</p>
 
 <p><img src="../pic/pubsub_simple.png" alt=""></p>
 
 <p>系统名词解释：</p>
 
 <blockquote>
-<p>1 Client : 消息发布者【或者叫做服务端pubsub系统调用者】，publisher；</p>
+<p>1 Client : 消息发布者【或者叫做服务端群聊消息系统调用者】，publisher；</p>
 
 <p>2 Proxy : 系统代理，对外统一接口，收集Client发来的消息转发给Broker；</p>
 
@@ -143,9 +143,9 @@ kbd {
 <p>7 Gateway Message : Room内某成员 登录 或者 登出 某Gateway消息，包含用户UIN/RoomID/Gateway地址{IP:Port}等消息；</p>
 </blockquote>
 
-<p>当一个 Room 中多个 Client 连接一个 Gateway 的时候，Broker只会根据 RoomID 把房间内的消息转发一次给这个Gateway，由Gateway再把消息复制多份分别发送给连接这个 Gateway 的 Room 中的所有用户的客户端。 </p>
+<p>当一个 Room 中多个 Client 连接一个 Gateway 的时候，Broker只会根据 RoomID 把房间内的消息转发一次给这个Gateway，由Gateway再把消息复制多份分别发送给连接这个 Gateway 的 Room 中的所有用户的客户端。</p>
 
-<p>这套系统有如下特点：   </p>
+<p>这套系统有如下特点：</p>
 
 <ul>
 <li>1 系统只转发房间内的聊天消息，每个节点收到后立即转发出去，不存储任何房间内的聊天消息，不考虑消息丢失以及消息重复的问题；</li>
@@ -239,7 +239,7 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 <p>初始系统这三步流程如果均放在一个线程内处理，proxy 的整体吞吐率只有 50 000 Msg/s，最后的实现方式是按照消息处理的三个步骤以 pipeline 方式做如下流程处理：</p>
 
 <ul>
-<li>1 启动 1 个消息接收线程和 N  【N == Broker Parition 数目】个多写一读形式的无锁队列【称之为消息协议转换队列】，消息接收线程分别启动一个 epoll 循环流程收取消息，然后把消息以相应的 hash 算法【队列ID =  UIN % N】写入对应的消息协议转换队列；</li>
+<li>1 启动 1 个消息接收线程和 N【N == Broker Parition 数目】个多写一读形式的无锁队列【称之为消息协议转换队列】，消息接收线程分别启动一个 epoll 循环流程收取消息，然后把消息以相应的 hash 算法【队列ID =  UIN % N】写入对应的消息协议转换队列；</li>
 <li>2 启动 N 个线程 和 N * 3 个一写一读的无锁队列【称之为消息发送队列】，每个消息协议专家线程从消息协议转换队列接收到消息并进行协议转换后，根据相应的 hash 算法【队列ID =  UIN % 3N】写入消息发送队列；</li>
 <li>3 启动 3N 个消息发送线程，分别创建与之对应的 Broker 的连接，每个线程单独从对应的某个消息发送队列接收消息然后发送出去。</li>
 </ul>
@@ -248,7 +248,19 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>关于 pipeline 自身的解释，本文不做详述，可以参考<a href="https://mmbiz.qpic.cn/mmbiz_jpg/5WXEuGYZIibCvMNgZ6zymiceCibpUOtGhtUfzVO88C3zxWQeP6Ziau77ib0vTmiczZ667PAXczYticxCWpbsBqNLB6T3Q/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1">此图</a>。</p>
 
-<h4 id="toc_6">2.3 Broker</h4>
+<h4 id="toc_6">2.2.2 大房间消息处理</h4>
+
+<hr>
+
+<p>每个 Room 的人数不均，最简便的解决方法就是给不同人数量级的 Room 各搭建一套消息系统，不用修改任何代码。</p>
+
+<p>然所谓需求推动架构改进，在系统迭代升级过程中遇到了这样一个需求：业务方有一个全国 Room，用于给所有在线用户进行消息推送。针对这个需求，不可能为了一个这样的 Room 单独搭建一套系统，况且这个 Room 的消息量很少。</p>
+
+<p>如果把这个 Room 的消息直接发送给现有系统，它又可能影响其他 Room 的消息发送：消息系统是一个写放大的系统，全国 Room 内有系统所有的在线用户，每次发送都会卡顿其他 Room 的消息发送。</p>
+
+<p>最终的解决方案是：使用类似于分区的方法，把这样的大 Room 映射为 64 个虚拟 Room【称之为 VRoom】。在 Room 号段分配业务线的配合下，给消息系统专门保留了一个号段，用于这种大 Room 的切分，在 Proxy 层依据一个 hash 方法 【 VRoomID = UserID % 64】 把每个 User 分配到相应的 VRoom，其他模块代码不用修改即完成了大 Room 消息的路由。 </p>
+
+<h4 id="toc_7">2.3 Broker</h4>
 
 <hr>
 
@@ -277,7 +289,7 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>Broker的扩容过程犹如细胞分裂，形成中的两个细胞有着完全相同的数据，分裂完成后【Registry路径/pubsub/broker/partition_num的值翻倍】则需要清洗垃圾信息。这种方法称为翻倍法。</p>
 
-<h4 id="toc_7">2.4 Router</h4>
+<h4 id="toc_8">2.4 Router</h4>
 
 <hr>
 
@@ -298,10 +310,10 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 <li><p>7 启动一个线程定时读取Registry上的Broker路径/pubsub/broker下各个子节点的值，以定时轮询的策略观察Broker Partition Number变动，以及各Partition的变动情况，作为实时策略的补充；同时定时检查心跳包超时的Broker，从有效的BrokerList中删除；</p></li>
 <li><p>8 从Database全量加载路由 RoomGatewayList 数据放入本地缓存；</p></li>
 <li><p>9 收取Gateway发来的心跳消息，及时返回ack包；</p></li>
-<li><p>10 收取Gateway转发来的Gateway Message，按照一定规则【BrokerPartitionID % BrokerPartitionNum = RoomID % BrokerPartitionNum】转发给<font color=blue><strong>某个Broker Partition下所有Broker Replica</strong></font>，保证Partition下所有replica拥有同样的路由 RoomGatewayList 数据，再把Message内数据存入本地缓存，当检测到数据不重复的时候把数据异步写入Database； </p></li>
+<li><p>10 收取Gateway转发来的Gateway Message，按照一定规则【BrokerPartitionID % BrokerPartitionNum = RoomID % BrokerPartitionNum】转发给<font color=blue><strong>某个Broker Partition下所有Broker Replica</strong></font>，保证Partition下所有replica拥有同样的路由 RoomGatewayList 数据，再把Message内数据存入本地缓存，当检测到数据不重复的时候把数据异步写入Database；</p></li>
 </ul>
 
-<h4 id="toc_8">2.5 Gateway</h4>
+<h4 id="toc_9">2.5 Gateway</h4>
 
 <hr>
 
@@ -318,13 +330,13 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>Gateway本地有一个基于共享内存的LRU Cache，存储最近一段时间发送的消息的MessageID。</p>
 
-<h3 id="toc_9">3 系统稳定性</h3>
+<h3 id="toc_10">3 系统稳定性</h3>
 
 <hr>
 
 <p>系统具有了可扩展性仅仅是系统可用的初步，整个系统要保证最低粒度的SLA（0.99），就必须在两个维度对系统的可靠性就行感知：消息延迟和系统内部组件的高可用。</p>
 
-<h4 id="toc_10">3.1 消息延迟</h4>
+<h4 id="toc_11">3.1 消息延迟</h4>
 
 <hr>
 
@@ -334,7 +346,7 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>通过所有消息的平均延迟可以评估系统的整体性能。同时，因为系统消息路由的哈希方式已知，当固定时间内伪Gateway没有收到消息时，就把消息当做发送失败，当某条链路失败一定次数后就可以产生告警了。</p>
 
-<h4 id="toc_11">3.2 高可用</h4>
+<h4 id="toc_12">3.2 高可用</h4>
 
 <hr>
 
@@ -346,34 +358,34 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>同时依靠心跳包的延迟还可以判断broker的处理能力，基于此延迟值可在同一Partition内多broker端进行负载均衡。</p>
 
-<h3 id="toc_12">4 消息可靠性</h3>
+<h3 id="toc_13">4 消息可靠性</h3>
 
 <hr>
 
-<p>公司内部内部原有一个走tcp通道的pubsub系统，但是经过元旦一次大事故（几乎全线崩溃）后，相关业务的一些重要消息改走这套基于UDP的pubsub系统了。这些消息如服务端下达给客户端的游戏动作指令，是不允许丢失的，但其特点是相对于聊天消息来说量非常小（单人1秒最多一个），所以需要在目前UDP链路传递消息的基础之上再构建一个可靠消息链路。</p>
+<p>公司内部内部原有一个走tcp通道的群聊消息系统，但是经过元旦一次大事故（几乎全线崩溃）后，相关业务的一些重要消息改走这套基于UDP的群聊消息系统了。这些消息如服务端下达给客户端的游戏动作指令，是不允许丢失的，但其特点是相对于聊天消息来说量非常小（单人1秒最多一个），所以需要在目前UDP链路传递消息的基础之上再构建一个可靠消息链路。</p>
 
 <p>国内某IM大厂的消息系统也是以UDP链路为基础的，他们的做法是消息重试加ack构建了可靠消息稳定传输链路。但是这种做法会降低系统的吞吐率，所以需要独辟蹊径。</p>
 
 <p>UDP通信的本质就是伪装的IP通信，TCP自身的稳定性无非是重传、去重和ack，所以不考虑消息顺序性的情况下可以通过重传与去重来保证消息的可靠性。</p>
 
-<p>基于目前系统的可靠消息传输流程如下：  </p>
+<p>基于目前系统的可靠消息传输流程如下：</p>
 
 <ul>
-<li>1 Client给每个命令消息依据snowflake算法配置一个ID，复制三份，立即发送给不同的Proxy；<br></li>
-<li>2 Proxy收到命令消息以后随机发送给一个Broker；<br></li>
-<li>3 Broker收到后传输给Gateway；<br></li>
+<li>1 Client给每个命令消息依据snowflake算法配置一个ID，复制三份，立即发送给不同的Proxy；</li>
+<li>2 Proxy收到命令消息以后随机发送给一个Broker；</li>
+<li>3 Broker收到后传输给Gateway；</li>
 <li>4 Gateway接收到命令消息后根据消息ID进行重复判断，如果重复则丢弃，否则就发送给APP，并缓存之。</li>
 </ul>
 
-<p>正常的消息在pubsub系统中传输时，Proxy会根据消息的Room ID传递给固定的Broker，以保证消息的有序性。</p>
+<p>正常的消息在群聊消息系统中传输时，Proxy会根据消息的Room ID传递给固定的Broker，以保证消息的有序性。</p>
 
-<h3 id="toc_13">5 Router</h3>
+<h3 id="toc_14">5 Router</h3>
 
 <hr>
 
-<p>当线上需要部署多套pubsub系统的时候，Gateway需要把同样的Room Message复制多份转发给多套pubsub系统，会增大Gateway压力，可以把Router单独独立部署，然后把Room Message向所有的pubsub系统转发。</p>
+<p>当线上需要部署多套群聊消息系统的时候，Gateway需要把同样的Room Message复制多份转发给多套群聊消息系统，会增大Gateway压力，可以把Router单独独立部署，然后把Room Message向所有的群聊消息系统转发。</p>
 
-<p>Router系统原有流程是：Gateway按照Room ID把消息转发给某个Router，然后Router把消息转发给下游Broker实例。新部署一套pubsub系统的时候，新系统Broker的schema需要通过一套约定机制通知Router，使得Router自身逻辑过于复杂。</p>
+<p>Router系统原有流程是：Gateway按照Room ID把消息转发给某个Router，然后Router把消息转发给下游Broker实例。新部署一套群聊消息系统的时候，新系统Broker的schema需要通过一套约定机制通知Router，使得Router自身逻辑过于复杂。</p>
 
 <p><img src="../pic/pubsub_router.png" alt=""></p>
 
@@ -385,7 +397,7 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>独立Router架构下，下面分别详述Gateway、Router和Broker三个相关模块的详细流程。</p>
 
-<h4 id="toc_14">5.1 Gateway</h4>
+<h4 id="toc_15">5.1 Gateway</h4>
 
 <hr>
 
@@ -426,7 +438,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 </blockquote>
 </blockquote>
 
-<h5 id="toc_15">5.1.1 Gateway Message数据一致性</h5>
+<h5 id="toc_16">5.1.1 Gateway Message数据一致性</h5>
 
 <hr>
 
@@ -441,7 +453,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 <div><pre><code class="language-none">// 63 -------------------------- 48 47 -------------- 38 37 ------------ 0
 // |  16bit Gateway Instance ID    |   10bit Reserve    |    38bit自增码  |</code></pre></div>
 
-<h4 id="toc_16">5.2 Router</h4>
+<h4 id="toc_17">5.2 Router</h4>
 
 <hr>
 
@@ -474,7 +486,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>另外启动一个工具，当水平扩展后新启动的Partition内所有Replica的状态都是Running的时候，修改Registry路径/pubsub/router/partition_num的值为所有Partition的数目。</p>
 
-<h4 id="toc_17">5.3 Broker</h4>
+<h4 id="toc_18">5.3 Broker</h4>
 
 <hr>
 
@@ -510,14 +522,14 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 <p>另外，Gateway使用UDP通信方式向Router发送Gateway Message，如若这个Message丢失则此Gateway上该Room内所有成员一段时间内（当有新的成员在当前Gateway上加入Room
 时会产生新的Gateway Message）都无法再接收消息，为了保证消息的可靠性，可以使用这样一个约束解决问题：<font color=blue><strong>在此Gateway上登录的某Room内的人数少于3时，Gateway会把Gateway Message复制两份非连续（如以10ms为时间间隔）重复发送给某个Partition leader。</strong></font>因Gateway Message消息处理的幂等性，重复Gateway Message并不会导致Room Message发送错误，只在极少概率的情况下会导致Gateway收到消息的时候Room内已经没有成员在此Gateway登录，此时Gateway会把消息丢弃不作处理。</p>
 
-<p>传递实时消息pubsub系统的Broker向特定Gateway转发Room Message的时候，会带上Room内在此Gateway上登录的用户列表，Gateway根据这个用户列表下发消息时如果检测到此用户已经下线，在放弃向此用户转发消息的同时，还应该把此用户已经下线的消息发送给Router，当Router把这个消息转发给Broker后，Broker把此用户从用户列表中剔除。<font color=red><strong>通过这种负反馈机制保证用户状态更新的及时性</strong></font>。  </p>
+<p>传递实时消息群聊消息系统的Broker向特定Gateway转发Room Message的时候，会带上Room内在此Gateway上登录的用户列表，Gateway根据这个用户列表下发消息时如果检测到此用户已经下线，在放弃向此用户转发消息的同时，还应该把此用户已经下线的消息发送给Router，当Router把这个消息转发给Broker后，Broker把此用户从用户列表中剔除。<font color=red><strong>通过这种负反馈机制保证用户状态更新的及时性</strong></font>。</p>
 
-<h3 id="toc_18">6 离线消息</h3>
+<h3 id="toc_19">6 离线消息</h3>
 
 <hr>
 
-<p>前期的系统只考虑了用户在线情况下实时消息的传递，当用户离线时其消息便无法获取。若系统考虑用户离线消息传递，需要考虑如下因素：<br>
-* 消息固化：保证用户上线时收到其离线期间的消息；<br>
+<p>前期的系统只考虑了用户在线情况下实时消息的传递，当用户离线时其消息便无法获取。若系统考虑用户离线消息传递，需要考虑如下因素：
+* 消息固化：保证用户上线时收到其离线期间的消息；
 * 消息有序：离线消息和在线消息都在一个消息系统传递，给每个消息分配一个ID以区分消息先后顺序，消息顺序越靠后则ID愈大。</p>
 
 <p>离线消息的存储和传输，需要考虑用户的状态以及每条消息的发送状态，整个消息核心链路流程会有大的重构。新消息架构如下图：</p>
@@ -540,23 +552,23 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>下面先细述Pi和Xiu的接口，然后再详述发送和推送流程。</p>
 
-<h4 id="toc_19">6.1 Xiu</h4>
+<h4 id="toc_20">6.1 Xiu</h4>
 
 <hr>
 
 <p>Xiu模块功能名称是Message Storage，用户缓存和固化消息，并给消息分配ID。Xiu 集群采用分 Partition 分 Replica 机制，Partition 初始数目须是2的倍数，集群扩容时采用翻倍法。</p>
 
-<h5 id="toc_20">6.1.1 存储消息</h5>
+<h5 id="toc_21">6.1.1 存储消息</h5>
 
 <hr>
 
-<p>存储消息请求的参数列表为{SnowflakeID，UIN, Message}，其流程如下：   </p>
+<p>存储消息请求的参数列表为{SnowflakeID，UIN, Message}，其流程如下：</p>
 
 <ul>
-<li>1 接收客户端发来的消息，获取消息接收人ID（UIN）和客户端给消息分配的 SnowflakeID；<br></li>
-<li>2 检查 <code>UIN % Xiu_Partition_Num == Xiu_Partition_ID % Xiu_Partition_Num</code> 添加是否成立【即接收人的消息是否应当由当前Xiu负责】，不成立则返回错误并退出；<br></li>
-<li>3 检查 SnowflakeID 对应的消息是否已经被存储过，若已经存储过则返回其对应的消息ID然后退出；<br></li>
-<li><p>4 给消息分配一个 MsgID；   </p>
+<li>1 接收客户端发来的消息，获取消息接收人ID（UIN）和客户端给消息分配的 SnowflakeID；</li>
+<li>2 检查 <code>UIN % Xiu_Partition_Num == Xiu_Partition_ID % Xiu_Partition_Num</code> 添加是否成立【即接收人的消息是否应当由当前Xiu负责】，不成立则返回错误并退出；</li>
+<li>3 检查 SnowflakeID 对应的消息是否已经被存储过，若已经存储过则返回其对应的消息ID然后退出；</li>
+<li><p>4 给消息分配一个 MsgID；</p>
 
 <p>每个Xiu有自己唯一的 Xiu<em>Partition</em>ID，以及一个初始值为0的 Partition<em>Msg</em>ID。MsgID = 1B[ Xiu<em>Partition</em>ID ] + 1B[ Message Type ] + 6B[ ++ Partition<em>Msg</em>ID ]。每次分配的时候 Partition<em>Msg</em>ID 都自增加一。</p></li>
 <li><p>5 以 MsgID 为 key 把消息存入基于共享内存的 Hashtable，并存入消息的 CRC32 hash值和插入时间，把 MsgID 存入一个 LRU list 中；</p>
@@ -566,20 +578,20 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 <li><p>7 把MsgID异步通知给消息固化线程，消息固化线程根据MsgID从Hashtable中读取消息并根据CRC32 hash值判断消息内容是否完整，完整则把消息存入本地RocksDB中；</p></li>
 </ul>
 
-<h5 id="toc_21">6.1.2 读取消息</h5>
+<h5 id="toc_22">6.1.2 读取消息</h5>
 
 <hr>
 
 <p>读取消息请求的参数列表为{UIN, MsgIDList}，其流程为：</p>
 
 <ul>
-<li>1 获取请求的 MsgIDList，判断每个MsgID <code>MsgID{Xiu_Partition_ID} == Xiu_Partition_ID</code> 条件是否成立，不成立则返回错误并退出；<br></li>
-<li>2 从 Hashtable 中获取每个 MsgID 对应的消息；<br></li>
+<li>1 获取请求的 MsgIDList，判断每个MsgID <code>MsgID{Xiu_Partition_ID} == Xiu_Partition_ID</code> 条件是否成立，不成立则返回错误并退出；</li>
+<li>2 从 Hashtable 中获取每个 MsgID 对应的消息；</li>
 <li>3 如果 Hashtable 中不存在，则从 RocksDB 中读取 MsgID 对应的消息；</li>
 <li>4 读取完毕则把所有获取的消息返回给客户端。</li>
 </ul>
 
-<h5 id="toc_22">6.1.3 主从数据同步</h5>
+<h5 id="toc_23">6.1.3 主从数据同步</h5>
 
 <hr>
 
@@ -602,7 +614,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>当leader重启或者follower转换为leader的时候，需要把 Partition<em>Msg</em>ID 进行一个大数值增值（譬如增加1000）以防止可能的消息ID乱序情况。</p>
 
-<h5 id="toc_23">6.1.4 集群扩容</h5>
+<h5 id="toc_24">6.1.4 集群扩容</h5>
 
 <hr>
 
@@ -616,13 +628,13 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>之所以 Xiu 不用像 Broker 和 Router 那样启动的时候向老的 Partition 同步数据，是因为每个 Xiu 分配的 MsgID 中已经带有 Xiu 的 PartitionID 信息，即使集群扩容这个 ID 也不变，根据这个ID也可以定位到其所在的Partition，而不是借助 hash 方法。</p>
 
-<h4 id="toc_24">6.2 Pi</h4>
+<h4 id="toc_25">6.2 Pi</h4>
 
 <hr>
 
 <p>Pi 模块功能名称是 Message ID Storage，存储每个用户的 MsgID List。Xiu 集群也采用分 Partition 分 Replica 机制，Partition 初始数目须是2的倍数，集群扩容时采用翻倍法。</p>
 
-<h5 id="toc_25">6.2.1 存储消息ID</h5>
+<h5 id="toc_26">6.2.1 存储消息ID</h5>
 
 <hr>
 
@@ -630,12 +642,12 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <ul>
 <li>1 判断条件 <code>UIN % Pi_Partition_Num == Pi_Partition_ID % Pi_Partition_Num</code> 是否成立，若不成立则返回error退出；</li>
-<li>2 把 MsgID 插入UIN的 MsgIDList 中，保持 MsgIDList 中所有 MsgID 不重复有序递增，把请求内容写入本地log，给请求者返回成功响应。<br></li>
+<li>2 把 MsgID 插入UIN的 MsgIDList 中，保持 MsgIDList 中所有 MsgID 不重复有序递增，把请求内容写入本地log，给请求者返回成功响应。</li>
 </ul>
 
-<p>Pi有专门的日志记录线程，给每个日志操作分配一个 LogID，每个 Log 文件记录一定量的写操作，当文件 size 超过配置的上限后删除之。        </p>
+<p>Pi有专门的日志记录线程，给每个日志操作分配一个 LogID，每个 Log 文件记录一定量的写操作，当文件 size 超过配置的上限后删除之。</p>
 
-<h5 id="toc_26">6.2.2 读取消息ID列表</h5>
+<h5 id="toc_27">6.2.2 读取消息ID列表</h5>
 
 <hr>
 
@@ -647,7 +659,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 <li>3 如果 ExpireFlag 有效，则删除MsgIDList内所有在 [0, StartMsgID] 范围内的MsgID，把请求内容写入本地log。</li>
 </ul>
 
-<h5 id="toc_27">6.2.3 主从数据同步</h5>
+<h5 id="toc_28">6.2.3 主从数据同步</h5>
 
 <hr>
 
@@ -667,7 +679,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>follower 会关注Registry路径  /pubsub/pi/partition_id 下所有节点的变化情况，如果 leader 挂掉则及时转换身份并接受客户端请求。如果follower 与 leader 之间的心跳超时，则follower删掉 leader 的 Registry 路径节点，及时进行身份转换处理客户端请求。</p>
 
-<h5 id="toc_28">6.2.4 集群扩容</h5>
+<h5 id="toc_29">6.2.4 集群扩容</h5>
 
 <hr>
 
@@ -690,11 +702,11 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>另外启动一个工具，当水平扩展后所有新启动的 Partition 内所有 Replica 的状态都是 Running 的时候，修改Registry路径/pubsub/xiu/partition_num的值为扩容后 Partition 的数目。</p>
 
-<h4 id="toc_29">6.3 数据发送流程</h4>
+<h4 id="toc_30">6.3 数据发送流程</h4>
 
 <hr>
 
-<p>消息自 PiXiu 的外部客户端（Client，服务端所有使用 PiXiu 提供的服务者统称为客户端）按照一定负载均衡规则发送到 Proxy，然后存入 Xiu 中，把 MsgID 存入 Pi 中。其详细流程如下：   </p>
+<p>消息自 PiXiu 的外部客户端（Client，服务端所有使用 PiXiu 提供的服务者统称为客户端）按照一定负载均衡规则发送到 Proxy，然后存入 Xiu 中，把 MsgID 存入 Pi 中。其详细流程如下：</p>
 
 <ul>
 <li>1 Client 依据 snowflake 算法给消息分配 SnowflakeID，依据 <code>ProxyID = UIN % ProxyNum</code> 规则把消息发往某个 Proxy；</li>
@@ -704,7 +716,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 <li>5 如果 Proxy 收到 Xiu 返回的响应带有 MsgID，则给 Broker 发送一个 Notify，告知其某 UIN 的最新 MsgID。</li>
 </ul>
 
-<h4 id="toc_30">6.4 数据转发流程</h4>
+<h4 id="toc_31">6.4 数据转发流程</h4>
 
 <hr>
 
@@ -728,7 +740,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 <li>1 检查用户的当前状态，若为 OffLine 则把其状态值为在线 OnLine；</li>
 <li>2 检查用户的待发送消息队列是否为空，不为空则退出；</li>
 <li>3 向 Pi 模块发送获取 N 条消息 ID 的请求 {UIN: uin, StartMsgID: 0, MsgIDNum: N, ExpireFlag: false}，设置用户状态为 GettingMsgIDList 并等待回应；</li>
-<li>4 根据 Pi 返回的消息 ID 队列，向 Xiu 发起获取消息请求 {UIN: uin, MsgIDList: msg ID List}，设置用户状态为 GettingMsgList 并等待回应； </li>
+<li>4 根据 Pi 返回的消息 ID 队列，向 Xiu 发起获取消息请求 {UIN: uin, MsgIDList: msg ID List}，设置用户状态为 GettingMsgList 并等待回应；</li>
 <li>5 Xiu 返回消息列表后，设置状态为 SendingMsg，并向 Gateway 转发消息。</li>
 </ul>
 
@@ -754,9 +766,9 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 <ul>
 <li>1 如果用户状态为 OffLine，则退出；</li>
 <li>2 更新用户的最新消息 ID（LatestMsgID），如果用户发送消息队列不为空则退出；</li>
-<li>3 向 Pi 模块发送获取 N 条消息 ID 的请求 {UIN: uin, StartMsgID: 0, MsgIDNum: N, ExpireFlag: false}，设置用户状态为 GettingMsgIDList 并等待回应；<br></li>
-<li>4 根据 Pi 返回的消息 ID 队列，向 Xiu 发起获取消息请求 {UIN: uin, MsgIDList: msg ID List}，设置用户状态为 GettingMsgList 并等待回应； </li>
-<li>5 Xiu 返回消息列表后，设置状态为 SendingMsg，并向 Gateway 转发消息。 </li>
+<li>3 向 Pi 模块发送获取 N 条消息 ID 的请求 {UIN: uin, StartMsgID: 0, MsgIDNum: N, ExpireFlag: false}，设置用户状态为 GettingMsgIDList 并等待回应；</li>
+<li>4 根据 Pi 返回的消息 ID 队列，向 Xiu 发起获取消息请求 {UIN: uin, MsgIDList: msg ID List}，设置用户状态为 GettingMsgList 并等待回应；</li>
+<li>5 Xiu 返回消息列表后，设置状态为 SendingMsg，并向 Gateway 转发消息。</li>
 </ul>
 
 <p>所谓 Ack 消息，就是 Broker 经 Gateway 把消息转发给 App 后，App 给Broker的消息回复，告知Broker其最近成功收到消息的 MsgID。
@@ -767,18 +779,18 @@ Ack 消息处理流程如下：</p>
 <li>2 更新 LatestAckMsgID 的值；</li>
 <li>3 如果用户发送消息队列不为空，则发送下一个消息后退出；</li>
 <li>4 如果 LatestAckMsgID &gt;= LatestMsgID，则退出；</li>
-<li>5 向 Pi 模块发送获取 N 条消息 ID 的请求 {UIN: uin, StartMsgID: 0, MsgIDNum: N, ExpireFlag: false}，设置用户状态为 GettingMsgIDList 并等待回应；<br></li>
-<li>6 根据 Pi 返回的消息 ID 队列，向 Xiu 发起获取消息请求 {UIN: uin, MsgIDList: msg ID List}，设置用户状态为 GettingMsgList 并等待回应； </li>
-<li>7 Xiu 返回消息列表后，设置状态为 SendingMsg，并向 Gateway 转发消息。<br></li>
+<li>5 向 Pi 模块发送获取 N 条消息 ID 的请求 {UIN: uin, StartMsgID: 0, MsgIDNum: N, ExpireFlag: false}，设置用户状态为 GettingMsgIDList 并等待回应；</li>
+<li>6 根据 Pi 返回的消息 ID 队列，向 Xiu 发起获取消息请求 {UIN: uin, MsgIDList: msg ID List}，设置用户状态为 GettingMsgList 并等待回应；</li>
+<li>7 Xiu 返回消息列表后，设置状态为 SendingMsg，并向 Gateway 转发消息。</li>
 </ul>
 
-<p>总体上，PiXiu 转发消息流程采用拉取（pull）转发模型，以上面五种消息为驱动进行状态转换，并作出相应的动作行为。  </p>
+<p>总体上，PiXiu 转发消息流程采用拉取（pull）转发模型，以上面五种消息为驱动进行状态转换，并作出相应的动作行为。</p>
 
-<h3 id="toc_31">7 总结</h3>
+<h3 id="toc_32">7 总结</h3>
 
 <hr>
 
-<p>这套pubsub系统尚有以下task list需完善：</p>
+<p>这套群聊消息系统尚有以下task list需完善：</p>
 
 <ul>
 <li>1 消息以UDP链路传递，不可靠【2018/01/29解决之】；</li>
@@ -791,13 +803,13 @@ Ack 消息处理流程如下：</p>
 
 <p>此记。</p>
 
-<h2 id="toc_32">参考文档</h2>
+<h2 id="toc_33">参考文档</h2>
 
 <ul>
 <li>1 <a href="http://blog.csdn.net/bluishglc/article/details/7970268">一种支持自由规划无须数据迁移和修改路由代码的Replicaing扩容方案</a></li>
 </ul>
 
-<h2 id="toc_33">扒粪者-于雨氏</h2>
+<h2 id="toc_34">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>于雨氏，2017/12/31，初作此文于丰台金箱堂。</p>
@@ -812,7 +824,9 @@ Ack 消息处理流程如下：</p>
 
 <p>于雨氏，2018/03/14，于海淀添加负反馈机制、根据Gateway Message ID保证Gateway Message数据一致性 和 Gateway用户退出消息产生机制 等三个细节。</p>
 
-<p>于雨氏，2018/83054，于海淀添加 “pipeline” 一节。</p>
+<p>于雨氏，2018/08/05，于海淀添加 “pipeline” 一节。</p>
+
+<p>于雨氏，2018/08/28，于海淀添加 “大房间消息处理” 一节。</p>
 </blockquote>
 
 
@@ -845,6 +859,8 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
+
 
 
 </body>
