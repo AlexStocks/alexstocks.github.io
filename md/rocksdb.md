@@ -994,6 +994,10 @@ sst 文件只有在 compact 时才会被删除，所以禁止删除就相当于�
 
 * target_file_size_base 这个参数就是 #5.1# 小节中的 "target sise",是 level 1 SST 文件的 size。有使用者 “把pika的target-file-size-base从20M改到256M后，发现新写入数据时cpu消耗高30%左右，写入性能也有影响”，原因是“文件越大compaction代价越大”。
 
+### 8.2 使用场景
+---
+
+360 内部 90% 的情况下，pika 都运行在 ssd上，只有不到 10% 的对读写速度要求不高的情况下写入到 SATA 盘上。
 
 
 ## 参考文档 ##
