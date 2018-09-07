@@ -246,7 +246,9 @@ If the process either catches the signal and returns from the signal handler, or
 
 <p>而 pika 自身则是调用上图的<a href="https://github.com/pikalabs/pink/blob/master/pink/src/holy_thread.cc#L25">第二个构造函数</a>，直接导致  HolyThread::keepalive<em>time</em> 参数在被 gcc 编译时候被赋值 0，然后 pika slave 就不会去对它与 pika master之间连接作任何超时检查，所以也就不会出现丢数据的问题！</p>
 
-<p>关于为何要依赖 tcp 自身的 keepalive 机制而不是在逻辑层对 tcp 连接进行超时判断，pika 开发者陈宗志大师给出了一个 <a href="http://baotiao.github.io/tech/2015/09/25/tcp-keepalive/">blog</a> 进行解释，仁者见仁智者见智，这个就不再次探讨了。</p>
+<p>恰当的处理方法当然是重构两个构造函数，让其行为一致，然而作为著名项目的已有代码，相关改动牵一发而动全身，最终处方法是我在 <a href="https://github.com/PikaLabs/pink/pull/30">pr</a> 中对相关函数所在的头文件中加上注释以进行<a href="https://github.com/divebomb/pink/blob/master/pink/include/server_thread.h#L195">调用提醒</a>。</p>
+
+<p>至于为何要依赖 tcp 自身的 keepalive 机制而不是在逻辑层对 tcp 连接进行超时判断，pika 开发者陈宗志大师给出了一个 <a href="http://baotiao.github.io/tech/2015/09/25/tcp-keepalive/">blog</a> 进行解释，仁者见仁智者见智，这个就不再次探讨了。</p>
 
 <p>在处理这个问题时，与胡伟、<a href="https://github.com/zhengshuxin">郑树新</a>、<a href="https://github.com/loveyacper">bert</a>、<a href="https://github.com/git-hulk">hulk</a>等一帮老友进行了相关探讨，受益匪浅，在此一并致谢！</p>
 
@@ -295,6 +297,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 
 
