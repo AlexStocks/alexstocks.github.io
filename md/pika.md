@@ -125,7 +125,7 @@ Pika-port 调用了上图[第一个构造函数](https://github.com/pikalabs/pin
 
 恰当的处理方法当然是重构两个构造函数，让其行为一致，然而作为著名项目的已有代码，相关改动牵一发而动全身，最终处理方法是我在 [pr](https://github.com/PikaLabs/pink/pull/30) 中对相关函数所在的头文件中加上注释以进行[调用提醒](https://github.com/divebomb/pink/blob/master/pink/include/server_thread.h#L195)。
 
-至于为何要依赖 tcp 自身的 keepalive 机制而不是在逻辑层对 tcp 连接进行超时判断，pika 开发者陈宗志大师给出了一个 [blog](http://baotiao.github.io/tech/2015/09/25/tcp-keepalive/) 进行解释，仁者见仁智者见智，这个就不再次探讨了。
+至于为何要依赖 tcp 自身的 keepalive 机制而不是在逻辑层对 tcp 连接进行超时判断，pika 开发者陈宗志给出了一个 [blog](http://baotiao.github.io/tech/2015/09/25/tcp-keepalive/) 进行解释，仁者见仁智者见智，这个就不再次探讨了。
 
 在处理这个问题时，与胡伟、[郑树新](https://github.com/zhengshuxin)、[bert](https://github.com/loveyacper)、[hulk](https://github.com/git-hulk)等一帮老友进行了相关探讨，受益匪浅，在此一并致谢！
 
