@@ -1,6 +1,6 @@
 ## 一套高可用群聊消息系统实现
 ---
-*written by Alex Stocks on 2017/12/31*
+*written by Alex Stocks on 2017/12/31，版权所有，无授权不得转载*
 
 ### 1 极简实现
 ---
@@ -90,9 +90,9 @@ Proxy详细流程如下：
 - 5 启动一个线程关注Registry上的Broker路径/pubsub/broker，以实时获取以下信息：
 
 		Broker Partition Number；
-		新的Broker Partition（此时发生了扩容）；
-		Broker Partition内新的broker replica（Partition内发生了replica扩容）；
-		Broker Parition内某replica挂掉的信息；
+	​	新的Broker Partition（此时发生了扩容）；
+	​	Broker Partition内新的broker replica（Partition内发生了replica扩容）；
+	​	Broker Parition内某replica挂掉的信息；
 
 - 6 定时向各个Broker Partition replica发送心跳，异步等待Broker返回的心跳响应包，以探测其活性，以保证不向超时的replica转发Room Message；
 - 7 启动一个线程定时读取Registry上的Broker路径/pubsub/broker下各个子节点的值，以定时轮询的策略观察Broker Partition Number变动，以及各Partition的变动情况，作为实时策略的补充；同时定时检查心跳包超时的Broker，从有效的BrokerList中删除；
@@ -170,9 +170,9 @@ Router详细流程如下：
 - 5 启动一个线程关注Registry上的Broker路径/pubsub/broker，以实时获取以下信息：
 
 		Broker Partition Number；
-		新的Broker Partition（此时发生了扩容）；
-		Broker Partition内新的broker replica（Partition内发生了replica扩容）；
-		Broker Parition内某replica挂掉的信息；
+	​	新的Broker Partition（此时发生了扩容）；
+	​	Broker Partition内新的broker replica（Partition内发生了replica扩容）；
+	​	Broker Parition内某replica挂掉的信息；
 
 - 6 定时向各个Broker Partition replica发送心跳，异步等待Broker返回的心跳响应包，以探测其活性，以保证不向超时的replica转发Gateway Message；
 - 7 启动一个线程定时读取Registry上的Broker路径/pubsub/broker下各个子节点的值，以定时轮询的策略观察Broker Partition Number变动，以及各Partition的变动情况，作为实时策略的补充；同时定时检查心跳包超时的Broker，从有效的BrokerList中删除；
@@ -265,9 +265,9 @@ Gateway详细流程如下：
 - 3 启动一个线程关注Registry上的Router路径/pubsub/router，以实时获取以下信息：
 
 		Router Partition Number；
-		新的Router Partition（此时发生了扩容）；
-		Partition内新的replica（Partition内发生了replica扩容）；
-		Parition内某replica挂掉的信息；
+	​	新的Router Partition（此时发生了扩容）；
+	​	Partition内新的replica（Partition内发生了replica扩容）；
+	​	Parition内某replica挂掉的信息；
 
 - 4 定时向各个Partition replica发送心跳，异步等待Router返回的心跳响应包，以探测其活性，以保证不向超时的replica转发Gateway Message；
 - 4 启动一个线程定时读取Registry上的Router路径/pubsub/router下各个子节点的值，以定时轮询的策略观察Router Partition Number变动，以及各Partition的变动情况，作为实时策略的补充；同时定时检查心跳包超时的Router，从有效的BrokerList中删除；
@@ -311,8 +311,8 @@ Router详细流程如下：
 - 6 启动一个线程关注Registry路径/pubsub/router，以实时获取以下信息：
 
 		Router Partition Number；
-		Partition内新的replica（Partition内发生了replica扩容）；
-		Parition内某replica挂掉的信息；
+	​	Partition内新的replica（Partition内发生了replica扩容）；
+	​	Parition内某replica挂掉的信息；
 
 - 7 从Database加载数据；
 - 8 启动一个线程异步处理MessageQueue内的Gateway Message，把Gateway Message转发给同Partition内其他peer replica，然后依据规则【RoomID % BrokerPartitionNumber == BrokerReplicaPartitionID % BrokerPartitionNumber】转发给BrokerList内每个Broker；处理Broker发来的心跳包，把Broker的信息存入本地BrokerList，然后给Broker发送回包；
@@ -339,9 +339,9 @@ Broker详细流程如下：
 - 5 启动一个线程关注Registry路径/pubsub/router，以实时获取以下信息：
 
 		Router Partition Number；
-		新的Router Partition（此时发生了扩容）；
-		Partition内新的replica（Partition内发生了replica扩容）；
-		Parition内某replica挂掉的信息；
+	​	新的Router Partition（此时发生了扩容）；
+	​	Partition内新的replica（Partition内发生了replica扩容）；
+	​	Parition内某replica挂掉的信息；
 
 - 6 依据规则【RouterPartitionID % BrokerPartitionNum == BrokerPartitionID % BrokerPartitionNum，RouterReplicaID = BrokerReplicaID % BrokerPartitionNum】选定目标Router Partition下某个Router replica，向其发送心跳消息，包含BrokerPartitionNum、BrokerPartitionID、BrokerHostAddr和精确到秒级的Timestamp，并异步等待所有Router replica的回复，所有Router转发来的Gateway Message放入GatewayMessageQueue；
 - 7 依据规则【BrokerPartitionID == RoomID % BrokerParitionNum】从Database加载数据；

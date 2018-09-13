@@ -212,9 +212,9 @@ RocksDB 控制写内存 buffer 数目的参数是 `Options::max_write_buffer_num
 在 **1.8** 章节里提到 “block 是数据存储和传递的基本单元”，RocksDB 的数据是一个 range 的 key-value 构成一个 Region，根据局部性原理每次访问一个 Region 的 key 的时候，有很多概率会访问其相邻的 key，每个 Region 的 keys 放在一个 block 里，多个 Region 的 keys 放在多个 block 里。
 
 下面以文件系统作为类比，详细解释下 RocksDB 的文件系统：
-	
-	filename -> permission-bits, length, list of file_block_ids
-	file_block_id -> data
+​	
+​	filename -> permission-bits, length, list of file_block_ids
+​	file_block_id -> data
 
 以多个维度组织 key 的时候，我们可能希望 filename 的前缀都是 ‘/‘， 而 file_block_id 的前缀都是 ‘0’，这样可以把他们分别放在不同的 block 里，以方便快速查询。
 
@@ -304,7 +304,7 @@ assert(status.ok());
 ```
 
 还有其他一些参数，可详细阅读参考文档4。
-	
+​	
 #### 1.18 Bloom Filter
 ---
 
@@ -362,7 +362,7 @@ filter是 bloom filter 的实现，如果假阳率是 1%，每个key占用 10 bi
 如果 `cache_index_and_filter_blocks` 被设置为 false （其值默认就是 false），index/filter 个数就会受 `max_open_files` 影响，官方建议把这个选项设置为 -1，以方便 RocksDB 加载所有的 index 和 filter 文件，最大化程序性能。
 
 可以通过如下代码获取 index & filter 内存量大小：
-	
+​	
 ```c++
 	std::string out;
 	db->GetProperty(“rocksdb.estimate-table-readers-mem”, &out);
@@ -386,7 +386,7 @@ block cache、index & filter 都是读 buffer，而 memtable 则是写 buffer，
 这部分内存空间一般占用总量不多，但是如果有 100k 之多的transactions 发生，每个 iterator 与一个 data block 外加一个 L1 的 data block，所以内存使用量大约为 `num_iterators * block_size * ((num_levels-1) + num_l0_files)`。
 
 可以通过如下代码获取 Pin Blocks 内存量大小：
-	
+​	
 ```c++
 	table_options.block_cache->GetPinnedUsage();
 ```
@@ -478,13 +478,13 @@ index 与 filter 一般访问频次比 data 高，所以把他们放到一起会
 * pin\_l0\_filter\_and\_index\_blocks\_in\_cache 把 level0 的 index 以及 filter block 放到 Block Cache 中，因为 l0 访问频次最高，一般内存容量不大，占用不了多大内存空间。
 
 SimCache 用于评测 Cache 的命中率，它封装了一个真正的 Cache，然后用给定的 capacity 进行 LRU 测算，代码如下:
-	
-	// This cache is the actual cache use by the DB.
-	std::shared_ptr<Cache> cache = NewLRUCache(capacity);
-	// This is the simulated cache.
-	std::shared_ptr<Cache> sim_cache = NewSimCache(cache, sim_capacity, sim_num_shard_bits);
-	BlockBasedTableOptions table_options;
-	table_options.block_cache = sim_cache;
+​	
+​	// This cache is the actual cache use by the DB.
+​	std::shared_ptr<Cache> cache = NewLRUCache(capacity);
+​	// This is the simulated cache.
+​	std::shared_ptr<Cache> sim_cache = NewSimCache(cache, sim_capacity, sim_num_shard_bits);
+​	BlockBasedTableOptions table_options;
+​	table_options.block_cache = sim_cache;
 
 大概只有容量的 2% 会被用于测算。
 
@@ -965,15 +965,12 @@ RocksDB 每次进行更新操作就会把更新内容写入 Manifest 文件，�
 RocksDB 提供了 point-of-time 数据备份功能，可以调用 `BackupEngine::CreateNewBackup(db, flush_before_backup = false)` 接口进行数据备份， 其大致流程如下：
 
 * 禁止删除文件（sst 文件和 log 文件）；
-
 * 调用 `GetLiveFiles()` 获取当前的有效文件，如 table files, current, options and manifest file;
-
 * 将 RocksDB 中的所有的 sst/Manifest/配置/CURRENT 等有效文件备份到指定目录；
 
     GetLiveFiles() 接口返回的 SST 文件如果已经被备份过，则这个文件不会被重新复制到目标备份目录，但是 `BackupEngine` 会对这个文件进行 checksum 校验，如果校验失败则会中止备份过程。
 
 * 如果 `flush_before_backup` 为 false，则`BackupEngine` 会调用 `GetSortedWalFiles()` 接口把当前有效的 wal 文件也拷贝到备份目录；
-
 * 重新允许删除文件。
 
 sst 文件只有在 compact 时才会被删除，所以禁止删除就相当于禁止了 compaction。别的 RocksDB 在获取这些备份数据文件后会依据 Manifest 文件重构 LSM 结构的同时，也能恢复出 WAL 文件，进而重构出当时的 memtable 文件。
