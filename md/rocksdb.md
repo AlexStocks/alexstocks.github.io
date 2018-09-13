@@ -71,10 +71,10 @@ RocksDB 能够保存某个版本的所有数据（可称之为一个 Snapshot）
 
 如果 ReadOptions::snapshot 为 null，则读取的 snapshot 为 RocksDB 当前版本数据的 snapshot。
 
-#### 1.4 Slice
+#### 1.4 Slice & PinnableSlice
 ---
 
-不管是 `it->key()` 还是 `it->value()`，其值类型都是 `rocksdb::Slice`。 Slice 自身由一个长度字段以及一个指向外部一个内存区域的指针构成，返回 Slice 比返回一个 string 廉价，并不存在内存拷贝的问题。RocksDB 自身会给 key 和 value 添加一个 C-style 的 ‘\0’，所以 slice 的指针指向的内存区域自身作为字符串输出没有问题。
+不管是 `it->key()` 还是 `it->value()`，其值类型都是 `rocksdb::Slice`。 Slice 自身由一个长度字段[ size_t size_ ]以及一个指向外部一个内存区域的指针[ const char* data_ ]构成，返回 Slice 比返回一个 string 廉价，并不存在内存拷贝的问题。RocksDB 自身会给 key 和 value 添加一个 C-style 的 ‘\0’，所以 slice 的指针指向的内存区域自身作为字符串输出没有问题。
 
 Slice 与 string 之间的转换代码如下：
 
@@ -98,7 +98,45 @@ Slice 与 string 之间的转换代码如下：
 
 当退出 if 语句块后，slice 内部指针指向的内存区域已经不存在，此时再使用导致程序出问题。
 
+Slice 自身虽然能够减少内存拷贝，但是在离开相应的 scope 之后，其值就会被释放，rocksdb v5.4.5 版本引入一个 PinnableSlice，其继承自 Slice，可替换之前 Get 接口的出参：
+
+```c++
+Status Get(const ReadOptions& options,
+                     ColumnFamilyHandle* column_family, const Slice& key,
+                     std::string* value)
+
+virtual Status Get(const ReadOptions& options,
+                     ColumnFamilyHandle* column_family, const Slice& key,
+                     PinnableSlice* value)
+```
+
+这里的 PinnableSlice 如同 Slice 一样可以减少内存拷贝，提高读性能，但是 PinnableSlice 内部有一个引用计数功能，可以实现数据内存的延迟释放，延长相关数据的生命周期，相关详细分析详见 [参考文档15](https://zhuanlan.zhihu.com/p/30807728)。
+
+[参考文档16](https://rocksdb.org/blog/2017/08/24/pinnableslice.html) 提到 `PinnableSlice, as its name suggests, has the data pinned in memory. The pinned data are released when PinnableSlice object is destructed or when ::Reset is invoked explicitly on it.`。所谓的 **pinned in memory** 即为引用计数之意，文中提到内存数据释放是在 PinnableSlice 析构或者调用 ::Reset 之后。
+
+用户也可以把一个 std::string 对象作为 PinnableSlice 构造函数的参数， 把这个 std::string 指定为 PinnableSlice 的初始内部 buffer [ rocksdb/slice.h:PinnableSlice::buf_ ]，使用方法可以参考 [用新 Get 实现的旧版本的 Get](https://github.com/facebook/rocksdb/blob/9e583711144f580390ce21a49a8ceacca338fcd5/include/rocksdb/db.h#L314)：
+
+```c++
+ virtual inline Status Get(const ReadOptions& options,
+                            ColumnFamilyHandle* column_family, const Slice& key,
+                            std::string* value) {
+    assert(value != nullptr);
+    PinnableSlice pinnable_val(value);
+    assert(!pinnable_val.IsPinned());
+    auto s = Get(options, column_family, key, &pinnable_val);
+    if (s.ok() && pinnable_val.IsPinned()) {
+      value->assign(pinnable_val.data(), pinnable_val.size());
+    }  // else value is already assigned
+    return s;
+  }
+```
+
+通过 rocksdb/slice.h:PinnableSlice::PinSlice 实现代码可以看出，只有在这个函数里 PinnableSlice::pinned_ 被赋值为 true， 同时内存区域存放在 PinnableSlice::data_ 指向的内存区域，故而 PinnableSlice::IsPinned 为 true，则 内部 buffer [ rocksdb/slice.h:PinnableSlice::buf_ ] 必定为空。
+
+具体的编程用例可参考 [pinnalble_slice.cc](https://github.com/alexstocks/c-practice/blob/master/db/rocksdb/src/pinnalble_slice.cc)。
+
 #### 1.5 Transactions
+
 ---
 
 当使用 TransactionDB 或者 OptimisticTransactionDB 的时候，可以使用 RocksDB 的 BEGIN/COMMIT/ROLLBACK 等事务 API。RocksDB 支持活锁或者死等两种事务。
@@ -924,17 +962,77 @@ RocksDB 每次进行更新操作就会把更新内容写入 Manifest 文件，�
 #### 6.8 Backup
 ---
 
-RocksDB 提供了 point-of-time 数据备份功能，其大致流程如下：
+RocksDB 提供了 point-of-time 数据备份功能，可以调用 `BackupEngine::CreateNewBackup(db, flush_before_backup = false)` 接口进行数据备份， 其大致流程如下：
 
 * 禁止删除文件（sst 文件和 log 文件）；
-* 将 RocksDB 中的所有的 sst/Manifest/配置/CURRENT 文件备份到指定目录；
-* 允许删除文件。
+
+* 调用 `GetLiveFiles()` 获取当前的有效文件，如 table files, current, options and manifest file;
+
+* 将 RocksDB 中的所有的 sst/Manifest/配置/CURRENT 等有效文件备份到指定目录；
+
+    GetLiveFiles() 接口返回的 SST 文件如果已经被备份过，则这个文件不会被重新复制到目标备份目录，但是 `BackupEngine` 会对这个文件进行 checksum 校验，如果校验失败则会中止备份过程。
+
+* 如果 `flush_before_backup` 为 false，则`BackupEngine` 会调用 `GetSortedWalFiles()` 接口把当前有效的 wal 文件也拷贝到备份目录；
+
+* 重新允许删除文件。
 
 sst 文件只有在 compact 时才会被删除，所以禁止删除就相当于禁止了 compaction。别的 RocksDB 在获取这些备份数据文件后会依据 Manifest 文件重构 LSM 结构的同时，也能恢复出 WAL 文件，进而重构出当时的 memtable 文件。
 
 在进行 Backup 的过程中，写操作是不会被阻塞的，所以 WAL 文件内容会在 backup 过程中发生改变。RocksDB 的 flush_before_backup 选项用来控制在 backup 时是否也拷贝 WAL，其值为 true 则不拷贝。
 
+##### 6.8.1 Backup 编程接口
+---
+
+RocksDB 提供的 Backup 接口使用方法详见 [参考文档17](https://github.com/facebook/rocksdb/wiki/How-to-backup-RocksDB%3F)。include/rocksdb/utilities/backupable_db.h 主要提供了 `BackupEngine` 和 `BackupEngineReadOnly`，分别用于备份数据和恢复数据。
+
+`BackupEngine`备份数据是增量式备份【设置选项 `BackupableDBOptions::share_table_files` 】，调用 `BackupEngine::CreateNewBackup()` 接口进行备份后，可以调用接口 `BackupEngine::GetBackupInfo()`获取备份文件的信息：ID、timestamp、size、file number 和 metadata【用户自定义数据】。
+
+![](../pic/rocksdb_backup_dir_list.png)
+
+备份 DB 目录见上图，各个备份文件的 size 是其 private 目录下数据与 shared 目录下数据之和，shared 下面存储的数据是各个备份公共的数据，所以所有备份文件的 size 之和可能大于实际占用的磁盘空间大小。meta 目录下各个文件的格式详见 utilities/backupable/backupable_db.cc，上图中 `meta/1`内容如下：
+
+```tex
+1536821592   # checksum
+1            # backup ID
+4            # private file number
+private/1/MANIFEST-000008 crc32 272357318
+private/1/OPTIONS-000011 crc32 3039312718
+private/1/CURRENT crc32 1581506767
+private/1/000009.log crc32 3494278128
+```
+
+Private 目录则包含一些非 SST 文件：options, current, manifest, WALs。如果 `Options::share_table_files` 为false，则 private 目录会存储 SST 文件。如果 `Options::share_table_files` 为 true 且 ` Options::share_files_with_checksum` 为 false，shared 目录包含一些 SST 文件，SST 文件命名与原 RocksDB 目录下命名一致，所以在一个备份目录下只能备份一个 RocksDB 实例的数据。
+
+接口 `BackupEngine::VerifyBackups()` 用于对备份数据进行校验，但是仅仅根据 meta目录下各个 ID 文件记录的文件 size 与 相应的 private 目录下的文件的 size 是否相等，并不会进行 checksum 校验， 校验 checksum 需要读取数据文件，比较费时。另外需要注意的是，这个接口相应的 `BackupEngine` 句柄只能由`BackupEngine::CreateNewBackup()` 创建，也即只能在进行文件备份且句柄未失效前进行数据校验，因为校验时所依据的数据是在备份过程中产生的。
+
+接口 `BackupEngineReadOnly::RestoreDBFromBackup(backup_id, db_dir, wal_dir,restore_options)` 用于备份数据恢复，参数 `db_dir` 和`wal_dir`大部分场景下都是同一个目录，但在 [参考文档18](https://www.jianshu.com/p/46bb78bca726?utm_source=oschina-app) 所提供的把 RocksDB 当做纯内存数据库的使用场景下， `db_dir` 在内存虚拟文件系统上，而 `wal_dir` 则是一个磁盘文件目录。进行数据恢复时，这个接口还会根据 meta 下相应 ID 记录的 备份数据 checksum 对 private 目录下的数据进行校验，发错错误时返回 `Status::Corruption` 错误。
+
+##### 6.8.2 Backup 性能优化
+---
+
+`BackupEngine::Open()` 启用时需要进行一些初始化工作，所以它会消耗一些时间。例如需要把本地 RocksDB 数据备份到远端的 HDFS 上，这个过程就可能消耗多个 network round-trip，所以在实际使用中不要频繁创建 `BackupEngine` 对象。
+
+加快 BackupEngine 对象的方式之一是通过调用 `PurgeOldBackups(N)`来删除非必要的备份文件，接口 `PurgeOldBackups(N)` 本身之意就是只保留最近的 N 个备份，多余的会被删除掉。也可以通过调用 `DeleteBackup(id)` 接口根据备份 ID 删除某个确定的备份。
+
+初始化 BackupEngine 对象过后，备份的速度就取决于本地与远端的媒介运行速度了。例如，如果本地媒介是 HDD，在其自身饱和运转之后就算是打开再多的线程也无济于事。如果媒介是一个小的 HDFS 集群，其表现也不会很好。如果本地是 SSD 而远端是一个大的 HDFS 集群，则相较于单线程， 16 个备份线程会被备份时间缩短 2/3。
+
+##### 6.8.3 高级编程接口
+---
+
+* `BackupEngine::CreateNewBackupWithMetadata()` 用于设置 metadata，例如设置你能辨识的备份 ID，metadata 可以通过 `BackupEngine::GetBackupInfo()` 获取；
+* `rocksdb::LoadLatestOptions()` or `rocksdb:: LoadOptionsFromFile()` RocksDB 现在也能对 RocksDB 的 options 进行备份，可以通过这两个接口获取相应备份的 Options；
+* `BackupableDBOptions::backup_env` 用于设置备份目录的 ENV；
+* `BackupableDBOptions::backup_dir` 用于设置备份文件的根目录；
+* `BackupableDBOptions::share_table_files` 如果这个选项为 true，则 `BackupEngine` 会进行增量备份，把所有的 SST 文件存储到 "shared/" 子目录，其危险是 SST 文件名字可能相同【在多个 RocksDB 对象共用同一备份目录的场景下】；
+* `BackupableDBOptions::share_files_with_checksum` 在多个 RocksDB 对象共用同一备份目录的场景下，SST 文件名字可能相同，把这个选项设置为 true 可以处理这个冲突，SST 文件会被 `BackupEngine` 通过 checksum/size/seqnum 三个参数进行校验；
+* `BackupableDBOptions::max_background_operations` 这个参数用于设置备份和恢复数据的线程数，在使用分布式文件系统如 HDFS 场景下，这个参数会大大提高备份和恢复的效率；
+* `BackupableDBOptions::info_log` 用于设置 LOG 对象，可以在备份和恢复数据时进行日志输出；
+* `BackupableDBOptions::sync` 如果设置为 true，`BackupEngine` 会调用 `fsync` 系统接口进行文件数据和 metadata 的数据写入，以防备系统重启或者崩溃时的数据不一致现象，大部分情况下如果为追求性能，这个参数可以设置为 false；
+* `BackupableDBOptions::destroy_old_data` 如果这个选项为 true，新的 `BackupEngine` 被创建出来之后备份目录下旧的备份数据会被清空；
+* `BackupEngine::CreateNewBackup(db, flush_before_backup = false)` flush_before_backup 被设置为 true 时，`BackupEngine` 首先 flush memtable，然后再进行数据复制，而 WAL log 文件不会被复制，因为 flush 时候它会被删掉，如果这个为 false 则相应的 WAL 日志文件也会被复制以保证备份数据与当前 RocksDB 状态一致；
+
 ### 7 FAQ
+
 ---
 
 官方 wiki 【参考文档 11】提供了一份 FAQ，下面节选一些比较有意义的建议，其他内容请移步官方文档。
@@ -1017,11 +1115,19 @@ sst 文件只有在 compact 时才会被删除，所以禁止删除就相当于�
 - 12 [设计思路和主要知识点](https://note.youdao.com/share/?id=60b7e3aa14a01c85d05ee8a7e4d16c46&type=note#/)
 - 13 [RocksDB · MANIFEST文件介绍](https://yq.aliyun.com/articles/594728?spm=a2c4e.11157919.spm-cont-list.17.302c27aeDR3OyC)
 - 14 [RocksDB. Merge Operator](https://www.jianshu.com/p/e13338a3f161)
+- 15 [使用PinnableSlice减少Get时的内存拷贝](https://zhuanlan.zhihu.com/p/30807728)
+- 16 [PinnableSlice; less memcpy with point lookups](https://rocksdb.org/blog/2017/08/24/pinnableslice.html)
+- 17 [How to backup RocksDB?](https://github.com/facebook/rocksdb/wiki/How-to-backup-RocksDB%3F)
+- 18 [RocksDB系列十三:How to persist in memory RocksDB database?](https://www.jianshu.com/p/46bb78bca726?utm_source=oschina-app)
 
 ## 扒粪者-于雨氏 ##
 
 > 2018/03/28，于雨氏，初作此文于海淀。
-> 
+>
 > 2018/07/06，添加 5.4 节 `Merge Operator`。
-> 
+>
 > 2018/09/06，添加第 8 章 `Pika`。
+>
+> 2018/09/12，于西二旗，添加 1.4 节 `PinnableSlice` 。
+> 
+> 2018/09/13，于西二旗，依据参考文档 17 补充 5.8 节 `Backup` 。
