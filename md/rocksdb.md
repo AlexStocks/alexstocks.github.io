@@ -957,7 +957,16 @@ Manifest Block 的详细结构如上图所示。
 
 RocksDB 每次进行更新操作就会把更新内容写入 Manifest 文件，同时它会更新版本号。
 
-版本号是一个 8 字节的证书，每个 key 更新的时，除了新数据被写入数据文件，同时记录下 RocksDB 的版本号。RocksDB 的 Snapshot 数据仅仅是逻辑数据，并没有对应的真实存在的物理数据，仅仅对应一下当前 RocksDB 的全局版本号而已，只要 Snapshot 存在，每个 key 对应版本号的数据在后面的更新、删除、合并时会一并存在，不会被删除，以保证数据一致性。 
+版本号是一个 8 字节的证书，每个 key 更新时，除了新数据被写入数据文件，同时记录下 RocksDB 的版本号。RocksDB 的 Snapshot 数据仅仅是逻辑数据，并没有对应的真实存在的物理数据，仅仅对应一下当前 RocksDB 的全局版本号而已，只要 Snapshot 存在，每个 key 对应版本号的数据在后面的更新、删除、合并时会一并存在，不会被删除，以保证数据一致性。 
+
+##### 6.7.1  Checkpoints  
+---
+
+Checkpoints 是 RocksDB 提供的一种 snapshot，独立的存在一个单独的不同于 RocksDB 自身数据目录的目录中，既可以 ReadOnly 模式打开，也可以 Read-Write 模式打开。Checkpoints 被用于全量或者增量 Backup 机制中。
+
+如果 Checkpoints 目录和 RocksDB 数据目录在同一个文件系统上，则 Checkpoints 目录下的 SST 是一个 hard link【SST 文件是 Read-Only的】，而 manifest 和 CURRENT 两个文件则会被拷贝出来。如果 DB 有多个 Column Family，wal 文件也会被复制，其时间范围足以覆盖 Checkpoints 的起始和结束，以保证数据一致性。
+
+如果以 Read-Write 模式打开 Checkpoints 文件，则其中过时的 SST 文件会被删除掉。
 
 #### 6.8 Backup
 ---
@@ -1116,6 +1125,7 @@ Private 目录则包含一些非 SST 文件：options, current, manifest, WALs�
 - 16 [PinnableSlice; less memcpy with point lookups](https://rocksdb.org/blog/2017/08/24/pinnableslice.html)
 - 17 [How to backup RocksDB?](https://github.com/facebook/rocksdb/wiki/How-to-backup-RocksDB%3F)
 - 18 [RocksDB系列十三:How to persist in memory RocksDB database?](https://www.jianshu.com/p/46bb78bca726?utm_source=oschina-app)
+- 19 [Checkpoints](https://github.com/facebook/rocksdb/wiki/Checkpoints)
 
 ## 扒粪者-于雨氏 ##
 
@@ -1127,4 +1137,4 @@ Private 目录则包含一些非 SST 文件：options, current, manifest, WALs�
 >
 > 2018/09/12，于西二旗，添加 1.4 节 `PinnableSlice` 。
 > 
-> 2018/09/13，于西二旗，依据参考文档 17 补充 5.8 节 `Backup` 。
+> 2018/09/13，于西二旗，依据参考文档 17 补充 5.8 节 `Backup` 和 5.7.1 小节 `Checkpoints`。

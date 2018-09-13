@@ -325,10 +325,10 @@ delete txn;</code></pre></div>
 
 <p>在 <strong>1.8</strong> 章节里提到 “block 是数据存储和传递的基本单元”，RocksDB 的数据是一个 range 的 key-value 构成一个 Region，根据局部性原理每次访问一个 Region 的 key 的时候，有很多概率会访问其相邻的 key，每个 Region 的 keys 放在一个 block 里，多个 Region 的 keys 放在多个 block 里。</p>
 
-<p>下面以文件系统作为类比，详细解释下 RocksDB 的文件系统：</p>
-
-<div><pre><code class="language-none">filename -&gt; permission-bits, length, list of file_block_ids
-file_block_id -&gt; data</code></pre></div>
+<p>下面以文件系统作为类比，详细解释下 RocksDB 的文件系统：
+​<br>
+​   filename -&gt; permission-bits, length, list of file<em>block</em>ids
+​   file<em>block</em>id -&gt; data</p>
 
 <p>以多个维度组织 key 的时候，我们可能希望 filename 的前缀都是 ‘/‘， 而 file<em>block</em>id 的前缀都是 ‘0’，这样可以把他们分别放在不同的 block 里，以方便快速查询。</p>
 
@@ -421,7 +421,8 @@ options.max_background_flushes = 1;
 rocksdb::Status status = rocksdb::DB::Open(options, “/tmp/testdb”, &amp;db);
 assert(status.ok());</code></pre></div>
 
-<p>还有其他一些参数，可详细阅读参考文档4。</p>
+<p>还有其他一些参数，可详细阅读参考文档4。
+​   </p>
 
 <h4 id="toc_20">1.18 Bloom Filter</h4>
 
@@ -487,10 +488,12 @@ assert(status.ok());</code></pre></div>
 
 <p>如果 <code>cache_index_and_filter_blocks</code> 被设置为 false （其值默认就是 false），index/filter 个数就会受 <code>max_open_files</code> 影响，官方建议把这个选项设置为 -1，以方便 RocksDB 加载所有的 index 和 filter 文件，最大化程序性能。</p>
 
-<p>可以通过如下代码获取 index &amp; filter 内存量大小：</p>
-
-<div><pre><code class="language-cpp">    std::string out;
-    db-&gt;GetProperty(“rocksdb.estimate-table-readers-mem”, &amp;out);</code></pre></div>
+<p>可以通过如下代码获取 index &amp; filter 内存量大小：
+​<br>
+<code>c++
+    std::string out;
+    db-&gt;GetProperty(“rocksdb.estimate-table-readers-mem”, &amp;out);
+</code></p>
 
 <h4 id="toc_25">2.3 Indexes and bloom filters</h4>
 
@@ -509,9 +512,11 @@ assert(status.ok());</code></pre></div>
 
 <p>这部分内存空间一般占用总量不多，但是如果有 100k 之多的transactions 发生，每个 iterator 与一个 data block 外加一个 L1 的 data block，所以内存使用量大约为 <code>num_iterators * block_size * ((num_levels-1) + num_l0_files)</code>。</p>
 
-<p>可以通过如下代码获取 Pin Blocks 内存量大小：</p>
-
-<div><pre><code class="language-cpp">    table_options.block_cache-&gt;GetPinnedUsage();</code></pre></div>
+<p>可以通过如下代码获取 Pin Blocks 内存量大小：
+​<br>
+<code>c++
+    table_options.block_cache-&gt;GetPinnedUsage();
+</code></p>
 
 <h4 id="toc_27">2.5 读流程</h4>
 
@@ -600,14 +605,14 @@ table_options.cache_index_and_filter_blocks = true;</code></pre></div>
 <li>pin_l0_filter_and_index_blocks_in_cache 把 level0 的 index 以及 filter block 放到 Block Cache 中，因为 l0 访问频次最高，一般内存容量不大，占用不了多大内存空间。</li>
 </ul>
 
-<p>SimCache 用于评测 Cache 的命中率，它封装了一个真正的 Cache，然后用给定的 capacity 进行 LRU 测算，代码如下:</p>
-
-<div><pre><code class="language-none">// This cache is the actual cache use by the DB.
-std::shared_ptr&lt;Cache&gt; cache = NewLRUCache(capacity);
-// This is the simulated cache.
-std::shared_ptr&lt;Cache&gt; sim_cache = NewSimCache(cache, sim_capacity, sim_num_shard_bits);
-BlockBasedTableOptions table_options;
-table_options.block_cache = sim_cache;</code></pre></div>
+<p>SimCache 用于评测 Cache 的命中率，它封装了一个真正的 Cache，然后用给定的 capacity 进行 LRU 测算，代码如下:
+​<br>
+​   // This cache is the actual cache use by the DB.
+​   std::shared<em>ptr<Cache> cache = NewLRUCache(capacity);
+​   // This is the simulated cache.
+​   std::shared</em>ptr<Cache> sim<em>cache = NewSimCache(cache, sim</em>capacity, sim<em>num</em>shard<em>bits);
+​   BlockBasedTableOptions table</em>options;
+​   table<em>options.block</em>cache = sim_cache;</p>
 
 <p>大概只有容量的 2% 会被用于测算。</p>
 
@@ -1177,17 +1182,27 @@ manifest-log-file = { version, version-edit* }
 
 <p>RocksDB 每次进行更新操作就会把更新内容写入 Manifest 文件，同时它会更新版本号。</p>
 
-<p>版本号是一个 8 字节的证书，每个 key 更新的时，除了新数据被写入数据文件，同时记录下 RocksDB 的版本号。RocksDB 的 Snapshot 数据仅仅是逻辑数据，并没有对应的真实存在的物理数据，仅仅对应一下当前 RocksDB 的全局版本号而已，只要 Snapshot 存在，每个 key 对应版本号的数据在后面的更新、删除、合并时会一并存在，不会被删除，以保证数据一致性。 </p>
+<p>版本号是一个 8 字节的证书，每个 key 更新时，除了新数据被写入数据文件，同时记录下 RocksDB 的版本号。RocksDB 的 Snapshot 数据仅仅是逻辑数据，并没有对应的真实存在的物理数据，仅仅对应一下当前 RocksDB 的全局版本号而已，只要 Snapshot 存在，每个 key 对应版本号的数据在后面的更新、删除、合并时会一并存在，不会被删除，以保证数据一致性。 </p>
 
-<h4 id="toc_51">6.8 Backup</h4>
+<h5 id="toc_51">6.7.1  Checkpoints</h5>
+
+<hr>
+
+<p>Checkpoints 是 RocksDB 提供的一种 snapshot，独立的存在一个单独的不同于 RocksDB 自身数据目录的目录中，既可以 ReadOnly 模式打开，也可以 Read-Write 模式打开。Checkpoints 被用于全量或者增量 Backup 机制中。</p>
+
+<p>如果 Checkpoints 目录和 RocksDB 数据目录在同一个文件系统上，则 Checkpoints 目录下的 SST 是一个 hard link【SST 文件是 Read-Only的】，而 manifest 和 CURRENT 两个文件则会被拷贝出来。如果 DB 有多个 Column Family，wal 文件也会被复制，其时间范围足以覆盖 Checkpoints 的起始和结束，以保证数据一致性。</p>
+
+<p>如果以 Read-Write 模式打开 Checkpoints 文件，则其中过时的 SST 文件会被删除掉。</p>
+
+<h4 id="toc_52">6.8 Backup</h4>
 
 <hr>
 
 <p>RocksDB 提供了 point-of-time 数据备份功能，可以调用 <code>BackupEngine::CreateNewBackup(db, flush_before_backup = false)</code> 接口进行数据备份， 其大致流程如下：</p>
 
 <ul>
-<li><p>禁止删除文件（sst 文件和 log 文件）；</p></li>
-<li><p>调用 <code>GetLiveFiles()</code> 获取当前的有效文件，如 table files, current, options and manifest file;</p></li>
+<li>禁止删除文件（sst 文件和 log 文件）；</li>
+<li>调用 <code>GetLiveFiles()</code> 获取当前的有效文件，如 table files, current, options and manifest file;</li>
 <li><p>将 RocksDB 中的所有的 sst/Manifest/配置/CURRENT 等有效文件备份到指定目录；</p>
 
 <p>GetLiveFiles() 接口返回的 SST 文件如果已经被备份过，则这个文件不会被重新复制到目标备份目录，但是 <code>BackupEngine</code> 会对这个文件进行 checksum 校验，如果校验失败则会中止备份过程。</p></li>
@@ -1199,7 +1214,7 @@ manifest-log-file = { version, version-edit* }
 
 <p>在进行 Backup 的过程中，写操作是不会被阻塞的，所以 WAL 文件内容会在 backup 过程中发生改变。RocksDB 的 flush<em>before</em>backup 选项用来控制在 backup 时是否也拷贝 WAL，其值为 true 则不拷贝。</p>
 
-<h5 id="toc_52">6.8.1 Backup 编程接口</h5>
+<h5 id="toc_53">6.8.1 Backup 编程接口</h5>
 
 <hr>
 
@@ -1225,7 +1240,7 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 
 <p>接口 <code>BackupEngineReadOnly::RestoreDBFromBackup(backup_id, db_dir, wal_dir,restore_options)</code> 用于备份数据恢复，参数 <code>db_dir</code> 和<code>wal_dir</code>大部分场景下都是同一个目录，但在 <a href="https://www.jianshu.com/p/46bb78bca726?utm_source=oschina-app">参考文档18</a> 所提供的把 RocksDB 当做纯内存数据库的使用场景下， <code>db_dir</code> 在内存虚拟文件系统上，而 <code>wal_dir</code> 则是一个磁盘文件目录。进行数据恢复时，这个接口还会根据 meta 下相应 ID 记录的 备份数据 checksum 对 private 目录下的数据进行校验，发错错误时返回 <code>Status::Corruption</code> 错误。</p>
 
-<h5 id="toc_53">6.8.2 Backup 性能优化</h5>
+<h5 id="toc_54">6.8.2 Backup 性能优化</h5>
 
 <hr>
 
@@ -1235,7 +1250,7 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 
 <p>初始化 BackupEngine 对象过后，备份的速度就取决于本地与远端的媒介运行速度了。例如，如果本地媒介是 HDD，在其自身饱和运转之后就算是打开再多的线程也无济于事。如果媒介是一个小的 HDFS 集群，其表现也不会很好。如果本地是 SSD 而远端是一个大的 HDFS 集群，则相较于单线程， 16 个备份线程会被备份时间缩短 2/3。</p>
 
-<h5 id="toc_54">6.8.3 高级编程接口</h5>
+<h5 id="toc_55">6.8.3 高级编程接口</h5>
 
 <hr>
 
@@ -1253,7 +1268,7 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 <li><code>BackupEngine::CreateNewBackup(db, flush_before_backup = false)</code> flush<em>before</em>backup 被设置为 true 时，<code>BackupEngine</code> 首先 flush memtable，然后再进行数据复制，而 WAL log 文件不会被复制，因为 flush 时候它会被删掉，如果这个为 false 则相应的 WAL 日志文件也会被复制以保证备份数据与当前 RocksDB 状态一致；</li>
 </ul>
 
-<h3 id="toc_55">7 FAQ</h3>
+<h3 id="toc_56">7 FAQ</h3>
 
 <hr>
 
@@ -1306,13 +1321,13 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 <li>43 对于一个离线 DB 可以通过 &quot;sst<em>dump --show</em>properties --command=none&quot; 命令获取特定 sst 文件的 index &amp; filter 的 size，对于正在运行的 DB 可以通过读取 DB 的属性 &quot;kAggregatedTableProperties&quot; 或者调用 DB::GetPropertiesOfAllTables() 获取 DB 的 index &amp; filter 的 size。</li>
 </ul>
 
-<h3 id="toc_56">8 Pika</h3>
+<h3 id="toc_57">8 Pika</h3>
 
 <hr>
 
 <p>今年六月份公司打算使用 Codis + Pika 作为存储方案，故而最近三个月都在研究测试使用 Pika，稍微有些心得，一并记录于本文，以作记忆之用。</p>
 
-<h3 id="toc_57">8.1 相关参数</h3>
+<h3 id="toc_58">8.1 相关参数</h3>
 
 <hr>
 
@@ -1320,13 +1335,13 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 <li>target<em>file</em>size_base 这个参数就是 #5.1# 小节中的 &quot;target sise&quot;,是 level 1 SST 文件的 size。有使用者 “把pika的target-file-size-base从20M改到256M后，发现新写入数据时cpu消耗高30%左右，写入性能也有影响”，原因是“文件越大compaction代价越大”。</li>
 </ul>
 
-<h3 id="toc_58">8.2 使用场景</h3>
+<h3 id="toc_59">8.2 使用场景</h3>
 
 <hr>
 
 <p>360 内部 90% 的情况下，pika 都运行在 ssd上，只有不到 10% 的对读写速度要求不高的情况下写入到 SATA 盘上。</p>
 
-<h2 id="toc_59">参考文档</h2>
+<h2 id="toc_60">参考文档</h2>
 
 <hr>
 
@@ -1349,9 +1364,10 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 <li>16 <a href="https://rocksdb.org/blog/2017/08/24/pinnableslice.html">PinnableSlice; less memcpy with point lookups</a></li>
 <li>17 <a href="https://github.com/facebook/rocksdb/wiki/How-to-backup-RocksDB%3F">How to backup RocksDB?</a></li>
 <li>18 <a href="https://www.jianshu.com/p/46bb78bca726?utm_source=oschina-app">RocksDB系列十三:How to persist in memory RocksDB database?</a></li>
+<li>19 <a href="https://github.com/facebook/rocksdb/wiki/Checkpoints">Checkpoints</a></li>
 </ul>
 
-<h2 id="toc_60">扒粪者-于雨氏</h2>
+<h2 id="toc_61">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>2018/03/28，于雨氏，初作此文于海淀。</p>
@@ -1362,7 +1378,7 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 
 <p>2018/09/12，于西二旗，添加 1.4 节 <code>PinnableSlice</code> 。</p>
 
-<p>2018/09/13，于西二旗，依据参考文档 17 补充 5.8 节 <code>Backup</code> 。</p>
+<p>2018/09/13，于西二旗，依据参考文档 17 补充 5.8 节 <code>Backup</code> 和 5.7.1 小节 <code>Checkpoints</code>。</p>
 </blockquote>
 
 
@@ -1397,6 +1413,7 @@ gitalk.render('gitalk-container');
 <!-- Gitalk end -->
 
 </body>
+
 
 
 
