@@ -1,6 +1,6 @@
 ## 一种基于Redis的多租户多粒度分布式内存文件系统 ##
 ---
-*written by Alex Stocks on 2016/03/05*
+*written by Alex Stocks on 2016/03/05，版权所有，无授权不得转载*
 
 ### 1 前言 ###
 ---

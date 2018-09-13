@@ -1,6 +1,6 @@
 ## 一次Golang HTTP响应优化过程 ##
 ---
-*written by Alex Stocks on 2016/08/01*
+*written by Alex Stocks on 2016/08/01，版权所有，无授权不得转载*
 
 ### 1 前言 ###
 ---
@@ -34,7 +34,7 @@
 
 下面先贴出rpc框架中给客户端返回response的关键代码：
 
-	
+
 	func SendResponse(m *Message) error {
 		rsp := &http.Response{
 			Header:        r.Header,
@@ -141,28 +141,28 @@
 根据这个思路，修改后的SendResponse函数关键代码如下：
 
 	func SendResponse(m *Message) error {
-        rsp := &http.Response{
-                Header:        r.Header,
-                Body:          &buffer{b},
-                Status:        "200 OK",
-                StatusCode:    200,
-                Proto:         "HTTP/1.1",
-                ProtoMajor:    1,
-                ProtoMinor:    1,
-                ContentLength: int64(len(m.Body)),
-        }
-
+	    rsp := &http.Response{
+	            Header:        r.Header,
+	            Body:          &buffer{b},
+	            Status:        "200 OK",
+	            StatusCode:    200,
+	            Proto:         "HTTP/1.1",
+	            ProtoMajor:    1,
+	            ProtoMinor:    1,
+	            ContentLength: int64(len(m.Body)),
+	    }
+	
 		/*
-        	return rsp.Write(h.conn)
+	    	return rsp.Write(h.conn)
 		*/
-        rspBuf := bytes.NewBuffer(make([]byte, 0))
-        err := rsp.Write(rspBuf)
-        if err != nil {
-                return err
-        }
-
-        _, err = rspBuf.WriteTo(h.conn)
-        return err
+	    rspBuf := bytes.NewBuffer(make([]byte, 0))
+	    err := rsp.Write(rspBuf)
+	    if err != nil {
+	            return err
+	    }
+	
+	    _, err = rspBuf.WriteTo(h.conn)
+	    return err
 	}
 
 改进代码并重新部署程序后，用tcpdump抓包结果如下：

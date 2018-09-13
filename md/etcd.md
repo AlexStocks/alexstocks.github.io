@@ -438,24 +438,24 @@ key 初始创建的时候，generations[0]会被创建，当用户继续更新�
 put操作的 bboltdb 的key由 main+sub 构成：
 
 <!--- golang --->
-	ibytes := newRevBytes()
-	idxRev := revision{main: rev, sub: int64(len(tw.changes))}
-	revToBytes(idxRev, ibytes)
+​	ibytes := newRevBytes()
+​	idxRev := revision{main: rev, sub: int64(len(tw.changes))}
+​	revToBytes(idxRev, ibytes)
 
 delete 操作的 key 由 main+sub+”t” 构成：
 
 <!--- golang --->
-	idxRev := revision{main: tw.beginRev + 1, sub: int64(len(tw.changes))}
-	revToBytes(idxRev, ibytes)
-	ibytes = appendMarkTombstone(ibytes)
-	​
-	// appendMarkTombstone appends tombstone mark to normal revision bytes.
-	func appendMarkTombstone(b []byte) []byte {
-		if len(b) != revBytesLen {
-		    plog.Panicf(“cannot append mark to non normal revision bytes”)
-		}
-		return append(b, markTombstone)
-	}
+​	idxRev := revision{main: tw.beginRev + 1, sub: int64(len(tw.changes))}
+​	revToBytes(idxRev, ibytes)
+​	ibytes = appendMarkTombstone(ibytes)
+​	​
+​	// appendMarkTombstone appends tombstone mark to normal revision bytes.
+​	func appendMarkTombstone(b []byte) []byte {
+​		if len(b) != revBytesLen {
+​		    plog.Panicf(“cannot append mark to non normal revision bytes”)
+​		}
+​		return append(b, markTombstone)
+​	}
 
 	// isTombstone checks whether the revision bytes is a tombstone.
 	func isTombstone(b []byte) bool {
@@ -465,14 +465,14 @@ delete 操作的 key 由 main+sub+”t” 构成：
 bbolt中存储的value是这样一个json序列化后的结构，包括key创建时的revision（对应某一代generation的created），本次更新版本，sub ID（Version ver），Lease ID（租约ID）：
 
 <!--- golang --->
-	kv := mvccpb.KeyValue{
-	    Key:            key,
-	    Value:          value,
-	    CreateRevision: c,
-	    ModRevision:    rev,
-	    Version:        ver,  // version is the version of the key. A deletion resets the version to zero and any modification of the key increases its version.
-	    Lease:          int64(leaseID),
-	}
+​	kv := mvccpb.KeyValue{
+​	    Key:            key,
+​	    Value:          value,
+​	    CreateRevision: c,
+​	    ModRevision:    rev,
+​	    Version:        ver,  // version is the version of the key. A deletion resets the version to zero and any modification of the key increases its version.
+​	    Lease:          int64(leaseID),
+​	}
 
 总结来说：内存btree维护的是用户key => keyIndex的映射，keyIndex内维护多版本的revision信息，而revision可以映射到磁盘bbolt中的用户value。
 
@@ -487,15 +487,15 @@ bbolt中存储的value是这样一个json序列化后的结构，包括key创建
 > 2 Memory: 平常情况下8G内存即可保证etcd流畅运行，其中主要存储kv cache数据和客户端watch的数据，当处理的qps上万的时候，建议16 ~ 64GB的内存量，参考文档15#System requirements#提到etcd要求的内存最小容量是2GB；
 >
 > 3 Disk: 存储介质的质量是etcd运行performance和stability的关键，差劲的存储介质会导致延迟增加和系统不稳定。一般情况下顺序读写能达到50 IOPS(如7200RPM的磁盘)即可满足要求，当压力大的时候，要求能达到500 IOPS（SSD盘或者其他虚拟的block设备）。需要注意的是，一般云厂商提供的磁盘IOPS是并行而非顺序的，这个并行的指标一般是顺序指标的十倍以上，可以使用diskbench or fio工具去测试之。
->         当etcd死掉重启后，为了快速恢复服务，etcd需要快速进行数据恢复。通常情况下恢复100MB数据需要15s（每秒10MB/s），在大etcd集群中要求1GB数据15s内恢复完毕（每秒100MB/s）。
->         通常情况下建议使用SSD作为存储介质。如果用磁盘，要求能达到15,000 RPM的RAID0。
+> ​        当etcd死掉重启后，为了快速恢复服务，etcd需要快速进行数据恢复。通常情况下恢复100MB数据需要15s（每秒10MB/s），在大etcd集群中要求1GB数据15s内恢复完毕（每秒100MB/s）。
+> ​        通常情况下建议使用SSD作为存储介质。如果用磁盘，要求能达到15,000 RPM的RAID0。
 >
 > 4 Network: 一般情况下1GbE（千兆）网卡可以保证稳定运行，对于大的集群则要求10GbE(万兆)网卡。不仅是速度，同时尽量把etcd集群部署在同一个IDC以保证网络稳定，否则很容易出现网络分区导致的集群被划分成大集群和小集群的情况。
 >
 > 5 System: 拒参考文档5，etcd官方保证etcd可在amd64 + linux & ppc64Ie + linux上稳定运行，其他硬件凭他不推荐，由于go runtime在32-bit系统上的bug，也不推荐32位操作系统；
 >
 > 6 Etcd： 集群的数目一般为3或者5即可，成员不是越多越好，参考文档7的#Change the cluster size#就提到etcd集群成员越多，leader的通信任务就越繁重，可能导致响应延迟上升，参考文档15 #What is maximum cluster size# 则提到Google Chubby认为最适宜的数目是5，最大数目为7。
->          参考文档15#Should I add a member before removing an unhealthy member#一节提到，当集群出现unhealthy节点的时候，应该先下线这个节点，然后及时添加新节点以保证quorum。
+> ​         参考文档15#Should I add a member before removing an unhealthy member#一节提到，当集群出现unhealthy节点的时候，应该先下线这个节点，然后及时添加新节点以保证quorum。
 >
 > 7 Go: 参考文档16#Best Practices#要求Go的最低版本是1.4。
 
@@ -595,12 +595,12 @@ etcd v3兼容v2，所以进行数据操作前，需要检查数据的版本，�
 参考文档9建议定期对etcd数据进行冷备，其#Snapshot backup#一节给出了冷备的用法：
 
  	$ etcdctl snapshot save backup.db
-	$ etcdctl  --endpoints $ENDPOINT —write-out=table snapshot status backup.db
-	+———————————+———————————+—————————————+————————————+
-	|   HASH    | REVISION  | TOTAL KEYS  | TOTAL SIZE |
-	+———————————+———————————+—————————————+————————————+
-	| fe01cf57  |   10      |       7     |   2.1 MB   |
-	+———————————+———————————+—————————————+————————————+
+​	$ etcdctl  --endpoints $ENDPOINT —write-out=table snapshot status backup.db
+​	+———————————+———————————+—————————————+————————————+
+​	|   HASH    | REVISION  | TOTAL KEYS  | TOTAL SIZE |
+​	+———————————+———————————+—————————————+————————————+
+​	| fe01cf57  |   10      |       7     |   2.1 MB   |
+​	+———————————+———————————+—————————————+————————————+
 
 参考文档10#Snapshotting the keyspace#一节中提到了另一种方法：直接把数据目录member/snap/db下的数据拷贝备份。
 
@@ -699,7 +699,7 @@ github.com/coreos/etcd/clientv3/config.go:Config::DialTimeout 意为创建client
   		int64 version = 4;
   		bytes value = 5;
   		int64 lease = 6;
-	}
+​	}
 
 各个字段意义如下：
 

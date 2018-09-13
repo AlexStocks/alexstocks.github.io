@@ -1,6 +1,6 @@
 ## 大公司 - 小作坊 - 自我 ##
 ---
-*written by Alex Stocks on 2016/03/04*
+*written by Alex Stocks on 2016/03/04，版权所有，无授权不得转载*
 
 ### 大公司以及彼此之间 ###
 ---

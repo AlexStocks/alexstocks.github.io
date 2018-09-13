@@ -1,6 +1,6 @@
 ## flume使用经验总结 ##
 ---
-*written by Alex Stocks on 2017/04/26*
+*written by Alex Stocks on 2017/04/26，版权所有，无授权不得转载*
 
 
 ### 0 说明 ###
@@ -25,7 +25,7 @@
 - 2 同时运行12个client   
 	
 		/bin/bash multiple_tcp_log_clt.sh:
-		
+	​	
 		Processed 300000 messages in 52.34 seconds
 		1.23 MB/s
 		470.60 Msgs/s
@@ -50,7 +50,7 @@
 - 3 启动agent1( sink是file )& agent2( sink是kafka )，然后同时启动两个tcp client
 
 		启动agent1： /bin/bash agent1_load.sh start
-		启动agent2： /bin/bash agent2_load.sh start
+	​	启动agent2： /bin/bash agent2_load.sh start
 	
 	    client1(python tcp_log_clt1.py)运行结果：
 	    Processed 300000 messsages in 21.45 seconds

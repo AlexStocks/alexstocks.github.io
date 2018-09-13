@@ -1,6 +1,6 @@
 ## Kafka 海滩拾贝 ##
 ---
-*written by Alex Stocks on 2017/02/02*
+*written by Alex Stocks on 2017/02/02，版权所有，无授权不得转载*
 
 ### 0 引言 ###
 ---
@@ -28,7 +28,7 @@ broker无法启动大致有两个原因：第一是内存不足，第二是jmx�
 	if [ -z "$KAFKA_JMX_OPTS" ]; then
 	  KAFKA_JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false  -Dcom.sun.management.jmxremote.ssl=false "
 	fi
-
+	
 	# JMX port to use
 	if [  $JMX_PORT ]; then
 	  KAFKA_JMX_OPTS="$KAFKA_JMX_OPTS -Dcom.sun.management.jmxremote.port=$JMX_PORT "

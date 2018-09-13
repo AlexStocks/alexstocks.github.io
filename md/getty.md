@@ -1,6 +1,6 @@
 ## getty 开发日志
 ---
-*written by Alex Stocks on 2018/03/19*
+*written by Alex Stocks on 2018/03/19，版权所有，无授权不得转载*
 
 
 ### 0 说明

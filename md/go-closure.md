@@ -1,6 +1,6 @@
 ## Golang之闭包 ##
 ---
-*written by Alex Stocks on 2016/09/24*
+*written by Alex Stocks on 2016/09/24，版权所有，无授权不得转载*
 
 ### 1 closure定义 ###
 ---
@@ -22,7 +22,7 @@
 golang中通过传递变量值能够起到引用效果的变量类型有slice & map & channel，其本质是这三种var type不是那种类似于int等可以让CPU直接访问的原子变量类型，而是一种C中的类似于struct的复合数据结构，其结构体中存储的值又指向的更大的一块内存地址，这个大内存区域才是真正的“值域”，结构体本身类似域大内存域的proxy。如果能够理解C++的shared_ptr的实现，就能够理解这种变量类型的本质。
 
 因为closure与其所在的函数共享函数栈，所以也能实现类似于引用的效果。如下程序：
-	                                                                                                     
+​	                                                                                                     
 	// output: 5                                                                                           
 	func main() {                                                                                          
 	    var v int = 3                                                                                      
@@ -49,7 +49,7 @@ golang中通过传递变量值能够起到引用效果的变量类型有slice & 
 代码示例中f1和f2访问的变量v，其实v在使用时被runtime定义在了heap上。
 
 参考文档1的代码示例也比较经典，一并补录如下：
-	
+​	
 	func intSeq() func() int {
 	    i := 0
 	    return func() int {
@@ -150,7 +150,7 @@ context是我见过的golang标准库(go1.7)中最优雅的库之一，对contex
 golang中错误处理是一件令人头疼的事情：需要不断的写"if err != nil {}"这样的代码^_^。
 
 golang官方的《Errors are values》(参考文档5)一文中给出了如下一段错误处理示例：
-	
+​	
 	_, err = fd.Write(p0[a:b])
 	if err != nil {
 	    return err

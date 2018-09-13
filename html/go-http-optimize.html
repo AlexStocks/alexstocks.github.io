@@ -305,7 +305,7 @@ img {
 <body>
 <h2>一次Golang HTTP响应优化过程</h2>
 <hr />
-<p><em>written by Alex Stocks on 2016/08/01</em></p>
+<p><em>written by Alex Stocks on 2016/08/01，版权所有，无授权不得转载</em></p>
 <h3>1 前言</h3>
 <hr />
 <p>最近鄙人在用golang撸一个rpc框架，表示层协议采用了HTTP协议，在进行性能测试的时候发现server端给客户端进行回复的时候，一个大小282B的TCP响应包竟然被拆分成了超过30个TCP包返回给了客户端，其中大部分包长度不超过10B！   </p>
