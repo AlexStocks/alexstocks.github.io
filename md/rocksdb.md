@@ -959,7 +959,7 @@ RocksDB 每次进行更新操作就会把更新内容写入 Manifest 文件，�
 
 版本号是一个 8 字节的证书，每个 key 更新时，除了新数据被写入数据文件，同时记录下 RocksDB 的版本号。RocksDB 的 Snapshot 数据仅仅是逻辑数据，并没有对应的真实存在的物理数据，仅仅对应一下当前 RocksDB 的全局版本号而已，只要 Snapshot 存在，每个 key 对应版本号的数据在后面的更新、删除、合并时会一并存在，不会被删除，以保证数据一致性。 
 
-##### 6.7.1  Checkpoints  
+##### 6.7.1  [Checkpoints](https://github.com/facebook/rocksdb/wiki/Checkpoints)  
 ---
 
 Checkpoints 是 RocksDB 提供的一种 snapshot，独立的存在一个单独的不同于 RocksDB 自身数据目录的目录中，既可以 ReadOnly 模式打开，也可以 Read-Write 模式打开。Checkpoints 被用于全量或者增量 Backup 机制中。
@@ -1102,6 +1102,11 @@ Private 目录则包含一些非 SST 文件：options, current, manifest, WALs�
 ---
 
 360 内部 90% 的情况下，pika 都运行在 ssd上，只有不到 10% 的对读写速度要求不高的情况下写入到 SATA 盘上。
+
+### 8.3 Redis 命令支持
+---
+
+* dbsize  执行 dbsize 之前，先执行 `info keyspace 1`，其作用是 打印上一次统计即结果 且 进行新的统计，在执行 dbsize，`info keyspace 0` 作用只是打印上一次统计结果。
 
 
 ## 参考文档 ##

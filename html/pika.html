@@ -109,13 +109,13 @@ kbd {
 
 <body>
 
-<h2 id="toc_0">Pika改进笔记</h2>
+<h2 id="toc_0">Pika 笔记</h2>
 
 <hr>
 
 <p><em>written by Alex Stocks on 2018/09/07，版权所有，无授权不得转载</em></p>
 
-<h3 id="toc_1">0 说明</h3>
+<h3 id="toc_1">0 引言</h3>
 
 <hr>
 
@@ -252,19 +252,211 @@ If the process either catches the signal and returns from the signal handler, or
 
 <p>在处理这个问题时，与胡伟、<a href="https://github.com/zhengshuxin">郑树新</a>、<a href="https://github.com/loveyacper">bert</a>、<a href="https://github.com/git-hulk">hulk</a>等一帮老友进行了相关探讨，受益匪浅，在此一并致谢！</p>
 
-<h2 id="toc_8">参考文档</h2>
+<h3 id="toc_8">2 数据备份</h3>
+
+<hr>
+
+<p>Pika 官方 wiki [<a href="https://github.com/qihoo360/pika/wiki/pika-%E5%BF%AB%E7%85%A7%E5%BC%8F%E5%A4%87%E4%BB%BD%E6%96%B9%E6%A1%88">参考文档4</a>] 有对其数据备份过程的图文描述，此文就就不再进行转述。</p>
+
+<p>Ardb 作者对 Pika 的评价是  “直接修改了rocksdb代码实现某些功能。这种做法也是双刃剑，改动太多的话，社区的一些修改是很难merge进来的”【详见<a href="http://yinqiwen.github.io/">参考文档5</a>】。与比较几个主流的基于 RocksDB 实现的 KV 存储引擎（如 TiKV/SSDB/ARDB/CockroachDB）作比较，Pika 确实对 RocksDB 的代码侵入比较严重。RocksDB 默认的备份引擎 BackupEngine 通过 <code>BackupEngine::Open</code> 和 <code>BackupEngine::CreateNewBackup</code> 即实现了数据的备份【关于RocksDB 的 Backup 接口详见 <a href="http://alexstocks.github.io/html/rocksdb.html">参考文档6</a> 6.8节】，而 Pika 为了效率起见重新实现了一个 <code>nemo::BackupEngine</code>，以进行异步备份。</p>
+
+<p>Pika 的存储引擎 nemo 依赖于其对 RocksDB 的封装引擎 nemo-rocksdb，下面结合<a href="https://github.com/qihoo360/pika/wiki/pika-%E5%BF%AB%E7%85%A7%E5%BC%8F%E5%A4%87%E4%BB%BD%E6%96%B9%E6%A1%88">参考文档4</a> 从代码层面对备份流程进行详细分析。</p>
+
+<h4 id="toc_9">2.1 DBNemoCheckpoint</h4>
+
+<hr>
+
+<p>nemo:DBNemoCheckpoint 提供了执行实际备份任务的 checkpoint 接口，其实际实现是 nemo:DBNemoCheckpointImpl，其主要接口如下：</p>
+
+<div><pre><code class="language-cpp">class DBNemoCheckpointImpl : public DBNemoCheckpoint {
+  // 如果备份目录和源数据目录在同一个磁盘上，则对 SST 文件进行硬链接，
+  // 对 manifest 文件和 wal 文件进行直接拷贝
+  virtual Status CreateCheckpoint(const std::string&amp; checkpoint_dir) override;
+  // 先阻止文件删除【rocksdb:DB::DisableFileDeletions】，然后获取 rocksdb:DB 快照，如 db 所有文件名称、
+  // manifest 文件大小、SequenceNumber 以及同步点(filenum &amp; offset)
+  //
+  // nemo:BackupEngine 把这些信息组织为BackupContent
+  virtual Status GetCheckpointFiles(std::vector&lt;std::string&gt; &amp;live_files,
+      VectorLogPtr &amp;live_wal_files, uint64_t &amp;manifest_file_size,
+      uint64_t &amp;sequence_number) override;
+
+  // 根据上面获取到的 快照内容 进行文件复制操作
+  virtual Status CreateCheckpointWithFiles(const std::string&amp; checkpoint_dir,
+      std::vector&lt;std::string&gt; &amp;live_files, VectorLogPtr &amp;live_wal_files,
+      uint64_t manifest_file_size, uint64_t sequence_number) override;
+}</code></pre></div>
+
+<p><code>CreateCheckpoint</code> 接口可以认为是同步操作，它通过调用 <code>GetCheckpointFiles</code> 和 <code>CreateCheckpointWithFiles</code> 实现数据备份。</p>
+
+<p><code>DBNemoCheckpointImpl::GetCheckpointFiles</code> 先执行 “组织文件删除”，然后再获取 快照内容。</p>
+
+<p><code>DBNemoCheckpointImpl::CreateCheckpointWithFiles(checkpoint_dir, BackupContent)</code> 详细流程:</p>
+
+<ul>
+<li>1 如果 checkpoint 目录 @checkpoint_dir 存在，则退出；</li>
+<li>2 创建 临时目录 “@checkpoint_dir + .tmp”；</li>
+<li>3 根据 live file 的名称获取文件的类型，根据类型不同分别进行复制；
+
+<ul>
+<li>3.1 如果 type 是 SST 则进行 hard link，hark link 失败再尝试进行 Copy；</li>
+<li>3.2 如果 type 是其他类型则直接进行 Copy，如果 type 是 kDescriptorFile（manifest 文件）还需要指定文件的大小；</li>
+</ul></li>
+<li>4 单独创建一个 CURRENT 文件，其内容是 manifest 文件的名称；</li>
+<li>5 备份 WAL 文件；
+
+<ul>
+<li>5.1 如果文件的类型是归档 WAL，则拒绝备份；</li>
+<li>5.2 通过 LogFile::StartSequence() 获取 WAL 初始 SequenceNumber，如果这个 SequenceNumber 小于备份开始时的系统 SequenceNumber，则拒绝备份；</li>
+<li>5.3 如果 WAL 文件是最后文件集合的最后一个，则 Copy 文件，且只复制文件在备份开始时的文件 size，以防止复制过多的操作指令；</li>
+<li>5.3 如果备份文件和原始文件在同一个文件系统上，则进行 hard link，否则进行 Copy；</li>
+</ul></li>
+<li>6 允许文件删除；</li>
+<li>7 把临时目录 “@checkpoint<em>dir + .tmp” 重命名为 @checkpoint</em>dir，并执行 fsync 操作，把数据刷到磁盘。</li>
+</ul>
+
+<p>注：BackupCentent 中别的文件如 CURRENT、SST、Manifest 都是文件名称，唯独 WAL 文件传递了相关的句柄 <a href="https://github.com/facebook/rocksdb/blob/master/include/rocksdb/transaction_log.h#L32">LogFile</a>。</p>
+
+<h4 id="toc_10">2.2 BackupEngine</h4>
+
+<hr>
+
+<p>基于 DBNemoCheckpoint，nemo:BackupEngine 提供了一个异步备份五种类型数据文件的接口，其定义如下：</p>
+
+<div><pre><code class="language-cpp">    // Arguments which will used by BackupSave Thread
+    // p_engine for BackupEngine handler
+    // backup_dir
+    // key_type kv, hash, list, set or zset
+    struct BackupSaveArgs {
+        void *p_engine;
+        const std::string backup_dir;
+        const std::string key_type;
+        Status res;
+    };
+
+    struct BackupContent {
+        std::vector&lt;std::string&gt; live_files;
+        rocksdb::VectorLogPtr live_wal_files;
+        uint64_t manifest_file_size = 0;
+        uint64_t sequence_number = 0;
+    };
+
+    class BackupEngine {
+        public:
+            ~BackupEngine();
+            // 调用 BackupEngine::NewCheckpoint 为五种数据类型分别创建响应的 DBNemoCheckpoint 放入 engines_，
+            // 同时创建 BackupEngine 对象
+            static Status Open(nemo::Nemo *db, BackupEngine** backup_engine_ptr);
+            // 调用 DBNemoCheckpointImpl::GetCheckpointFiles 获取五种类型需要备份的 快照内容 存入 backup_content_
+            Status SetBackupContent();
+            // 创建五个线程，分别调用 CreateNewBackupSpecify 进行数据备份
+            Status CreateNewBackup(const std::string &amp;dir);
+
+            void StopBackup();
+            // 调用 DBNemoCheckpointImpl::CreateCheckpointWithFiles 执行具体的备份任务
+            // 这个函数之所以类型是 public 的，是为了在 线程函数ThreadFuncSaveSpecify 中能够调用之
+            Status CreateNewBackupSpecify(const std::string &amp;dir, const std::string &amp;type);
+        private:
+            BackupEngine() {}
+
+            std::map&lt;std::string, rocksdb::DBNemoCheckpoint*&gt; engines_; // 保存每个类型的 checkpoint 对象
+            std::map&lt;std::string, BackupContent&gt; backup_content_; // 保存每个类型需要复制的 快照内容
+            std::map&lt;std::string, pthread_t&gt; backup_pthread_ts_; // 保存每个类型执行备份任务的线程对象
+
+            // 调用 rocksdb::DBNemoCheckpoint::Create 创建 checkpoint 对象
+            Status NewCheckpoint(rocksdb::DBNemo *tdb, const std::string &amp;type);
+            // 获取每个类型的数据目录
+            std::string GetSaveDirByType(const std::string _dir, const std::string&amp; _type) const {
+                std::string backup_dir = _dir.empty() ? DEFAULT_BK_PATH : _dir;
+                return backup_dir + ((backup_dir.back() != &#39;/&#39;) ? &quot;/&quot; : &quot;&quot;) + _type;
+            }
+            Status WaitBackupPthread();
+    };</code></pre></div>
+
+<p><code>nemo::BackupEngine</code> 对外的主要接口是 Open、SetBackupContent、CreateNewBackup 和 StopBackup，分别用于 创建 BackupEngine 对象、获取快照内容、执行备份任务和停止备份任务。</p>
+
+<h4 id="toc_11">2.3 Bgsave</h4>
+
+<hr>
+
+<p><code>PikaServer::Bgsave</code> 是 redis 命令 bgsave 的响应函数，通过调用 <code>nemo::BackupEngine</code> 相关接口执行备份任务，下面先分别介绍其先关的函数接口。</p>
+
+<h4 id="toc_12">2.3.1 PikaServer::InitBgsaveEnv</h4>
+
+<hr>
+
+<p>这个函数用于创建数据备份目录，其流程为：</p>
+
+<ul>
+<li>1 获取当前时间，以 <code>%Y%m%d%H%M%S</code> 格式序列化为字符串；</li>
+<li>2 创建目录 <code>pika.conf:dump-path/%Y%m%d</code>，如果目录已经存在，则删除之；</li>
+<li>3 删除目录 <code>pika.conf:dump-path/_FAILED</code>。</li>
+</ul>
+
+<p>注意上面第二步的备份目录，之所以最终目录只有年月日信息，是因为最终只用了前 8 个字符串作为目录名称。</p>
+
+<h4 id="toc_13">2.3.2 PikaServer::InitBgsaveEngine</h4>
+
+<p>这个函数用于创建 BackupEngine 对象并进行获取五种数据类型的快照内容，其流程为：</p>
+
+<ul>
+<li>1 调用 <code>nemo::BackupEngine::Open</code> 创建 nemo::BackupEngine 对象；</li>
+<li>2 通过 <code>PikaServer::rwlock_::WLock</code> 进行数据写入 RocksDB::DB 阻止；</li>
+<li>3 获取当前 Binlog 的 filenum 和 offset；</li>
+<li>4 调用 <code>nemo::BackupEngine:: SetBackupContent</code> 获取快照内容；</li>
+<li>5 通过 <code>PikaServer::rwlock_::UnLock</code> 取消数据写入 RocksDB::DB 阻止。</li>
+</ul>
+
+<p><code>PikaClientConn::DoCmd</code> 在执行写命令的时候，会先调用 <code>g_pika_server-&gt;RWLockReader()</code> 尝试加上读锁，如果正在执行 Bgsave 则此处就会阻塞等待。 </p>
+
+<h4 id="toc_14">2.3.3 PikaServer::RunBgsaveEngine</h4>
+
+<p>这个函数用于执行具体的备份任务，其流程为：</p>
+
+<ul>
+<li>1 调用 <code>PikaServer::InitBgsaveEnv</code> 初始化 BGSave 需要的目录环境；</li>
+<li>2 调用 <code>PikaServer:: InitBgsaveEngine</code> 创建 nemo::BackupEngine 对象和获取快照内容；</li>
+<li>3 调用 <code>nemo::BackupEngine::CreateNewBackup</code> 执行备份任务。</li>
+</ul>
+
+<h4 id="toc_15">2.3.4 PikaServer::DoBgsave</h4>
+
+<p>这个函数是 Bgsave 线程的执行体，其流程为：</p>
+
+<ul>
+<li>1 调用 <code>PikaServer::RunBgsaveEngine</code> 执行数据备份；</li>
+<li>2 把执行备份任务时长、本机 hostinfo、binlog filenum 和 binlog offset 写入 <code>pika.conf:dump-path/%Y%m%d/info</code> 文件；</li>
+<li>3 如果备份失败，则把 <code>pika.conf:dump-path/%Y%m%d</code> 重命名为 <code>pika.conf:dump-path/%Y%m%d_FAILED</code>；</li>
+<li>4 把 <code>bgsave_info_.bgsaving</code> 置为 false。</li>
+</ul>
+
+<h4 id="toc_16">2.3.4 PikaServer::Bgsave</h4>
+
+<p>作为命令 bgsave 的响应函数，其流程非常简单：</p>
+
+<ul>
+<li>1 如果 <code>bgsave_info_.bgsaving</code> 值为 true，则退出，否则把其值置为 true；</li>
+<li>2 启动 <code>PikaServer::bgsave_thread_</code>，通过调用 <code>PikaServer::DoBgsave</code> 函数完成备份任务。</li>
+</ul>
+
+<h2 id="toc_17">参考文档</h2>
 
 <ul>
 <li>1 <a href="https://github.com/Qihoo360/pika/wiki/%E4%BD%BF%E7%94%A8binlog%E8%BF%81%E7%A7%BB%E6%95%B0%E6%8D%AE%E5%B7%A5%E5%85%B7">使用binlog迁移数据工具</a></li>
 <li>2 <a href="https://www.jianshu.com/p/01bd76eb7a93">pika主从复制原理之工作流程</a></li>
 <li>3 <a href="https://www.jianshu.com/p/d969b6f6ae42">pika主从复制原理之binlog</a></li>
+<li>4 <a href="https://github.com/qihoo360/pika/wiki/pika-%E5%BF%AB%E7%85%A7%E5%BC%8F%E5%A4%87%E4%BB%BD%E6%96%B9%E6%A1%88">Pika 快照式备份方案</a></li>
+<li>5 <a href="http://yinqiwen.github.io/">杂感(2016-06)</a></li>
+<li>6 <a href="http://alexstocks.github.io/html/rocksdb.html">RocksDB 笔记</a></li>
 </ul>
 
-<h2 id="toc_9">扒粪者-于雨氏</h2>
+<h2 id="toc_18">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>2018/09/07，于雨氏，初作此文于西二旗。</p>
+
+<p>2018/09/15，于雨氏，于西二旗添加第二节 “数据备份”。</p>
 </blockquote>
+
 
 <!-- baidu statistic start -->
 <script>
@@ -295,6 +487,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 
 
