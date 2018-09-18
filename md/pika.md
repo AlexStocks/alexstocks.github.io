@@ -309,7 +309,7 @@ Pika 存储引擎的最基本作用就是把 Redis 的数据结构映射为 Rock
 
 #### 3.1 Nemo
 ---
- 
+
 Nemo 自身并不直接使用 RocksDB，而是使用 nemo-rocksdb - - - 一个对 RocksDB 进行了一层薄薄封装的存储层。
 
 nemo-rocksdb 的主要类 DBNemo 继承自 rocksdb::StackableDB，用于替代 rocksdb::DB，主要作用是给 KV 的 Key 添加 timestamp 和 version 以及 Key 的类型信息，以实现 Redis 对数据的时限【称之为 ttl】要求：在 RocksDB 进行 compaction 的时候预先检查数据是否过期，过期则直接淘汰。
@@ -317,7 +317,7 @@ nemo-rocksdb 的主要类 DBNemo 继承自 rocksdb::StackableDB，用于替代 r
 RocksDB 进行 compaction 的时候需要对每个 key 调用留给使用者的接口 CompactionFilter 以进行过滤：让用户解释当前 key 是否还有效。nemo-rocksdb 封装了一个 NemoCompactionFilter 以实现过时数据的检验，其主要接口是 rocksdb:CompactionFilter::Filter。RocksDB 在进行 compaction 还会调用另一个预备给用户的接口 rocksdb::MergeOperator，以方便用户自定义如何对同一个 key 的相关操作进行合并。
 
 nemo-rocksdb 一并重新封装了一个可以实现 **更新** 意义的继承自 rocksdb::MergeOperator 的 NemoMergeOperator，以在 RocksDB 进行 Get 或者 compaction 的时候对 key 的一些写或者更行操作合并后再进行，以提高效率。至于 rocksdb::MergeOperator 的使用，见[参考文档6](http://alexstocks.github.io/html/rocksdb.html)。
- 
+
 #### 3.2 Blackwidow Filter
 ---
 
@@ -532,4 +532,6 @@ class StringsValue : public InternalValue {
 > 2018/09/07，于雨氏，初作此文于西二旗。
 > 
 > 2018/09/15，于雨氏，于西二旗添加第二节 “数据备份”。
+> 
+> 2018/09/19，于雨氏，于西二旗添加第三节 “Blackwidow”。
 
