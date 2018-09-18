@@ -153,6 +153,8 @@ kbd {
 
 <blockquote>
 <p>代码详见 include/pika_command.h:Cmd::AppendAffiliatedInfo，修改后的 redis 命令 <code>set A 1</code> 格式为 <code>*7\r\n$3\r\nset\r\n$1\r\nA\r\n$1\r\n1\r\n$14\r\n__PIKA_X#$SKGI\r\n$1\r\n1\r\n$16\r\nj[m\r\n$1\r\n1\r\n</code></p>
+
+<p>这些补充信息在跨机房数据同步的情况下也很有用，详细内容见<a href="http://kernelmaker.github.io/pika-muli-idc">参考文档7</a></p>
 </blockquote></li>
 <li><p>pika 内部有一个特殊的 set 用于记录当前 migrate 信息，set key 前缀是 <code>_internal:slotkey:4migrate:</code>，这个在进行数据同步时也需要过滤掉；</p></li>
 </ul>
@@ -261,6 +263,8 @@ If the process either catches the signal and returns from the signal handler, or
 <p>Ardb 作者对 Pika 的评价是  “直接修改了rocksdb代码实现某些功能。这种做法也是双刃剑，改动太多的话，社区的一些修改是很难merge进来的”【详见<a href="http://yinqiwen.github.io/">参考文档5</a>】。与比较几个主流的基于 RocksDB 实现的 KV 存储引擎（如 TiKV/SSDB/ARDB/CockroachDB）作比较，Pika 确实对 RocksDB 的代码侵入比较严重。RocksDB 默认的备份引擎 BackupEngine 通过 <code>BackupEngine::Open</code> 和 <code>BackupEngine::CreateNewBackup</code> 即实现了数据的备份【关于RocksDB 的 Backup 接口详见 <a href="http://alexstocks.github.io/html/rocksdb.html">参考文档6</a> 6.8节】，而 Pika 为了效率起见重新实现了一个 <code>nemo::BackupEngine</code>，以进行异步备份。</p>
 
 <p>Pika 的存储引擎 nemo 依赖于其对 RocksDB 的封装引擎 nemo-rocksdb，下面结合<a href="https://github.com/qihoo360/pika/wiki/pika-%E5%BF%AB%E7%85%A7%E5%BC%8F%E5%A4%87%E4%BB%BD%E6%96%B9%E6%A1%88">参考文档4</a> 从代码层面对备份流程进行详细分析。</p>
+
+<p><font size=“2” color=blue><strong><em>注：本章描述的备份流程基于 pika 的 nemo 引擎，基本与最新的 blackwidow 引擎的备份流程无差。</em></strong></font></p>
 
 <h4 id="toc_9">2.1 DBNemoCheckpoint</h4>
 
@@ -447,6 +451,7 @@ If the process either catches the signal and returns from the signal handler, or
 <li>4 <a href="https://github.com/qihoo360/pika/wiki/pika-%E5%BF%AB%E7%85%A7%E5%BC%8F%E5%A4%87%E4%BB%BD%E6%96%B9%E6%A1%88">Pika 快照式备份方案</a></li>
 <li>5 <a href="http://yinqiwen.github.io/">杂感(2016-06)</a></li>
 <li>6 <a href="http://alexstocks.github.io/html/rocksdb.html">RocksDB 笔记</a></li>
+<li>7 <a href="http://kernelmaker.github.io/pika-muli-idc">pika 跨机房同步设计</a></li>
 </ul>
 
 <h2 id="toc_18">扒粪者-于雨氏</h2>
@@ -487,7 +492,6 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
-
 
 
 

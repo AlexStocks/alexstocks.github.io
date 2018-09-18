@@ -34,6 +34,8 @@ V1 虽然半途而废，但是开发过程中遇到的两个问题比较有意�
 + pika 的 binlog record 在每个 redis 写命令后面追加了四个额外信息，分别是：Pika Magic [kPikaBinlogMagic]、server_id【用于双 master 同步时做去重】、binlog info【主要是执行命令的时间】以及 send hub 信息，需要过滤掉；
 
   >  代码详见 include/pika_command.h:Cmd::AppendAffiliatedInfo，修改后的 redis 命令 `set A 1` 格式为 `*7\r\n$3\r\nset\r\n$1\r\nA\r\n$1\r\n1\r\n$14\r\n__PIKA_X#$SKGI\r\n$1\r\n1\r\n$16\r\nj[m\r\n$1\r\n1\r\n`
+  >  
+  > 这些补充信息在跨机房数据同步的情况下也很有用，详细内容见[参考文档7](http://kernelmaker.github.io/pika-muli-idc)
 
 + pika 内部有一个特殊的 set 用于记录当前 migrate 信息，set key 前缀是 `_internal:slotkey:4migrate:`，这个在进行数据同步时也需要过滤掉；
 
@@ -137,6 +139,9 @@ Pika 官方 wiki [[参考文档4](https://github.com/qihoo360/pika/wiki/pika-%E5
 Ardb 作者对 Pika 的评价是  “直接修改了rocksdb代码实现某些功能。这种做法也是双刃剑，改动太多的话，社区的一些修改是很难merge进来的”【详见[参考文档5](http://yinqiwen.github.io/)】。与比较几个主流的基于 RocksDB 实现的 KV 存储引擎（如 TiKV/SSDB/ARDB/CockroachDB）作比较，Pika 确实对 RocksDB 的代码侵入比较严重。RocksDB 默认的备份引擎 BackupEngine 通过 `BackupEngine::Open` 和 `BackupEngine::CreateNewBackup` 即实现了数据的备份【关于RocksDB 的 Backup 接口详见 [参考文档6](http://alexstocks.github.io/html/rocksdb.html) 6.8节】，而 Pika 为了效率起见重新实现了一个 `nemo::BackupEngine`，以进行异步备份。
 
 Pika 的存储引擎 nemo 依赖于其对 RocksDB 的封装引擎 nemo-rocksdb，下面结合[参考文档4](https://github.com/qihoo360/pika/wiki/pika-%E5%BF%AB%E7%85%A7%E5%BC%8F%E5%A4%87%E4%BB%BD%E6%96%B9%E6%A1%88) 从代码层面对备份流程进行详细分析。
+
+<font size=“2” color=blue>***注：本章描述的备份流程基于 pika 的 nemo 引擎，基本与最新的 blackwidow 引擎的备份流程无差。***</font>
+
 
 #### 2.1 DBNemoCheckpoint
 ---
@@ -304,6 +309,7 @@ class DBNemoCheckpointImpl : public DBNemoCheckpoint {
 - 4 [Pika 快照式备份方案](https://github.com/qihoo360/pika/wiki/pika-%E5%BF%AB%E7%85%A7%E5%BC%8F%E5%A4%87%E4%BB%BD%E6%96%B9%E6%A1%88)
 - 5 [杂感(2016-06)](http://yinqiwen.github.io/)
 - 6 [RocksDB 笔记](http://alexstocks.github.io/html/rocksdb.html)
+- 7 [pika 跨机房同步设计](http://kernelmaker.github.io/pika-muli-idc)
 
 ## 扒粪者-于雨氏
 
