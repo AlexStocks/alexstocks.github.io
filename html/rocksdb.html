@@ -596,7 +596,7 @@ assert(status.ok());</code></pre></div>
 
 <p>默认情况下 index 和filter block 与 block cache 是独立的，用户不能设定二者的内存空间使用量，但为了控制 RocksDB 的内存空间使用量，可以用如下代码把 index 和 filter 也放在 block cache 中：</p>
 
-<div><pre><code class="language-none">BlockBasedTableOptions table_options;
+<div><pre><code class="language-cpp">BlockBasedTableOptions table_options;
 table_options.cache_index_and_filter_blocks = true;</code></pre></div>
 
 <p>index 与 filter 一般访问频次比 data 高，所以把他们放到一起会导致内存空间与 cpu 资源竞争，进而导致 cache 性能抖动厉害。有如下两个参数需要注意：cache<em>index</em>filter<em>blocks</em>with<em>high</em>priority 和 high<em>pri</em>pool<em>ratio 一样，这个参数只对 LRU Cache 有效，两者须同时生效。这个选项会把 LRU Cache 划分为高 prio 和低 prio 区，data 放在 low 区，index 和 filter 放在 high 区，如果高区占用的内存空间超过了 capacity * high</em>pri<em>pool</em>ratio，则会侵占 low 区的尾部数据空间。</p>
@@ -607,12 +607,14 @@ table_options.cache_index_and_filter_blocks = true;</code></pre></div>
 
 <p>SimCache 用于评测 Cache 的命中率，它封装了一个真正的 Cache，然后用给定的 capacity 进行 LRU 测算，代码如下:
 ​<br>
-​   // This cache is the actual cache use by the DB.
-​   std::shared<em>ptr<Cache> cache = NewLRUCache(capacity);
-​   // This is the simulated cache.
-​   std::shared</em>ptr<Cache> sim<em>cache = NewSimCache(cache, sim</em>capacity, sim<em>num</em>shard<em>bits);
-​   BlockBasedTableOptions table</em>options;
-​   table<em>options.block</em>cache = sim_cache;</p>
+​<code>c++
+​// This cache is the actual cache use by the DB.
+​std::shared_ptr&lt;Cache&gt; cache = NewLRUCache(capacity);
+​// This is the simulated cache.
+​std::shared_ptr&lt;Cache&gt; sim_cache = NewSimCache(cache, sim_capacity, sim_num_shard_bits);
+​BlockBasedTableOptions table_options;
+​table_options.block_cache = sim_cache;
+</code></p>
 
 <p>大概只有容量的 2% 会被用于测算。</p>
 
@@ -1184,7 +1186,7 @@ manifest-log-file = { version, version-edit* }
 
 <p>版本号是一个 8 字节的证书，每个 key 更新时，除了新数据被写入数据文件，同时记录下 RocksDB 的版本号。RocksDB 的 Snapshot 数据仅仅是逻辑数据，并没有对应的真实存在的物理数据，仅仅对应一下当前 RocksDB 的全局版本号而已，只要 Snapshot 存在，每个 key 对应版本号的数据在后面的更新、删除、合并时会一并存在，不会被删除，以保证数据一致性。 </p>
 
-<h5 id="toc_51">6.7.1  Checkpoints</h5>
+<h5 id="toc_51">6.7.1  <a href="https://github.com/facebook/rocksdb/wiki/Checkpoints">Checkpoints</a></h5>
 
 <hr>
 
@@ -1341,7 +1343,15 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 
 <p>360 内部 90% 的情况下，pika 都运行在 ssd上，只有不到 10% 的对读写速度要求不高的情况下写入到 SATA 盘上。</p>
 
-<h2 id="toc_60">参考文档</h2>
+<h3 id="toc_60">8.3 Redis 命令支持</h3>
+
+<hr>
+
+<ul>
+<li>dbsize  执行 dbsize 之前，先执行 <code>info keyspace 1</code>，其作用是 打印上一次统计即结果 且 进行新的统计，在执行 dbsize，<code>info keyspace 0</code> 作用只是打印上一次统计结果。</li>
+</ul>
+
+<h2 id="toc_61">参考文档</h2>
 
 <hr>
 
@@ -1367,7 +1377,7 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 <li>19 <a href="https://github.com/facebook/rocksdb/wiki/Checkpoints">Checkpoints</a></li>
 </ul>
 
-<h2 id="toc_61">扒粪者-于雨氏</h2>
+<h2 id="toc_62">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>2018/03/28，于雨氏，初作此文于海淀。</p>
@@ -1380,7 +1390,6 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 
 <p>2018/09/13，于西二旗，依据参考文档 17 补充 5.8 节 <code>Backup</code> 和 5.7.1 小节 <code>Checkpoints</code>。</p>
 </blockquote>
-
 
 <!-- baidu statistic start -->
 <script>
@@ -1411,9 +1420,6 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
-
-</body>
-
 
 
 

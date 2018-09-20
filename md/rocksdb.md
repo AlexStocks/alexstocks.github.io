@@ -470,8 +470,10 @@ Block Cache初始化之时相关参数：
 
 默认情况下 index 和filter block 与 block cache 是独立的，用户不能设定二者的内存空间使用量，但为了控制 RocksDB 的内存空间使用量，可以用如下代码把 index 和 filter 也放在 block cache 中：
 
-	BlockBasedTableOptions table_options;
-	table_options.cache_index_and_filter_blocks = true;
+```c++
+BlockBasedTableOptions table_options;
+table_options.cache_index_and_filter_blocks = true;
+```
 
 index 与 filter 一般访问频次比 data 高，所以把他们放到一起会导致内存空间与 cpu 资源竞争，进而导致 cache 性能抖动厉害。有如下两个参数需要注意：cache_index_filter_blocks_with_high_priority 和 high_pri_pool_ratio 一样，这个参数只对 LRU Cache 有效，两者须同时生效。这个选项会把 LRU Cache 划分为高 prio 和低 prio 区，data 放在 low 区，index 和 filter 放在 high 区，如果高区占用的内存空间超过了 capacity * high_pri_pool_ratio，则会侵占 low 区的尾部数据空间。
 
@@ -479,12 +481,14 @@ index 与 filter 一般访问频次比 data 高，所以把他们放到一起会
 
 SimCache 用于评测 Cache 的命中率，它封装了一个真正的 Cache，然后用给定的 capacity 进行 LRU 测算，代码如下:
 ​	
-​	// This cache is the actual cache use by the DB.
-​	std::shared_ptr<Cache> cache = NewLRUCache(capacity);
-​	// This is the simulated cache.
-​	std::shared_ptr<Cache> sim_cache = NewSimCache(cache, sim_capacity, sim_num_shard_bits);
-​	BlockBasedTableOptions table_options;
-​	table_options.block_cache = sim_cache;
+​```c++
+​// This cache is the actual cache use by the DB.
+​std::shared_ptr<Cache> cache = NewLRUCache(capacity);
+​// This is the simulated cache.
+​std::shared_ptr<Cache> sim_cache = NewSimCache(cache, sim_capacity, sim_num_shard_bits);
+​BlockBasedTableOptions table_options;
+​table_options.block_cache = sim_cache;
+```
 
 大概只有容量的 2% 会被用于测算。
 
