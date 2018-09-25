@@ -669,7 +669,35 @@ If the process either catches the signal and returns from the signal handler, or
 
 <p>使用 <strong>blackwidow:: StringsFilter</strong> 的 <strong>blackwidow::StringsFilterFactory</strong> 会被设置为 Strings 的 default ColumnFamily 的 ColumnFamilyOptions 的 compaction<em>filter</em>factory。</p>
 
-<h2 id="toc_27">参考文档</h2>
+<h4 id="toc_27">3.4 Binlog</h4>
+
+<hr>
+
+<p>官方在 Pika 3.x 中使用了最新改进的的 Binlog。最新版的 Binlog 内容其实并无多大改进，无非是把原来放在 Binlog Redis 写命令后面追加的四个额外信息【详见 #1.1 节】挪到了前面，但是好处是把二者做了分离，Binlog Info 与 Redis 命令不再混淆在一起。更重要的是整个协议为未来改进留下了可扩展空间，不用每次升级 Binlog 协议把整个协议格式完全推动重新设计一遍。</p>
+
+<p>最新版协议网络格式如下：</p>
+
+<div><pre><code class="language-cpp">| ********** Header ************ | ******* Body ***** |
+| &lt;Transfer Type&gt; | &lt;Body Lenth&gt; |  [BinlogItem] RESP |
+      2 Bytes         4 Bytes</code></pre></div>
+
+<p>注：RESP 意为 Redis 序列化协议。</p>
+
+<p>Transfer Type 对应的代码是：
+<code>c++
+// master_conn.h
+enum TransferOperate{
+  kTypeAuth = 1,
+  kTypeBinlog = 2
+};
+</code>c++
+用于说明 Body 是用于验证 session id 的 auth 包 还是传递 Redis 写命令的 Binlog 包。</p>
+
+<p>从 <code>master_conn.cc:MasterConn::GetRequest</code> 函数可以看出， 如若是 auth 包，则 Body 内容只有 <code>auth sid</code>；如果是 binlog 包，则 body 是 <code>BinlogItem + RESP</code>。BinlogItem 详细内容见 <code>pika_binlog_transverter.h:BinlogItem</code> 定义，而 RESP 则是 Redis 写命令。</p>
+
+<p>以后再升级 Binlog，估计只需要扩展 Transfer Type 即可，可以保持向后兼容。</p>
+
+<h2 id="toc_28">参考文档</h2>
 
 <ul>
 <li>1 <a href="https://github.com/Qihoo360/pika/wiki/%E4%BD%BF%E7%94%A8binlog%E8%BF%81%E7%A7%BB%E6%95%B0%E6%8D%AE%E5%B7%A5%E5%85%B7">使用binlog迁移数据工具</a></li>
@@ -682,7 +710,7 @@ If the process either catches the signal and returns from the signal handler, or
 <li>8 <a href="https://github.com/qihoo360/pika/wiki/pika-blackwidow%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F">pika blackwidow引擎数据存储格式</a></li>
 </ul>
 
-<h2 id="toc_28">扒粪者-于雨氏</h2>
+<h2 id="toc_29">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>2018/09/07，于雨氏，初作此文于西二旗。</p>
@@ -690,7 +718,22 @@ If the process either catches the signal and returns from the signal handler, or
 <p>2018/09/15，于雨氏，于西二旗添加第二节 “数据备份”。</p>
 
 <p>2018/09/19，于雨氏，于西二旗添加第三节 “Blackwidow”。</p>
+
+<p>2018/09/25，于雨氏，于西二旗添加 #3.4 “Binlog”。</p>
 </blockquote>
+
+
+<!-- baidu statistic start -->
+<script>
+var _hmt = _hmt || [];
+(function() {
+	  var hm = document.createElement("script");
+	    hm.src = "https://hm.baidu.com/hm.js?170a8df8802fbc47c7acc272d270979c";
+		  var s = document.getElementsByTagName("script")[0];
+		    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+<!-- baidu statistic end -->
 
 <!-- Gitalk start -->
 <link rel="stylesheet" href="https://unpkg.com/gitalk@latest/dist/gitalk.css">

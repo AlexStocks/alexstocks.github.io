@@ -516,6 +516,35 @@ class StringsValue : public InternalValue {
 
 使用 **blackwidow:: StringsFilter** 的 **blackwidow::StringsFilterFactory** 会被设置为 Strings 的 default ColumnFamily 的 ColumnFamilyOptions 的 compaction_filter_factory。
 
+#### 3.4 Binlog
+---
+
+官方在 Pika 3.x 中使用了最新改进的的 Binlog。最新版的 Binlog 内容其实并无多大改进，无非是把原来放在 Binlog Redis 写命令后面追加的四个额外信息【详见 #1.1 节】挪到了前面，但是好处是把二者做了分离，Binlog Info 与 Redis 命令不再混淆在一起。更重要的是整个协议为未来改进留下了可扩展空间，不用每次升级 Binlog 协议把整个协议格式完全推动重新设计一遍。
+
+最新版协议网络格式如下：
+
+```c++
+| ********** Header ************ | ******* Body ***** |
+| <Transfer Type> | <Body Lenth> |  [BinlogItem] RESP |      
+      2 Bytes         4 Bytes
+```
+
+注：RESP 意为 Redis 序列化协议。
+
+Transfer Type 对应的代码是：
+```c++
+// master_conn.h 
+enum TransferOperate{
+  kTypeAuth = 1,
+  kTypeBinlog = 2
+};
+```c++
+用于说明 Body 是用于验证 session id 的 auth 包 还是传递 Redis 写命令的 Binlog 包。
+
+从 `master_conn.cc:MasterConn::GetRequest` 函数可以看出， 如若是 auth 包，则 Body 内容只有 `auth sid`；如果是 binlog 包，则 body 是 `BinlogItem + RESP`。BinlogItem 详细内容见 `pika_binlog_transverter.h:BinlogItem` 定义，而 RESP 则是 Redis 写命令。
+
+以后再升级 Binlog，估计只需要扩展 Transfer Type 即可，可以保持向后兼容。
+
 ## 参考文档
 
 - 1 [使用binlog迁移数据工具](https://github.com/Qihoo360/pika/wiki/%E4%BD%BF%E7%94%A8binlog%E8%BF%81%E7%A7%BB%E6%95%B0%E6%8D%AE%E5%B7%A5%E5%85%B7)
@@ -534,4 +563,6 @@ class StringsValue : public InternalValue {
 > 2018/09/15，于雨氏，于西二旗添加第二节 “数据备份”。
 > 
 > 2018/09/19，于雨氏，于西二旗添加第三节 “Blackwidow”。
+> 
+> 2018/09/25，于雨氏，于西二旗添加 #3.4 “Binlog”。
 
