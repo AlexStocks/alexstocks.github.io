@@ -533,7 +533,7 @@ class StringsValue : public InternalValue {
 
 Transfer Type 对应的代码是：
 ```c++
-// master_conn.h 
+// pika/src/pika_new_master_conn.h 
 enum TransferOperate{
   kTypeAuth = 1,
   kTypeBinlog = 2
@@ -541,7 +541,7 @@ enum TransferOperate{
 ```c++
 用于说明 Body 是用于验证 session id 的 auth 包 还是传递 Redis 写命令的 Binlog 包。
 
-从 `master_conn.cc:MasterConn::GetRequest` 函数可以看出， 如若是 auth 包，则 Body 内容只有 `auth sid`；如果是 binlog 包，则 body 是 `BinlogItem + RESP`。BinlogItem 详细内容见 `pika_binlog_transverter.h:BinlogItem` 定义，而 RESP 则是 Redis 写命令。
+从 `pika/src/pika_new_master_conn.cc:MasterConn::GetRequest` 函数可以看出， 如若是 auth 包，则 Body 内容只有 `auth sid`；如果是 binlog 包，则 body 是 `BinlogItem + RESP`。BinlogItem 详细内容见 `pika_binlog_transverter.h:BinlogItem` 定义，而 RESP 则是 Redis 写命令。
 
 以后再升级 Binlog，估计只需要扩展 Transfer Type 即可，可以保持向后兼容。
 

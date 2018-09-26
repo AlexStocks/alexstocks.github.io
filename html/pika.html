@@ -685,7 +685,7 @@ If the process either catches the signal and returns from the signal handler, or
 
 <p>Transfer Type 对应的代码是：
 <code>c++
-// master_conn.h
+// pika/src/pika_new_master_conn.h
 enum TransferOperate{
   kTypeAuth = 1,
   kTypeBinlog = 2
@@ -693,7 +693,7 @@ enum TransferOperate{
 </code>c++
 用于说明 Body 是用于验证 session id 的 auth 包 还是传递 Redis 写命令的 Binlog 包。</p>
 
-<p>从 <code>master_conn.cc:MasterConn::GetRequest</code> 函数可以看出， 如若是 auth 包，则 Body 内容只有 <code>auth sid</code>；如果是 binlog 包，则 body 是 <code>BinlogItem + RESP</code>。BinlogItem 详细内容见 <code>pika_binlog_transverter.h:BinlogItem</code> 定义，而 RESP 则是 Redis 写命令。</p>
+<p>从 <code>pika/src/pika_new_master_conn.cc:MasterConn::GetRequest</code> 函数可以看出， 如若是 auth 包，则 Body 内容只有 <code>auth sid</code>；如果是 binlog 包，则 body 是 <code>BinlogItem + RESP</code>。BinlogItem 详细内容见 <code>pika_binlog_transverter.h:BinlogItem</code> 定义，而 RESP 则是 Redis 写命令。</p>
 
 <p>以后再升级 Binlog，估计只需要扩展 Transfer Type 即可，可以保持向后兼容。</p>
 
