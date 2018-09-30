@@ -38,6 +38,8 @@ RocksDB的三种基本文件格式是 memtable/sstfile/logfile，memtable 是一
 
 一个进程对一个 DB 同时只能创建一个 rocksdb::DB 对象，所有线程共享之。这个对象内部有锁机制保证访问安全，多个线程同时进行 Get/Put/Fetch Iteration 都没有问题，但是如果直接 Iteration 或者 WriteBatch 则需要额外的锁同步机制保护 Iterator 或者 WriteBatch 对象。
 
+基于 RocksDB 设计存储系统，要考虑到应用场景进行各种 tradeoff 设置相关参数。譬如，如果 RocksDB 进行 compaction 比较频繁，虽然有利于空间和读，但是会造成读放大；compaction 过低则会造成读放大和空间放大；增大每个 level 的 comparession 难度可以减小空间放大，但是会增加 cpu 负担，是运算时间增加换取使用空间减小；增大 SSTfile 的 data block size，则是增大内存使用量来加快读取数据的速度，减小读放大。
+
 #### 1.1 WriteBatch
 ---
 
