@@ -119,9 +119,7 @@ kbd {
 
 <hr>
 
-<p>近日在写一个分布式 KV DB，存储层使用了 RocksDB。</p>
-
-<p>RocksDB 的优点此处无需多说，它的一个 feature 是其有很多优化选项用于对 RocksDB 进行调优。欲熟悉这些参数，必须对其背后的原理有所了解，本文主要整理一些 RocksDB 的 wiki 文档，以备自己参考之用。</p>
+<p>近日工作中使用了 RocksDB。RocksDB 的优点此处无需多说，它的一个 feature 是其有很多优化选项用于对 RocksDB 进行调优。欲熟悉这些参数，必须对其背后的原理有所了解，本文主要整理一些 RocksDB 的 wiki 文档，以备自己参考之用。</p>
 
 <h3 id="toc_2">1 <a href="https://github.com/facebook/rocksdb/wiki/Basic-Operations">Basic Operations</a></h3>
 
@@ -133,11 +131,24 @@ kbd {
 
 <p><img src="../pic/log_structured_merge_tree.png" alt=""></p>
 
-<p>LSM 大致结构如上图所示。LSM树而且通过批量存储技术规避磁盘随机写入问题。 LSM树的设计思想非常朴素, 它的原理是把一颗大树拆分成N棵小树， 它首先写入到内存中（内存没有寻道速度的问题，随机写的性能得到大幅提升），在内存中构建一颗有序小树，随着小树越来越大，内存的小树会flush到磁盘上。磁盘中的树定期可以做merge操作，合并成一棵大树，以优化读性能【读数据的过程可能需要从内存memtable到磁盘sstfile读取多次，称之为读放大】。RocksDB 的 LSM 体现在多 level 文件格式上，最热最新的数据尽在 L0 层，数据在内存中，最冷最老的数据尽在 LN层，数据在磁盘或者固态盘上。</p>
+<p>LSM 大致结构如上图所示。LSM 树而且通过批量存储技术规避磁盘随机写入问题。 LSM 树的设计思想非常朴素, 它的原理是把一颗大树拆分成N棵小树， 它首先写入到内存中（内存没有寻道速度的问题，随机写的性能得到大幅提升），在内存中构建一颗有序小树，随着小树越来越大，内存的小树会flush到磁盘上。磁盘中的树定期可以做 merge 操作，合并成一棵大树，以优化读性能【读数据的过程可能需要从内存 memtable 到磁盘 sstfile 读取多次，称之为读放大】。RocksDB 的 LSM 体现在多 level 文件格式上，最热最新的数据尽在 L0 层，数据在内存中，最冷最老的数据尽在 LN 层，数据在磁盘或者固态盘上。RocksDB 还有一种日志文件叫做 manifest，用于记录对 sstfile 的更改，可以认为是 RocksDB 的 GIF，后面将会详述。</p>
+
+<p>LSM-Tree(Log-Structured-Merge-Tree)
+LSM从命名上看，容易望文生义成一个具体的数据结构，一个tree。但LSM并不是一个具体的数据结构，也不是一个tree。LSM是一个数据结构的概念，是一个数据结构的设计思想。实际上，要是给LSM的命名断句，Log和Structured这两个词是合并在一起的，LSM-Tree应该断句成Log-Structured、Merge、Tree三个词汇，这三个词汇分别对应以下三点LSM的关键性质：</p>
+
+<ul>
+<li>将数据形成Log-Structured：在将数据写入LSM内存结构之前，先记录log。这样LSM就可以将有易失性的内存看做永久性存储器。并且信任内存上的数据，等到内存容量达到threshold再集体写入磁盘。将数据形成Log-Structured，也是将整体存储结构转换成了“内存(in-memory)”存储结构。</li>
+<li>将所有磁盘上数据不组织成一个整体索引结构，而组织成有序的文件集：因为磁盘随机读写比顺序读写慢3个数量级，LSM尽量将磁盘读写转换成顺序读写。将磁盘上的数据组织成B树这样的一个整体索引结构，虽然查找很高效，但是面对随机读写，由于大量寻道导致其性能不佳。而LSM用了一种很有趣的方法，将所有数据不组织成一个整体索引结构，而组织成有序的文件集。每次LSM面对磁盘写，将数据写入一个或几个新生成的文件，顺序写入且不能修改其他文件，这样就将随机读写转换成了顺序读写。LSM将一次性集体写入的文件作为一个level，磁盘上划分多level，level与level之间互相隔离。这就形成了，以写入数据时间线形成的逻辑上、而非物理上的层级结构，这也就是为什么LSM被命名为”tree“，但不是“tree”。</li>
+<li>将数据按key排序，在合并不同file、level上的数据时类似merge-join：如果一直保持生成新的文件，不仅写入会造成冗余空间，而且也会大量降低读的性能。所以要高效的、周期性合并不同file、level。而如果数据是乱序的，根本做不到高效合并。所以LSM要将数据按key排序，在合并不同file、level上的数据时类似 merge-join。</li>
+</ul>
+
+<p>很明显，LSM牺牲了一部分读的性能和增加了合并的开销，换取了高效的写性能。那LSM为什么要这么做？实际上，这就关系到对于磁盘写已经没有什么优化手段了，而对于磁盘读，不论硬件还是软件上都有优化的空间。通过多种优化后，读性能虽然仍是下降，但可以控制在可接受范围内。实际上，用于磁盘上的数据结构不同于用于内存上的数据结构，用于内存上的数据结构性能的瓶颈就在搜索复杂度，而用于磁盘上的数据结构性能的瓶颈在磁盘IO，甚至是磁盘IO的模式。</p>
+
+<p>以上三段摘抄自<a href="https://www.tuicool.com/articles/7ju2UfI">参考文档20</a>。</p>
 
 <p><img src="../pic/rocksdb_arch.png" alt=""></p>
 
-<p>RocksDB的三种基本文件格式是 memtable/sstfile/logfile，memtable 是一种内存文件数据系统，新写数据会被写进 memtable，部分请求内容会被写进 logfile。logfile 是一种有利于顺序写的文件系统。memtable 的内存空间被填满之后，会有一部分老数据被转移到 sstfiile 里面，这些数据对应的 logfile 里的 log 就会被安全删除。sstfile 中的内容是有序的。</p>
+<p>RocksDB的三种基本文件格式是 memtable/sstfile/logfile，memtable 是一种内存文件数据系统，新写数据会被写进 memtable，部分请求内容会被写进 logfile。logfile 是一种有利于顺序写的文件系统。memtable 的内存空间被填满之后，会有一部分老数据被转移到 sstfile 里面，这些数据对应的 logfile 里的 log 就会被安全删除。sstfile 中的内容是有序的。</p>
 
 <p>上图所示，所有 Column Family 共享一个 WAL 文件，但是每个 Column Family 有自己单独的 memtable &amp; ssttable(sstfile)，即 log 共享而数据分离。</p>
 
@@ -177,13 +188,13 @@ db-&gt;Put(write_options, …);</code></pre></div>
 
 <p>RocksDB 能够保存某个版本的所有数据（可称之为一个 Snapshot）以方便读取操作，创建并读取 Snapshot 方法如下：</p>
 
-<div><pre><code class="language-none">rocksdb::ReadOptions options;
-options.snapshot = db-&gt;GetSnapshot();
-… apply some updates to db ….
-rocksdb::Iterator* iter = db-&gt;NewIterator(options);
-… read using iter to view the state when the snapshot was created ….
-delete iter;
-db-&gt;ReleaseSnapshot(options.snapshot);</code></pre></div>
+<div><pre><code class="language-C++">    rocksdb::ReadOptions options;
+    options.snapshot = db-&gt;GetSnapshot();
+    … apply some updates to db ….
+    rocksdb::Iterator* iter = db-&gt;NewIterator(options);
+    … read using iter to view the state when the snapshot was created ….
+    delete iter;
+    db-&gt;ReleaseSnapshot(options.snapshot);</code></pre></div>
 
 <p>如果 ReadOptions::snapshot 为 null，则读取的 snapshot 为 RocksDB 当前版本数据的 snapshot。</p>
 
@@ -195,23 +206,23 @@ db-&gt;ReleaseSnapshot(options.snapshot);</code></pre></div>
 
 <p>Slice 与 string 之间的转换代码如下：</p>
 
-<div><pre><code class="language-none">rocksdb::Slice s1 = “hello”;
-std::string str(“world”);
-rocksdb::Slice s2 = str;
+<div><pre><code class="language-C++">    rocksdb::Slice s1 = “hello”;
+    std::string str(“world”);
+    rocksdb::Slice s2 = str;
 
-OR:
+    OR:
 
-std::string str = s1.ToString();
-assert(str == std::string(“hello”));</code></pre></div>
+    std::string str = s1.ToString();
+    assert(str == std::string(“hello”));</code></pre></div>
 
 <p>但是请注意 Slice 的安全性，有代码如下：</p>
 
-<div><pre><code class="language-none">rocksdb::Slice slice;
-if (…) {
- std::string str = …;
- slice = str;
-}
-Use(slice);   </code></pre></div>
+<div><pre><code class="language-C++">    rocksdb::Slice slice;
+    if (…) {
+     std::string str = …;
+     slice = str;
+    }
+    Use(slice);   </code></pre></div>
 
 <p>当退出 if 语句块后，slice 内部指针指向的内存区域已经不存在，此时再使用导致程序出问题。</p>
 
@@ -258,28 +269,28 @@ virtual Status Get(const ReadOptions&amp; options,
 
 <p>当打开一个 TransactionDB 的时候，如果 RocksDB 检测到某个 key 已经被别的事务锁住，则 RocksDB 会返回一个 error。如果打开成功，则所有相关 key 都会被 lock 住，直到事务结束。TransactionDB 的并发特性表现要比 OptimisticTransactionDB 好，但是 TransactionDB 的一个小问题就是不管写发生在事务里或者事务外，他都会进行写冲突检测。TransactionDB 使用示例代码如下：</p>
 
-<div><pre><code class="language-none">TransactionDB* txn_db;
-Status s = TransactionDB::Open(options, path, &amp;txn_db);
-Transaction* txn = txn_db-&gt;BeginTransaction(write_options, txn_options);
-s = txn-&gt;Put(“key”, “value”);
-s = txn-&gt;Delete(“key2”);
-s = txn-&gt;Merge(“key3”, “value”);
-s = txn-&gt;Commit();
-delete txn;</code></pre></div>
+<div><pre><code class="language-C++">    TransactionDB* txn_db;
+    Status s = TransactionDB::Open(options, path, &amp;txn_db);
+    Transaction* txn = txn_db-&gt;BeginTransaction(write_options, txn_options);
+    s = txn-&gt;Put(“key”, “value”);
+    s = txn-&gt;Delete(“key2”);
+    s = txn-&gt;Merge(“key3”, “value”);
+    s = txn-&gt;Commit();
+    delete txn;</code></pre></div>
 
 <p>OptimisticTransactionDB 提供了一个更轻量的事务实现，它在进行写之前不会进行写冲突检测，当对写操作进行 commit 的时候如果发生了 lock 冲突导致写操作失败，则 RocksDB 会返回一个 error。这种事务使用了活锁策略，适用于读多写少这种写冲突概率比较低的场景下，使用示例代码如下：</p>
 
-<div><pre><code class="language-none">DB* db;
-OptimisticTransactionDB* txn_db;
-Status s = OptimisticTransactionDB::Open(options, path, &amp;txn_db);
-db = txn_db-&gt;GetBaseDB();
+<div><pre><code class="language-C++">    DB* db;
+    OptimisticTransactionDB* txn_db;
+    Status s = OptimisticTransactionDB::Open(options, path, &amp;txn_db);
+    db = txn_db-&gt;GetBaseDB();
 
-OptimisticTransaction* txn = txn_db-&gt;BeginTransaction(write_options, txn_options);
-txn-&gt;Put(“key”, “value”);
-txn-&gt;Delete(“key2”);
-txn-&gt;Merge(“key3”, “value”);
-s = txn-&gt;Commit();
-delete txn;</code></pre></div>
+    OptimisticTransaction* txn = txn_db-&gt;BeginTransaction(write_options, txn_options);
+    txn-&gt;Put(“key”, “value”);
+    txn-&gt;Delete(“key2”);
+    txn-&gt;Merge(“key3”, “value”);
+    s = txn-&gt;Commit();
+    delete txn;</code></pre></div>
 
 <p>参考文档 6 详细描述了 <code>RocksDB</code> 的 Transactions。</p>
 
@@ -351,11 +362,11 @@ delete txn;</code></pre></div>
 
 <p><code>GetApproximateSizes</code> 方法可以返回一个 key range 的磁盘占用空间大致使用量，示例代码如下：</p>
 
-<div><pre><code class="language-none">rocksdb::Range ranges[2];
-ranges[0] = rocksdb::Range(“a”, “c”);
-ranges[1] = rocksdb::Range(“x”, “z”);
-uint64_t sizes[2];
-rocksdb::Status s = db-&gt;GetApproximateSizes(ranges, 2, sizes);  </code></pre></div>
+<div><pre><code class="language-C++">    rocksdb::Range ranges[2];
+    ranges[0] = rocksdb::Range(“a”, “c”);
+    ranges[1] = rocksdb::Range(“x”, “z”);
+    uint64_t sizes[2];
+    rocksdb::Status s = db-&gt;GetApproximateSizes(ranges, 2, sizes);  </code></pre></div>
 
 <p>上面的 <code>sizes[0]</code> 返回 <code>[a..c)</code> key range 的磁盘使用量，而 <code>sizes[1]</code> 返回 <code>[x..z)</code>  key range 的磁盘使用量。 </p>
 
@@ -658,14 +669,14 @@ table_options.cache_index_and_filter_blocks = true;</code></pre></div>
 
 <p>这个值一般设置为 RocksDB 想要使用的内存总量的 1/3，其余的留给 OS 的 page cache。</p>
 
-<div><pre><code class="language-none">BlockBasedTableOptions table_options;
-… \\ set options in table_options
-options.table_factory.reset(new
+<div><pre><code class="language-C++">    BlockBasedTableOptions table_options;
+    … \\ set options in table_options
+    options.table_factory.reset(new
 
-std::shared_ptr&lt;Cache&gt; cache = NewLRUCache(&lt;your_cache_size&gt;);
-table_options.block_cache = cache;
+    std::shared_ptr&lt;Cache&gt; cache = NewLRUCache(&lt;your_cache_size&gt;);
+    table_options.block_cache = cache;
 
-BlockBasedTableFactory(table_options));</code></pre></div>
+    BlockBasedTableFactory(table_options));</code></pre></div>
 
 <p>本进程的所有的 DB 所有的 CF 所有的 table_options 都必须使用同一个 cahce 对象，或者让所有的 DB 所有的 CF 使用同一个 table_options。</p>
 
@@ -681,17 +692,17 @@ BlockBasedTableFactory(table_options));</code></pre></div>
 
 <p><font color=red><strong>官方真正建议修改的参数只有这个 filter 参数。如果大量使用迭代方法，不要修改这个参数，如果大量调用 Get() 接口，建议修改这个参数。</strong></font>修改方法如下：</p>
 
-<div><pre><code class="language-none">table_options.filter_policy.reset(NewBloomFilterPolicy(10, false));</code></pre></div>
+<div><pre><code class="language-C++">    table_options.filter_policy.reset(NewBloomFilterPolicy(10, false));</code></pre></div>
 
 <p>一个可能的优化设定如下：</p>
 
-<div><pre><code class="language-none">cf_options.level_compaction_dynamic_level_bytes = true;
-options.max_background_compactions = 4;
-options.max_background_flushes = 2;
-options.bytes_per_sync = 1048576;
-table_options.block_size = 16 * 1024;
-table_options.cache_index_and_filter_blocks = true;
-table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
+<div><pre><code class="language-none">    cf_options.level_compaction_dynamic_level_bytes = true;
+    options.max_background_compactions = 4;
+    options.max_background_flushes = 2;
+    options.bytes_per_sync = 1048576;
+    table_options.block_size = 16 * 1024;
+    table_options.cache_index_and_filter_blocks = true;
+    table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
 
 <p>上面只是罗列了一些优化选项，这些选项也只能在进程启动的时候设定。更多的选项请详细阅读参考文档1。</p>
 
@@ -719,9 +730,9 @@ table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
 
 <p>在 compaction 过程中如果某个被标记为删除的 key 在某个 snapshot 中存在，则会被一直保留，直到 snapshot 不存在才会被删除。</p>
 
-<p>RocksDB 的 compaction 策略分为 <code>Universal Compaction</code> 和 <code>Leveled Compaction</code> 两种。两种策略分别有不同的使用场景，下面分两个章节详述。</p>
+<p>RocksDB 的 compaction 策略分为 <code>Universal Compaction</code> 和 <code>Leveled Compaction</code> 两种。两种策略分别有不同的使用场景，下面分两个章节详述。综述就是  <code>Leveled Compaction</code> 有利于减小空间放大却会增加读放大，<code>Universal Compaction</code> 有利于减少读放大却会增大空间放大。</p>
 
-<h4 id="toc_35">5.1 Leveled  Compaction</h4>
+<h4 id="toc_35">5.1 Leveled Compaction</h4>
 
 <hr>
 
@@ -868,7 +879,7 @@ table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
 
 <p>RocksDB 还支持一种 FIFO 的 compaction。FIFO 顾名思义就是先进先出，这种模式周期性地删除旧数据。在 FIFO 模式下，所有文件都在 L0，当 sst 文件总大小超过阀值 max<em>table</em>files_size，则删除最老的 sst 文件。</p>
 
-<p>整个 compaction 是 LSM-tree 数据结构的核心，也是rocksDB的核心，详细内容请阅读参考文档8 和 参考文档9。</p>
+<p>整个 compaction 是 LSM-tree 数据结构的核心，也是rocksDB的核心，详细内容请阅读 <a href="https://github.com/facebook/rocksdb/wiki/Universal-Compaction">参考文档8</a> 和 <a href="https://github.com/facebook/rocksdb/wiki/Leveled-Compaction">参考文档9</a>。</p>
 
 <h4 id="toc_42">5.4 Merge</h4>
 
@@ -893,40 +904,40 @@ table_options.pin_l0_filter_and_index_blocks_in_cache = true;</code></pre></div>
 
 <p>RocksDB 提供了一个 MergeOperator 作为 Merge 接口，其中一个子类 AssociativeMergeOperator 可在大部分场景下使用，其定义如下：</p>
 
-<div><pre><code class="language-none">// The simpler, associative merge operator.
-class AssociativeMergeOperator : public MergeOperator {
- public:
-  virtual ~AssociativeMergeOperator() {}
+<div><pre><code class="language-C++">    // The simpler, associative merge operator.
+    class AssociativeMergeOperator : public MergeOperator {
+     public:
+      virtual ~AssociativeMergeOperator() {}
 
-  // Gives the client a way to express the read -&gt; modify -&gt; write semantics
-  // key:           (IN) 操作对象 KV 的 key
-  // existing_value:(IN) 操作对象 KV 的 value，如果为 null 则意味着 KV 不存在
-  // value:         (IN) 新值，用于替换/更新 @existing_value
-  // new_value:    (OUT) 客户端负责把 merge 后的新值填入这个变量
-  // logger:        (IN) Client could use this to log errors during merge.
-  //
-  // Return true on success.
-  // All values passed in will be client-specific values. So if this method
-  // returns false, it is because client specified bad data or there was
-  // internal corruption. The client should assume that this will be treated
-  // as an error by the library.
-  virtual bool Merge(const Slice&amp; key,
-                     const Slice* existing_value,
-                     const Slice&amp; value,
-                     std::string* new_value,
-                     Logger* logger) const = 0;
+      // Gives the client a way to express the read -&gt; modify -&gt; write semantics
+      // key:           (IN) 操作对象 KV 的 key
+      // existing_value:(IN) 操作对象 KV 的 value，如果为 null 则意味着 KV 不存在
+      // value:         (IN) 新值，用于替换/更新 @existing_value
+      // new_value:    (OUT) 客户端负责把 merge 后的新值填入这个变量
+      // logger:        (IN) Client could use this to log errors during merge.
+      //
+      // Return true on success.
+      // All values passed in will be client-specific values. So if this method
+      // returns false, it is because client specified bad data or there was
+      // internal corruption. The client should assume that this will be treated
+      // as an error by the library.
+      virtual bool Merge(const Slice&amp; key,
+                         const Slice* existing_value,
+                         const Slice&amp; value,
+                         std::string* new_value,
+                         Logger* logger) const = 0;
 
- private:
-  // Default implementations of the MergeOperator functions
-  virtual bool FullMergeV2(const MergeOperationInput&amp; merge_in,
-                           MergeOperationOutput* merge_out) const override;
+     private:
+      // Default implementations of the MergeOperator functions
+      virtual bool FullMergeV2(const MergeOperationInput&amp; merge_in,
+                               MergeOperationOutput* merge_out) const override;
 
-  virtual bool PartialMerge(const Slice&amp; key,
-                            const Slice&amp; left_operand,
-                            const Slice&amp; right_operand,
-                            std::string* new_value,
-                            Logger* logger) const override;
-};</code></pre></div>
+      virtual bool PartialMerge(const Slice&amp; key,
+                                const Slice&amp; left_operand,
+                                const Slice&amp; right_operand,
+                                std::string* new_value,
+                                Logger* logger) const override;
+    };</code></pre></div>
 
 <p>RocksDB AssociativeMergeOperator 被称为关联性 Merge Operator，<a href="https://www.jianshu.com/p/e13338a3f161">参考文档14</a>  给出了关联性的定义：</p>
 
@@ -937,57 +948,56 @@ class AssociativeMergeOperator : public MergeOperator {
 
 <p><code>**MergeOperator还可以用于非关联型数据类型的更新。** 例如，在RocksDB中保存json字符串，即Put接口写入data的格式为合法的json字符串。而Merge接口只希望更新json中的某个字段。所以代码可能是这样</code>：</p>
 
-<div><pre><code class="language-none">// Put/store the json string into to the database
-db_-&gt;Put(put_option_, &quot;json_obj_key&quot;,
-         &quot;{ employees: [ {first_name: john, last_name: doe}, {first_name: adam, last_name: smith}] }&quot;);
-// Use a pre-defined &quot;merge operator&quot; to incrementally update the value of the json string
-db_-&gt;Merge(merge_option_, &quot;json_obj_key&quot;, &quot;employees[1].first_name = lucy&quot;);
-db_-&gt;Merge(merge_option_, &quot;json_obj_key&quot;, &quot;employees[0].last_name = dow&quot;);</code></pre></div>
+<div><pre><code class="language-C++">    // Put/store the json string into to the database
+    db_-&gt;Put(put_option_, &quot;json_obj_key&quot;,
+             &quot;{ employees: [ {first_name: john, last_name: doe}, {first_name: adam, last_name: smith}] }&quot;);
+    // Use a pre-defined &quot;merge operator&quot; to incrementally update the value of the json string
+    db_-&gt;Merge(merge_option_, &quot;json_obj_key&quot;, &quot;employees[1].first_name = lucy&quot;);
+    db_-&gt;Merge(merge_option_, &quot;json_obj_key&quot;, &quot;employees[0].last_name = dow&quot;);
+ `AssociativeMergeOperator无法处理这种场景，因为它假设Put和Merge的数据格式是关联的。我们需要区分Put和Merge的数据格式，也无法把多个merge操作数合并成一个。这时候就需要Generic MergeOperator。`
 
-<p><code>AssociativeMergeOperator无法处理这种场景，因为它假设Put和Merge的数据格式是关联的。我们需要区分Put和Merge的数据格式，也无法把多个merge操作数合并成一个。这时候就需要Generic MergeOperator。</code></p>
+    // The Merge Operator
+    //
+    // Essentially, a MergeOperator specifies the SEMANTICS of a merge, which only
+    // client knows. It could be numeric addition, list append, string
+    // concatenation, edit data structure, ... , anything.
+    // The library, on the other hand, is concerned with the exercise of this
+    // interface, at the right time (during get, iteration, compaction...)
+    class MergeOperator {
+     public:
+      virtual ~MergeOperator() {}
 
-<div><pre><code class="language-none">// The Merge Operator
-//
-// Essentially, a MergeOperator specifies the SEMANTICS of a merge, which only
-// client knows. It could be numeric addition, list append, string
-// concatenation, edit data structure, ... , anything.
-// The library, on the other hand, is concerned with the exercise of this
-// interface, at the right time (during get, iteration, compaction...)
-class MergeOperator {
- public:
-  virtual ~MergeOperator() {}
+      // Gives the client a way to express the read -&gt; modify -&gt; write semantics
+      // key:         (IN) The key that&#39;s associated with this merge operation.
+      // existing:    (IN) null indicates that the key does not exist before this op
+      // operand_list:(IN) the sequence of merge operations to apply, front() first.
+      // new_value:  (OUT) Client is responsible for filling the merge result here
+      // logger:      (IN) Client could use this to log errors during merge.
+      //
+      // Return true on success. Return false failure / error / corruption.
+      // 用于对已有的值做Put或Delete操作
+      virtual bool FullMerge(const Slice&amp; key,
+                             const Slice* existing_value,
+                             const std::deque&lt;std::string&gt;&amp; operand_list,
+                             std::string* new_value,
+                             Logger* logger) const = 0;
 
-  // Gives the client a way to express the read -&gt; modify -&gt; write semantics
-  // key:         (IN) The key that&#39;s associated with this merge operation.
-  // existing:    (IN) null indicates that the key does not exist before this op
-  // operand_list:(IN) the sequence of merge operations to apply, front() first.
-  // new_value:  (OUT) Client is responsible for filling the merge result here
-  // logger:      (IN) Client could use this to log errors during merge.
-  //
-  // Return true on success. Return false failure / error / corruption.
-  // 用于对已有的值做Put或Delete操作
-  virtual bool FullMerge(const Slice&amp; key,
-                         const Slice* existing_value,
-                         const std::deque&lt;std::string&gt;&amp; operand_list,
-                         std::string* new_value,
-                         Logger* logger) const = 0;
+      // This function performs merge(left_op, right_op)
+      // when both the operands are themselves merge operation types.
+      // Save the result in *new_value and return true. If it is impossible
+      // or infeasible to combine the two operations, return false instead.
+      // 如果连续多次对一个 key 进行操作，则可以可以借助 PartialMerge 将两个操作数合并.
+      virtual bool PartialMerge(const Slice&amp; key,
+                                const Slice&amp; left_operand,
+                                const Slice&amp; right_operand,
+                                std::string* new_value,
+                                Logger* logger) const = 0;
 
-  // This function performs merge(left_op, right_op)
-  // when both the operands are themselves merge operation types.
-  // Save the result in *new_value and return true. If it is impossible
-  // or infeasible to combine the two operations, return false instead.
-  // 如果连续多次对一个 key 进行操作，则可以可以借助 PartialMerge 将两个操作数合并.
-  virtual bool PartialMerge(const Slice&amp; key,
-                            const Slice&amp; left_operand,
-                            const Slice&amp; right_operand,
-                            std::string* new_value,
-                            Logger* logger) const = 0;
-
-  // The name of the MergeOperator. Used to check for MergeOperator
-  // mismatches (i.e., a DB created with one MergeOperator is
-  // accessed using a different MergeOperator)
-  virtual const char* Name() const = 0;
-};</code></pre></div>
+      // The name of the MergeOperator. Used to check for MergeOperator
+      // mismatches (i.e., a DB created with one MergeOperator is
+      // accessed using a different MergeOperator)
+      virtual const char* Name() const = 0;
+    };</code></pre></div>
 
 <ul>
 <li><strong>工作原理</strong></li>
@@ -1095,12 +1105,31 @@ manifest-log-file = { version, version-edit* }
 
 <hr>
 
+<p>SSTfile 结构如下：</p>
+
+<div><pre><code class="language-none">&lt;beginning_of_file&gt;
+[data block 1]
+[data block 2]
+…
+[data block N]
+[meta block 1: filter block]
+[meta block 2: stats block]
+[meta block 3: compression dictionary block]
+…
+[meta block K: future extended block]
+[metaindex block]
+[index block]
+[Footer]
+&lt;end_of_file&gt;</code></pre></div>
+
+<p>LevelDB 的 SSTfile 结构如下：</p>
+
 <p><img src="../pic/leveldb_sst_file.png" alt=""></p>
 
 <p>见参考文档12，SSTtable 大致分为几个部分：</p>
 
 <ul>
-<li>数据块 Data Block，直接存储有序键值对；</li>
+<li>数据块 Data Block，直接存储有序键值对，是 SSTfile 的数据实体；</li>
 <li>Meta Block，存储Filter相关信息；</li>
 <li>Meta Index Block，对Meta Block的索引，它只有一条记录，key是meta index的名字（也就是Filter的名字），value为指向meta index的位置；</li>
 <li>Index Block，是对Data Block的索引，对于其中的每个记录，其key &gt;=Data Block最后一条记录的key，同时&lt;其后Data Block的第一条记录的key；value是指向data index的位置信息；</li>
@@ -1375,6 +1404,7 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 <li>17 <a href="https://github.com/facebook/rocksdb/wiki/How-to-backup-RocksDB%3F">How to backup RocksDB?</a></li>
 <li>18 <a href="https://www.jianshu.com/p/46bb78bca726?utm_source=oschina-app">RocksDB系列十三:How to persist in memory RocksDB database?</a></li>
 <li>19 <a href="https://github.com/facebook/rocksdb/wiki/Checkpoints">Checkpoints</a></li>
+<li>20 <a href="https://www.tuicool.com/articles/7ju2UfI">LSM-Tree与RocksDB</a></li>
 </ul>
 
 <h2 id="toc_62">扒粪者-于雨氏</h2>
@@ -1389,7 +1419,10 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 <p>2018/09/12，于西二旗，添加 1.4 节 <code>PinnableSlice</code> 。</p>
 
 <p>2018/09/13，于西二旗，依据参考文档 17 补充 5.8 节 <code>Backup</code> 和 5.7.1 小节 <code>Checkpoints</code>。</p>
+
+<p>2018/09/30，于西二旗，依据参考文档 20 补充第 1 章中 <code>LSM</code> 部分内容。</p>
 </blockquote>
+
 
 <!-- baidu statistic start -->
 <script>
