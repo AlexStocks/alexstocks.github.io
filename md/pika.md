@@ -61,11 +61,17 @@ V2 版本的 pika-port 相当于是 pika 和 Codis / Redis 之间的 proxy，实
 
 在开发过程中遇到了一些坑，有的是自己对 pika 理解不透彻，有的是 pika 自身一些缺陷，下面详细分小节记录之，以备将来作参考之用。
 
+Pika 把心跳和数据发收分开处理，[参考文档9](https://github.com/Qihoo360/pika/wiki/FAQ)这样解释：`第一为了提高同步速度，sender只发不收，receiver只收不发，心跳是又单独的线程去做，如果心跳又sender来做，那么为了一秒仅有一次的心跳还要去复杂化sender和receiver的逻辑；第二其实前期尝试过合并在一起来进行连接级别的存活检测，当写入压力过大的时候会心跳包的收发会延后，导致存活检测被影响，slave误判master超时而进行不必要的重连`。
+
+Pika 主从对 binlog 的处理不一样，[参考文档9](https://github.com/Qihoo360/pika/wiki/FAQ)这样描述：`master是先写db再写binlog，之前slave只用一个worker来同步会在master写入压力很大的情况下由于slave一个worker写入太慢而造成同步差距过大，后来我们调整结构，让slave通过多个worker来写提高写入速度，不过这时候有一个问题，为了保证主从binlog顺序一致，写binlog的操作还是只能又一个线程来做，也就是receiver，所以slave这边是先写binlog在写db，所以slave存在写完binlog挂掉导致丢失数据的问题，不过redis在master写完db后挂掉同样会丢失数据，所以redis采用全同步的办法来解决这一问题，pika同样，默认使用部分同步来继续，如果业务对数据十分敏感，此处可以强制slave重启后进行全同步即可`。
+
 ##### 1.2.1 rsync 启动失败
 
 Pika-port 与 pika 之间全量数据同步是通过 rsync 进行的，如果 pika-port 启动 rsync 失败【譬如rsync 监听端口被占用】，pika-port 所借鉴的 [PikaTrysyncThread::ThreadMain](https://github.com/qihoo360/pika/blob/master/src/pika_trysync_thread.cc#L259) 仅仅记录一个错误日志，然后继续相关流程。
 
 合理的处理方法当然是启动 rsync daemon 失败退出即可，然官方相关处理流程如是，且出现这种错误概率极低，愚人处理方法就是暂时不处理这种 corner case。
+
+补1：[基于 Blackwidow 引擎的 pika-port](https://github.com/ipixiu/pika/tree/master/tools/pika_port) 对 rsync 连接失败的处理方法是打印日志后退出程序。
 
 ##### 1.2.2 非法命令过滤
 
@@ -85,11 +91,11 @@ Pika-port V2开发完毕后测试过程中，遇到这样一个 corner case：�
 
 ![](../pic/pika_tcp_fin_reset.jpg)
 
-                                                       ***图1: pika-port fin reset***
+     ***图1: pika-port fin reset***
 
 ![](../pic/pika_tcp_reset_3handshake.jpg)
 
-                                                       ***图2: pika与pika-port 3 handshake***
+     ***图2: pika与pika-port 3 handshake***
 
 图1 是在 pika 向 pika-port 写入 B 指令时的网络流程，通过分析 图1 并结合相关代码分析，可以得到这样一个流程：
 
@@ -106,7 +112,6 @@ Pika-port V2开发完毕后测试过程中，遇到这样一个 corner case：�
 可能有些对 tcp 四次挥手逻辑不甚明了的人对这个过程有些不甚了了，根本原因是 tcp 是双向连接，pika-port 只是关闭了 pika-port --> pika 这个方向的连接，而 pika --> pika-port 这个方向的单向连接还是存在的，只不过 pika-port 依赖的 pink 网络库在关闭一个单向连接时调用了 close 函数，导致结果是：pika-port 关闭了 pika-port --> pika 这个方向的连接的同时不再接收 pika --> pika-port 这个方向由 pika 发来的 B 指令数据！
 
 解决问题的根本就在于正确处理 RST 信号，linux manpage 对 RST 信号的处理解释如下：
-
 
 ```
 What happens if the client ignores the error return from readline and writes more data to the server? This can happen, for example, if the client needs to perform two writes to the server before reading anything back, with the first write eliciting the RST.
@@ -312,10 +317,16 @@ class DBNemoCheckpointImpl : public DBNemoCheckpoint {
 
 Pika 存储引擎的最基本作用就是把 Redis 的数据结构映射为 RocksDB 的 KV 数据存入其中。本节主要分析 Pika 最新版的存储引擎 Blackwidow，作为对比需要稍微提及其前一个版本 Nemo。
 
+Pika 存储系统中另外一个比较重要的概念是 timestamp 和 version，其实都与数据删除功能有关。Redis 中数据被淘汰有两种常见场景：set key 时就设置了 ttl，显示调用 del 命令对 key 进行删除。timestamp 与 set key 时的 ttl 有关，其意义就是数据的超时时间。
+
+version 则与 del 命令删除 key 相关，参照 **base\_meta\_value\_format.h:ParsedBaseMetaValue::UpdateVersion**, 可知其值为执行 del 指令时的当前系统时间【第一次对一个 key 执行 del 指令】 或者 自增【第二次以及后续多次对同一个 key 执行 del 指令】。
+
+Pika 后续执行 get 指令时，会依据 timestamp 和 version 判断数据是否过时。Rocksdb 进行 compaction 时，也会调用各个 Filter 接口依据  timestamp 和 version 判定数据是否已经超时，若超时则进行物理删除。
+
 #### 3.1 Nemo
 ---
 
-Nemo 自身并不直接使用 RocksDB，而是使用 nemo-rocksdb - - - 一个对 RocksDB 进行了一层薄薄封装的存储层。
+Nemo 自身并不直接使用 RocksDB，而是使用 nemo-rocksdb --- 一个对 RocksDB 进行了一层薄薄封装的存储层。
 
 nemo-rocksdb 的主要类 DBNemo 继承自 rocksdb::StackableDB，用于替代 rocksdb::DB，主要作用是给 KV 的 Key 添加 timestamp 和 version 以及 Key 的类型信息，以实现 Redis 对数据的时限【称之为 ttl】要求：在 RocksDB 进行 compaction 的时候预先检查数据是否过期，过期则直接淘汰。
 
@@ -342,7 +353,7 @@ rocksdb::CompactionFilter 调用暴露给用户的接口 CompactionFilter::Filte
 ##### 3.2.1 blackwidow::InternalValue
 ---
 
-base_value_format.h:blackwidow::InternalValue 用于存储 string 类型的 Key 和 其他四种类型的 meta Key，其主要类成员如下：
+base\_value\_format.h:blackwidow::InternalValue 用于存储 string 类型的 Value 和 其他四种类型的 meta Value，其主要类成员如下：
 
 ```c++
 class InternalValue {
@@ -357,17 +368,26 @@ class InternalValue {
 };
 ```
 
-blackwidow::InternalValue 主要的接口是 Encode，其作用是把 key 的相关信息序列化成一个字节流，其工作流程如下：
+blackwidow::InternalValue 主要的接口是 Encode，其作用是把 value 的相关信息序列化成一个字节流，其工作流程如下：
 
-- 1 若 `key + timestamp + version` 拼接后的总长度不大于 200B，则 InternalValue::start_ = InternalValue::space_，即使用 InternalValue::space_ 存储序列化后的字节流，否则就在堆上分配一段内存用于存储字节流；
-- 2 调用虚接口 blackwidow:AppendTimestampAndVersion 对 `key + timestamp + version` 进行序列化并存入 InternalValue::start_。
+- 1 若 `key + timestamp + version` 拼接后的总长度不大于 200B，则 InternalValue::start\_ = InternalValue::space\_，即使用 InternalValue::space\_ 存储序列化后的字节流，否则就在堆上分配一段内存用于存储字节流；
+- 2 调用虚接口 blackwidow:AppendTimestampAndVersion 对 `key + timestamp + version` 进行序列化并存入 InternalValue::start\_。
 
-继承自 blackwidow::InternalValue 的 base_meta_value_format.h:BaseMetaValue 主要用于对 meta key进行序列化。 
+继承自 blackwidow::InternalValue 的 **base\_meta\_value\_format.h:BaseMetaValue** 主要用于对 meta value 进行序列化。 
+
+Set meta 存储格式如下：
+![](../pic/pika_bw_sets_meta.png)
+
+Zset meta 存储格式如下：
+![](../pic/pika_bw_zsets_meta.png)
+
+Hashtable meta 存储格式如下：
+![](../pic/pika_bw_hashs_meta.png)
+
 
 ##### 3.2.2 blackwidow::ParsedInternalValue 与 blackwidow::BaseMetaFilter
----
 
-base_value_format.h:blackwidow::ParsedInternalValue 用于对 string 类型的 Value 和 其他四种类型的 meta Value 进行反序列化，其主要类成员如下：
+base\_value\_format.h:blackwidow::ParsedInternalValue 用于对 string 类型的 Value 和 其他四种类型的 meta Value 进行反序列化，其主要类成员如下：
 
 ```c++
 class ParsedInternalValue {
@@ -399,7 +419,7 @@ class ParsedInternalValue {
 };
 ```
 
-继承自 blackwidow::ParsedInternalValue 的 **base\_meta\_value\_format.h:blackwidow::ParsedBaseMetaValue** 主要用于对 meta value 进行反序列化，需要注意的是 blackwidow::ParsedBaseMetaValue 多了一个 blackwidow::ParsedBaseMetaValue::count_ 成员，用于记录集合中成员【field/field】的数目，这个数值一般位于字节流的前四个字节。
+继承自 blackwidow::ParsedInternalValue 的 **base\_meta\_value\_format.h:blackwidow::ParsedBaseMetaValue** 主要用于对 meta value 进行反序列化，需要注意的是 blackwidow::ParsedBaseMetaValue 多了一个 blackwidow::ParsedBaseMetaValue::count_ 成员，用于记录集合中成员【field/member】的数目，这个数值一般位于字节流的前四个字节。
 
 继承自 rocksdb::CompactionFilter 的 **base\_filter.h:blackwidow::BaseMetaFilter** 在调用其 Filter 接口的时候，就使用 blackwidow::ParsedInternalValue 对 meta value 进行了解析处理，其工作流程如下：
 
@@ -409,12 +429,12 @@ class ParsedInternalValue {
 - 4 若 ***meta value count 为零*** 且 ***meta value version 小于当前时间***，则数据可以淘汰；
 - 5 否则数据仍然有效，不能淘汰。
 
-使用 **blackwidow::BaseMetaFilter** 的 **blackwidow::BaseMetaFilterFactory** 会被设置为 hashtable/set/zset 三种数据结构 meta ColumnFamily 的 ColumnFamilyOptions 的 compaction_filter_factory。
+使用 **blackwidow::BaseMetaFilter** 的 **blackwidow::BaseMetaFilterFactory** 会被设置为 hashtable/set/zset 三种数据结构 meta ColumnFamily 的 ColumnFamilyOptions 的 compaction\_filter\_factory。
 
 ##### 3.2.3 blackwidow::BaseDataKey
 ---
 
-base_data_key_format.h:blackwidow::BaseDataKey 用于存储 hashtable/zset/set 三种类型 Data ColumnFamily 的 Key【下文称为 data key】，其主要类成员如下：
+base\_data\_key\_format.h:blackwidow::BaseDataKey 用于存储 hashtable/zset/set 三种类型 Data ColumnFamily 的 Key【下文称为 data key】，其主要类成员如下：
 
 ```c++
 class BaseDataKey {
@@ -429,9 +449,21 @@ class BaseDataKey {
 };
 ```
 
-blackwidow::BaseDataKey 主要的接口是 Encode，其作用是把 KV Key 的相关信息序列化成一个字节流，其工作流程如下：
+Set data 存储格式如下：
+![](../pic/pika_bw_sets_data.png)
 
-- 1 若 `key size(4B) + key + version + field` 拼接后的总长度不大于 200B，则 BaseDataKey::start_ = BaseDataKey::space_，即使用 InternalValue::space_ 存储序列化后的字节流，否则就在堆上分配一段内存用于存储字节流；
+Zset data 的  data\_cf 存储格式如下：
+![](../pic/pika_bw_zsets_data_member_to_score.png)
+
+Zset data 的  score\_cf 存储格式如下：
+![](../pic/pika_bw_zsets_data_score_to_member.png)
+
+Hashtable data 存储格式如下：
+![](../pic/pika_bw_hashs_data.png)
+
+blackwidow::BaseDataKey 主要的接口是 Encode，其作用是把 KV Key 的相关信息序列化成字节流，其工作流程如下：
+
+- 1 若 `key size(4B) + key + version + field` 拼接后的总长度不大于 200B，则 BaseDataKey::start\_ = BaseDataKey::space\_，即使用 InternalValue::space\_ 存储序列化后的字节流，否则就在堆上分配一段内存用于存储字节流；
 - 2 把 key size 存入字节流前 4 字节；
 - 3 存入 key；
 - 4 存入 version；
@@ -440,7 +472,7 @@ blackwidow::BaseDataKey 主要的接口是 Encode，其作用是把 KV Key 的�
 ##### 3.2.4 blackwidow::ParsedBaseDataKey 与 blackwidow::BaseDataFilter
 ---
 
-base_data_key_format.h:blackwidow::ParsedBaseDataKey 用于对 hashtable/zset/set 三种类型的 data key 进行反序列化，其主要类成员如下：
+base\_data\_key\_format.h:blackwidow::ParsedBaseDataKey 用于对 hashtable/zset/set 三种类型的 data key 进行反序列化，其主要类成员如下：
 
 ```c++
 class ParsedBaseDataKey {
@@ -471,14 +503,14 @@ class BaseDataFilter {
 在调用其 Filter 接口的时候，就使用 blackwidow::ParsedBaseDataKey 对 data key 进行了解析处理，其工作流程如下：
 
 - 1 使用 blackwidow::ParsedBaseDataKey 对 data key 进行解析；
-- 2 若 cur_key_ 与 hashtable/zset/set key 不相等，则从 meta ColumnFamily 中获取 hashtable/zset/set 对应的 meta value；
+- 2 若 cur\_key\_ 与 hashtable/zset/set key 不相等，则从 meta ColumnFamily 中获取 hashtable/zset/set 对应的 meta value；
   + 2.1 使用 ParsedBaseMetaValue 解析 meta value；
   + 2.2 获取 hashtable/zset/set 当前的 cur_meta_version_ 与 cur_meta_timestamp_；
   + 2.3 获取不到 meta value 则意味着当前 data KV 可以淘汰；
 
 - 3 获取系统当前时间；
-- 4 若 ***cur_meta_timestamp_ 不为零 且 cur_meta_timestamp_ 小于 系统当前时间***，则数据可以淘汰；
-- 5 若 ***data key 的 version 小于 cur_meta_version_***，则数据可以淘汰；
+- 4 若 ***cur\_meta\_timestamp\_ 不为零 且 cur\_meta\_timestamp\_ 小于 系统当前时间***，则数据可以淘汰；
+- 5 若 ***data key 的 version 小于 cur\_meta\_version_***，秒删功能启用，数据可以淘汰；
 - 6 否则数据仍然有效，不能淘汰。
 
 使用 **blackwidow::BaseDataFilter** 的 **blackwidow::BaseDataFilterFactory** 会被设置为 hashtable/set/zset 三种数据结构 data ColumnFamily 的 ColumnFamilyOptions 的 compaction_filter_factory。
@@ -491,7 +523,7 @@ class BaseDataFilter {
 ##### 3.3.1 blackwidow::StringsValue
 ---
 
-**strings_value_format.h:blackwidow::StringsValue** 继承自 **blackwidow::InternalValue**，其作用自然是序列化 KV value，其主要接口 AppendTimestampAndVersion 代码如下： 
+**strings\_value\_format.h:blackwidow::StringsValue** 继承自 **blackwidow::InternalValue**，其作用自然是序列化 KV value，其主要接口 AppendTimestampAndVersion 代码如下： 
 
 ```c++
 class StringsValue : public InternalValue {
@@ -510,18 +542,184 @@ class StringsValue : public InternalValue {
 };
 ```
 
-从上面代码可以看出，Strings 没有 version 概念。
+从上面代码可以看出，Strings 没有 version 概念，其实际存储格式如下：
+
+![](../pic/pika_bw_strings.png)
 
 ##### 3.3.2 blackwidow::ParsedStringsValue 与 blackwidow::StringsFilter
 ---
 
-**strings_value_format.h:blackwidow::ParsedStringsValue** 继承自 **blackwidow::ParsedInternalValue**，其作用自然是反序列化 KV value，获取 V 与 timestamp。
+**strings\_value\_format.h:blackwidow::ParsedStringsValue** 继承自 **blackwidow::ParsedInternalValue**，其作用自然是反序列化 KV value，获取 V 与 timestamp。
 
 继承自 rocksdb::CompactionFilter 的 **strings\_filter.h:blackwidow::StringsFilter** 通过 **blackwidow::ParsedStringsValue** 对 Strings KV 进行解析，其 Filter 接口依据 V 中的 timestamp 与系统当前时间进行比较，如果 V 的 timestamp 小于系统当前时间，则数据过时可以淘汰。
 
-使用 **blackwidow:: StringsFilter** 的 **blackwidow::StringsFilterFactory** 会被设置为 Strings 的 default ColumnFamily 的 ColumnFamilyOptions 的 compaction_filter_factory。
+使用 **blackwidow::StringsFilter** 的 **blackwidow::StringsFilterFactory** 会被设置为 Strings 的 default ColumnFamily 的 ColumnFamilyOptions 的 compaction_filter_factory。
 
-#### 3.4 Binlog
+#### 3.4 Blackwidow Lists
+---
+
+不同于  hashtable/zset/set，Lists 数据集合中各个 node 之间有先后顺序且其顺序在写入数据的时候已经指定，所以其 meta 和 data 组织方式也与其他三者有所不同。
+
+##### 3.4.1 blackwidow::ListsMetaValue 与 blackwidow::ParsedListsMetaValue
+---
+
+**lists\_meta\_value\_format.h:blackwidow::ListsMetaValue** 继承自 **blackwidow::InternalValue**，其作用是序列化 meta value，其主要接口 Encode 代码如下： 
+
+```c++
+class ListsMetaValue : public InternalValue {
+ public:
+  virtual size_t AppendTimestampAndVersion() override {
+    size_t usize = user_value_.size();
+    char* dst = start_;
+    memcpy(dst, user_value_.data(), usize);
+    dst += usize;
+    EncodeFixed32(dst, version_);
+    dst += sizeof(int32_t);
+    EncodeFixed32(dst, timestamp_);
+    return usize + 2 * sizeof(int32_t);
+  }
+
+  virtual size_t AppendIndex() {
+    char * dst = start_;
+    dst += user_value_.size() + 2 * sizeof(int32_t);
+    EncodeFixed64(dst, left_index_);
+    dst += sizeof(int64_t);
+    EncodeFixed64(dst, right_index_);
+    return 2 * sizeof(int64_t);
+  }
+
+  static const size_t kDefaultValueSuffixLength = sizeof(int32_t) * 2 +
+    sizeof(int64_t) * 2;
+
+  virtual const Slice Encode() override {
+    size_t usize = user_value_.size();
+    size_t needed = usize + kDefaultValueSuffixLength;
+    char* dst;
+    if (needed <= sizeof(space_)) {
+      dst = space_;
+    } else {
+      dst = new char[needed];
+    }
+    start_  = dst;
+    size_t len = AppendTimestampAndVersion() + AppendIndex();
+    return Slice(start_, len);
+  }
+ private:
+  uint64_t left_index_;
+  uint64_t right_index_;
+};
+```
+
+从上面代码可以看出，Lists meta value 除了 version 和 timestap之外，还有两个 index，分别指向链表的左右边界。
+
+**lists\_meta\_value\_format.h:blackwidow::ParsedListsMetaValue** 继承自 **blackwidow::ParsedInternalValue**，其作用是反序列化 meta value，获取 version、timestamp、count、left\_index\_ 和 right\_index\_。
+
+```C++
+class ParsedListsMetaValue : public ParsedInternalValue {
+ private:
+  uint64_t count_;
+  uint64_t left_index_;
+  uint64_t right_index_;
+};
+```
+
+Lists meta 的具体存储格式如下：
+
+![](../pic/pika_bw_list_meta.png)
+
+##### 3.4.2 blackwidow::ListsDataKey 与 blackwidow::ParsedListsDataKey
+---
+
+lists\_data\_key\_format.h:blackwidow::ListsDataKey 用于存储 lists 的 data key，lists data key 的主要成员就是其在 lists 中的序号 index，其所有类成员如下：
+
+```c++
+class ListsDataKey {
+ public:
+  const Slice Encode();
+ private:
+  char space_[200];
+  char* start_;
+  Slice key_;  // hashtable/zset/set key
+  int32_t version_;
+  uint64_t index_;  // list node index
+};
+```
+
+blackwidow::ListsDataKey 与 blackwidow::BaseDataKey 的差异在于：BaseDataKey 中存储了 key data，而 ListsDataKey 存储了 list node index。blackwidow::ListsDataKey 的序列化函数 Encode 大致与 blackwidow::BaseDataKey::Encode 类似，此处不再详述。
+
+类似于 blackwidow::ParsedBaseDataKey，lists 数据结构也有一个反序列化数据结构 blackwidow::ParsedListsDataKey，其结构如下：
+
+```c++
+class ParsedListsDataKey {
+ private:
+  Slice key_;
+  int32_t version_;
+  uint64_t index_;
+};
+```
+
+其与 blackwidow::ParsedBaseDataKey 的差异同样也是：ParsedBaseDataKey 中存储了 key data，而 ParsedListsDataKey 存储了 list node index。
+
+Lists data 的具体存储格式如下：
+
+![](../pic/pika_bw_list_data.png)
+
+##### 3.4.3 blackwidow::ListsMetaFilter 与 blackwidow::ListsDataFilter
+---
+
+继承自 rocksdb::CompactionFilter 的 **lists\_filter.h:blackwidow::ListsMetaFilter** 通过 **blackwidow::ParsedListsMetaValue** 对 Lists meta value 进行解析，其 Filter 接口依据 meta value 中的 timestamp/version 与系统当前时间进行比较，流程与 #3.2.2# 小节中 **base\_filter.h:blackwidow::BaseMetaFilter::Filter** 接口类似，此处不再详述。
+
+使用 **blackwidow::ListsMetaFilter** 的 **blackwidow::ListsMetaFilterFactory** 会被设置为 Lists 的 default ColumnFamily 的 ColumnFamilyOptions 的 compaction_filter_factory。
+
+
+
+继承自 rocksdb::CompactionFilter 的 **lists\_filter.h:blackwidow::ListsMetaFilterFactory** 通过 **blackwidow:: ParsedListsDataKey** 对 Lists data key 进行解析，其 Filter 接口依据 data key 中的 timestamp/version 与系统当前时间进行比较，流程与 #3.2.4# 小节中 **base\_filter.h:blackwidow::BaseDataFilter::Filter** 接口类似，此处不再详述。
+
+使用 **blackwidow::ListsDataFilter** 的 **blackwidow::ListsDataFilterFactory** 会被设置为 Lists 的 data_cf ColumnFamily 的 ColumnFamilyOptions 的 compaction_filter_factory。
+
+##### 3.4.4 blackwidow::ListsDataKeyComparator
+---
+
+RocksDB 提供了一个名为 Comparator 的接口，用于对 Column Family 或者整个 Database 的 sst file 的 KV 进行排序。
+
+Lists 的有序体现在其 data_cf Column Family 下的数据有序性，Pika 提供了继承自 RocksDB::Comparator 的 blackwidow::ListsDataKeyComparatorImpl 对 data key 进行排序。RocksDB::Comparator 的主要接口是 Compare 函数和 Equal 函数，其定义形式如下：
+```C++
+// A Comparator object provides a total order across slices that are
+// used as keys in an sstable or a database.  A Comparator implementation
+// must be thread-safe since rocksdb may invoke its methods concurrently
+// from multiple threads.
+class Comparator {
+ public:
+  virtual ~Comparator() {}
+
+  // Three-way comparison.  Returns value:
+  //   < 0 iff "a" < "b",
+  //   == 0 iff "a" == "b",
+  //   > 0 iff "a" > "b"
+  virtual int Compare(const Slice& a, const Slice& b) const = 0;
+
+  // Compares two slices for equality. The following invariant should always
+  // hold (and is the default implementation):
+  //   Equal(a, b) iff Compare(a, b) == 0
+  // Overwrite only if equality comparisons can be done more efficiently than
+  // three-way comparisons.
+  virtual bool Equal(const Slice& a, const Slice& b) const {
+    return Compare(a, b) == 0;
+  }
+};
+```
+
+**custom\_comparator.h:ListsDataKeyComparatorImpl** 的主要接口 Compare 函数流程如下：
+
+- 1 对 data key 中存储的 lists key 以 slice 自带的 comparator 进行比较，如果 key 不相等，则返回比较结果；
+- 2 对 data key 中存储的 version 进行比较，如果 version 不相等，则返回比较结果；
+- 3 对 data key 中存储的 index 进行比较，返回比较结果；
+
+**custom\_comparator.h:ListsDataKeyComparatorImpl** 存在的形式是 Lists 的 data_cf Column Family 的 Options.comparator 被 RocksDB 调用。
+
+**custom\_comparator.h** 文件中还有一个 ZSetsScoreKeyComparatorImpl 接口类，用于 zset 集合下的 score_cf 进行排序，其排序方式是：`同一个zset中score to member的data_key会首先按照score来排序， 在score相同的情况下再按照member来排序`【摘自[参考文档8]((https://github.com/qihoo360/pika/wiki/pika-blackwidow%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F))】。
+
+#### 3.5 Binlog
 ---
 
 官方在 Pika 3.x 中使用了最新改进的的 Binlog。最新版的 Binlog 内容其实并无多大改进，无非是把原来放在 Binlog Redis 写命令后面追加的四个额外信息【详见 #1.1 节】挪到了前面，但是好处是把二者做了分离，Binlog Info 与 Redis 命令不再混淆在一起。更重要的是整个协议为未来改进留下了可扩展空间，不用每次升级 Binlog 协议把整个协议格式完全推动重新设计一遍。
@@ -560,6 +758,7 @@ enum TransferOperate{
 - 6 [RocksDB 笔记](http://alexstocks.github.io/html/rocksdb.html)
 - 7 [pika 跨机房同步设计](http://kernelmaker.github.io/pika-muli-idc)
 - 8 [pika blackwidow引擎数据存储格式](https://github.com/qihoo360/pika/wiki/pika-blackwidow%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F)
+- 9 [pika FAQ](https://github.com/Qihoo360/pika/wiki/FAQ)
 
 ## 扒粪者-于雨氏
 
@@ -569,5 +768,6 @@ enum TransferOperate{
 > 
 > 2018/09/19，于雨氏，于西二旗添加第三节 “Blackwidow”。
 > 
-> 2018/09/25，于雨氏，于西二旗添加 #3.4 “Binlog”。
-
+> 2018/09/25，于雨氏，于西二旗添加 #3.5# “Binlog”。
+> 
+> 2018/09/30，于雨氏，于西二旗添加 #3.4# “Blackwidow Lists”。
