@@ -1058,7 +1058,7 @@ private/1/000009.log crc32 3494278128
 
 Private 目录则包含一些非 SST 文件：options, current, manifest, WALs。如果 `Options::share_table_files` 为false，则 private 目录会存储 SST 文件。如果 `Options::share_table_files` 为 true 且 ` Options::share_files_with_checksum` 为 false，shared 目录包含一些 SST 文件，SST 文件命名与原 RocksDB 目录下命名一致，所以在一个备份目录下只能备份一个 RocksDB 实例的数据。
 
-接口 `BackupEngine::VerifyBackups()` 用于对备份数据进行校验，但是仅仅根据 meta目录下各个 ID 文件记录的文件 size 与 相应的 private 目录下的文件的 size 是否相等，并不会进行 checksum 校验， 校验 checksum 需要读取数据文件，比较费时。另外需要注意的是，这个接口相应的 `BackupEngine` 句柄只能由`BackupEngine::CreateNewBackup()` 创建，也即只能在进行文件备份且句柄未失效前进行数据校验，因为校验时所依据的数据是在备份过程中产生的。
+接口 `BackupEngine::VerifyBackups()` 用于对备份数据进行校验，但是仅仅根据 meta 目录下各个 ID 文件记录的文件 size 与 相应的 private 目录下的文件的 size 是否相等，并不会进行 checksum 校验， 校验 checksum 需要读取数据文件，比较费时。另外需要注意的是，这个接口相应的 `BackupEngine` 句柄只能由`BackupEngine::CreateNewBackup()` 创建，也即只能在进行文件备份且句柄未失效前进行数据校验，因为校验时所依据的数据是在备份过程中产生的。
 
 接口 `BackupEngineReadOnly::RestoreDBFromBackup(backup_id, db_dir, wal_dir,restore_options)` 用于备份数据恢复，参数 `db_dir` 和`wal_dir`大部分场景下都是同一个目录，但在 [参考文档18](https://www.jianshu.com/p/46bb78bca726?utm_source=oschina-app) 所提供的把 RocksDB 当做纯内存数据库的使用场景下， `db_dir` 在内存虚拟文件系统上，而 `wal_dir` 则是一个磁盘文件目录。进行数据恢复时，这个接口还会根据 meta 下相应 ID 记录的 备份数据 checksum 对 private 目录下的数据进行校验，发错错误时返回 `Status::Corruption` 错误。
 

@@ -268,9 +268,9 @@ If the process either catches the signal and returns from the signal handler, or
 
 <hr>
 
-<p>Pika 官方 wiki [<a href="https://github.com/qihoo360/pika/wiki/pika-%E5%BF%AB%E7%85%A7%E5%BC%8F%E5%A4%87%E4%BB%BD%E6%96%B9%E6%A1%88">参考文档4</a>] 有对其数据备份过程的图文描述，此文就就不再进行转述。</p>
+<p>Pika 官方 wiki [<a href="https://github.com/qihoo360/pika/wiki/pika-%E5%BF%AB%E7%85%A7%E5%BC%8F%E5%A4%87%E4%BB%BD%E6%96%B9%E6%A1%88">参考文档4</a>] 有对其数据备份过程的图文描述，此文就不再进行转述。</p>
 
-<p>Ardb 作者对 Pika 的评价是  “直接修改了rocksdb代码实现某些功能。这种做法也是双刃剑，改动太多的话，社区的一些修改是很难merge进来的”【详见<a href="http://yinqiwen.github.io/">参考文档5</a>】。与比较几个主流的基于 RocksDB 实现的 KV 存储引擎（如 TiKV/SSDB/ARDB/CockroachDB）作比较，Pika 确实对 RocksDB 的代码侵入比较严重。RocksDB 默认的备份引擎 BackupEngine 通过 <code>BackupEngine::Open</code> 和 <code>BackupEngine::CreateNewBackup</code> 即实现了数据的备份【关于RocksDB 的 Backup 接口详见 <a href="http://alexstocks.github.io/html/rocksdb.html">参考文档6</a> 6.8节】，而 Pika 为了效率起见重新实现了一个 <code>nemo::BackupEngine</code>，以进行异步备份。</p>
+<p>Ardb 作者在<a href="http://yinqiwen.github.io/">参考文档5</a>文中对 Pika 的评价是  “直接修改了rocksdb代码实现某些功能。这种做法也是双刃剑，改动太多的话，社区的一些修改是很难merge进来的”。与几个比较主流的基于 RocksDB 实现的 KV 存储引擎（如 TiKV/SSDB/ARDB/CockroachDB）作比较，Pika 确实对 RocksDB 的代码侵入比较严重。RocksDB 默认的备份引擎 BackupEngine 通过 <code>BackupEngine::Open</code> 和 <code>BackupEngine::CreateNewBackup</code> 即实现了数据的备份【关于RocksDB 的 Backup 接口详见 <a href="http://alexstocks.github.io/html/rocksdb.html">参考文档6</a> 6.8节】，而 Pika 为了效率起见重新实现了一个 <code>nemo::BackupEngine</code>，以进行异步备份。另一个可能的原因是 Pika 的 WAL 日志是独立于 RocksDB 自身数据单独存储的，而不像诸如 TiKV 此类的存储引擎把 Log（Raft Log）也存入了 RocksDB，所以不得不自己实现了一套数据备份流程。</p>
 
 <p>Pika 的存储引擎 nemo 依赖于其对 RocksDB 的封装引擎 nemo-rocksdb，下面结合<a href="https://github.com/qihoo360/pika/wiki/pika-%E5%BF%AB%E7%85%A7%E5%BC%8F%E5%A4%87%E4%BB%BD%E6%96%B9%E6%A1%88">参考文档4</a> 从代码层面对备份流程进行详细分析。</p>
 
@@ -302,7 +302,7 @@ If the process either catches the signal and returns from the signal handler, or
 
 <p><code>CreateCheckpoint</code> 接口可以认为是同步操作，它通过调用 <code>GetCheckpointFiles</code> 和 <code>CreateCheckpointWithFiles</code> 实现数据备份。</p>
 
-<p><code>DBNemoCheckpointImpl::GetCheckpointFiles</code> 先执行 “组织文件删除”，然后再获取 快照内容。</p>
+<p><code>DBNemoCheckpointImpl::GetCheckpointFiles</code> 先执行 “组织文件删除”，然后再获取快照内容。</p>
 
 <p><code>DBNemoCheckpointImpl::CreateCheckpointWithFiles(checkpoint_dir, BackupContent)</code> 详细流程:</p>
 
@@ -443,7 +443,7 @@ If the process either catches the signal and returns from the signal handler, or
 <li>4 把 <code>bgsave_info_.bgsaving</code> 置为 false。</li>
 </ul>
 
-<h4 id="toc_16">2.3.4 PikaServer::Bgsave</h4>
+<h4 id="toc_16">2.3.5 PikaServer::Bgsave</h4>
 
 <p>作为命令 bgsave 的响应函数，其流程非常简单：</p>
 
@@ -901,7 +901,7 @@ enum TransferOperate{
 
 <p>Pika 把心跳和数据发收分开处理，<a href="https://github.com/Qihoo360/pika/wiki/FAQ">参考文档9</a>这样解释：<code>第一为了提高同步速度，sender只发不收，receiver只收不发，心跳是又单独的线程去做，如果心跳又sender来做，那么为了一秒仅有一次的心跳还要去复杂化sender和receiver的逻辑；第二其实前期尝试过合并在一起来进行连接级别的存活检测，当写入压力过大的时候会心跳包的收发会延后，导致存活检测被影响，slave误判master超时而进行不必要的重连</code>。</p>
 
-<p>个人对于这一处理机制持有异议，心跳和逻辑处理分开后，有这样一种 case 这种机制无法很好处理：如果 slave 逻辑处理函数写流程机制有问题【譬如陷入无限循环或者写 log 过程因为 log 库的 bug 而永久阻塞】，把处理逻辑处理流程的线程阻塞住（或者说叫做卡死），整个进程其实处于假死状态（什么也不做，与僵尸无疑），但是心跳逻辑线程正常工作，其结果就是 master 以为 slave 正常存活而继续发送数据！此时相对于不能正常 work， “重连的代价” 就不算什么了。所以个人以为应当把心跳和逻辑处理机制在同一个线程【或者线程池】处理。</p>
+<p>个人对于这一处理机制持有异议，心跳和数据收发逻辑处理分开后，有这样一种 case 这种机制无法很好处理：如果 slave 逻辑处理函数写流程机制有问题【譬如陷入无限循环或者写 log 时因为 log 库的 bug 而永久阻塞】，把收数据处理逻辑处理流程的线程阻塞住（或者说叫做卡死），整个进程其实处于假死状态（什么也不做，与僵尸无疑），但是心跳逻辑线程正常工作，其结果就是 master 以为 slave 正常存活而继续发送数据！此时相对于不能正常 work， “重连的代价” 就不算什么了。所以个人以为应当把心跳和逻辑处理机制在同一个线程【或者线程池】处理。</p>
 
 <p>Pika 主从对 binlog 的处理不一样，<a href="https://github.com/Qihoo360/pika/wiki/FAQ">参考文档9</a>这样描述：<code>master是先写db再写binlog，之前slave只用一个worker来同步会在master写入压力很大的情况下由于slave一个worker写入太慢而造成同步差距过大，后来我们调整结构，让slave通过多个worker来写提高写入速度，不过这时候有一个问题，为了保证主从binlog顺序一致，写binlog的操作还是只能又一个线程来做，也就是receiver，所以slave这边是先写binlog在写db，所以slave存在写完binlog挂掉导致丢失数据的问题，不过redis在master写完db后挂掉同样会丢失数据，所以redis采用全同步的办法来解决这一问题，pika同样，默认使用部分同步来继续，如果业务对数据十分敏感，此处可以强制slave重启后进行全同步即可</code>。</p>
 
@@ -931,9 +931,13 @@ enum TransferOperate{
 <p>RocksDB 通过提供常用场景的 API 之外，还提供了一些适用于特定场景的 API，下面分别罗列之。</p>
 
 <ul>
-<li>InsertWithHint 这个 API pika 并未使用，<a href="https://pingcap.com/blog/2017-09-15-rocksdbintikv/">参考文档10</a> 建议在连续插入具有共同前缀的 key 的场景下使用，据说可以把性能提高 15% 以上，使用示例见<a href="https://github.com/facebook/rocksdb/blob/189f0c27aaecdf17ae7fc1f826a423a28b77984f/memtable/inlineskiplist_test.cc">inlineskiplist_test</a> 和<a href="https://github.com/facebook/rocksdb/blob/189f0c27aaecdf17ae7fc1f826a423a28b77984f/db/db_memtable_test.cc">db<em>memtable</em>test</a>；</li>
+<li>InsertWithHint 这个 API pika 并未使用，<a href="https://pingcap.com/blog/2017-09-15-rocksdbintikv/">参考文档10</a> 建议在连续插入具有共同前缀的 key 的场景下使用，据说可以把性能提高 15% 以上，使用示例见<a href="https://github.com/facebook/rocksdb/blob/189f0c27aaecdf17ae7fc1f826a423a28b77984f/memtable/inlineskiplist_test.cc">inlineskiplist_test</a> 和<a href="https://github.com/facebook/rocksdb/blob/189f0c27aaecdf17ae7fc1f826a423a28b77984f/db/db_memtable_test.cc">db_memtable_test</a>；</li>
+<li>DeleteRange 这个 API pika 并未使用，<a href="https://pingcap.com/blog/2017-09-08-rocksdbbug/">参考文档12</a> 中说是使用这个 API 可以大规模提高删除效率；</li>
 <li>Prefix Iterator 这个 feature Pika 大量使用了，且在使用的时候要启用 Bloom filter，<a href="https://pingcap.com/blog/2017-09-15-rocksdbintikv/">参考文档10</a> 中说可以把查找性能提高 10%；</li>
+<li>BackupEngine::VerifyBackups 用于对备份数据进行校验，但是仅仅根据 meta 目录下各个 ID 文件记录的文件 size 与 相应的 private 目录下的文件的 size 是否相等，并不会进行 checksum 校验，校验 checksum 需要读取数据文件，比较费时，<a href="https://pingcap.com/blog/2017-09-08-rocksdbbug/">参考文档12</a>中提到 TiKV 的数据一致性校验方法就是查验一个 Region 中各个 replica 文件的 checksum 是否一致；</li>
 </ul>
+
+<p>补：<a href="https://pingcap.com/blog/2017-09-08-rocksdbbug/">参考文档12</a> 中有句话比较有意思：<code>After a few days, we got some suspicious places but still nothing solid, except to realize that the DeleteRange implementation was more complicated than we expected.</code>。说明 RocksDB 确实很难读嘛，术业有专攻，不能因为自己读了一些 RocksDB 的代码就鄙视那些没有读过的人。</p>
 
 <h2 id="toc_37">参考文档</h2>
 
@@ -949,6 +953,7 @@ enum TransferOperate{
 <li>9 <a href="https://github.com/Qihoo360/pika/wiki/FAQ">pika FAQ</a></li>
 <li>10 <a href="https://pingcap.com/blog/2017-09-15-rocksdbintikv/">RocksDB in TiKV</a></li>
 <li>11 <a href="https://www.jianshu.com/p/9e385682ed4e">RocksDB MemTable源码分析</a></li>
+<li>12 <a href="https://pingcap.com/blog/2017-09-08-rocksdbbug/">How we Hunted a Data Corruption bug in RocksDB</a></li>
 </ul>
 
 <h2 id="toc_38">扒粪者-于雨氏</h2>
@@ -997,6 +1002,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 
 

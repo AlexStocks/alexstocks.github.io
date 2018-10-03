@@ -2,7 +2,6 @@
 ---
 *written by Alex Stocks on 2018/09/07，版权所有，无授权不得转载*
 
-
 ### 0 引言
 ---
 
@@ -142,14 +141,13 @@ Pika-port 调用了上图[第一个构造函数](https://github.com/pikalabs/pin
 ### 2 数据备份
 ---
 
-Pika 官方 wiki [[参考文档4](https://github.com/qihoo360/pika/wiki/pika-%E5%BF%AB%E7%85%A7%E5%BC%8F%E5%A4%87%E4%BB%BD%E6%96%B9%E6%A1%88)] 有对其数据备份过程的图文描述，此文就就不再进行转述。
+Pika 官方 wiki [[参考文档4](https://github.com/qihoo360/pika/wiki/pika-%E5%BF%AB%E7%85%A7%E5%BC%8F%E5%A4%87%E4%BB%BD%E6%96%B9%E6%A1%88)] 有对其数据备份过程的图文描述，此文就不再进行转述。
 
-Ardb 作者对 Pika 的评价是  “直接修改了rocksdb代码实现某些功能。这种做法也是双刃剑，改动太多的话，社区的一些修改是很难merge进来的”【详见[参考文档5](http://yinqiwen.github.io/)】。与比较几个主流的基于 RocksDB 实现的 KV 存储引擎（如 TiKV/SSDB/ARDB/CockroachDB）作比较，Pika 确实对 RocksDB 的代码侵入比较严重。RocksDB 默认的备份引擎 BackupEngine 通过 `BackupEngine::Open` 和 `BackupEngine::CreateNewBackup` 即实现了数据的备份【关于RocksDB 的 Backup 接口详见 [参考文档6](http://alexstocks.github.io/html/rocksdb.html) 6.8节】，而 Pika 为了效率起见重新实现了一个 `nemo::BackupEngine`，以进行异步备份。
+Ardb 作者在[参考文档5](http://yinqiwen.github.io/)文中对 Pika 的评价是  “直接修改了rocksdb代码实现某些功能。这种做法也是双刃剑，改动太多的话，社区的一些修改是很难merge进来的”。与几个比较主流的基于 RocksDB 实现的 KV 存储引擎（如 TiKV/SSDB/ARDB/CockroachDB）作比较，Pika 确实对 RocksDB 的代码侵入比较严重。RocksDB 默认的备份引擎 BackupEngine 通过 `BackupEngine::Open` 和 `BackupEngine::CreateNewBackup` 即实现了数据的备份【关于RocksDB 的 Backup 接口详见 [参考文档6](http://alexstocks.github.io/html/rocksdb.html) 6.8节】，而 Pika 为了效率起见重新实现了一个 `nemo::BackupEngine`，以进行异步备份。另一个可能的原因是 Pika 的 WAL 日志是独立于 RocksDB 自身数据单独存储的，而不像诸如 TiKV 此类的存储引擎把 Log（Raft Log）也存入了 RocksDB，所以不得不自己实现了一套数据备份流程。
 
 Pika 的存储引擎 nemo 依赖于其对 RocksDB 的封装引擎 nemo-rocksdb，下面结合[参考文档4](https://github.com/qihoo360/pika/wiki/pika-%E5%BF%AB%E7%85%A7%E5%BC%8F%E5%A4%87%E4%BB%BD%E6%96%B9%E6%A1%88) 从代码层面对备份流程进行详细分析。
 
 <font size=“2” color=blue>***注：本章描述的备份流程基于 pika 的 nemo 引擎，基本与最新的 blackwidow 引擎的备份流程无差。***</font>
-
 
 #### 2.1 DBNemoCheckpoint
 ---
@@ -178,7 +176,7 @@ class DBNemoCheckpointImpl : public DBNemoCheckpoint {
 
 `CreateCheckpoint` 接口可以认为是同步操作，它通过调用 `GetCheckpointFiles` 和 `CreateCheckpointWithFiles` 实现数据备份。
 
-`DBNemoCheckpointImpl::GetCheckpointFiles` 先执行 “组织文件删除”，然后再获取 快照内容。
+`DBNemoCheckpointImpl::GetCheckpointFiles` 先执行 “组织文件删除”，然后再获取快照内容。
 
 `DBNemoCheckpointImpl::CreateCheckpointWithFiles(checkpoint_dir, BackupContent)` 详细流程:
 
@@ -302,7 +300,7 @@ class DBNemoCheckpointImpl : public DBNemoCheckpoint {
 - 3 如果备份失败，则把 `pika.conf:dump-path/%Y%m%d` 重命名为 `pika.conf:dump-path/%Y%m%d_FAILED`；
 - 4 把 `bgsave_info_.bgsaving` 置为 false。
 
-#### 2.3.4 PikaServer::Bgsave
+#### 2.3.5 PikaServer::Bgsave
 
 作为命令 bgsave 的响应函数，其流程非常简单：
 
@@ -751,7 +749,7 @@ enum TransferOperate{
 
 Pika 把心跳和数据发收分开处理，[参考文档9](https://github.com/Qihoo360/pika/wiki/FAQ)这样解释：`第一为了提高同步速度，sender只发不收，receiver只收不发，心跳是又单独的线程去做，如果心跳又sender来做，那么为了一秒仅有一次的心跳还要去复杂化sender和receiver的逻辑；第二其实前期尝试过合并在一起来进行连接级别的存活检测，当写入压力过大的时候会心跳包的收发会延后，导致存活检测被影响，slave误判master超时而进行不必要的重连`。
 
-个人对于这一处理机制持有异议，心跳和逻辑处理分开后，有这样一种 case 这种机制无法很好处理：如果 slave 逻辑处理函数写流程机制有问题【譬如陷入无限循环或者写 log 过程因为 log 库的 bug 而永久阻塞】，把处理逻辑处理流程的线程阻塞住（或者说叫做卡死），整个进程其实处于假死状态（什么也不做，与僵尸无疑），但是心跳逻辑线程正常工作，其结果就是 master 以为 slave 正常存活而继续发送数据！此时相对于不能正常 work， “重连的代价” 就不算什么了。所以个人以为应当把心跳和逻辑处理机制在同一个线程【或者线程池】处理。
+个人对于这一处理机制持有异议，心跳和数据收发逻辑处理分开后，有这样一种 case 这种机制无法很好处理：如果 slave 逻辑处理函数写流程机制有问题【譬如陷入无限循环或者写 log 时因为 log 库的 bug 而永久阻塞】，把收数据处理逻辑处理流程的线程阻塞住（或者说叫做卡死），整个进程其实处于假死状态（什么也不做，与僵尸无疑），但是心跳逻辑线程正常工作，其结果就是 master 以为 slave 正常存活而继续发送数据！此时相对于不能正常 work， “重连的代价” 就不算什么了。所以个人以为应当把心跳和逻辑处理机制在同一个线程【或者线程池】处理。
 
 Pika 主从对 binlog 的处理不一样，[参考文档9](https://github.com/Qihoo360/pika/wiki/FAQ)这样描述：`master是先写db再写binlog，之前slave只用一个worker来同步会在master写入压力很大的情况下由于slave一个worker写入太慢而造成同步差距过大，后来我们调整结构，让slave通过多个worker来写提高写入速度，不过这时候有一个问题，为了保证主从binlog顺序一致，写binlog的操作还是只能又一个线程来做，也就是receiver，所以slave这边是先写binlog在写db，所以slave存在写完binlog挂掉导致丢失数据的问题，不过redis在master写完db后挂掉同样会丢失数据，所以redis采用全同步的办法来解决这一问题，pika同样，默认使用部分同步来继续，如果业务对数据十分敏感，此处可以强制slave重启后进行全同步即可`。
 
@@ -776,8 +774,12 @@ Pika 使用了 RocksDB，其性能关键就在于如何通过调参优化 RocksD
 
 RocksDB 通过提供常用场景的 API 之外，还提供了一些适用于特定场景的 API，下面分别罗列之。
 
-* InsertWithHint 这个 API pika 并未使用，[参考文档10](https://pingcap.com/blog/2017-09-15-rocksdbintikv/) 建议在连续插入具有共同前缀的 key 的场景下使用，据说可以把性能提高 15% 以上，使用示例见[inlineskiplist_test](https://github.com/facebook/rocksdb/blob/189f0c27aaecdf17ae7fc1f826a423a28b77984f/memtable/inlineskiplist_test.cc) 和[db_memtable_test](https://github.com/facebook/rocksdb/blob/189f0c27aaecdf17ae7fc1f826a423a28b77984f/db/db_memtable_test.cc)；
+* InsertWithHint 这个 API pika 并未使用，[参考文档10](https://pingcap.com/blog/2017-09-15-rocksdbintikv/) 建议在连续插入具有共同前缀的 key 的场景下使用，据说可以把性能提高 15% 以上，使用示例见[inlineskiplist\_test](https://github.com/facebook/rocksdb/blob/189f0c27aaecdf17ae7fc1f826a423a28b77984f/memtable/inlineskiplist_test.cc) 和[db\_memtable\_test](https://github.com/facebook/rocksdb/blob/189f0c27aaecdf17ae7fc1f826a423a28b77984f/db/db_memtable_test.cc)；
+* DeleteRange 这个 API pika 并未使用，[参考文档12](https://pingcap.com/blog/2017-09-08-rocksdbbug/) 中说是使用这个 API 可以大规模提高删除效率；
 * Prefix Iterator 这个 feature Pika 大量使用了，且在使用的时候要启用 Bloom filter，[参考文档10](https://pingcap.com/blog/2017-09-15-rocksdbintikv/) 中说可以把查找性能提高 10%；
+* BackupEngine::VerifyBackups 用于对备份数据进行校验，但是仅仅根据 meta 目录下各个 ID 文件记录的文件 size 与 相应的 private 目录下的文件的 size 是否相等，并不会进行 checksum 校验，校验 checksum 需要读取数据文件，比较费时，[参考文档12](https://pingcap.com/blog/2017-09-08-rocksdbbug/)中提到 TiKV 的数据一致性校验方法就是查验一个 Region 中各个 replica 文件的 checksum 是否一致；
+
+补：[参考文档12](https://pingcap.com/blog/2017-09-08-rocksdbbug/) 中有句话比较有意思：`After a few days, we got some suspicious places but still nothing solid, except to realize that the DeleteRange implementation was more complicated than we expected.`。说明 RocksDB 确实很难读嘛，术业有专攻，不能因为自己读了一些 RocksDB 的代码就鄙视那些没有读过的人。
 
 ## 参考文档
 
@@ -792,6 +794,7 @@ RocksDB 通过提供常用场景的 API 之外，还提供了一些适用于特�
 - 9 [pika FAQ](https://github.com/Qihoo360/pika/wiki/FAQ)
 - 10 [RocksDB in TiKV](https://pingcap.com/blog/2017-09-15-rocksdbintikv/)
 - 11 [RocksDB MemTable源码分析](https://www.jianshu.com/p/9e385682ed4e)
+- 12 [How we Hunted a Data Corruption bug in RocksDB](https://pingcap.com/blog/2017-09-08-rocksdbbug/)
 
 ## 扒粪者-于雨氏
 
