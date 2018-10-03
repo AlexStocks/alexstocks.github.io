@@ -30,7 +30,7 @@ LSM从命名上看，容易望文生义成一个具体的数据结构，一个tr
 
 很明显，LSM牺牲了一部分读的性能和增加了合并的开销，换取了高效的写性能。那LSM为什么要这么做？实际上，这就关系到对于磁盘写已经没有什么优化手段了，而对于磁盘读，不论硬件还是软件上都有优化的空间。通过多种优化后，读性能虽然仍是下降，但可以控制在可接受范围内。实际上，用于磁盘上的数据结构不同于用于内存上的数据结构，用于内存上的数据结构性能的瓶颈就在搜索复杂度，而用于磁盘上的数据结构性能的瓶颈在磁盘IO，甚至是磁盘IO的模式。
 
-以上三段摘抄自[参考文档20](https://www.tuicool.com/articles/7ju2UfI)。个人以为，LSM 的关键就在于其是一种自带数据 Garbage Collect 的有序数据集合，对外只提供了 Add/Get 接口，其内部的 Compaction 就是其 GC 的关键，通过 Compaction 实现了对数据的删除、附带了 TTL 的过期数据地淘汰、同一个 Key 的多个版本 Value 的合并。RocksDB 基于 LSM 对外提供了 Add/Delete/Get 三个接口，用户则基于 RocksDB 提供的 transaction 还可以实现 Update 语义。
+以上三段摘抄自[参考文档20](https://www.tuicool.com/articles/7ju2UfI)。个人以为，除了将随机写合并之后转化为顺写之外，LSM 的另外一个关键特性就在于其是一种自带数据 Garbage Collect 的有序数据集合，对外只提供了 Add/Get 接口，其内部的 Compaction 就是其 GC 的关键，通过 Compaction 实现了对数据的删除、附带了 TTL 的过期数据地淘汰、同一个 Key 的多个版本 Value 地合并。RocksDB 基于 LSM 对外提供了 Add/Delete/Get 三个接口，用户则基于 RocksDB 提供的 transaction 还可以实现 Update 语义。
 
 ![](../pic/rocksdb_arch.png)
 
@@ -54,9 +54,11 @@ WriteBatch 还有一个好处是保持加快吞吐率。
 
 默认情况下，RocksDB 的写是异步的：仅仅把数据写进了操作系统的缓存区就返回了，而这些数据被写进磁盘是一个异步的过程。如果为了数据安全，可以用如下代码把写过程改为同步写：
 
+```C++
 	rocksdb::WriteOptions write_options;   
 	write_options.sync = true;   
 	db->Put(write_options, …);
+```
 
 这个选项会启用 Posix 系统的 `fsync(...) or fdatasync(...) or msync(..., MS_SYNC)` 等函数。
 
@@ -1134,26 +1136,6 @@ Private 目录则包含一些非 SST 文件：options, current, manifest, WALs�
 - 41 即使没有被标记为删除的 key，也没有数据过期，RocksDB 仍然会执行 compaction，以提高读性能；
 - 42 RocksDB 的 key 和 value 是存在一起的，遍历一个 key 的时候，RocksDB 已经把其 value 读入 cache 中；
 - 43 对于一个离线 DB 可以通过 "sst_dump --show_properties --command=none" 命令获取特定 sst 文件的 index & filter 的 size，对于正在运行的 DB 可以通过读取 DB 的属性 "kAggregatedTableProperties" 或者调用 DB::GetPropertiesOfAllTables() 获取 DB 的 index & filter 的 size。
-
-### 8 Pika
----
-
-今年六月份公司打算使用 Codis + Pika 作为存储方案，故而最近三个月都在研究测试使用 Pika，稍微有些心得，一并记录于本文，以作记忆之用。
-
-### 8.1 相关参数
----
-
-* target_file_size_base 这个参数就是 #5.1# 小节中的 "target sise",是 level 1 SST 文件的 size。有使用者 “把pika的target-file-size-base从20M改到256M后，发现新写入数据时cpu消耗高30%左右，写入性能也有影响”，原因是“文件越大compaction代价越大”。
-
-### 8.2 使用场景
----
-
-360 内部 90% 的情况下，pika 都运行在 ssd上，只有不到 10% 的对读写速度要求不高的情况下写入到 SATA 盘上。
-
-### 8.3 Redis 命令支持
----
-
-* dbsize  执行 dbsize 之前，先执行 `info keyspace 1`，其作用是 打印上一次统计即结果 且 进行新的统计，在执行 dbsize，`info keyspace 0` 作用只是打印上一次统计结果。
 
 
 ## 参考文档 ##

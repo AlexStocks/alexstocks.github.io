@@ -5,6 +5,7 @@
 
 ### 0 引言
 ---
+
 愚人所在公司的大部分服务端业务无论是缓存还是存储颇为依赖 Codis，经过数次踩坑，其中一条经验教训是：线上 Redis 数据不要落地。
 
 也就是说，我司的 Codis 集群中的 Redis，无论是 master 还是 slave，都没有打开 rdb 和 aof，所有数据都放在内存中。Codis 以这种方式“平静地”运行了一年，但是大伙终究心里石头无法落地，现状要求运维的同事在线上部署一种能高效运行且数据能落地的 “Codis”。
@@ -13,10 +14,11 @@
 
 最终这个“光荣任务”落在了愚人肩上。本文用来记录我阅读代码并在改进 Pika 【到 2018/09/07 为止主要是开发相关工具】过程中遇到的一些问题。
 
-补充其他 Codis 使用经验大致如下：
+补充其他 Pika/Codis 使用经验大致如下：
 
 - 1 数据量大的业务单独使用一个 Codis 集群；
 - 2 单个 Redis 实例的数据尽量不要超过 8G，最大不能超过 15G，否则单进程的 Redis 管理能力急剧下降； 
+- 3 RocksDB 的数据尽量存储在 SSD 上，360 内部 90% 的情况下，pika 都运行在 ssd上，只有不到 10% 的对读写速度要求不高的情况下写入到 SATA 盘上。
 
 ### 1 数据迁移
 ---
@@ -755,6 +757,28 @@ Pika 主从对 binlog 的处理不一样，[参考文档9](https://github.com/Qi
 
 Pika master 处理写请求的流程是先写 DB 后生成对应的 binlog，似乎与时下常见的 leader-follower 架构下 leader处理写请求流程 “先把写请求内容写入 WAL（类似于binlog） 然后再应用到状态机（DB）” 不同，个人以为可能的一个原因是因为 leader-follower 对写请求的处理是一种同步机制，而 master-slave 对写请求的处理是一个异步过程。假设 master-slave 架构下 master 对写请求的处理过程是先写 binlog 然后再写 DB，则 slave DB 的数据有可能比 master DB 数据更新：写请求内容被 master 写入 binlog 后迅速同步给slave，然后 slave 将其写入 DB，而此时 master 还未完成相应数据的更新。可以类比地，同样使用了 master-slave 架构的 Redis master 收到写请求之后先把数据写入 DB，然后再放入 backlog 同步给 slave。
 
+### 4 调优
+---
+
+Pika 使用了 RocksDB，其性能关键就在于如何通过调参优化 RocksDB。
+
+### 4.1 参数调优
+---
+
+* write\_buffer\_size 指明一个 memtable 的大小
+* max_write_buffer_number 内存中 memtable 数目上限
+* db\_write\_buffer\_size 所有 Column Family 的 memtable 内存之和, 用来限定 memtable 的内存使用上限
+* target\_file\_size\_base 这个参数就是 #5.1# 小节中的 "target sise",是 level 1 SST 文件的 size。有使用者 “把pika的target-file-size-base从20M改到256M后，发现新写入数据时cpu消耗高30%左右，写入性能也有影响”，原因是“文件越大compaction代价越大”
+
+
+### 4.2 API 使用
+---
+
+RocksDB 通过提供常用场景的 API 之外，还提供了一些适用于特定场景的 API，下面分别罗列之。
+
+* InsertWithHint 这个 API pika 并未使用，[参考文档10](https://pingcap.com/blog/2017-09-15-rocksdbintikv/) 建议在连续插入具有共同前缀的 key 的场景下使用，据说可以把性能提高 15% 以上，使用示例见[inlineskiplist_test](https://github.com/facebook/rocksdb/blob/189f0c27aaecdf17ae7fc1f826a423a28b77984f/memtable/inlineskiplist_test.cc) 和[db_memtable_test](https://github.com/facebook/rocksdb/blob/189f0c27aaecdf17ae7fc1f826a423a28b77984f/db/db_memtable_test.cc)；
+* Prefix Iterator 这个 feature Pika 大量使用了，且在使用的时候要启用 Bloom filter，[参考文档10](https://pingcap.com/blog/2017-09-15-rocksdbintikv/) 中说可以把查找性能提高 10%；
+
 ## 参考文档
 
 - 1 [使用binlog迁移数据工具](https://github.com/Qihoo360/pika/wiki/%E4%BD%BF%E7%94%A8binlog%E8%BF%81%E7%A7%BB%E6%95%B0%E6%8D%AE%E5%B7%A5%E5%85%B7)
@@ -766,6 +790,8 @@ Pika master 处理写请求的流程是先写 DB 后生成对应的 binlog，似
 - 7 [pika 跨机房同步设计](http://kernelmaker.github.io/pika-muli-idc)
 - 8 [pika blackwidow引擎数据存储格式](https://github.com/qihoo360/pika/wiki/pika-blackwidow%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F)
 - 9 [pika FAQ](https://github.com/Qihoo360/pika/wiki/FAQ)
+- 10 [RocksDB in TiKV](https://pingcap.com/blog/2017-09-15-rocksdbintikv/)
+- 11 [RocksDB MemTable源码分析](https://www.jianshu.com/p/9e385682ed4e)
 
 ## 扒粪者-于雨氏
 
@@ -779,4 +805,4 @@ Pika master 处理写请求的流程是先写 DB 后生成对应的 binlog，似
 > 
 > 2018/09/30，于雨氏，于西二旗添加 #3.4 Blackwidow Lists# 小节。
 > 
-> 2018/10/03，于雨氏，于丰台添加 #3.5.1 Pika 主从 Binlog 处理机制# 小节。
+> 2018/10/03，于雨氏，于丰台添加 #4 调优# 一节 和 #3.5.1 Pika 主从 Binlog 处理机制# 小节。
