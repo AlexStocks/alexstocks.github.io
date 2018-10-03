@@ -751,7 +751,7 @@ Pika 把心跳和数据发收分开处理，[参考文档9](https://github.com/Q
 
 Pika 主从对 binlog 的处理不一样，[参考文档9](https://github.com/Qihoo360/pika/wiki/FAQ)这样描述：`master是先写db再写binlog，之前slave只用一个worker来同步会在master写入压力很大的情况下由于slave一个worker写入太慢而造成同步差距过大，后来我们调整结构，让slave通过多个worker来写提高写入速度，不过这时候有一个问题，为了保证主从binlog顺序一致，写binlog的操作还是只能又一个线程来做，也就是receiver，所以slave这边是先写binlog在写db，所以slave存在写完binlog挂掉导致丢失数据的问题，不过redis在master写完db后挂掉同样会丢失数据，所以redis采用全同步的办法来解决这一问题，pika同样，默认使用部分同步来继续，如果业务对数据十分敏感，此处可以强制slave重启后进行全同步即可`。
 
-Pika master 处理写请求的流程是先写 DB 后生成对应的 binlog，似乎与时下常见的 leader-follower 架构下 leader处理写请求流程 “先把写请求内容写入 WAL（类似于binlog） 然后再应用到状态机（DB）” 不同，个人以为可能的一个原因是因为 leader-follower 对写请求的处理是一种同步机制，而 master-slave 对写请求的处理是一个异步过程。假设 master-slave 架构下 master 对写请求的处理过程是先写 binlog 然后再写 DB，则 slave DB 的数据有可能比 master DB 数据更新：写请求内容被 master 写入 binlog 后迅速同步给slave，然后 slave 将其写入 DB，而此时 master 还未完成相应数据的更新！
+Pika master 处理写请求的流程是先写 DB 后生成对应的 binlog，似乎与时下常见的 leader-follower 架构下 leader处理写请求流程 “先把写请求内容写入 WAL（类似于binlog） 然后再应用到状态机（DB）” 不同，个人以为可能的一个原因是因为 leader-follower 对写请求的处理是一种同步机制，而 master-slave 对写请求的处理是一个异步过程。假设 master-slave 架构下 master 对写请求的处理过程是先写 binlog 然后再写 DB，则 slave DB 的数据有可能比 master DB 数据更新：写请求内容被 master 写入 binlog 后迅速同步给slave，然后 slave 将其写入 DB，而此时 master 还未完成相应数据的更新。可以类比地，同样使用了 master-slave 架构的 Redis master 收到写请求之后先把数据写入 DB，然后再放入 backlog 同步给 slave。
 
 ## 参考文档
 
