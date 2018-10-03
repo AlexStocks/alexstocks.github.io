@@ -12,7 +12,10 @@
 
 先介绍一些 RocksDB 的基本操作和基本架构。
 
-通过参考文档 5，RocksDB 是一个快速存储系统，它会充分挖掘 Flash or RAM 硬件的读写特性，支持单个 KV 的读写以及批量读写。RocksDB 自身采用的一些数据结构如 LSM/SKIPLIST 等结构使得其有读放大、写放大和空间使用放大的问题。
+#### 1.1 LSM 与 WriteBatch
+---
+
+[参考文档5](https://github.com/facebook/rocksdb/wiki/RocksDB-Basics)提到RocksDB 是一个快速存储系统，它会充分挖掘 Flash or RAM 硬件的读写特性，支持单个 KV 的读写以及批量读写。RocksDB 自身采用的一些数据结构如 LSM/SKIPLIST 等结构使得其有读放大、写放大和空间使用放大的问题。
 
 ![](../pic/log_structured_merge_tree.png)
 
@@ -27,8 +30,7 @@ LSM从命名上看，容易望文生义成一个具体的数据结构，一个tr
 
 很明显，LSM牺牲了一部分读的性能和增加了合并的开销，换取了高效的写性能。那LSM为什么要这么做？实际上，这就关系到对于磁盘写已经没有什么优化手段了，而对于磁盘读，不论硬件还是软件上都有优化的空间。通过多种优化后，读性能虽然仍是下降，但可以控制在可接受范围内。实际上，用于磁盘上的数据结构不同于用于内存上的数据结构，用于内存上的数据结构性能的瓶颈就在搜索复杂度，而用于磁盘上的数据结构性能的瓶颈在磁盘IO，甚至是磁盘IO的模式。
 
-以上三段摘抄自[参考文档20](https://www.tuicool.com/articles/7ju2UfI)。
-
+以上三段摘抄自[参考文档20](https://www.tuicool.com/articles/7ju2UfI)。个人以为，LSM 的关键就在于其是一种自带数据 Garbage Collect 的有序数据集合，对外只提供了 Add/Get 接口，其内部的 Compaction 就是其 GC 的关键，通过 Compaction 实现了对数据的删除、附带了 TTL 的过期数据地淘汰、同一个 Key 的多个版本 Value 的合并。RocksDB 基于 LSM 对外提供了 Add/Delete/Get 三个接口，用户则基于 RocksDB 提供的 transaction 还可以实现 Update 语义。
 
 ![](../pic/rocksdb_arch.png)
 
@@ -40,8 +42,6 @@ RocksDB的三种基本文件格式是 memtable/sstfile/logfile，memtable 是一
 
 基于 RocksDB 设计存储系统，要考虑到应用场景进行各种 tradeoff 设置相关参数。譬如，如果 RocksDB 进行 compaction 比较频繁，虽然有利于空间和读，但是会造成读放大；compaction 过低则会造成读放大和空间放大；增大每个 level 的 comparession 难度可以减小空间放大，但是会增加 cpu 负担，是运算时间增加换取使用空间减小；增大 SSTfile 的 data block size，则是增大内存使用量来加快读取数据的速度，减小读放大。
 
-#### 1.1 WriteBatch
----
 
 单独的 Get/Put/Delete 是原子操作，要么成功要么失败，不存在中间状态。
 
@@ -1192,4 +1192,6 @@ Private 目录则包含一些非 SST 文件：options, current, manifest, WALs�
 > 
 > 2018/09/13，于西二旗，依据参考文档 17 补充 5.8 节 `Backup` 和 5.7.1 小节 `Checkpoints`。
 > 
-> 2018/09/30，于西二旗，依据参考文档 20 补充第 1 章中 `LSM` 部分内容。
+> 2018/09/30，于西二旗，依据参考文档 20 补充 1.1 节中 `LSM` 部分内容。
+> 
+> 2018/10/03，于丰台，在 1.1 节中补充了个人对 `LSM` 的理解。
