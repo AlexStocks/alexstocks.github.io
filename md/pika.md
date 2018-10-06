@@ -333,7 +333,7 @@ RocksDB 进行 compaction 的时候需要对每个 key 调用留给使用者的�
 
 nemo-rocksdb 一并重新封装了一个可以实现 **更新** 意义的继承自 rocksdb::MergeOperator 的 NemoMergeOperator，以在 RocksDB 进行 Get 或者 compaction 的时候对 key 的一些写或者更行操作合并后再进行，以提高效率。至于 rocksdb::MergeOperator 的使用，见[参考文档6](http://alexstocks.github.io/html/rocksdb.html)。
 
-Pika 执行写指令时先更新 Pika DB，然后才把写指令写入 binlog 中。Nemo 版的 Pika 在执行写指令过程中使用了行锁，[参考文档14](https://github.com/Qihoo360/pika/wiki/pika-锁的应用) 对行锁的定义是 `用于对一个key加锁，保证同一时间只有一个线程对一个key进行操作`。Pika 中每个 key 之间相互独立，行锁就足以保证并发时候的数据一致性，且 `锁定粒度小，也可以保证数据访问的高效性`。
+Pika 执行写指令时先更新 Pika DB，然后才把写指令写入 binlog 中。Nemo 版的 Pika 在执行写指令过程中使用了行锁，[参考文档14](https://github.com/Qihoo360/pika/wiki/pika-锁的应用) 对行锁的定义是 `用于对一个key加锁，保证同一时间只有一个线程对一个key进行操作`。Pika 中每个 key 之间相互独立，行锁就足以保证并发时候的数据一致性，且 `锁定粒度小，也可以保证数据访问的高效性`。#3.6.1# 小节在代码层面分析行锁的具体实现。
 
 
 #### 3.2 Blackwidow Filter
@@ -673,8 +673,6 @@ Lists data 的具体存储格式如下：
 
 使用 **blackwidow::ListsMetaFilter** 的 **blackwidow::ListsMetaFilterFactory** 会被设置为 Lists 的 default ColumnFamily 的 ColumnFamilyOptions 的 compaction_filter_factory。
 
-
-
 继承自 rocksdb::CompactionFilter 的 **lists\_filter.h:blackwidow::ListsMetaFilterFactory** 通过 **blackwidow:: ParsedListsDataKey** 对 Lists data key 进行解析，其 Filter 接口依据 data key 中的 timestamp/version 与系统当前时间进行比较，流程与 #3.2.4# 小节中 **base\_filter.h:blackwidow::BaseDataFilter::Filter** 接口类似，此处不再详述。
 
 使用 **blackwidow::ListsDataFilter** 的 **blackwidow::ListsDataFilterFactory** 会被设置为 Lists 的 data_cf ColumnFamily 的 ColumnFamilyOptions 的 compaction_filter_factory。
@@ -771,7 +769,7 @@ Pika master 处理写请求的流程是先写 DB 后生成对应的 binlog，似
 ##### 3.6.1 Nemo 行锁
 ---
 
-本章节开头的地方提到了 Nemo 存储引擎使用了行锁，并给出了行锁的定义。
+本章节开头的地方提到了 Nemo 存储引擎使用了行锁，[参考文档14](https://github.com/Qihoo360/pika/wiki/pika-锁的应用) 对行锁的定义是 `用于对一个key加锁，保证同一时间只有一个线程对一个key进行操作`。
 
 ![](../pic/pika_nemo_lock.jpg)
 
@@ -931,8 +929,6 @@ struct LockMapStripe {  // lock map 的一个桶
   explicit LockMapStripe(std::shared_ptr<MutexFactory> factory) {
     stripe_mutex = factory->AllocateMutex();
     stripe_cv = factory->AllocateCondVar();
-    assert(stripe_mutex);
-    assert(stripe_cv);
   }
 
   // Mutex must be held before modifying keys map
@@ -1083,7 +1079,7 @@ class ScopeRecordLock {
 }    
 ```
 
-上面代码块的关键就在于 **blackwidow::LockMapStripe**，我理解为 lock 桶，其作用就是<font color=red>让多个 key 使用同一个 lock，不像 **slash::RecordLock** 那样为每个 key 加锁时还有创建销毁 mutex lock 的开销</font>，但是除此之外，同一个桶中多个 key 使用同一个 key 这个 feature 个人并不觉得能提高多少效率。
+上面代码块的关键就在于 **blackwidow::LockMapStripe**，我理解为 lock 桶，其作用就是<font color=red>让多个 key 使用同一个 lock 以节省内存使用，不像 **slash::RecordLock** 那样为每个 key 加锁时还有创建销毁 mutex lock 的开销</font>，但是除此之外，同一个桶中多个 key 使用同一个 key 这个 feature 个人并不觉得能提高多少效率。[参考文档15](https://www.cnblogs.com/cchust/p/7107392.html) 认为 **blackwidow::LockMapStripe** 的另一个问题是：`RocksDB首先按Columnfamily进行拆分，每个Columnfamily中的锁通过一个LockMap管理，而每个LockMap再拆分成若干个分片，每个分片通过LockMapStripe管理，而hash表(std::unordered_map<std::string, LockInfo>)则存在于Stripe结构中，Stripe结构中还包含一个mutex和condition_variable，这个主要作用是，互斥访问hash表，当出现锁冲突时，将线程挂起，解锁后，唤醒挂起的线程。这种设计很简单但也带来一个显而易见的问题，就是多个不相关的锁公用一个condition_variable，导致锁释放时，不必要的唤醒一批线程，而这些线程重试后，发现仍然需要等待，造成了无效的上下文切换。`
 
 类比于 **slash::RecordMutex** 中作为类成员存在的 lock map，Blackwidow 把这个 map 独立成了一个类 **blackwidow::LockMap**，其底层存储容器是一个容量固定的桶数组，因其容量固定所以访问时不用加锁。**blackwidow::LockMap** 还有一个群成员 **blackwidow::LockMap::lock\_cnt**【个人疑惑：为何不命名为 lock\_cnt\_ 】用于记录加锁的 key 的总数目。
 
@@ -1153,6 +1149,7 @@ RocksDB 通过提供常用场景的 API 之外，还提供了一些适用于特�
 - 12 [How we Hunted a Data Corruption bug in RocksDB](https://pingcap.com/blog/2017-09-08-rocksdbbug/)
 - 13 [pika introduction](http://baotiao.github.io/2016/05/18/pika-introduction/)
 - 14 [锁的应用](https://github.com/Qihoo360/pika/wiki/pika-锁的应用)
+- 15 [RocksDB上锁机制](http://www.cnblogs.com/cchust/p/7107392.html)
 
 ## 扒粪者-于雨氏
 

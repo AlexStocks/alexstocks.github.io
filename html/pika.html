@@ -475,7 +475,7 @@ Compact：数据的实际删除是在Compact过程中，根据版本信息过滤
 
 <p>nemo-rocksdb 一并重新封装了一个可以实现 <strong>更新</strong> 意义的继承自 rocksdb::MergeOperator 的 NemoMergeOperator，以在 RocksDB 进行 Get 或者 compaction 的时候对 key 的一些写或者更行操作合并后再进行，以提高效率。至于 rocksdb::MergeOperator 的使用，见<a href="http://alexstocks.github.io/html/rocksdb.html">参考文档6</a>。</p>
 
-<p>Pika 执行写指令时先更新 Pika DB，然后才把写指令写入 binlog 中。Nemo 版的 Pika 在执行写指令过程中使用了行锁，<a href="https://github.com/Qihoo360/pika/wiki/pika-%E9%94%81%E7%9A%84%E5%BA%94%E7%94%A8">参考文档14</a> 对行锁的定义是 <code>用于对一个key加锁，保证同一时间只有一个线程对一个key进行操作</code>。Pika 中每个 key 之间相互独立，行锁就足以保证并发时候的数据一致性，且 <code>锁定粒度小，也可以保证数据访问的高效性</code>。</p>
+<p>Pika 执行写指令时先更新 Pika DB，然后才把写指令写入 binlog 中。Nemo 版的 Pika 在执行写指令过程中使用了行锁，<a href="https://github.com/Qihoo360/pika/wiki/pika-%E9%94%81%E7%9A%84%E5%BA%94%E7%94%A8">参考文档14</a> 对行锁的定义是 <code>用于对一个key加锁，保证同一时间只有一个线程对一个key进行操作</code>。Pika 中每个 key 之间相互独立，行锁就足以保证并发时候的数据一致性，且 <code>锁定粒度小，也可以保证数据访问的高效性</code>。#3.6.1# 小节在代码层面分析行锁的具体实现。</p>
 
 <h4 id="toc_19">3.2 Blackwidow Filter</h4>
 
@@ -920,7 +920,7 @@ enum TransferOperate{
 
 <hr>
 
-<p>本章节开头的地方提到了 Nemo 存储引擎使用了行锁，并给出了行锁的定义。</p>
+<p>本章节开头的地方提到了 Nemo 存储引擎使用了行锁，<a href="https://github.com/Qihoo360/pika/wiki/pika-%E9%94%81%E7%9A%84%E5%BA%94%E7%94%A8">参考文档14</a> 对行锁的定义是 <code>用于对一个key加锁，保证同一时间只有一个线程对一个key进行操作</code>。</p>
 
 <p><img src="../pic/pika_nemo_lock.jpg" alt=""></p>
 
@@ -1076,8 +1076,6 @@ struct LockMapStripe {  // lock map 的一个桶
   explicit LockMapStripe(std::shared_ptr&lt;MutexFactory&gt; factory) {
     stripe_mutex = factory-&gt;AllocateMutex();
     stripe_cv = factory-&gt;AllocateCondVar();
-    assert(stripe_mutex);
-    assert(stripe_cv);
   }
 
   // Mutex must be held before modifying keys map
@@ -1227,7 +1225,7 @@ class ScopeRecordLock {
 };
 }    </code></pre></div>
 
-<p>上面代码块的关键就在于 <strong>blackwidow::LockMapStripe</strong>，我理解为 lock 桶，其作用就是<font color=red>让多个 key 使用同一个 lock，不像 <strong>slash::RecordLock</strong> 那样为每个 key 加锁时还有创建销毁 mutex lock 的开销</font>，但是除此之外，同一个桶中多个 key 使用同一个 key 这个 feature 个人并不觉得能提高多少效率。</p>
+<p>上面代码块的关键就在于 <strong>blackwidow::LockMapStripe</strong>，我理解为 lock 桶，其作用就是<font color=red>让多个 key 使用同一个 lock 以节省内存使用，不像 <strong>slash::RecordLock</strong> 那样为每个 key 加锁时还有创建销毁 mutex lock 的开销</font>，但是除此之外，同一个桶中多个 key 使用同一个 key 这个 feature 个人并不觉得能提高多少效率。<a href="https://www.cnblogs.com/cchust/p/7107392.html">参考文档15</a> 认为 <strong>blackwidow::LockMapStripe</strong> 的另一个问题是：<code>RocksDB首先按Columnfamily进行拆分，每个Columnfamily中的锁通过一个LockMap管理，而每个LockMap再拆分成若干个分片，每个分片通过LockMapStripe管理，而hash表(std::unordered_map&lt;std::string, LockInfo&gt;)则存在于Stripe结构中，Stripe结构中还包含一个mutex和condition_variable，这个主要作用是，互斥访问hash表，当出现锁冲突时，将线程挂起，解锁后，唤醒挂起的线程。这种设计很简单但也带来一个显而易见的问题，就是多个不相关的锁公用一个condition_variable，导致锁释放时，不必要的唤醒一批线程，而这些线程重试后，发现仍然需要等待，造成了无效的上下文切换。</code></p>
 
 <p>类比于 <strong>slash::RecordMutex</strong> 中作为类成员存在的 lock map，Blackwidow 把这个 map 独立成了一个类 <strong>blackwidow::LockMap</strong>，其底层存储容器是一个容量固定的桶数组，因其容量固定所以访问时不用加锁。<strong>blackwidow::LockMap</strong> 还有一个群成员 <strong>blackwidow::LockMap::lock_cnt</strong>【个人疑惑：为何不命名为 lock_cnt_ 】用于记录加锁的 key 的总数目。</p>
 
@@ -1304,6 +1302,7 @@ class Redis {
 <li>12 <a href="https://pingcap.com/blog/2017-09-08-rocksdbbug/">How we Hunted a Data Corruption bug in RocksDB</a></li>
 <li>13 <a href="http://baotiao.github.io/2016/05/18/pika-introduction/">pika introduction</a></li>
 <li>14 <a href="https://github.com/Qihoo360/pika/wiki/pika-%E9%94%81%E7%9A%84%E5%BA%94%E7%94%A8">锁的应用</a></li>
+<li>15 <a href="http://www.cnblogs.com/cchust/p/7107392.html">RocksDB上锁机制</a></li>
 </ul>
 
 <h2 id="toc_41">扒粪者-于雨氏</h2>
@@ -1323,6 +1322,7 @@ class Redis {
 
 <p>2018/10/06，于雨氏，于西二旗添加 #3.6 锁# 小节。</p>
 </blockquote>
+
 
 
 <!-- baidu statistic start -->
@@ -1354,7 +1354,6 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
-
 
 
 
