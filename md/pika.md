@@ -13,11 +13,7 @@
 
 最终这个“光荣任务”落在了愚人肩上。本文用来记录我阅读代码并在改进 Pika 【到 2018/09/07 为止主要是开发相关工具】过程中遇到的一些问题。
 
-补充其他 Pika/Codis 使用经验大致如下：
-
-- 1 数据量大的业务单独使用一个 Codis 集群；
-- 2 单个 Redis 实例的数据尽量不要超过 8G，最大不能超过 15G，否则单进程的 Redis 管理能力急剧下降； 
-- 3 RocksDB 的数据尽量存储在 SSD 上，360 内部 90% 的情况下，pika 都运行在 ssd上，只有不到 10% 的对读写速度要求不高的情况下写入到 SATA 盘上。
+Ardb 作者在[参考文档5](http://yinqiwen.github.io/)文中对 Pika 的评价是  “直接修改了rocksdb代码实现某些功能。这种做法也是双刃剑，改动太多的话，社区的一些修改是很难merge进来的”。与几个比较主流的基于 RocksDB 实现的 KV 存储引擎（如 TiKV/SSDB/ARDB/CockroachDB）作比较，Pika 确实对 RocksDB 的代码侵入比较严重。至于为何修改这么大，最终的一个原因就是效率考虑，如[参考文档13](http://baotiao.github.io/2016/05/18/pika-introduction/)提到秒删功能时，说道 `需要改动下层rocksdb，一定程度破坏了rocksdb的封装，各个模块之间耦合起来`。另一个原因可能就是架构设计使然了，譬如 **#2 数据备份#** 一节中详述的 Nemo 自己实现的独立的备份引擎，而 RocksDB 自身是有备份机制的，之所以修改是因为 Pika 自身独立设计了一套独立于 RocksDB 的 binlog 存储机制。
 
 ### 1 数据迁移
 ---
@@ -143,7 +139,7 @@ Pika-port 调用了上图[第一个构造函数](https://github.com/pikalabs/pin
 
 Pika 官方 wiki [[参考文档4](https://github.com/qihoo360/pika/wiki/pika-%E5%BF%AB%E7%85%A7%E5%BC%8F%E5%A4%87%E4%BB%BD%E6%96%B9%E6%A1%88)] 有对其数据备份过程的图文描述，此文就不再进行转述。
 
-Ardb 作者在[参考文档5](http://yinqiwen.github.io/)文中对 Pika 的评价是  “直接修改了rocksdb代码实现某些功能。这种做法也是双刃剑，改动太多的话，社区的一些修改是很难merge进来的”。与几个比较主流的基于 RocksDB 实现的 KV 存储引擎（如 TiKV/SSDB/ARDB/CockroachDB）作比较，Pika 确实对 RocksDB 的代码侵入比较严重。RocksDB 默认的备份引擎 BackupEngine 通过 `BackupEngine::Open` 和 `BackupEngine::CreateNewBackup` 即实现了数据的备份【关于RocksDB 的 Backup 接口详见 [参考文档6](http://alexstocks.github.io/html/rocksdb.html) 6.8节】，而 Pika 为了效率起见重新实现了一个 `nemo::BackupEngine`，以进行异步备份。另一个可能的原因是 Pika 的 WAL 日志是独立于 RocksDB 自身数据单独存储的，而不像诸如 TiKV 此类的存储引擎把 Log（Raft Log）也存入了 RocksDB，所以不得不自己实现了一套数据备份流程。
+RocksDB 默认的备份引擎 BackupEngine 通过 `BackupEngine::Open` 和 `BackupEngine::CreateNewBackup` 即实现了数据的备份【关于RocksDB 的 Backup 接口详见 [参考文档6](http://alexstocks.github.io/html/rocksdb.html) 6.8节】，而 Pika 为了效率起见重新实现了一个 `nemo::BackupEngine`，以进行异步备份。一个可能的原因是 Pika 的 WAL 日志是独立于 RocksDB 自身数据单独存储的，而不像诸如 TiKV 此类的存储引擎把 Log（Raft Log）也存入了 RocksDB，所以不得不自己实现了一套数据备份流程。
 
 Pika 的存储引擎 nemo 依赖于其对 RocksDB 的封装引擎 nemo-rocksdb，下面结合[参考文档4](https://github.com/qihoo360/pika/wiki/pika-%E5%BF%AB%E7%85%A7%E5%BC%8F%E5%A4%87%E4%BB%BD%E6%96%B9%E6%A1%88) 从代码层面对备份流程进行详细分析。
 
@@ -315,9 +311,16 @@ Pika 存储引擎的最基本作用就是把 Redis 的数据结构映射为 Rock
 
 Pika 存储系统中另外一个比较重要的概念是 timestamp 和 version，其实都与数据删除功能有关。Redis 中数据被淘汰有两种常见场景：set key 时就设置了 ttl，显示调用 del 命令对 key 进行删除。timestamp 与 set key 时的 ttl 有关，其意义就是数据的超时时间。
 
-version 则与 del 命令删除 key 相关，参照 **base\_meta\_value\_format.h:ParsedBaseMetaValue::UpdateVersion**, 可知其值为执行 del 指令时的当前系统时间【第一次对一个 key 执行 del 指令】 或者 自增【第二次以及后续多次对同一个 key 执行 del 指令】。
+version 则与 del 命令删除 key 相关，参照 **base\_meta\_value\_format.h:ParsedBaseMetaValue::UpdateVersion**, 可知其值为执行 del 指令时的当前系统时间【第一次对一个 key 执行 del 指令】 或者 自增【第二次以及后续多次对同一个 key 执行 del 指令】。[参考文档13](http://baotiao.github.io/2016/05/18/pika-introduction/) 通过 version 实现了在 “秒删大量的key” 的场景下 “不删除, 只做标记, 时间复杂度O(1)”，“效率就够了”。
 
-Pika 后续执行 get 指令时，会依据 timestamp 和 version 判断数据是否过时。Rocksdb 进行 compaction 时，也会调用各个 Filter 接口依据  timestamp 和 version 判定数据是否已经超时，若超时则进行物理删除。
+Pika 后续执行 get 指令时，会依据 timestamp 和 version 判断数据是否过时。Rocksdb 进行 compaction 时，也会调用各个 Filter 接口依据  timestamp 和 version 判定数据是否已经超时，若超时则进行物理删除。[参考文档13](http://baotiao.github.io/2016/05/18/pika-introduction/) 给出了各个操作过程中 version 的处理：
+
+```
+Put：查询key的最新版本，后缀到val；
+Get：查询key的最新版本，过滤最新的数据；
+Iterator： 迭代时，查询key的版本，过滤旧版本数据；
+Compact：数据的实际删除是在Compact过程中，根据版本信息过滤；
+```
 
 #### 3.1 Nemo
 ---
@@ -329,6 +332,9 @@ nemo-rocksdb 的主要类 DBNemo 继承自 rocksdb::StackableDB，用于替代 r
 RocksDB 进行 compaction 的时候需要对每个 key 调用留给使用者的接口 CompactionFilter 以进行过滤：让用户解释当前 key 是否还有效。nemo-rocksdb 封装了一个 NemoCompactionFilter 以实现过时数据的检验，其主要接口是 rocksdb:CompactionFilter::Filter。RocksDB 在进行 compaction 还会调用另一个预备给用户的接口 rocksdb::MergeOperator，以方便用户自定义如何对同一个 key 的相关操作进行合并。
 
 nemo-rocksdb 一并重新封装了一个可以实现 **更新** 意义的继承自 rocksdb::MergeOperator 的 NemoMergeOperator，以在 RocksDB 进行 Get 或者 compaction 的时候对 key 的一些写或者更行操作合并后再进行，以提高效率。至于 rocksdb::MergeOperator 的使用，见[参考文档6](http://alexstocks.github.io/html/rocksdb.html)。
+
+Pika 执行写指令时先更新 Pika DB，然后才把写指令写入 binlog 中。Nemo 版的 Pika 在执行写指令过程中使用了行锁，[参考文档14](https://github.com/Qihoo360/pika/wiki/pika-锁的应用) 对行锁的定义是 `用于对一个key加锁，保证同一时间只有一个线程对一个key进行操作`。Pika 中每个 key 之间相互独立，行锁就足以保证并发时候的数据一致性，且 `锁定粒度小，也可以保证数据访问的高效性`。
+
 
 #### 3.2 Blackwidow Filter
 ---
@@ -755,10 +761,360 @@ Pika 主从对 binlog 的处理不一样，[参考文档9](https://github.com/Qi
 
 Pika master 处理写请求的流程是先写 DB 后生成对应的 binlog，似乎与时下常见的 leader-follower 架构下 leader处理写请求流程 “先把写请求内容写入 WAL（类似于binlog） 然后再应用到状态机（DB）” 不同，个人以为可能的一个原因是因为 leader-follower 对写请求的处理是一种同步机制，而 master-slave 对写请求的处理是一个异步过程。假设 master-slave 架构下 master 对写请求的处理过程是先写 binlog 然后再写 DB，则 slave DB 的数据有可能比 master DB 数据更新：写请求内容被 master 写入 binlog 后迅速同步给slave，然后 slave 将其写入 DB，而此时 master 还未完成相应数据的更新。可以类比地，同样使用了 master-slave 架构的 Redis master 收到写请求之后先把数据写入 DB，然后再放入 backlog 同步给 slave。
 
-### 4 调优
+#### 3.6 锁
 ---
 
-Pika 使用了 RocksDB，其性能关键就在于如何通过调参优化 RocksDB。
+[参考文档8](https://github.com/qihoo360/pika/wiki/pika-blackwidow%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F) 提到 `Blackwidow在锁的实现上参照了RocksDB事务里锁的实现方法，而弃用了之前Nemo的行锁，所以在多线程对同一把锁有抢占的情况下性能会有所提升`。
+
+下面先介绍 Nemo 引擎的行锁。
+
+##### 3.6.1 Nemo 行锁
+---
+
+本章节开头的地方提到了 Nemo 存储引擎使用了行锁，并给出了行锁的定义。
+
+![](../pic/pika_nemo_lock.jpg)
+
+Nemo 行锁的原理如上图，[参考文档14](https://github.com/Qihoo360/pika/wiki/pika-锁的应用) 提到`对同一个key，加了两次行锁，在实际应用中，pika上所加的锁就已经能够保证数据访问的正确性。如果只是为了pika所需要的业务，blackwidow层面使用行锁是多余的，但是blackwidow的设计初衷就是通过对rocksdb的改造和封装提供一套完整的类redis数据访问的解决方案，而不仅仅是为pika提供数据库引擎。这样设计大大降低了pika与blackwidow之间的耦合，也使得blackwidow可以被单独拿出来测试和使用，在pika中的数据迁移工具就是完全使用blackwidow来完成，不必依赖任何pika相关的东西`。
+
+[参考文档14](https://github.com/Qihoo360/pika/wiki/pika-锁的应用)对其具体实现的文字描述如下：`在pika系统中，一把行锁就可以维护所有key。在行锁的实现上是将一个key与一把互斥锁相绑定，并将其放入哈希表中维护，来保证每次访问key的线程只有一个，但是不可能也不需要为每一个key保留一把互斥锁，只需要当有多条线程访问同一个key时才需要锁，在所有线程都访问结束之后，就可以销毁这个绑定key的互斥锁，释放资源。`
+
+行锁代码层面实现是 slash::RecordLock，其基础是 [slash::RefLock](https://github.com/PikaLabs/slash/blob/25b88e65cbfe4eb22a4850d5d03c5b27446ec5dc/slash/include/slash_mutex.h#L136) 和 [slash::RecordLock](https://github.com/PikaLabs/slash/blob/25b88e65cbfe4eb22a4850d5d03c5b27446ec5dc/slash/include/slash_mutex.h#L180):
+
+```C++
+class RefMutex {
+ public:
+  void Ref();
+  void Unref();
+  bool IsLastRef() {
+    return refs_ == 1; // 给一个 key 刚加上锁时，其值会被赋值为 1
+  }
+
+ private:
+  pthread_mutex_t mu_; // 从 RecordMutex::Lock 可见，此锁专门用于 lock/unlock redis key
+  int refs_;           // 用于记录加锁次数
+};
+
+void RefMutex::Ref() {
+  refs_++;
+}
+
+void RefMutex::Unref() {
+  --refs_;
+  if (refs_ == 0) {  // 初始时 refs_ 值就为0
+    delete this;
+  }
+}
+
+class RecordMutex {
+public:
+  void Lock(const std::string &key);
+  void Unlock(const std::string &key);
+
+private:
+  Mutex mutex_;  // 此锁用于 lock/unlock @records_
+  std::unordered_map<std::string, RefMutex *> records_;
+};
+
+RecordMutex::~RecordMutex() {
+  mutex_.Lock();
+  
+  std::unordered_map<std::string, RefMutex *>::const_iterator it = records_.begin();
+  for (; it != records_.end(); it++) {
+    delete it->second;
+  }
+  mutex_.Unlock();
+}
+
+void RecordMutex::Lock(const std::string &key) {
+  mutex_.Lock();
+  std::unordered_map<std::string, RefMutex *>::const_iterator it = records_.find(key);
+
+  if (it != records_.end()) {
+    RefMutex *ref_mutex = it->second;
+    ref_mutex->Ref();
+    mutex_.Unlock();
+
+    ref_mutex->Lock();
+  } else {
+    RefMutex *ref_mutex = new RefMutex();
+
+    records_.insert(std::make_pair(key, ref_mutex));
+    ref_mutex->Ref(); // 第一次插入时其值即为 1
+    mutex_.Unlock();
+
+    ref_mutex->Lock();
+  }
+}
+
+void RecordMutex::Unlock(const std::string &key) {
+  mutex_.Lock();
+  std::unordered_map<std::string, RefMutex *>::const_iterator it = records_.find(key);
+  
+  if (it != records_.end()) {
+    RefMutex *ref_mutex = it->second;
+
+    if (ref_mutex->IsLastRef()) {
+      records_.erase(it);    // 无引用，则从 record map 中删除
+    }
+    ref_mutex->Unlock();
+    ref_mutex->Unref();     // 此时 ref_mutex::refs_ 肯定为0，ref_mutex 可以被释放了
+  }
+
+  mutex_.Unlock();
+}
+
+class RecordLock {
+ public:
+  RecordLock(RecordMutex *mu, const std::string &key)
+      : mu_(mu), key_(key) {
+        mu_->Lock(key_);
+      }
+  ~RecordLock() { mu_->Unlock(key_); }
+
+ private:
+  RecordMutex *const mu_;
+  std::string key_;
+};
+
+```
+
+**slash::RefMutex** 用于对 key 加锁，并附带记录了引用次数。
+
+**slash::RecordMutex** 底层是一个类型为 std::unordered_map 的 lock map：**slash::RecordMutex::records_**，存放所有加锁的 key 和它的 lock。
+
+基于 **slash::RecordMutex** 之上的 **slash::RecordLock** 类似一个 LockGuard，不需使用者每次需要对一个 key 加锁的时候都由使用者自己生成一个 lock，简直太 tmd 好用了！
+
+nemo 引擎具体使用行锁的[代码块](https://github.com/Qihoo360/nemo/blob/4c023399523588e9a8d9f8bc38c9b46533a80367/include/nemo.h#L253)摘要如下：
+
+```C++
+namespace nemo {
+class Nemo {
+  private:
+    std::unique_ptr<rocksdb::DBNemo> kv_db_;
+    std::unique_ptr<rocksdb::DBNemo> hash_db_;
+    //std::unique_ptr<rocksdb::DB> hash_db_;
+    std::unique_ptr<rocksdb::DBNemo> list_db_;
+    std::unique_ptr<rocksdb::DBNemo> zset_db_;
+    std::unique_ptr<rocksdb::DBNemo> set_db_;
+
+    port::RecordMutex mutex_hash_record_;
+    port::RecordMutex mutex_kv_record_;
+    port::RecordMutex mutex_list_record_;
+    port::RecordMutex mutex_zset_record_;
+    port::RecordMutex mutex_set_record_;
+};
+}
+```
+
+##### 3.6.2 Blackwidow 事务锁
+---
+
+类似于 Slash::RecordMutex，Blackwidow 有一个 [blackwidow::LockMgr](https://github.com/Qihoo360/blackwidow/blob/2490ebd29d95fcbed5356b2113938f3e414a46e7/src/lock_mgr.h#L19)。
+ 
+```C++ 
+namespace blackwidow {
+// Default implementation of MutexFactory.
+class MutexFactoryImpl : public MutexFactory { // 用于方便创建 Mutex & CondVar
+ public:
+	std::shared_ptr<Mutex>
+	MutexFactoryImpl::AllocateMutex() {
+	  return std::shared_ptr<Mutex>(new MutexImpl());
+	}
+	std::shared_ptr<CondVar>
+	MutexFactoryImpl::AllocateCondVar() {
+	  return std::shared_ptr<CondVar>(new CondVarImpl());
+	}
+};
+
+struct LockMapStripe {  // lock map 的一个桶
+  explicit LockMapStripe(std::shared_ptr<MutexFactory> factory) {
+    stripe_mutex = factory->AllocateMutex();
+    stripe_cv = factory->AllocateCondVar();
+    assert(stripe_mutex);
+    assert(stripe_cv);
+  }
+
+  // Mutex must be held before modifying keys map
+  std::shared_ptr<Mutex> stripe_mutex;  // 对当前桶加锁
+  // Condition Variable per stripe for waiting on a lock
+    // 当桶中已经存放了某个 key 时候，说明此 key 已经被加上锁，则需要死等，一个加锁者退出时会通过这个变量发出通知
+  std::shared_ptr<CondVar> stripe_cv;
+  // Locked keys
+  std::unordered_set<std::string> keys; // 正如注释写的明白，这里面存储已经被加锁的 key
+};
+
+// Map of #num_stripes LockMapStripes
+struct LockMap { // lock map，在构造函数中就把各个桶创建好，后面使用的时候直接访问这些只读的桶即可
+  explicit LockMap(size_t num_stripes,
+                   std::shared_ptr<MutexFactory> factory)
+      : num_stripes_(num_stripes) {
+    lock_map_stripes_.reserve(num_stripes);
+    for (size_t i = 0; i < num_stripes; i++) {
+      LockMapStripe* stripe = new LockMapStripe(factory);
+      lock_map_stripes_.push_back(stripe);
+    }
+  }
+  ~LockMap() {
+    for (auto stripe : lock_map_stripes_) {
+      delete stripe;
+    }
+  }
+
+  // Number of sepearate LockMapStripes to create, each with their own Mutex
+  const size_t num_stripes_;
+
+  // Count of keys that are currently locked.
+  // (Only maintained if LockMgr::max_num_locks_ is positive.)
+  std::atomic<int64_t> lock_cnt{0}; // lock map 中被 lock 的 key 的个数
+  std::vector<LockMapStripe*> lock_map_stripes_; // lock 桶集合
+  size_t LockMap::GetStripe(const std::string& key) const { // 获取 key 所对应的桶的 index
+    static murmur_hash hash;
+    size_t stripe = hash(key) % num_stripes_;
+    return stripe;
+  }
+};
+
+class LockMgr {
+ public:
+  LockMgr(size_t default_num_stripes, int64_t max_num_locks,
+          std::shared_ptr<MutexFactory> factory);
+
+  // Attempt to lock key.  If OK status is returned, the caller is responsible
+  // for calling UnLock() on this key.
+  Status TryLock(const std::string& key) {
+    size_t stripe_num = lock_map_->GetStripe(key);
+    LockMapStripe* stripe = lock_map_->lock_map_stripes_.at(stripe_num);
+    return Acquire(stripe, key);
+  }
+  
+  // Unlock a key locked by TryLock().
+  	void LockMgr::UnLock(const std::string& key) {
+	  // Lock the mutex for the stripe that this key hashes to
+	  size_t stripe_num = lock_map_->GetStripe(key);
+	  LockMapStripe* stripe = lock_map_->lock_map_stripes_.at(stripe_num); // 找到 key 所在的桶
+	
+	  stripe->stripe_mutex->Lock();
+	  UnLockKey(key, stripe);
+	  stripe->stripe_mutex->UnLock();
+	
+	  // Signal waiting threads to retry locking
+	  stripe->stripe_cv->NotifyAll(); // 通知所有在桶上等待加锁的 waiter
+	}
+
+ private:
+  // Default number of lock map stripes
+  const size_t default_num_stripes_;
+  // Limit on number of keys locked per column family
+  const int64_t max_num_locks_;
+  // Used to allocate mutexes/condvars to use when locking keys
+  std::shared_ptr<MutexFactory> mutex_factory_;
+  // Map to locked key info
+  std::shared_ptr<LockMap> lock_map_;
+
+  // Helper function for TryLock().
+  Status LockMgr::Acquire(LockMapStripe* stripe, const std::string& key) {
+	  // we wait indefinitely to acquire the lock
+	  stripe->stripe_mutex->Lock();
+	  // Acquire lock if we are able to
+	  result = AcquireLocked(stripe, key);
+	  if (!result.ok()) {
+	    // If we weren’t able to acquire the lock, we will keep retrying
+	    do {
+	      result = stripe->stripe_cv->Wait(stripe->stripe_mutex);  // UnLock 函数释放锁后会调用 NotifyAll 发出信号
+	      if (result.ok()) {
+	        result = AcquireLocked(stripe, key);
+	      }
+	    } while (!result.ok());
+	  }
+	  stripe->stripe_mutex->UnLock();
+	  return result;
+  }
+
+	// Try to lock this key after we have acquired the mutex.
+	Status LockMgr::AcquireLocked(LockMapStripe* stripe, const std::string& key) {
+	  Status result;
+	  // Check if this key is already locked
+	  if (stripe->keys.find(key) != stripe->keys.end()) {
+	    // Lock already held
+	    result = Status::Busy(Status::SubCode::kLockTimeout);
+	  } else {  // Lock not held.
+	    // Check lock limit
+	    if (max_num_locks_ > 0 &&
+	        lock_map_->lock_cnt.load(std::memory_order_acquire) >= max_num_locks_) {
+	      result = Status::Busy(Status::SubCode::kLockLimit);
+	    } else {
+	      // acquire lock
+	      stripe->keys.insert(key);
+	      // Maintain lock count if there is a limit on the number of locks
+	      if (max_num_locks_) {
+	        lock_map_->lock_cnt++;
+	      }
+	    }
+	  }
+	
+	  return result;
+	}
+
+    void LockMgr::UnLockKey(const std::string& key, LockMapStripe* stripe) {
+      auto stripe_iter = stripe->keys.find(key);
+      stripe->keys.erase(stripe_iter);  // 从桶中移除此 key
+      if (max_num_locks_ > 0) {
+        lock_map_->lock_cnt--;        
+      }
+    }
+};   
+
+class ScopeRecordLock {
+ public:
+  ScopeRecordLock(LockMgr* lock_mgr, const Slice& key) :
+    lock_mgr_(lock_mgr), key_(key) {
+    lock_mgr_->TryLock(key_.ToString());
+  }
+  ~ScopeRecordLock() {
+    lock_mgr_->UnLock(key_.ToString());
+  }
+ private:
+  LockMgr* const lock_mgr_;
+  Slice key_;
+  ScopeRecordLock(const ScopeRecordLock&);
+  void operator=(const ScopeRecordLock&);
+};
+}    
+```
+
+上面代码块的关键就在于 **blackwidow::LockMapStripe**，我理解为 lock 桶，其作用就是<font color=red>让多个 key 使用同一个 lock，不像 **slash::RecordLock** 那样为每个 key 加锁时还有创建销毁 mutex lock 的开销</font>，但是除此之外，同一个桶中多个 key 使用同一个 key 这个 feature 个人并不觉得能提高多少效率。
+
+类比于 **slash::RecordMutex** 中作为类成员存在的 lock map，Blackwidow 把这个 map 独立成了一个类 **blackwidow::LockMap**，其底层存储容器是一个容量固定的桶数组，因其容量固定所以访问时不用加锁。**blackwidow::LockMap** 还有一个群成员 **blackwidow::LockMap::lock\_cnt**【个人疑惑：为何不命名为 lock\_cnt\_ 】用于记录加锁的 key 的总数目。
+
+**blackwidow::LockMgr** 提供 TryLock/Unlock 接口外，它还有一个控制 key 上限的成员 **slash::RecordLock::max\_num\_locks\_**，和 **blackwidow::LockMap::lock_cnt** 配合使用。**blackwidow::LockMgr** 提供 TryLock 接口加锁总是会成功，所以等同于 Lock。
+
+Blackwidow 引擎具体使用事务锁 **blackwidow::LockMgr** 的[代码块](https://github.com/Qihoo360/blackwidow/blob/2490ebd29d95fcbed5356b2113938f3e414a46e7/src/redis.h#L58)如下：
+
+```C++
+namespace blackwidow {
+class Redis {
+ protected:
+  LockMgr* lock_mgr_;
+  rocksdb::DB* db_;
+};
+}   
+```
+
+Blackwidow 引擎的其他 Redis 实例都继承自 **blackwidow::Redis**，所以每个 Redis 实例都会包含一个 **blackwidow::LockMgr** 对象。
+
+类似于 **slash::RecordLock**，基于 **blackwidow::LockMgr** 之上的 **blackwidow::ScopeRecordLock** 也类似一个 LockGuard，此处不再赘述。
+
+### 4 使用与调优
+---
+
+如同其他数据库一样，对 Pika 的使用和优化也是门玄学。Pika/Codis 线上使用要点大致如下：
+
+- 1 数据量大的业务单独使用一个 Codis 集群；
+- 2 单个 Redis 实例的数据尽量不要超过 8G，最大不能超过 15G，否则单进程的 Redis 管理能力急剧下降； 
+- 3 RocksDB 的数据尽量存储在 SSD 上，360 内部 90% 的情况下，pika 都运行在 ssd上，只有不到 10% 的对读写速度要求不高的情况下写入到 SATA 盘上。
+
+至于调优，Pika 使用了 RocksDB，其性能关键就在于如何通过调参优化 RocksDB。
 
 ### 4.1 参数调优
 ---
@@ -795,6 +1151,8 @@ RocksDB 通过提供常用场景的 API 之外，还提供了一些适用于特�
 - 10 [RocksDB in TiKV](https://pingcap.com/blog/2017-09-15-rocksdbintikv/)
 - 11 [RocksDB MemTable源码分析](https://www.jianshu.com/p/9e385682ed4e)
 - 12 [How we Hunted a Data Corruption bug in RocksDB](https://pingcap.com/blog/2017-09-08-rocksdbbug/)
+- 13 [pika introduction](http://baotiao.github.io/2016/05/18/pika-introduction/)
+- 14 [锁的应用](https://github.com/Qihoo360/pika/wiki/pika-锁的应用)
 
 ## 扒粪者-于雨氏
 
@@ -809,3 +1167,5 @@ RocksDB 通过提供常用场景的 API 之外，还提供了一些适用于特�
 > 2018/09/30，于雨氏，于西二旗添加 #3.4 Blackwidow Lists# 小节。
 > 
 > 2018/10/03，于雨氏，于丰台添加 #4 调优# 一节 和 #3.5.1 Pika 主从 Binlog 处理机制# 小节。
+> 
+> 2018/10/06，于雨氏，于西二旗添加 #3.6 锁# 小节。
