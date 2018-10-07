@@ -1164,7 +1164,9 @@ class MultiScopeRecordLock {
 }
 ```
 
-上面代码块的关键就在于 **blackwidow::LockMapStripe**，我理解为 lock 桶【与分片同义】，其作用就是<font color=red>让多个 key 使用同一个 lock 以节省内存使用，不像 **slash::RecordLock** 那样为每个 key 加锁时还有创建销毁 mutex lock 的开销</font>，但是除此之外，同一个桶中多个 key 使用同一个 key 这个 feature 个人并不觉得能提高多少效率。[参考文档15](https://www.cnblogs.com/cchust/p/7107392.html) 认为 **blackwidow::LockMapStripe** 的另一个问题是：`RocksDB首先按Columnfamily进行拆分，每个Columnfamily中的锁通过一个LockMap管理，而每个LockMap再拆分成若干个分片，每个分片通过LockMapStripe管理，而hash表(std::unordered_map<std::string, LockInfo>)则存在于Stripe结构中，Stripe结构中还包含一个mutex和condition_variable，这个主要作用是，互斥访问hash表，当出现锁冲突时，将线程挂起，解锁后，唤醒挂起的线程。这种设计很简单但也带来一个显而易见的问题，就是多个不相关的锁公用一个condition_variable，导致锁释放时，不必要的唤醒一批线程，而这些线程重试后，发现仍然需要等待，造成了无效的上下文切换。`
+上面代码块的关键就在于 **blackwidow::LockMapStripe**，我理解为 lock 桶【与分片同义】，其作用就是<font color=red>让多个 key 使用同一个 lock 以节省内存使用，不像 **slash::RecordLock** 那样为每个 key 加锁时还有创建销毁 mutex lock 的开销</font>，但是除此之外，同一个桶中多个 key 使用同一个 key 这个 feature 个人并不觉得能提高多少效率。
+
+[参考文档15](https://www.cnblogs.com/cchust/p/7107392.html) 认为 **blackwidow::LockMapStripe** 的另一个问题是：RocksDB首先按Columnfamily进行拆分，每个Columnfamily中的锁通过一个LockMap管理，而每个LockMap再拆分成若干个分片，每个分片通过LockMapStripe管理，而hash表(std::unordered_map<std::string, LockInfo>)则存在于Stripe结构中，Stripe结构中还包含一个mutex和condition_variable，这个主要作用是，互斥访问hash表，当出现锁冲突时，将线程挂起，解锁后，唤醒挂起的线程。这种设计很简单但也带来一个显而易见的问题，就是<font color=red>多个不相关的锁公用一个condition_variable，导致锁释放时，不必要的唤醒一批线程，而这些线程重试后，发现仍然需要等待，造成了无效的上下文切换</font>。
 
 类比于 **slash::RecordMutex** 中作为类成员存在的 lock map，Blackwidow 把这个 map 独立成了一个类 **blackwidow::LockMap**，其底层存储容器是一个容量固定的桶数组，因其容量固定所以访问时不用加锁。**blackwidow::LockMap** 还有一个群成员 **blackwidow::LockMap::lock\_cnt**【个人疑惑：为何不命名为 lock\_cnt\_ 】用于记录加锁的 key 的总数目。
 
@@ -1208,7 +1210,7 @@ Status RedisStrings::MSet(const std::vector<KeyValue>& kvs) {
 }
 ```
 
-这块代码曾经导致整个 strings DB 被锁住。因为 v3.0.2 时的 **blackwidow::Redis::lock_mgr_** 构建时其初始值 {default_num_stripes = 1000,max_num_locks = 10000}，导致过 mset 超过一万个 key 时 **blackwidow::MultiScopeRecordLock** 无法加锁成功。后来在 v3.0.3 时才[修改了此 bug](https://github.com/Qihoo360/blackwidow/commit/665c44db35dc1eb79c40c800e2cd15bf05f9ec99)，设置 {default_num_stripes = 1000,max_num_locks = 0}，不再设置加锁 keys 数目值上限。
+这块代码曾经导致整个 strings DB 被锁住。因为 v3.0.2 时的 **blackwidow::Redis::lock\_mgr\_** 构建时其初始值 {default\_num\_stripes = 1000, max\_num\_locks = 10000}，导致过 mset 超过一万个 key 时 **blackwidow::MultiScopeRecordLock** 无法加锁成功。后来在 v3.0.3 时才[修改了此 bug](https://github.com/Qihoo360/blackwidow/commit/665c44db35dc1eb79c40c800e2cd15bf05f9ec99)，设置 {default\_num\_stripes = 1000,max\_num\_locks = 0}，不再设置加锁 keys 数目值上限。
 
 ### 4 使用与调优
 ---
@@ -1225,9 +1227,9 @@ Status RedisStrings::MSet(const std::vector<KeyValue>& kvs) {
 ---
 
 * write\_buffer\_size 指明一个 memtable 的大小
-* max_write_buffer_number 内存中 memtable 数目上限
+* max\_write\_buffer\_number 内存中 memtable 数目上限
 * db\_write\_buffer\_size 所有 Column Family 的 memtable 内存之和, 用来限定 memtable 的内存使用上限
-* target\_file\_size\_base 这个参数就是 #5.1# 小节中的 "target sise",是 level 1 SST 文件的 size。有使用者 “把pika的target-file-size-base从20M改到256M后，发现新写入数据时cpu消耗高30%左右，写入性能也有影响”，原因是“文件越大compaction代价越大”
+* target\_file\_size\_base 这个参数就是 #5.1# 小节中的 "target sise",是 level 1 SST 文件的 size。有使用者 “把pika的target-file-size-base从20M改到256M后，发现新写入数据时 cpu 消耗高30%左右，写入性能也有影响”，原因是“文件越大 compaction 代价越大”
 
 
 ### 4.2 API 使用
@@ -1240,7 +1242,7 @@ RocksDB 通过提供常用场景的 API 之外，还提供了一些适用于特�
 * Prefix Iterator 这个 feature Pika 大量使用了，且在使用的时候要启用 Bloom filter，[参考文档10](https://pingcap.com/blog/2017-09-15-rocksdbintikv/) 中说可以把查找性能提高 10%；
 * BackupEngine::VerifyBackups 用于对备份数据进行校验，但是仅仅根据 meta 目录下各个 ID 文件记录的文件 size 与 相应的 private 目录下的文件的 size 是否相等，并不会进行 checksum 校验，校验 checksum 需要读取数据文件，比较费时，[参考文档12](https://pingcap.com/blog/2017-09-08-rocksdbbug/)中提到 TiKV 的数据一致性校验方法就是查验一个 Region 中各个 replica 文件的 checksum 是否一致；
 
-补：[参考文档12](https://pingcap.com/blog/2017-09-08-rocksdbbug/) 中有句话比较有意思：`After a few days, we got some suspicious places but still nothing solid, except to realize that the DeleteRange implementation was more complicated than we expected.`。说明 RocksDB 确实很难读嘛，术业有专攻，不能因为自己读了一些 RocksDB 的代码就鄙视那些没有读过的人。
+补：[参考文档12](https://pingcap.com/blog/2017-09-08-rocksdbbug/) 中有句话 `After a few days, we got some suspicious places but still nothing solid, except to realize that the DeleteRange implementation was more complicated than we expected` 比较有意思，说明 RocksDB 确实不是很容读懂的嘛，术业有专攻，某某同行不能因为自己读了一些 RocksDB 的代码就鄙视那些没有读过的人。
 
 ## 参考文档
 
@@ -1279,4 +1281,4 @@ RocksDB 通过提供常用场景的 API 之外，还提供了一些适用于特�
 >
 > 2018/10/06，于雨氏，于西二旗添加 #3.6 锁# 小节 以及 “秒删”相关内容。
 >
-> 2018/10/06，于雨氏，于西二旗添加 #3.5.2 Purge Binlog# 小节。
+> 2018/10/07，于雨氏，于西二旗添加 #3.5.2 Purge Binlog# 小节。
