@@ -303,7 +303,89 @@ class DBNemoCheckpointImpl : public DBNemoCheckpoint {
 - 1 如果 `bgsave_info_.bgsaving` 值为 true，则退出，否则把其值置为 true；
 - 2 启动 `PikaServer::bgsave_thread_`，通过调用 `PikaServer::DoBgsave` 函数完成备份任务。
 
+#### 2.4 Purge
+---
 
+当数据备份完成后，过时的 binlog 文件就应当及时地被清理掉，这个工作是由 Purge 线程完成的。
+
+#### 2.4.1 获取 binlog 集合
+---
+
+欲清理过时的 binlog 文件，必须先获取所有的 binlog 文件集合，这个工作由 [**PikaServer::GetBinlogFiles**](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1194) 完成，其流程为：
+
+- 1 调用 [slash::GetChildren](https://github.com/Qihoo360/slash/blob/57823f23d5adfe2de469329d9b7df14851988f3d/slash/src/env.cc#L174) 获取 binlog 文件夹下所有 binlog；
+- 2 遍历 binlog 集合，判断名称前缀是否为 `write2file`，然后构建一个 index:binlog_filename 为 pair 的 binlog map。
+
+#### 2.4.2 binlog 过时/加锁判定
+---
+
+判定 binlog 是否过时/被加锁其实就是判定其是否在同步给 slave 的 binlog 集合范围内。
+
+binlog 过时判定由[PikaServer::CouldPurge](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1123)完成，某个后缀为 @index 的数据加锁判断流程为：
+
+- 1 调用 [PikaServer::GetProducerStatus](https://github.com/Qihoo360/pika/blob/d533f6331ac299a913ef825e1628b72d1a51d696/tools/binlog_tools/binlog.cc#L75) 接口获取当前的binlog index @pro_num，如果 @pro_num 与 @index 之差小于等于 10，则@index 对应的文件不过时；
+- 2 遍历 pika 所有的 slave 集合 @slaves_，若同步给某个 slave 的 binlog 的 filenum 小于 @index，则 @index 对应的文件没有被加锁。
+
+#### 2.4.3 过时 binlog 淘汰
+---
+
+过时 binlog 淘汰工作具体由 [PikaServer::PurgeFiles](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1148) 完成，其流程为：
+
+- 1 调用 [**PikaServer::GetBinlogFiles**](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1194) 获取 index:binlog_filename binlog map 集合 @binlogs；
+- 2 获取配置文件参数 expire-logs-nums，计算本次应当删除文件的上限数目 remain\_expire\_num；
+
+   > [参考文档16](https://github.com/Qihoo360/pika/wiki/pika-config) 中对这个参数的说明是：log日志的过期数量，若当前 log 的数量大于 expire\_logs\_nums，则认为删除 expire\_logs\_nums 之前的log是安全的。
+   >
+   > [参考文档17](https://may.ac.cn/2018/04/16/how-to-use-pika/) 进一步指出：`首次同步时，将完整数据传输到从服务器上会比较慢，需要设置更大的 expire-logs-nums 值，避免数据同步过慢，同步完成时起始 binlog 已被删除`。
+   >
+   > remain\_expire\_num = binlogs.size() - expire-logs-nums
+   
+- 3 获取配置文件参数 expire-logs-days，其为过期文件天数；  
+- 4 遍历 map @binlogs，判定某个 @index 对应的 binlog 是否应该删除；
+
+    * 4.1 @manual 为 true 且 遍历文件的 index 小于 @to；
+    * 4.2 @remain_expire_num 大于零；
+    * 4.3 文件修改时间已经超过 expire-logs-days；
+
+    > 上面条件优先级从上到下递减，且满足其中一个条件即可，也可以看出 expire-logs-nums 优先级高于 expire-logs-days。
+    
+- 5 当 @index 对应的 binlog 满足上述判定条件时，还要满足下面两个条件，若满足则 binlog 应当被物理删除之，然后对 @remain_expire_num 进行自减；
+  
+    * 5.1 @force 参数为 true
+    * 5.2 [PikaServer::CouldPurge](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1123)判定文件过时/加锁；
+
+    > 上述两个条件满足其中一个即可，优先级从上到下递减。
+    
+流程 4 的三个条件之间是逻辑 OR 关系，流程 5 的两个条件之间也是逻辑 OR 关系，但流程 4 的条件和流程 5 的条件之间是逻辑 AND 关系。
+    
+#### 2.4.4 Purge 工作
+---    
+
+类似于 bgsave 工作，Purge 工作实际上是有 purge 线程完成的，具体线程函数是 [PikaServer::PurgeLogs](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1073)。在同一时刻，只能启动一个 purge 工作。Purge 线程开始工作时设置 [PikaServer::purging_](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/include/pika_server.h#L444) 为 true，purge 工作完成后设置其为 false。
+
+用户如果人工向 pika 发出 `purgelogsto`[见参考文档18](https://github.com/qihoo360/pika/wiki/pika-%E5%B7%AE%E5%BC%82%E5%8C%96%E7%AE%A1%E7%90%86%E5%91%BD%E4%BB%A4) 指令，则 PikaServer 会通过 [PurgelogstoCmd::Do](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_admin.cc#L310) 启动 purge 线程函数，调用时方式为 `PurgeLogs(num_, true, false)`：
+
+	- 起始 file index 为用户指令指定的 @index；
+	- 手工调用参数 @manual 为 true；
+	- 强制删除参数 @force 为 false。
+
+
+PikaServer 自身执行定时任务 [PikaServer::DoTimingTask](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1738) 时也会启用 purge 任务 [PikaServer::AutoPurge](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1287)，调用方式为 `PurgeLogs(0, false, false)`：
+
+	- 起始 file index 为 0；
+	- 手工调用参数 @manual 为 false；
+	- 强制删除参数 @force 为 false。
+	
+上述条件即意味着只删除满足 [pika.conf](https://github.com/Qihoo360/pika/wiki/pika-config) 中	expire-logs-nums/expire-logs-days 两个配置项的超数目/过时文件。
+
+在执行 slaveof 命令时，其指令函数 [SlaveofCmd::Do](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_admin.cc#L81) 也会会启用 purge 任务，调用方式为 `PurgeLogs(filenum_ - 1, true, true)`：
+
+	- 起始 file index 为 filenum_；
+	- 手工调用参数 @manual 为 true；
+	- 强制删除参数 @force 为 true。
+
+调用函数上方的注释 `Before we send the trysync command, we need purge current logs older than the sync point` 说明了一切。
+	
 ### 3 Blackwidow
 ---
 
@@ -333,7 +415,7 @@ RocksDB 进行 compaction 的时候需要对每个 key 调用留给使用者的�
 
 nemo-rocksdb 一并重新封装了一个可以实现 **更新** 意义的继承自 rocksdb::MergeOperator 的 NemoMergeOperator，以在 RocksDB 进行 Get 或者 compaction 的时候对 key 的一些写或者更行操作合并后再进行，以提高效率。至于 rocksdb::MergeOperator 的使用，见[参考文档6](http://alexstocks.github.io/html/rocksdb.html)。
 
-Pika 执行写指令时先更新 Pika DB，然后才把写指令写入 binlog 中。Nemo 版的 Pika 在执行写指令过程中使用了行锁，[参考文档14](https://github.com/Qihoo360/pika/wiki/pika-锁的应用) 对行锁的定义是 `用于对一个key加锁，保证同一时间只有一个线程对一个key进行操作`。Pika 中每个 key 之间相互独立，行锁就足以保证并发时候的数据一致性，且 `锁定粒度小，也可以保证数据访问的高效性`。#3.6.1# 小节在代码层面分析行锁的具体实现。
+Pika 执行写指令时先更新 Pika DB，然后才把写指令写入 binlog 中。Nemo 版的 Pika 在执行写指令过程中使用了行锁，[参考文档14](https://github.com/Qihoo360/pika/wiki/pika-%E9%94%81%E7%9A%84%E5%BA%94%E7%94%A8) 对行锁的定义是 `用于对一个key加锁，保证同一时间只有一个线程对一个key进行操作`。Pika 中每个 key 之间相互独立，行锁就足以保证并发时候的数据一致性，且 `锁定粒度小，也可以保证数据访问的高效性`。#3.6.1# 小节在代码层面分析行锁的具体实现。
 
 
 #### 3.2 Blackwidow Filter
@@ -683,6 +765,7 @@ Lists data 的具体存储格式如下：
 RocksDB 提供了一个名为 Comparator 的接口，用于对 Column Family 或者整个 Database 的 sst file 的 KV 进行排序。
 
 Lists 的有序体现在其 data_cf Column Family 下的数据有序性，Pika 提供了继承自 RocksDB::Comparator 的 blackwidow::ListsDataKeyComparatorImpl 对 data key 进行排序。RocksDB::Comparator 的主要接口是 Compare 函数和 Equal 函数，其定义形式如下：
+
 ```C++
 // A Comparator object provides a total order across slices that are
 // used as keys in an sstable or a database.  A Comparator implementation
@@ -711,9 +794,11 @@ class Comparator {
 
 **custom\_comparator.h:ListsDataKeyComparatorImpl** 的主要接口 Compare 函数流程如下：
 
-- 1 对 data key 中存储的 lists key 以 slice 自带的 comparator 进行比较，如果 key 不相等，则返回比较结果；
-- 2 对 data key 中存储的 version 进行比较，如果 version 不相等，则返回比较结果；
-- 3 对 data key 中存储的 index 进行比较，返回比较结果；
+- 1 对 data key 中存储的 lists key 以 slice 自带的 comparator 进行比较，如果两个 key slice 没有指向同一块内存区域，则返回比较结果；
+- 2 如果两个 key slice 指向同一块内存区域，如果双方都没有 version 和 index 时返回 0 值，若有一方没有 version 和 index 则认为其小于另一方并返回比较值；
+- 3 对 data key 中存储的 version 进行比较，如果 version 不相等，则返回比较结果；
+- 4 如果 version 相等，如果双方都没有 index 时返回 0 值，若有一方没有 index 则认为其小于另一方并返回比较值；
+- 5 对 data key 中存储的 index 进行比较，返回比较结果；
 
 **custom\_comparator.h:ListsDataKeyComparatorImpl** 存在的形式是 Lists 的 data_cf Column Family 的 Options.comparator 被 RocksDB 调用。
 
@@ -769,13 +854,13 @@ Pika master 处理写请求的流程是先写 DB 后生成对应的 binlog，似
 ##### 3.6.1 Nemo 行锁
 ---
 
-本章节开头的地方提到了 Nemo 存储引擎使用了行锁，[参考文档14](https://github.com/Qihoo360/pika/wiki/pika-锁的应用) 对行锁的定义是 `用于对一个key加锁，保证同一时间只有一个线程对一个key进行操作`。
+本章节开头的地方提到了 Nemo 存储引擎使用了行锁，[参考文档14](https://github.com/Qihoo360/pika/wiki/pika-%E9%94%81%E7%9A%84%E5%BA%94%E7%94%A8) 对行锁的定义是 `用于对一个key加锁，保证同一时间只有一个线程对一个key进行操作`。
 
 ![](../pic/pika_nemo_lock.jpg)
 
-Nemo 行锁的原理如上图，[参考文档14](https://github.com/Qihoo360/pika/wiki/pika-锁的应用) 提到`对同一个key，加了两次行锁，在实际应用中，pika上所加的锁就已经能够保证数据访问的正确性。如果只是为了pika所需要的业务，blackwidow层面使用行锁是多余的，但是blackwidow的设计初衷就是通过对rocksdb的改造和封装提供一套完整的类redis数据访问的解决方案，而不仅仅是为pika提供数据库引擎。这样设计大大降低了pika与blackwidow之间的耦合，也使得blackwidow可以被单独拿出来测试和使用，在pika中的数据迁移工具就是完全使用blackwidow来完成，不必依赖任何pika相关的东西`。
+Nemo 行锁的原理如上图，[参考文档14](https://github.com/Qihoo360/pika/wiki/pika-%E9%94%81%E7%9A%84%E5%BA%94%E7%94%A8) 提到`对同一个key，加了两次行锁，在实际应用中，pika上所加的锁就已经能够保证数据访问的正确性。如果只是为了pika所需要的业务，blackwidow层面使用行锁是多余的，但是blackwidow的设计初衷就是通过对rocksdb的改造和封装提供一套完整的类redis数据访问的解决方案，而不仅仅是为pika提供数据库引擎。这样设计大大降低了pika与blackwidow之间的耦合，也使得blackwidow可以被单独拿出来测试和使用，在pika中的数据迁移工具就是完全使用blackwidow来完成，不必依赖任何pika相关的东西`。
 
-[参考文档14](https://github.com/Qihoo360/pika/wiki/pika-锁的应用)对其具体实现的文字描述如下：`在pika系统中，一把行锁就可以维护所有key。在行锁的实现上是将一个key与一把互斥锁相绑定，并将其放入哈希表中维护，来保证每次访问key的线程只有一个，但是不可能也不需要为每一个key保留一把互斥锁，只需要当有多条线程访问同一个key时才需要锁，在所有线程都访问结束之后，就可以销毁这个绑定key的互斥锁，释放资源。`
+[参考文档14](https://github.com/Qihoo360/pika/wiki/pika-%E9%94%81%E7%9A%84%E5%BA%94%E7%94%A8)对其具体实现的文字描述如下：`在pika系统中，一把行锁就可以维护所有key。在行锁的实现上是将一个key与一把互斥锁相绑定，并将其放入哈希表中维护，来保证每次访问key的线程只有一个，但是不可能也不需要为每一个key保留一把互斥锁，只需要当有多条线程访问同一个key时才需要锁，在所有线程都访问结束之后，就可以销毁这个绑定key的互斥锁，释放资源。`
 
 行锁代码层面实现是 slash::RecordLock，其基础是 [slash::RefLock](https://github.com/PikaLabs/slash/blob/25b88e65cbfe4eb22a4850d5d03c5b27446ec5dc/slash/include/slash_mutex.h#L136) 和 [slash::RecordLock](https://github.com/PikaLabs/slash/blob/25b88e65cbfe4eb22a4850d5d03c5b27446ec5dc/slash/include/slash_mutex.h#L180):
 
@@ -962,7 +1047,7 @@ struct LockMap { // lock map，在构造函数中就把各个桶创建好，后�
 
   // Count of keys that are currently locked.
   // (Only maintained if LockMgr::max_num_locks_ is positive.)
-  std::atomic<int64_t> lock_cnt{0}; // lock map 中被 lock 的 key 的个数
+  std::atomic<int64_t> lock_cnt{0}; // lock map 中被 lock 的 key 的个数，注意上面的注释
   std::vector<LockMapStripe*> lock_map_stripes_; // lock 桶集合
   size_t LockMap::GetStripe(const std::string& key) const { // 获取 key 所对应的桶的 index
     static murmur_hash hash;
@@ -1073,17 +1158,44 @@ class ScopeRecordLock {
  private:
   LockMgr* const lock_mgr_;
   Slice key_;
-  ScopeRecordLock(const ScopeRecordLock&);
-  void operator=(const ScopeRecordLock&);
+};
+
+class MultiScopeRecordLock {
+  public:
+    MultiScopeRecordLock(LockMgr* lock_mgr, const std::vector<std::string>& keys) :
+      lock_mgr_(lock_mgr), keys_(keys) {
+      std::string pre_key;
+      std::sort(keys_.begin(), keys_.end());
+      if (!keys_.empty() &&
+        keys_[0].empty()) {
+        lock_mgr_->TryLock(pre_key);
+      }
+
+      for (const auto& key : keys_) {
+        if (pre_key != key) {
+          lock_mgr_->TryLock(key);
+          pre_key = key;
+        }
+      }
+    }
+    
+    ~MultiScopeRecordLock() {
+      std::string pre_key;
+        …
+      }
+    
+  private:
+    LockMgr* const lock_mgr_;
+    std::vector<std::string> keys_;
 };
 }    
 ```
 
-上面代码块的关键就在于 **blackwidow::LockMapStripe**，我理解为 lock 桶，其作用就是<font color=red>让多个 key 使用同一个 lock 以节省内存使用，不像 **slash::RecordLock** 那样为每个 key 加锁时还有创建销毁 mutex lock 的开销</font>，但是除此之外，同一个桶中多个 key 使用同一个 key 这个 feature 个人并不觉得能提高多少效率。[参考文档15](https://www.cnblogs.com/cchust/p/7107392.html) 认为 **blackwidow::LockMapStripe** 的另一个问题是：`RocksDB首先按Columnfamily进行拆分，每个Columnfamily中的锁通过一个LockMap管理，而每个LockMap再拆分成若干个分片，每个分片通过LockMapStripe管理，而hash表(std::unordered_map<std::string, LockInfo>)则存在于Stripe结构中，Stripe结构中还包含一个mutex和condition_variable，这个主要作用是，互斥访问hash表，当出现锁冲突时，将线程挂起，解锁后，唤醒挂起的线程。这种设计很简单但也带来一个显而易见的问题，就是多个不相关的锁公用一个condition_variable，导致锁释放时，不必要的唤醒一批线程，而这些线程重试后，发现仍然需要等待，造成了无效的上下文切换。`
+上面代码块的关键就在于 **blackwidow::LockMapStripe**，我理解为 lock 桶【与分片同义】，其作用就是<font color=red>让多个 key 使用同一个 lock 以节省内存使用，不像 **slash::RecordLock** 那样为每个 key 加锁时还有创建销毁 mutex lock 的开销</font>，但是除此之外，同一个桶中多个 key 使用同一个 key 这个 feature 个人并不觉得能提高多少效率。[参考文档15](https://www.cnblogs.com/cchust/p/7107392.html) 认为 **blackwidow::LockMapStripe** 的另一个问题是：`RocksDB首先按Columnfamily进行拆分，每个Columnfamily中的锁通过一个LockMap管理，而每个LockMap再拆分成若干个分片，每个分片通过LockMapStripe管理，而hash表(std::unordered_map<std::string, LockInfo>)则存在于Stripe结构中，Stripe结构中还包含一个mutex和condition_variable，这个主要作用是，互斥访问hash表，当出现锁冲突时，将线程挂起，解锁后，唤醒挂起的线程。这种设计很简单但也带来一个显而易见的问题，就是多个不相关的锁公用一个condition_variable，导致锁释放时，不必要的唤醒一批线程，而这些线程重试后，发现仍然需要等待，造成了无效的上下文切换。`
 
 类比于 **slash::RecordMutex** 中作为类成员存在的 lock map，Blackwidow 把这个 map 独立成了一个类 **blackwidow::LockMap**，其底层存储容器是一个容量固定的桶数组，因其容量固定所以访问时不用加锁。**blackwidow::LockMap** 还有一个群成员 **blackwidow::LockMap::lock\_cnt**【个人疑惑：为何不命名为 lock\_cnt\_ 】用于记录加锁的 key 的总数目。
 
-**blackwidow::LockMgr** 提供 TryLock/Unlock 接口外，它还有一个控制 key 上限的成员 **slash::RecordLock::max\_num\_locks\_**，和 **blackwidow::LockMap::lock_cnt** 配合使用。**blackwidow::LockMgr** 提供 TryLock 接口加锁总是会成功，所以等同于 Lock。
+**blackwidow::LockMgr** 提供 TryLock/Unlock 接口，TryLock 接口以循环阻塞方式加锁，所以加锁总是会成功，所以等同于 Lock。**blackwidow::LockMgr** 还有一个控制 key 上限的成员 **slash::RecordLock::max\_num\_locks\_**，和 **blackwidow::LockMap::lock\_cnt** 配合使用，如果 **slash::RecordLock::max\_num\_locks\_** 不为零，则加锁的时候如果被加锁的key的数量 **blackwidow::LockMap::lock\_cnt** 大于 **slash::RecordLock::max\_num\_locks\_**，则会让 **blackwidow::LockMgr::TryLock** 阻塞住【这里就引入了一个Bug，下文会叙述到】。
 
 Blackwidow 引擎具体使用事务锁 **blackwidow::LockMgr** 的[代码块](https://github.com/Qihoo360/blackwidow/blob/2490ebd29d95fcbed5356b2113938f3e414a46e7/src/redis.h#L58)如下：
 
@@ -1094,12 +1206,36 @@ class Redis {
   LockMgr* lock_mgr_;
   rocksdb::DB* db_;
 };
-}   
+
+Redis::Redis()
+	    : lock_mgr_(new LockMgr(1000, 0, std::make_shared<MutexFactoryImpl>())),
+      db_(nullptr) {}   
 ```
 
 Blackwidow 引擎的其他 Redis 实例都继承自 **blackwidow::Redis**，所以每个 Redis 实例都会包含一个 **blackwidow::LockMgr** 对象。
 
 类似于 **slash::RecordLock**，基于 **blackwidow::LockMgr** 之上的 **blackwidow::ScopeRecordLock** 也类似一个 LockGuard，此处不再赘述。
+
+**slash::MultiScopeRecordLock** 用于一次锁住一个 range 的 keys，其使用示例如下：
+
+```C++
+Status RedisStrings::MSet(const std::vector<KeyValue>& kvs) {
+  std::vector<std::string> keys;
+  for (const auto& kv :  kvs) {
+    keys.push_back(kv.key);
+  }
+
+  MultiScopeRecordLock ml(lock_mgr_, keys);
+  rocksdb::WriteBatch batch;
+  for (const auto& kv : kvs) {
+    StringsValue strings_value(kv.value);
+    batch.Put(kv.key, strings_value.Encode());
+  }
+  return db_->Write(default_write_options_, &batch);
+}
+```
+
+这块代码曾经导致整个 strings DB 被锁住。因为 v3.0.2 时的 **blackwidow::Redis::lock_mgr_** 构建时其初始值 {default_num_stripes = 1000,max_num_locks = 10000}，导致过 mset 超过一万个 key 时 **blackwidow::MultiScopeRecordLock** 无法加锁成功。后来在 v3.0.3 时才[修改了此 bug](https://github.com/Qihoo360/blackwidow/commit/665c44db35dc1eb79c40c800e2cd15bf05f9ec99)，设置 {default_num_stripes = 1000,max_num_locks = 0}，不再设置加锁 keys 数目值上限。
 
 ### 4 使用与调优
 ---
@@ -1148,8 +1284,11 @@ RocksDB 通过提供常用场景的 API 之外，还提供了一些适用于特�
 - 11 [RocksDB MemTable源码分析](https://www.jianshu.com/p/9e385682ed4e)
 - 12 [How we Hunted a Data Corruption bug in RocksDB](https://pingcap.com/blog/2017-09-08-rocksdbbug/)
 - 13 [pika introduction](http://baotiao.github.io/2016/05/18/pika-introduction/)
-- 14 [锁的应用](https://github.com/Qihoo360/pika/wiki/pika-锁的应用)
+- 14 [锁的应用](https://github.com/Qihoo360/pika/wiki/pika-%E9%94%81%E7%9A%84%E5%BA%94%E7%94%A8)
 - 15 [RocksDB上锁机制](http://www.cnblogs.com/cchust/p/7107392.html)
+- 16 [pika-config](https://github.com/Qihoo360/pika/wiki/pika-config)
+- 17 [Pika 运维指南](https://may.ac.cn/2018/04/16/how-to-use-pika/)
+- 18 [pika 差异化管理命令](https://github.com/qihoo360/pika/wiki/pika-%E5%B7%AE%E5%BC%82%E5%8C%96%E7%AE%A1%E7%90%86%E5%91%BD%E4%BB%A4)
 
 ## 扒粪者-于雨氏
 
@@ -1166,3 +1305,5 @@ RocksDB 通过提供常用场景的 API 之外，还提供了一些适用于特�
 > 2018/10/03，于雨氏，于丰台添加 #4 调优# 一节 和 #3.5.1 Pika 主从 Binlog 处理机制# 小节。
 > 
 > 2018/10/06，于雨氏，于西二旗添加 #3.6 锁# 小节。
+> 
+> 2018/10/06，于雨氏，于西二旗添加 #2.4 Purge# 小节。

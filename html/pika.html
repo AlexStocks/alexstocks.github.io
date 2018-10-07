@@ -446,7 +446,108 @@ If the process either catches the signal and returns from the signal handler, or
 <li>2 启动 <code>PikaServer::bgsave_thread_</code>，通过调用 <code>PikaServer::DoBgsave</code> 函数完成备份任务。</li>
 </ul>
 
-<h3 id="toc_17">3 Blackwidow</h3>
+<h4 id="toc_17">2.4 Purge</h4>
+
+<hr>
+
+<p>当数据备份完成后，过时的 binlog 文件就应当及时地被清理掉，这个工作是由 Purge 线程完成的。</p>
+
+<h4 id="toc_18">2.4.1 获取 binlog 集合</h4>
+
+<hr>
+
+<p>欲清理过时的 binlog 文件，必须先获取所有的 binlog 文件集合，这个工作由 <a href="https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1194"><strong>PikaServer::GetBinlogFiles</strong></a> 完成，其流程为：</p>
+
+<ul>
+<li>1 调用 <a href="https://github.com/Qihoo360/slash/blob/57823f23d5adfe2de469329d9b7df14851988f3d/slash/src/env.cc#L174">slash::GetChildren</a> 获取 binlog 文件夹下所有 binlog；</li>
+<li>2 遍历 binlog 集合，判断名称前缀是否为 <code>write2file</code>，然后构建一个 index:binlog_filename 为 pair 的 binlog map。</li>
+</ul>
+
+<h4 id="toc_19">2.4.2 binlog 过时/加锁判定</h4>
+
+<hr>
+
+<p>判定 binlog 是否过时/被加锁其实就是判定其是否在同步给 slave 的 binlog 集合范围内。</p>
+
+<p>binlog 过时判定由<a href="https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1123">PikaServer::CouldPurge</a>完成，某个后缀为 @index 的数据加锁判断流程为：</p>
+
+<ul>
+<li>1 调用 <a href="https://github.com/Qihoo360/pika/blob/d533f6331ac299a913ef825e1628b72d1a51d696/tools/binlog_tools/binlog.cc#L75">PikaServer::GetProducerStatus</a> 接口获取当前的binlog index @pro<em>num，如果 @pro</em>num 与 @index 之差小于等于 10，则@index 对应的文件不过时；</li>
+<li>2 遍历 pika 所有的 slave 集合 @slaves_，若同步给某个 slave 的 binlog 的 filenum 小于 @index，则 @index 对应的文件没有被加锁。</li>
+</ul>
+
+<h4 id="toc_20">2.4.3 过时 binlog 淘汰</h4>
+
+<hr>
+
+<p>过时 binlog 淘汰工作具体由 <a href="https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1148">PikaServer::PurgeFiles</a> 完成，其流程为：</p>
+
+<ul>
+<li>1 调用 <a href="https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1194"><strong>PikaServer::GetBinlogFiles</strong></a> 获取 index:binlog_filename binlog map 集合 @binlogs；</li>
+<li><p>2 获取配置文件参数 expire-logs-nums，计算本次应当删除文件的上限数目 remain_expire_num；</p>
+
+<blockquote>
+<p><a href="https://github.com/Qihoo360/pika/wiki/pika-config">参考文档16</a> 中对这个参数的说明是：log日志的过期数量，若当前 log 的数量大于 expire_logs_nums，则认为删除 expire_logs_nums 之前的log是安全的。</p>
+
+<p><a href="https://may.ac.cn/2018/04/16/how-to-use-pika/">参考文档17</a> 进一步指出：<code>首次同步时，将完整数据传输到从服务器上会比较慢，需要设置更大的 expire-logs-nums 值，避免数据同步过慢，同步完成时起始 binlog 已被删除</code>。</p>
+
+<p>remain_expire_num = binlogs.size() - expire-logs-nums</p>
+</blockquote></li>
+<li><p>3 获取配置文件参数 expire-logs-days，其为过期文件天数；  </p></li>
+<li><p>4 遍历 map @binlogs，判定某个 @index 对应的 binlog 是否应该删除；</p>
+
+<ul>
+<li>4.1 @manual 为 true 且 遍历文件的 index 小于 @to；</li>
+<li>4.2 @remain<em>expire</em>num 大于零；</li>
+<li>4.3 文件修改时间已经超过 expire-logs-days；</li>
+</ul>
+
+<blockquote>
+<p>上面条件优先级从上到下递减，且满足其中一个条件即可，也可以看出 expire-logs-nums 优先级高于 expire-logs-days。</p>
+</blockquote></li>
+<li><p>5 当 @index 对应的 binlog 满足上述判定条件时，还要满足下面两个条件，若满足则 binlog 应当被物理删除之，然后对 @remain<em>expire</em>num 进行自减；</p>
+
+<ul>
+<li>5.1 @force 参数为 true</li>
+<li>5.2 <a href="https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1123">PikaServer::CouldPurge</a>判定文件过时/加锁；</li>
+</ul>
+
+<blockquote>
+<p>上述两个条件满足其中一个即可，优先级从上到下递减。</p>
+</blockquote></li>
+</ul>
+
+<p>流程 4 的三个条件之间是逻辑 OR 关系，流程 5 的两个条件之间也是逻辑 OR 关系，但流程 4 的条件和流程 5 的条件之间是逻辑 AND 关系。</p>
+
+<h4 id="toc_21">2.4.4 Purge 工作</h4>
+
+<hr>
+
+<p>类似于 bgsave 工作，Purge 工作实际上是有 purge 线程完成的，具体线程函数是 <a href="https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1073">PikaServer::PurgeLogs</a>。在同一时刻，只能启动一个 purge 工作。Purge 线程开始工作时设置 <a href="https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/include/pika_server.h#L444">PikaServer::purging_</a> 为 true，purge 工作完成后设置其为 false。</p>
+
+<p>用户如果人工向 pika 发出 <code>purgelogsto</code><a href="https://github.com/qihoo360/pika/wiki/pika-%E5%B7%AE%E5%BC%82%E5%8C%96%E7%AE%A1%E7%90%86%E5%91%BD%E4%BB%A4">见参考文档18</a> 指令，则 PikaServer 会通过 <a href="https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_admin.cc#L310">PurgelogstoCmd::Do</a> 启动 purge 线程函数，调用时方式为 <code>PurgeLogs(num_, true, false)</code>：</p>
+
+<div><pre><code class="language-none">- 起始 file index 为用户指令指定的 @index；
+- 手工调用参数 @manual 为 true；
+- 强制删除参数 @force 为 false。</code></pre></div>
+
+<p>PikaServer 自身执行定时任务 <a href="https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1738">PikaServer::DoTimingTask</a> 时也会启用 purge 任务 <a href="https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1287">PikaServer::AutoPurge</a>，调用方式为 <code>PurgeLogs(0, false, false)</code>：</p>
+
+<div><pre><code class="language-none">- 起始 file index 为 0；
+- 手工调用参数 @manual 为 false；
+- 强制删除参数 @force 为 false。</code></pre></div>
+
+<p>上述条件即意味着只删除满足 <a href="https://github.com/Qihoo360/pika/wiki/pika-config">pika.conf</a> 中  expire-logs-nums/expire-logs-days 两个配置项的超数目/过时文件。</p>
+
+<p>在执行 slaveof 命令时，其指令函数 <a href="https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_admin.cc#L81">SlaveofCmd::Do</a> 也会会启用 purge 任务，调用方式为 <code>PurgeLogs(filenum_ - 1, true, true)</code>：</p>
+
+<div><pre><code class="language-none">- 起始 file index 为 filenum_；
+- 手工调用参数 @manual 为 true；
+- 强制删除参数 @force 为 true。</code></pre></div>
+
+<p>调用函数上方的注释 <code>Before we send the trysync command, we need purge current logs older than the sync point</code> 说明了一切。</p>
+
+<h3 id="toc_22">3 Blackwidow</h3>
 
 <hr>
 
@@ -463,7 +564,7 @@ Get：查询key的最新版本，过滤最新的数据；
 Iterator： 迭代时，查询key的版本，过滤旧版本数据；
 Compact：数据的实际删除是在Compact过程中，根据版本信息过滤；</code></pre></div>
 
-<h4 id="toc_18">3.1 Nemo</h4>
+<h4 id="toc_23">3.1 Nemo</h4>
 
 <hr>
 
@@ -477,7 +578,7 @@ Compact：数据的实际删除是在Compact过程中，根据版本信息过滤
 
 <p>Pika 执行写指令时先更新 Pika DB，然后才把写指令写入 binlog 中。Nemo 版的 Pika 在执行写指令过程中使用了行锁，<a href="https://github.com/Qihoo360/pika/wiki/pika-%E9%94%81%E7%9A%84%E5%BA%94%E7%94%A8">参考文档14</a> 对行锁的定义是 <code>用于对一个key加锁，保证同一时间只有一个线程对一个key进行操作</code>。Pika 中每个 key 之间相互独立，行锁就足以保证并发时候的数据一致性，且 <code>锁定粒度小，也可以保证数据访问的高效性</code>。#3.6.1# 小节在代码层面分析行锁的具体实现。</p>
 
-<h4 id="toc_19">3.2 Blackwidow Filter</h4>
+<h4 id="toc_24">3.2 Blackwidow Filter</h4>
 
 <hr>
 
@@ -499,7 +600,7 @@ Compact：数据的实际删除是在Compact过程中，根据版本信息过滤
 
 <p>rocksdb::CompactionFilter 调用暴露给用户的接口 CompactionFilter::Filter 的时候，需要用户自己对相关数据的含义进行解释并处理，下面分小节介绍相关数据类操作。</p>
 
-<h5 id="toc_20">3.2.1 blackwidow::InternalValue</h5>
+<h5 id="toc_25">3.2.1 blackwidow::InternalValue</h5>
 
 <hr>
 
@@ -534,7 +635,7 @@ Compact：数据的实际删除是在Compact过程中，根据版本信息过滤
 <p>Hashtable meta 存储格式如下：
 <img src="../pic/pika_bw_hashs_meta.png" alt=""></p>
 
-<h5 id="toc_21">3.2.2 blackwidow::ParsedInternalValue 与 blackwidow::BaseMetaFilter</h5>
+<h5 id="toc_26">3.2.2 blackwidow::ParsedInternalValue 与 blackwidow::BaseMetaFilter</h5>
 
 <p>base_value_format.h:blackwidow::ParsedInternalValue 用于对 string 类型的 Value 和 其他四种类型的 meta Value 进行反序列化，其主要类成员如下：</p>
 
@@ -580,7 +681,7 @@ Compact：数据的实际删除是在Compact过程中，根据版本信息过滤
 
 <p>使用 <strong>blackwidow::BaseMetaFilter</strong> 的 <strong>blackwidow::BaseMetaFilterFactory</strong> 会被设置为 hashtable/set/zset 三种数据结构 meta ColumnFamily 的 ColumnFamilyOptions 的 compaction_filter_factory。</p>
 
-<h5 id="toc_22">3.2.3 blackwidow::BaseDataKey</h5>
+<h5 id="toc_27">3.2.3 blackwidow::BaseDataKey</h5>
 
 <hr>
 
@@ -619,7 +720,7 @@ Compact：数据的实际删除是在Compact过程中，根据版本信息过滤
 <li>5 存入 field。</li>
 </ul>
 
-<h5 id="toc_23">3.2.4 blackwidow::ParsedBaseDataKey 与 blackwidow::BaseDataFilter</h5>
+<h5 id="toc_28">3.2.4 blackwidow::ParsedBaseDataKey 与 blackwidow::BaseDataFilter</h5>
 
 <hr>
 
@@ -666,13 +767,13 @@ Compact：数据的实际删除是在Compact过程中，根据版本信息过滤
 
 <p>使用 <strong>blackwidow::BaseDataFilter</strong> 的 <strong>blackwidow::BaseDataFilterFactory</strong> 会被设置为 hashtable/set/zset 三种数据结构 data ColumnFamily 的 ColumnFamilyOptions 的 compaction<em>filter</em>factory。</p>
 
-<h4 id="toc_24">3.3 Blackwidow Strings</h4>
+<h4 id="toc_29">3.3 Blackwidow Strings</h4>
 
 <hr>
 
 <p>不同于其他四种数据结构，Strings 因其数据结构比较简单，不需要 meta 数据，所以的数据直接存入默认的 ColumnFamily，相关的 Blackwidow 类在此节单独列明。</p>
 
-<h5 id="toc_25">3.3.1 blackwidow::StringsValue</h5>
+<h5 id="toc_30">3.3.1 blackwidow::StringsValue</h5>
 
 <hr>
 
@@ -697,7 +798,7 @@ Compact：数据的实际删除是在Compact过程中，根据版本信息过滤
 
 <p><img src="../pic/pika_bw_strings.png" alt=""></p>
 
-<h5 id="toc_26">3.3.2 blackwidow::ParsedStringsValue 与 blackwidow::StringsFilter</h5>
+<h5 id="toc_31">3.3.2 blackwidow::ParsedStringsValue 与 blackwidow::StringsFilter</h5>
 
 <hr>
 
@@ -707,13 +808,13 @@ Compact：数据的实际删除是在Compact过程中，根据版本信息过滤
 
 <p>使用 <strong>blackwidow::StringsFilter</strong> 的 <strong>blackwidow::StringsFilterFactory</strong> 会被设置为 Strings 的 default ColumnFamily 的 ColumnFamilyOptions 的 compaction<em>filter</em>factory。</p>
 
-<h4 id="toc_27">3.4 Blackwidow Lists</h4>
+<h4 id="toc_32">3.4 Blackwidow Lists</h4>
 
 <hr>
 
 <p>不同于  hashtable/zset/set，Lists 数据集合中各个 node 之间有先后顺序且其顺序在写入数据的时候已经指定，所以其 meta 和 data 组织方式也与其他三者有所不同。</p>
 
-<h5 id="toc_28">3.4.1 blackwidow::ListsMetaValue 与 blackwidow::ParsedListsMetaValue</h5>
+<h5 id="toc_33">3.4.1 blackwidow::ListsMetaValue 与 blackwidow::ParsedListsMetaValue</h5>
 
 <hr>
 
@@ -777,7 +878,7 @@ Compact：数据的实际删除是在Compact过程中，根据版本信息过滤
 
 <p><img src="../pic/pika_bw_list_meta.png" alt=""></p>
 
-<h5 id="toc_29">3.4.2 blackwidow::ListsDataKey 与 blackwidow::ParsedListsDataKey</h5>
+<h5 id="toc_34">3.4.2 blackwidow::ListsDataKey 与 blackwidow::ParsedListsDataKey</h5>
 
 <hr>
 
@@ -811,7 +912,7 @@ Compact：数据的实际删除是在Compact过程中，根据版本信息过滤
 
 <p><img src="../pic/pika_bw_list_data.png" alt=""></p>
 
-<h5 id="toc_30">3.4.3 blackwidow::ListsMetaFilter 与 blackwidow::ListsDataFilter</h5>
+<h5 id="toc_35">3.4.3 blackwidow::ListsMetaFilter 与 blackwidow::ListsDataFilter</h5>
 
 <hr>
 
@@ -823,29 +924,29 @@ Compact：数据的实际删除是在Compact过程中，根据版本信息过滤
 
 <p>使用 <strong>blackwidow::ListsDataFilter</strong> 的 <strong>blackwidow::ListsDataFilterFactory</strong> 会被设置为 Lists 的 data<em>cf ColumnFamily 的 ColumnFamilyOptions 的 compaction</em>filter_factory。</p>
 
-<h5 id="toc_31">3.4.4 blackwidow::ListsDataKeyComparator</h5>
+<h5 id="toc_36">3.4.4 blackwidow::ListsDataKeyComparator</h5>
 
 <hr>
 
 <p>RocksDB 提供了一个名为 Comparator 的接口，用于对 Column Family 或者整个 Database 的 sst file 的 KV 进行排序。</p>
 
-<p>Lists 的有序体现在其 data_cf Column Family 下的数据有序性，Pika 提供了继承自 RocksDB::Comparator 的 blackwidow::ListsDataKeyComparatorImpl 对 data key 进行排序。RocksDB::Comparator 的主要接口是 Compare 函数和 Equal 函数，其定义形式如下：
-```C++
-// A Comparator object provides a total order across slices that are
+<p>Lists 的有序体现在其 data_cf Column Family 下的数据有序性，Pika 提供了继承自 RocksDB::Comparator 的 blackwidow::ListsDataKeyComparatorImpl 对 data key 进行排序。RocksDB::Comparator 的主要接口是 Compare 函数和 Equal 函数，其定义形式如下：</p>
+
+<div><pre><code class="language-C++">// A Comparator object provides a total order across slices that are
 // used as keys in an sstable or a database.  A Comparator implementation
 // must be thread-safe since rocksdb may invoke its methods concurrently
 // from multiple threads.
 class Comparator {
  public:
-  virtual ~Comparator() {}</p>
+  virtual ~Comparator() {}
 
-<p>// Three-way comparison.  Returns value:
+  // Three-way comparison.  Returns value:
   //   &lt; 0 iff &quot;a&quot; &lt; &quot;b&quot;,
   //   == 0 iff &quot;a&quot; == &quot;b&quot;,
   //   &gt; 0 iff &quot;a&quot; &gt; &quot;b&quot;
-  virtual int Compare(const Slice&amp; a, const Slice&amp; b) const = 0;</p>
+  virtual int Compare(const Slice&amp; a, const Slice&amp; b) const = 0;
 
-<p>// Compares two slices for equality. The following invariant should always
+  // Compares two slices for equality. The following invariant should always
   // hold (and is the default implementation):
   //   Equal(a, b) iff Compare(a, b) == 0
   // Overwrite only if equality comparisons can be done more efficiently than
@@ -853,22 +954,23 @@ class Comparator {
   virtual bool Equal(const Slice&amp; a, const Slice&amp; b) const {
     return Compare(a, b) == 0;
   }
-};
-```</p>
+};</code></pre></div>
 
 <p><strong>custom_comparator.h:ListsDataKeyComparatorImpl</strong> 的主要接口 Compare 函数流程如下：</p>
 
 <ul>
-<li>1 对 data key 中存储的 lists key 以 slice 自带的 comparator 进行比较，如果 key 不相等，则返回比较结果；</li>
-<li>2 对 data key 中存储的 version 进行比较，如果 version 不相等，则返回比较结果；</li>
-<li>3 对 data key 中存储的 index 进行比较，返回比较结果；</li>
+<li>1 对 data key 中存储的 lists key 以 slice 自带的 comparator 进行比较，如果两个 key slice 没有指向同一块内存区域，则返回比较结果；</li>
+<li>2 如果两个 key slice 指向同一块内存区域，如果双方都没有 version 和 index 时返回 0 值，若有一方没有 version 和 index 则认为其小于另一方并返回比较值；</li>
+<li>3 对 data key 中存储的 version 进行比较，如果 version 不相等，则返回比较结果；</li>
+<li>4 如果 version 相等，如果双方都没有 index 时返回 0 值，若有一方没有 index 则认为其小于另一方并返回比较值；</li>
+<li>5 对 data key 中存储的 index 进行比较，返回比较结果；</li>
 </ul>
 
 <p><strong>custom_comparator.h:ListsDataKeyComparatorImpl</strong> 存在的形式是 Lists 的 data_cf Column Family 的 Options.comparator 被 RocksDB 调用。</p>
 
 <p><strong>custom_comparator.h</strong> 文件中还有一个 ZSetsScoreKeyComparatorImpl 接口类，用于 zset 集合下的 score_cf 进行排序，其排序方式是：<code>同一个zset中score to member的data_key会首先按照score来排序， 在score相同的情况下再按照member来排序</code>【摘自<a href="(https://github.com/qihoo360/pika/wiki/pika-blackwidow%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F)">参考文档8</a>】。</p>
 
-<h4 id="toc_32">3.5 Binlog</h4>
+<h4 id="toc_37">3.5 Binlog</h4>
 
 <hr>
 
@@ -896,7 +998,7 @@ enum TransferOperate{
 
 <p>以后再升级 Binlog，估计只需要扩展 Transfer Type 即可，可以保持向后兼容。</p>
 
-<h5 id="toc_33">3.5.1 Pika 主从 Binlog 处理机制</h5>
+<h5 id="toc_38">3.5.1 Pika 主从 Binlog 处理机制</h5>
 
 <hr>
 
@@ -908,7 +1010,7 @@ enum TransferOperate{
 
 <p>Pika master 处理写请求的流程是先写 DB 后生成对应的 binlog，似乎与时下常见的 leader-follower 架构下 leader处理写请求流程 “先把写请求内容写入 WAL（类似于binlog） 然后再应用到状态机（DB）” 不同，个人以为可能的一个原因是因为 leader-follower 对写请求的处理是一种同步机制，而 master-slave 对写请求的处理是一个异步过程。假设 master-slave 架构下 master 对写请求的处理过程是先写 binlog 然后再写 DB，则 slave DB 的数据有可能比 master DB 数据更新：写请求内容被 master 写入 binlog 后迅速同步给slave，然后 slave 将其写入 DB，而此时 master 还未完成相应数据的更新。可以类比地，同样使用了 master-slave 架构的 Redis master 收到写请求之后先把数据写入 DB，然后再放入 backlog 同步给 slave。</p>
 
-<h4 id="toc_34">3.6 锁</h4>
+<h4 id="toc_39">3.6 锁</h4>
 
 <hr>
 
@@ -916,7 +1018,7 @@ enum TransferOperate{
 
 <p>下面先介绍 Nemo 引擎的行锁。</p>
 
-<h5 id="toc_35">3.6.1 Nemo 行锁</h5>
+<h5 id="toc_40">3.6.1 Nemo 行锁</h5>
 
 <hr>
 
@@ -1052,7 +1154,7 @@ class Nemo {
 };
 }</code></pre></div>
 
-<h5 id="toc_36">3.6.2 Blackwidow 事务锁</h5>
+<h5 id="toc_41">3.6.2 Blackwidow 事务锁</h5>
 
 <hr>
 
@@ -1109,7 +1211,7 @@ struct LockMap { // lock map，在构造函数中就把各个桶创建好，后�
 
   // Count of keys that are currently locked.
   // (Only maintained if LockMgr::max_num_locks_ is positive.)
-  std::atomic&lt;int64_t&gt; lock_cnt{0}; // lock map 中被 lock 的 key 的个数
+  std::atomic&lt;int64_t&gt; lock_cnt{0}; // lock map 中被 lock 的 key 的个数，注意上面的注释
   std::vector&lt;LockMapStripe*&gt; lock_map_stripes_; // lock 桶集合
   size_t LockMap::GetStripe(const std::string&amp; key) const { // 获取 key 所对应的桶的 index
     static murmur_hash hash;
@@ -1220,16 +1322,43 @@ class ScopeRecordLock {
  private:
   LockMgr* const lock_mgr_;
   Slice key_;
-  ScopeRecordLock(const ScopeRecordLock&amp;);
-  void operator=(const ScopeRecordLock&amp;);
+};
+
+class MultiScopeRecordLock {
+  public:
+    MultiScopeRecordLock(LockMgr* lock_mgr, const std::vector&lt;std::string&gt;&amp; keys) :
+      lock_mgr_(lock_mgr), keys_(keys) {
+      std::string pre_key;
+      std::sort(keys_.begin(), keys_.end());
+      if (!keys_.empty() &amp;&amp;
+        keys_[0].empty()) {
+        lock_mgr_-&gt;TryLock(pre_key);
+      }
+
+      for (const auto&amp; key : keys_) {
+        if (pre_key != key) {
+          lock_mgr_-&gt;TryLock(key);
+          pre_key = key;
+        }
+      }
+    }
+
+    ~MultiScopeRecordLock() {
+      std::string pre_key;
+        …
+      }
+
+  private:
+    LockMgr* const lock_mgr_;
+    std::vector&lt;std::string&gt; keys_;
 };
 }    </code></pre></div>
 
-<p>上面代码块的关键就在于 <strong>blackwidow::LockMapStripe</strong>，我理解为 lock 桶，其作用就是<font color=red>让多个 key 使用同一个 lock 以节省内存使用，不像 <strong>slash::RecordLock</strong> 那样为每个 key 加锁时还有创建销毁 mutex lock 的开销</font>，但是除此之外，同一个桶中多个 key 使用同一个 key 这个 feature 个人并不觉得能提高多少效率。<a href="https://www.cnblogs.com/cchust/p/7107392.html">参考文档15</a> 认为 <strong>blackwidow::LockMapStripe</strong> 的另一个问题是：<code>RocksDB首先按Columnfamily进行拆分，每个Columnfamily中的锁通过一个LockMap管理，而每个LockMap再拆分成若干个分片，每个分片通过LockMapStripe管理，而hash表(std::unordered_map&lt;std::string, LockInfo&gt;)则存在于Stripe结构中，Stripe结构中还包含一个mutex和condition_variable，这个主要作用是，互斥访问hash表，当出现锁冲突时，将线程挂起，解锁后，唤醒挂起的线程。这种设计很简单但也带来一个显而易见的问题，就是多个不相关的锁公用一个condition_variable，导致锁释放时，不必要的唤醒一批线程，而这些线程重试后，发现仍然需要等待，造成了无效的上下文切换。</code></p>
+<p>上面代码块的关键就在于 <strong>blackwidow::LockMapStripe</strong>，我理解为 lock 桶【与分片同义】，其作用就是<font color=red>让多个 key 使用同一个 lock 以节省内存使用，不像 <strong>slash::RecordLock</strong> 那样为每个 key 加锁时还有创建销毁 mutex lock 的开销</font>，但是除此之外，同一个桶中多个 key 使用同一个 key 这个 feature 个人并不觉得能提高多少效率。<a href="https://www.cnblogs.com/cchust/p/7107392.html">参考文档15</a> 认为 <strong>blackwidow::LockMapStripe</strong> 的另一个问题是：<code>RocksDB首先按Columnfamily进行拆分，每个Columnfamily中的锁通过一个LockMap管理，而每个LockMap再拆分成若干个分片，每个分片通过LockMapStripe管理，而hash表(std::unordered_map&lt;std::string, LockInfo&gt;)则存在于Stripe结构中，Stripe结构中还包含一个mutex和condition_variable，这个主要作用是，互斥访问hash表，当出现锁冲突时，将线程挂起，解锁后，唤醒挂起的线程。这种设计很简单但也带来一个显而易见的问题，就是多个不相关的锁公用一个condition_variable，导致锁释放时，不必要的唤醒一批线程，而这些线程重试后，发现仍然需要等待，造成了无效的上下文切换。</code></p>
 
 <p>类比于 <strong>slash::RecordMutex</strong> 中作为类成员存在的 lock map，Blackwidow 把这个 map 独立成了一个类 <strong>blackwidow::LockMap</strong>，其底层存储容器是一个容量固定的桶数组，因其容量固定所以访问时不用加锁。<strong>blackwidow::LockMap</strong> 还有一个群成员 <strong>blackwidow::LockMap::lock_cnt</strong>【个人疑惑：为何不命名为 lock_cnt_ 】用于记录加锁的 key 的总数目。</p>
 
-<p><strong>blackwidow::LockMgr</strong> 提供 TryLock/Unlock 接口外，它还有一个控制 key 上限的成员 <strong>slash::RecordLock::max_num_locks_</strong>，和 <strong>blackwidow::LockMap::lock_cnt</strong> 配合使用。<strong>blackwidow::LockMgr</strong> 提供 TryLock 接口加锁总是会成功，所以等同于 Lock。</p>
+<p><strong>blackwidow::LockMgr</strong> 提供 TryLock/Unlock 接口，TryLock 接口以循环阻塞方式加锁，所以加锁总是会成功，所以等同于 Lock。<strong>blackwidow::LockMgr</strong> 还有一个控制 key 上限的成员 <strong>slash::RecordLock::max_num_locks_</strong>，和 <strong>blackwidow::LockMap::lock_cnt</strong> 配合使用，如果 <strong>slash::RecordLock::max_num_locks_</strong> 不为零，则加锁的时候如果被加锁的key的数量 <strong>blackwidow::LockMap::lock_cnt</strong> 大于 <strong>slash::RecordLock::max_num_locks_</strong>，则会让 <strong>blackwidow::LockMgr::TryLock</strong> 阻塞住【这里就引入了一个Bug，下文会叙述到】。</p>
 
 <p>Blackwidow 引擎具体使用事务锁 <strong>blackwidow::LockMgr</strong> 的<a href="https://github.com/Qihoo360/blackwidow/blob/2490ebd29d95fcbed5356b2113938f3e414a46e7/src/redis.h#L58">代码块</a>如下：</p>
 
@@ -1239,13 +1368,35 @@ class Redis {
   LockMgr* lock_mgr_;
   rocksdb::DB* db_;
 };
-}   </code></pre></div>
+
+Redis::Redis()
+        : lock_mgr_(new LockMgr(1000, 0, std::make_shared&lt;MutexFactoryImpl&gt;())),
+      db_(nullptr) {}   </code></pre></div>
 
 <p>Blackwidow 引擎的其他 Redis 实例都继承自 <strong>blackwidow::Redis</strong>，所以每个 Redis 实例都会包含一个 <strong>blackwidow::LockMgr</strong> 对象。</p>
 
 <p>类似于 <strong>slash::RecordLock</strong>，基于 <strong>blackwidow::LockMgr</strong> 之上的 <strong>blackwidow::ScopeRecordLock</strong> 也类似一个 LockGuard，此处不再赘述。</p>
 
-<h3 id="toc_37">4 使用与调优</h3>
+<p><strong>slash::MultiScopeRecordLock</strong> 用于一次锁住一个 range 的 keys，其使用示例如下：</p>
+
+<div><pre><code class="language-C++">Status RedisStrings::MSet(const std::vector&lt;KeyValue&gt;&amp; kvs) {
+  std::vector&lt;std::string&gt; keys;
+  for (const auto&amp; kv :  kvs) {
+    keys.push_back(kv.key);
+  }
+
+  MultiScopeRecordLock ml(lock_mgr_, keys);
+  rocksdb::WriteBatch batch;
+  for (const auto&amp; kv : kvs) {
+    StringsValue strings_value(kv.value);
+    batch.Put(kv.key, strings_value.Encode());
+  }
+  return db_-&gt;Write(default_write_options_, &amp;batch);
+}</code></pre></div>
+
+<p>这块代码曾经导致整个 strings DB 被锁住。因为 v3.0.2 时的 <strong>blackwidow::Redis::lock<em>mgr</em></strong> 构建时其初始值 {default<em>num</em>stripes = 1000,max<em>num</em>locks = 10000}，导致过 mset 超过一万个 key 时 <strong>blackwidow::MultiScopeRecordLock</strong> 无法加锁成功。后来在 v3.0.3 时才<a href="https://github.com/Qihoo360/blackwidow/commit/665c44db35dc1eb79c40c800e2cd15bf05f9ec99">修改了此 bug</a>，设置 {default<em>num</em>stripes = 1000,max<em>num</em>locks = 0}，不再设置加锁 keys 数目值上限。</p>
+
+<h3 id="toc_42">4 使用与调优</h3>
 
 <hr>
 
@@ -1259,7 +1410,7 @@ class Redis {
 
 <p>至于调优，Pika 使用了 RocksDB，其性能关键就在于如何通过调参优化 RocksDB。</p>
 
-<h3 id="toc_38">4.1 参数调优</h3>
+<h3 id="toc_43">4.1 参数调优</h3>
 
 <hr>
 
@@ -1270,7 +1421,7 @@ class Redis {
 <li>target_file_size_base 这个参数就是 #5.1# 小节中的 &quot;target sise&quot;,是 level 1 SST 文件的 size。有使用者 “把pika的target-file-size-base从20M改到256M后，发现新写入数据时cpu消耗高30%左右，写入性能也有影响”，原因是“文件越大compaction代价越大”</li>
 </ul>
 
-<h3 id="toc_39">4.2 API 使用</h3>
+<h3 id="toc_44">4.2 API 使用</h3>
 
 <hr>
 
@@ -1285,7 +1436,7 @@ class Redis {
 
 <p>补：<a href="https://pingcap.com/blog/2017-09-08-rocksdbbug/">参考文档12</a> 中有句话比较有意思：<code>After a few days, we got some suspicious places but still nothing solid, except to realize that the DeleteRange implementation was more complicated than we expected.</code>。说明 RocksDB 确实很难读嘛，术业有专攻，不能因为自己读了一些 RocksDB 的代码就鄙视那些没有读过的人。</p>
 
-<h2 id="toc_40">参考文档</h2>
+<h2 id="toc_45">参考文档</h2>
 
 <ul>
 <li>1 <a href="https://github.com/Qihoo360/pika/wiki/%E4%BD%BF%E7%94%A8binlog%E8%BF%81%E7%A7%BB%E6%95%B0%E6%8D%AE%E5%B7%A5%E5%85%B7">使用binlog迁移数据工具</a></li>
@@ -1303,9 +1454,12 @@ class Redis {
 <li>13 <a href="http://baotiao.github.io/2016/05/18/pika-introduction/">pika introduction</a></li>
 <li>14 <a href="https://github.com/Qihoo360/pika/wiki/pika-%E9%94%81%E7%9A%84%E5%BA%94%E7%94%A8">锁的应用</a></li>
 <li>15 <a href="http://www.cnblogs.com/cchust/p/7107392.html">RocksDB上锁机制</a></li>
+<li>16 <a href="https://github.com/Qihoo360/pika/wiki/pika-config">pika-config</a></li>
+<li>17 <a href="https://may.ac.cn/2018/04/16/how-to-use-pika/">Pika 运维指南</a></li>
+<li>18 <a href="https://github.com/qihoo360/pika/wiki/pika-%E5%B7%AE%E5%BC%82%E5%8C%96%E7%AE%A1%E7%90%86%E5%91%BD%E4%BB%A4">pika 差异化管理命令</a></li>
 </ul>
 
-<h2 id="toc_41">扒粪者-于雨氏</h2>
+<h2 id="toc_46">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>2018/09/07，于雨氏，初作此文于西二旗。</p>
@@ -1321,8 +1475,9 @@ class Redis {
 <p>2018/10/03，于雨氏，于丰台添加 #4 调优# 一节 和 #3.5.1 Pika 主从 Binlog 处理机制# 小节。</p>
 
 <p>2018/10/06，于雨氏，于西二旗添加 #3.6 锁# 小节。</p>
-</blockquote>
 
+<p>2018/10/06，于雨氏，于西二旗添加 #2.4 Purge# 小节。</p>
+</blockquote>
 
 
 <!-- baidu statistic start -->
@@ -1354,6 +1509,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 
 
