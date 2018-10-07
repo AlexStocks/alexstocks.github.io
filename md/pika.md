@@ -36,7 +36,7 @@ V1 虽然半途而废，但是开发过程中遇到的两个问题比较有意�
 + pika 的 binlog record 在每个 redis 写命令后面追加了四个额外信息，分别是：Pika Magic [kPikaBinlogMagic]、server_id【用于双 master 同步时做去重】、binlog info【主要是执行命令的时间】以及 send hub 信息，需要过滤掉；
 
   >  代码详见 include/pika_command.h:Cmd::AppendAffiliatedInfo，修改后的 redis 命令 `set A 1` 格式为 `*7\r\n$3\r\nset\r\n$1\r\nA\r\n$1\r\n1\r\n$14\r\n__PIKA_X#$SKGI\r\n$1\r\n1\r\n$16\r\nj[m\r\n$1\r\n1\r\n`
-  >  
+  >
   > 这些补充信息在跨机房数据同步的情况下也很有用，详细内容见[参考文档7](http://kernelmaker.github.io/pika-muli-idc)
 
 + pika 内部有一个特殊的 set 用于记录当前 migrate 信息，set key 前缀是 `_internal:slotkey:4migrate:`，这个在进行数据同步时也需要过滤掉；
@@ -256,7 +256,7 @@ class DBNemoCheckpointImpl : public DBNemoCheckpoint {
 
 `PikaServer::Bgsave` 是 redis 命令 bgsave 的响应函数，通过调用 `nemo::BackupEngine` 相关接口执行备份任务，下面先分别介绍其先关的函数接口。
 
-#### 2.3.1 PikaServer::InitBgsaveEnv 
+#### 2.3.1 PikaServer::InitBgsaveEnv
 ---
 
 这个函数用于创建数据备份目录，其流程为：
@@ -277,7 +277,7 @@ class DBNemoCheckpointImpl : public DBNemoCheckpoint {
 - 4 调用 `nemo::BackupEngine:: SetBackupContent` 获取快照内容；
 - 5 通过 `PikaServer::rwlock_::UnLock` 取消数据写入 RocksDB::DB 阻止。
 
-`PikaClientConn::DoCmd` 在执行写命令的时候，会先调用 `g_pika_server->RWLockReader()` 尝试加上读锁，如果正在执行 Bgsave 则此处就会阻塞等待。 
+`PikaClientConn::DoCmd` 在执行写命令的时候，会先调用 `g_pika_server->RWLockReader()` 尝试加上读锁，如果正在执行 Bgsave 则此处就会阻塞等待。
 
 #### 2.3.3 PikaServer::RunBgsaveEngine
 
@@ -303,98 +303,6 @@ class DBNemoCheckpointImpl : public DBNemoCheckpoint {
 - 1 如果 `bgsave_info_.bgsaving` 值为 true，则退出，否则把其值置为 true；
 - 2 启动 `PikaServer::bgsave_thread_`，通过调用 `PikaServer::DoBgsave` 函数完成备份任务。
 
-#### 2.4 Purge
----
-
-当数据备份完成后，过时的 binlog 文件就应当及时地被清理掉，这个工作是由 Purge 线程完成的。
-
-#### 2.4.1 获取 binlog 集合
----
-
-欲清理过时的 binlog 文件，必须先获取所有的 binlog 文件集合，这个工作由 [**PikaServer::GetBinlogFiles**](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1194) 完成，其流程为：
-
-- 1 调用 [slash::GetChildren](https://github.com/Qihoo360/slash/blob/57823f23d5adfe2de469329d9b7df14851988f3d/slash/src/env.cc#L174) 获取 binlog 文件夹下所有 binlog；
-- 2 遍历 binlog 集合，判断名称前缀是否为 `write2file`，然后构建一个 index:binlog_filename 为 pair 的 binlog map。
-
-#### 2.4.2 binlog 过时/加锁判定
----
-
-判定 binlog 是否过时/被加锁其实就是判定其是否在同步给 slave 的 binlog 集合范围内。
-
-binlog 过时判定由[PikaServer::CouldPurge](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1123)完成，某个后缀为 @index 的数据加锁判断流程为：
-
-- 1 调用 [**PikaServer::GetProducerStatus**](https://github.com/Qihoo360/pika/blob/d533f6331ac299a913ef825e1628b72d1a51d696/tools/binlog_tools/binlog.cc#L75) 接口获取当前的binlog index @pro_num；
-- 2 如果 @pro_num 与 @index 之差小于等于 10，则@index 对应的文件不过时；
-- 3 遍历 pika 所有的 slave 集合 @slaves_，若同步给某个 slave 的起始 binlog 的 filenum 小于 @index，则 @index 对应的文件没有被加锁。
-
-获取最大可删除 binlog 文件的 index 函数 [**PikaServer::GetPurgeWindow**](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1101) 流程与 [PikaServer::CouldPurge](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1123) 非常类似，一并说明如下：
-
-- 1 调用 [**PikaServer::GetProducerStatus**](https://github.com/Qihoo360/pika/blob/d533f6331ac299a913ef825e1628b72d1a51d696/tools/binlog_tools/binlog.cc#L75) 接口获取当前的binlog index @pro_num，作为起始可删除index @max；
-- 2 遍历 pika 所有的 slave 集合 @slaves_，若同步给某个 slave 的起始 binlog 的 filenum 小于 @max，则赋值 filenum 给@max；
-- 3 如果 @max 大于 10，则返回 true 并把 @max 减小 10，否则返回 false。
-
-函数 [**PikaServer::GetPurgeWindow**](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1101) 会被执行 info 命令的函数 [InfoCmd::InfoLog](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_admin.cc#L836) 调用。
-
-#### 2.4.3 过时 binlog 淘汰
----
-
-过时 binlog 淘汰工作具体由 [PikaServer::PurgeFiles](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1148) 完成，其流程为：
-
-- 1 调用 [**PikaServer::GetBinlogFiles**](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1194) 获取 index:binlog_filename binlog map 集合 @binlogs；
-- 2 获取配置文件参数 expire-logs-nums，计算本次应当删除文件的上限数目 remain\_expire\_num；
-
-   > [参考文档16](https://github.com/Qihoo360/pika/wiki/pika-config) 中对这个参数的说明是：log日志的过期数量，若当前 log 的数量大于 expire\_logs\_nums，则认为删除 expire\_logs\_nums 之前的log是安全的。
-   >
-   > [参考文档17](https://may.ac.cn/2018/04/16/how-to-use-pika/) 进一步指出：`首次同步时，将完整数据传输到从服务器上会比较慢，需要设置更大的 expire-logs-nums 值，避免数据同步过慢，同步完成时起始 binlog 已被删除`。
-   >
-   > remain\_expire\_num = binlogs.size() - expire-logs-nums
-   
-- 3 获取配置文件参数 expire-logs-days，其为过期文件天数；  
-- 4 遍历 map @binlogs，判定某个 @index 对应的 binlog 是否应该删除；
-
-    * 4.1 @manual 为 true 且 遍历文件的 index 小于 @to；
-    * 4.2 @remain_expire_num 大于零；
-    * 4.3 文件修改时间已经超过 expire-logs-days；
-
-    > 上面条件优先级从上到下递减，且满足其中一个条件即可，也可以看出 expire-logs-nums 优先级高于 expire-logs-days。
-    
-- 5 当 @index 对应的 binlog 满足上述判定条件时，还要满足下面两个条件，若满足则 binlog 应当被物理删除之，然后对 @remain_expire_num 进行自减；
-  
-    * 5.1 @force 参数为 true
-    * 5.2 [PikaServer::CouldPurge](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1123)判定文件过时/加锁；
-
-    > 上述两个条件满足其中一个即可，优先级从上到下递减。
-    
-流程 4 的三个条件之间是逻辑 OR 关系，流程 5 的两个条件之间也是逻辑 OR 关系，但流程 4 的条件和流程 5 的条件之间是逻辑 AND 关系。
-    
-#### 2.4.4 Purge 工作
----    
-
-类似于 bgsave 工作，Purge 工作实际上是有 purge 线程完成的，具体线程函数是 [PikaServer::PurgeLogs](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1073)。在同一时刻，只能启动一个 purge 工作。Purge 线程开始工作时设置 [PikaServer::purging_](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/include/pika_server.h#L444) 为 true，purge 工作完成后设置其为 false。
-
-用户如果人工向 pika 发出 `purgelogsto`[见参考文档18](https://github.com/qihoo360/pika/wiki/pika-%E5%B7%AE%E5%BC%82%E5%8C%96%E7%AE%A1%E7%90%86%E5%91%BD%E4%BB%A4) 指令，则 PikaServer 会通过 [PurgelogstoCmd::Do](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_admin.cc#L310) 启动 purge 线程函数，调用时方式为 `PurgeLogs(num_, true, false)`：
-
-	- 起始 file index 为用户指令指定的 @index；
-	- 手工调用参数 @manual 为 true；
-	- 强制删除参数 @force 为 false。
-
-
-PikaServer 自身执行定时任务 [PikaServer::DoTimingTask](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1738) 时也会启用 purge 任务 [PikaServer::AutoPurge](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1287)，调用方式为 `PurgeLogs(0, false, false)`：
-
-	- 起始 file index 为 0；
-	- 手工调用参数 @manual 为 false；
-	- 强制删除参数 @force 为 false。
-	
-上述条件即意味着只删除满足 [pika.conf](https://github.com/Qihoo360/pika/wiki/pika-config) 中	expire-logs-nums/expire-logs-days 两个配置项的超数目/过时文件。
-
-在执行 slaveof 命令时，其指令函数 [SlaveofCmd::Do](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_admin.cc#L81) 也会会启用 purge 任务，调用方式为 `PurgeLogs(filenum_ - 1, true, true)`：
-
-	- 起始 file index 为 filenum_；
-	- 手工调用参数 @manual 为 true；
-	- 强制删除参数 @force 为 true。
-
-调用函数上方的注释 `Before we send the trysync command, we need purge current logs older than the sync point` 说明了一切。
-	
 ### 3 Blackwidow
 ---
 
@@ -466,7 +374,7 @@ blackwidow::InternalValue 主要的接口是 Encode，其作用是把 value 的�
 - 1 若 `key + timestamp + version` 拼接后的总长度不大于 200B，则 InternalValue::start\_ = InternalValue::space\_，即使用 InternalValue::space\_ 存储序列化后的字节流，否则就在堆上分配一段内存用于存储字节流；
 - 2 调用虚接口 blackwidow:AppendTimestampAndVersion 对 `key + timestamp + version` 进行序列化并存入 InternalValue::start\_。
 
-继承自 blackwidow::InternalValue 的 **base\_meta\_value\_format.h:BaseMetaValue** 主要用于对 meta value 进行序列化。 
+继承自 blackwidow::InternalValue 的 **base\_meta\_value\_format.h:BaseMetaValue** 主要用于对 meta value 进行序列化。
 
 Set meta 存储格式如下：
 ![](../pic/pika_bw_sets_meta.png)
@@ -496,7 +404,7 @@ class ParsedInternalValue {
 
   // 这个函数在 rocksdb::CompactionFilter::Filter() 之中会被调用，
   // 用户仅仅仅对 @value 进行分析即可，不会有写动作，所以不需要
-  // 把 value 的指针赋值给 value_ 
+  // 把 value 的指针赋值给 value_
   explicit ParsedInternalValue(const Slice& value) :
     value_(nullptr),
     version_(0),
@@ -616,7 +524,7 @@ class BaseDataFilter {
 ##### 3.3.1 blackwidow::StringsValue
 ---
 
-**strings\_value\_format.h:blackwidow::StringsValue** 继承自 **blackwidow::InternalValue**，其作用自然是序列化 KV value，其主要接口 AppendTimestampAndVersion 代码如下： 
+**strings\_value\_format.h:blackwidow::StringsValue** 继承自 **blackwidow::InternalValue**，其作用自然是序列化 KV value，其主要接口 AppendTimestampAndVersion 代码如下：
 
 ```c++
 class StringsValue : public InternalValue {
@@ -656,7 +564,7 @@ class StringsValue : public InternalValue {
 ##### 3.4.1 blackwidow::ListsMetaValue 与 blackwidow::ParsedListsMetaValue
 ---
 
-**lists\_meta\_value\_format.h:blackwidow::ListsMetaValue** 继承自 **blackwidow::InternalValue**，其作用是序列化 meta value，其主要接口 Encode 代码如下： 
+**lists\_meta\_value\_format.h:blackwidow::ListsMetaValue** 继承自 **blackwidow::InternalValue**，其作用是序列化 meta value，其主要接口 Encode 代码如下：
 
 ```c++
 class ListsMetaValue : public InternalValue {
@@ -822,7 +730,7 @@ class Comparator {
 
 ```c++
 | ********** Header ************ | ******* Body ***** |
-| <Transfer Type> | <Body Lenth> |  [BinlogItem] RESP |      
+| <Transfer Type> | <Body Lenth> |  [BinlogItem] RESP |
       2 Bytes         4 Bytes
 ```
 
@@ -830,7 +738,7 @@ class Comparator {
 
 Transfer Type 对应的代码是：
 ```c++
-// pika/src/pika_new_master_conn.h 
+// pika/src/pika_new_master_conn.h
 enum TransferOperate{
   kTypeAuth = 1,
   kTypeBinlog = 2
@@ -843,7 +751,7 @@ enum TransferOperate{
 以后再升级 Binlog，估计只需要扩展 Transfer Type 即可，可以保持向后兼容。
 
 ##### 3.5.1 Pika 主从 Binlog 处理机制
---- 
+---
 
 Pika 把心跳和数据发收分开处理，[参考文档9](https://github.com/Qihoo360/pika/wiki/FAQ)这样解释：`第一为了提高同步速度，sender只发不收，receiver只收不发，心跳是又单独的线程去做，如果心跳又sender来做，那么为了一秒仅有一次的心跳还要去复杂化sender和receiver的逻辑；第二其实前期尝试过合并在一起来进行连接级别的存活检测，当写入压力过大的时候会心跳包的收发会延后，导致存活检测被影响，slave误判master超时而进行不必要的重连`。
 
@@ -852,6 +760,99 @@ Pika 把心跳和数据发收分开处理，[参考文档9](https://github.com/Q
 Pika 主从对 binlog 的处理不一样，[参考文档9](https://github.com/Qihoo360/pika/wiki/FAQ)这样描述：`master是先写db再写binlog，之前slave只用一个worker来同步会在master写入压力很大的情况下由于slave一个worker写入太慢而造成同步差距过大，后来我们调整结构，让slave通过多个worker来写提高写入速度，不过这时候有一个问题，为了保证主从binlog顺序一致，写binlog的操作还是只能又一个线程来做，也就是receiver，所以slave这边是先写binlog在写db，所以slave存在写完binlog挂掉导致丢失数据的问题，不过redis在master写完db后挂掉同样会丢失数据，所以redis采用全同步的办法来解决这一问题，pika同样，默认使用部分同步来继续，如果业务对数据十分敏感，此处可以强制slave重启后进行全同步即可`。
 
 Pika master 处理写请求的流程是先写 DB 后生成对应的 binlog，似乎与时下常见的 leader-follower 架构下 leader处理写请求流程 “先把写请求内容写入 WAL（类似于binlog） 然后再应用到状态机（DB）” 不同，个人以为可能的一个原因是因为 leader-follower 对写请求的处理是一种同步机制，而 master-slave 对写请求的处理是一个异步过程。假设 master-slave 架构下 master 对写请求的处理过程是先写 binlog 然后再写 DB，则 slave DB 的数据有可能比 master DB 数据更新：写请求内容被 master 写入 binlog 后迅速同步给slave，然后 slave 将其写入 DB，而此时 master 还未完成相应数据的更新。可以类比地，同样使用了 master-slave 架构的 Redis master 收到写请求之后先把数据写入 DB，然后再放入 backlog 同步给 slave。
+
+##### 3.5.2 Purge Binlog
+---
+
+当数据备份完成后，过时的 binlog 文件就应当及时地被清理掉，这个工作是由 Purge 线程完成的。
+
+##### 3.5.2.1 获取 binlog 集合
+---
+
+欲清理过时的 binlog 文件，必须先获取所有的 binlog 文件集合，这个工作由 [**PikaServer::GetBinlogFiles**](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1194) 完成，其流程为：
+
+- 1 调用 [slash::GetChildren](https://github.com/Qihoo360/slash/blob/57823f23d5adfe2de469329d9b7df14851988f3d/slash/src/env.cc#L174) 获取 binlog 文件夹下所有 binlog；
+- 2 遍历 binlog 集合，判断名称前缀是否为 `write2file`，然后构建一个 index:binlog_filename 为 pair 的 binlog map。
+
+##### 3.5.2.2 binlog 过时/加锁判定
+---
+
+判定 binlog 是否过时/被加锁其实就是判定其是否在同步给 slave 的 binlog 集合范围内。
+
+binlog 过时判定由[PikaServer::CouldPurge](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1123)完成，某个后缀为 @index 的数据加锁判断流程为：
+
+- 1 调用 [**PikaServer::GetProducerStatus**](https://github.com/Qihoo360/pika/blob/d533f6331ac299a913ef825e1628b72d1a51d696/tools/binlog_tools/binlog.cc#L75) 接口获取当前的binlog index @pro_num；
+- 2 如果 @pro_num 与 @index 之差小于等于 10，则@index 对应的文件不过时；
+- 3 遍历 pika 所有的 slave 集合 @slaves_，若同步给某个 slave 的起始 binlog 的 filenum 小于 @index，则 @index 对应的文件没有被加锁。
+
+获取最大可删除 binlog 文件的 index 函数 [**PikaServer::GetPurgeWindow**](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1101) 流程与 [PikaServer::CouldPurge](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1123) 非常类似，一并说明如下：
+
+- 1 调用 [**PikaServer::GetProducerStatus**](https://github.com/Qihoo360/pika/blob/d533f6331ac299a913ef825e1628b72d1a51d696/tools/binlog_tools/binlog.cc#L75) 接口获取当前的binlog index @pro_num，作为起始可删除index @max；
+- 2 遍历 pika 所有的 slave 集合 @slaves_，若同步给某个 slave 的起始 binlog 的 filenum 小于 @max，则赋值 filenum 给@max；
+- 3 如果 @max 大于 10，则返回 true 并把 @max 减小 10，否则返回 false。
+
+函数 [**PikaServer::GetPurgeWindow**](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1101) 会被执行 info 命令的函数 [InfoCmd::InfoLog](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_admin.cc#L836) 调用。
+
+##### 3.5.2.3 过时 binlog 淘汰
+---
+
+过时 binlog 淘汰工作具体由 [PikaServer::PurgeFiles](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1148) 完成，其流程为：
+
+- 1 调用 [**PikaServer::GetBinlogFiles**](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1194) 获取 index:binlog_filename binlog map 集合 @binlogs；
+- 2 获取配置文件参数 expire-logs-nums，计算本次应当删除文件的上限数目 remain\_expire\_num；
+
+   > [参考文档16](https://github.com/Qihoo360/pika/wiki/pika-config) 中对这个参数的说明是：log日志的过期数量，若当前 log 的数量大于 expire\_logs\_nums，则认为删除 expire\_logs\_nums 之前的log是安全的。
+   >
+   > [参考文档17](https://may.ac.cn/2018/04/16/how-to-use-pika/) 进一步指出：`首次同步时，将完整数据传输到从服务器上会比较慢，需要设置更大的 expire-logs-nums 值，避免数据同步过慢，同步完成时起始 binlog 已被删除`。
+   >
+   > remain\_expire\_num = binlogs.size() - expire-logs-nums
+
+- 3 获取配置文件参数 expire-logs-days，其为过期文件天数；
+- 4 遍历 map @binlogs，判定某个 @index 对应的 binlog 是否应该删除；
+
+    * 4.1 @manual 为 true 且 遍历文件的 index 小于 @to；
+    * 4.2 @remain_expire_num 大于零；
+    * 4.3 文件修改时间已经超过 expire-logs-days；
+
+    > 上面条件优先级从上到下递减，且满足其中一个条件即可，也可以看出 expire-logs-nums 优先级高于 expire-logs-days。
+
+- 5 当 @index 对应的 binlog 满足上述判定条件时，还要满足下面两个条件，若满足则 binlog 应当被物理删除之，然后对 @remain_expire_num 进行自减；
+
+    * 5.1 @force 参数为 true
+    * 5.2 [PikaServer::CouldPurge](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1123)判定文件过时/加锁；
+
+    > 上述两个条件满足其中一个即可，优先级从上到下递减。
+
+流程 4 的三个条件之间是逻辑 OR 关系，流程 5 的两个条件之间也是逻辑 OR 关系，但流程 4 的条件和流程 5 的条件之间是逻辑 AND 关系。
+
+##### 3.5.2.4 Purge 工作
+---
+
+类似于 bgsave 工作，Purge 工作实际上是有 purge 线程完成的，具体线程函数是 [PikaServer::PurgeLogs](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1073)。在同一时刻，只能启动一个 purge 工作。Purge 线程开始工作时设置 [PikaServer::purging_](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/include/pika_server.h#L444) 为 true，purge 工作完成后设置其为 false。
+
+用户如果人工向 pika 发出 `purgelogsto` 指令 (详见[参考文档18](https://github.com/qihoo360/pika/wiki/pika-%E5%B7%AE%E5%BC%82%E5%8C%96%E7%AE%A1%E7%90%86%E5%91%BD%E4%BB%A4)，则 PikaServer 会通过 [PurgelogstoCmd::Do](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_admin.cc#L310) 启动 purge 线程函数，调用时方式为 `PurgeLogs(num_, true, false)`：
+
+	- 起始 file index 为用户指令指定的 @index；
+	- 手工调用参数 @manual 为 true；
+	- 强制删除参数 @force 为 false。
+
+
+PikaServer 自身执行定时任务 [PikaServer::DoTimingTask](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1738) 时也会启用 purge 任务 [PikaServer::AutoPurge](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1287)，调用方式为 `PurgeLogs(0, false, false)`：
+
+	- 起始 file index 为 0；
+	- 手工调用参数 @manual 为 false；
+	- 强制删除参数 @force 为 false。
+
+上述条件即意味着只删除满足 [pika.conf](https://github.com/Qihoo360/pika/wiki/pika-config) 中	expire-logs-nums/expire-logs-days 两个配置项的超数目/过时文件。
+
+在执行 slaveof 命令时，其指令函数 [SlaveofCmd::Do](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_admin.cc#L81) 也会会启用 purge 任务，调用方式为 `PurgeLogs(filenum_ - 1, true, true)`：
+
+	- 起始 file index 为 filenum_；
+	- 手工调用参数 @manual 为 true；
+	- 强制删除参数 @force 为 true。
+
+调用函数上方的注释 `Before we send the trysync command, we need purge current logs older than the sync point` 说明了一切。
+
 
 #### 3.6 锁
 ---
@@ -908,16 +909,6 @@ private:
   std::unordered_map<std::string, RefMutex *> records_;
 };
 
-RecordMutex::~RecordMutex() {
-  mutex_.Lock();
-  
-  std::unordered_map<std::string, RefMutex *>::const_iterator it = records_.begin();
-  for (; it != records_.end(); it++) {
-    delete it->second;
-  }
-  mutex_.Unlock();
-}
-
 void RecordMutex::Lock(const std::string &key) {
   mutex_.Lock();
   std::unordered_map<std::string, RefMutex *>::const_iterator it = records_.find(key);
@@ -942,7 +933,7 @@ void RecordMutex::Lock(const std::string &key) {
 void RecordMutex::Unlock(const std::string &key) {
   mutex_.Lock();
   std::unordered_map<std::string, RefMutex *>::const_iterator it = records_.find(key);
-  
+
   if (it != records_.end()) {
     RefMutex *ref_mutex = it->second;
 
@@ -1003,8 +994,8 @@ class Nemo {
 ---
 
 类似于 Slash::RecordMutex，Blackwidow 有一个 [blackwidow::LockMgr](https://github.com/Qihoo360/blackwidow/blob/2490ebd29d95fcbed5356b2113938f3e414a46e7/src/lock_mgr.h#L19)。
- 
-```C++ 
+
+```C++
 namespace blackwidow {
 // Default implementation of MutexFactory.
 class MutexFactoryImpl : public MutexFactory { // 用于方便创建 Mutex & CondVar
@@ -1045,16 +1036,8 @@ struct LockMap { // lock map，在构造函数中就把各个桶创建好，后�
       lock_map_stripes_.push_back(stripe);
     }
   }
-  ~LockMap() {
-    for (auto stripe : lock_map_stripes_) {
-      delete stripe;
-    }
-  }
 
-  // Number of sepearate LockMapStripes to create, each with their own Mutex
-  const size_t num_stripes_;
-
-  // Count of keys that are currently locked.
+  const size_t num_stripes_; // 桶的数目
   // (Only maintained if LockMgr::max_num_locks_ is positive.)
   std::atomic<int64_t> lock_cnt{0}; // lock map 中被 lock 的 key 的个数，注意上面的注释
   std::vector<LockMapStripe*> lock_map_stripes_; // lock 桶集合
@@ -1077,36 +1060,29 @@ class LockMgr {
     LockMapStripe* stripe = lock_map_->lock_map_stripes_.at(stripe_num);
     return Acquire(stripe, key);
   }
-  
+
   // Unlock a key locked by TryLock().
   	void LockMgr::UnLock(const std::string& key) {
 	  // Lock the mutex for the stripe that this key hashes to
 	  size_t stripe_num = lock_map_->GetStripe(key);
 	  LockMapStripe* stripe = lock_map_->lock_map_stripes_.at(stripe_num); // 找到 key 所在的桶
-	
 	  stripe->stripe_mutex->Lock();
 	  UnLockKey(key, stripe);
 	  stripe->stripe_mutex->UnLock();
-	
+
 	  // Signal waiting threads to retry locking
 	  stripe->stripe_cv->NotifyAll(); // 通知所有在桶上等待加锁的 waiter
 	}
 
  private:
-  // Default number of lock map stripes
-  const size_t default_num_stripes_;
-  // Limit on number of keys locked per column family
-  const int64_t max_num_locks_;
-  // Used to allocate mutexes/condvars to use when locking keys
-  std::shared_ptr<MutexFactory> mutex_factory_;
-  // Map to locked key info
+  const size_t default_num_stripes_;  // 默认桶的个数
+  const int64_t max_num_locks_; // 每个 column family 可加锁的 key 的数目上限
+  std::shared_ptr<MutexFactory> mutex_factory_; // allocate mutexes/condvars
   std::shared_ptr<LockMap> lock_map_;
 
   // Helper function for TryLock().
   Status LockMgr::Acquire(LockMapStripe* stripe, const std::string& key) {
-	  // we wait indefinitely to acquire the lock
 	  stripe->stripe_mutex->Lock();
-	  // Acquire lock if we are able to
 	  result = AcquireLocked(stripe, key);
 	  if (!result.ok()) {
 	    // If we weren’t able to acquire the lock, we will keep retrying
@@ -1142,7 +1118,7 @@ class LockMgr {
 	      }
 	    }
 	  }
-	
+
 	  return result;
 	}
 
@@ -1150,10 +1126,10 @@ class LockMgr {
       auto stripe_iter = stripe->keys.find(key);
       stripe->keys.erase(stripe_iter);  // 从桶中移除此 key
       if (max_num_locks_ > 0) {
-        lock_map_->lock_cnt--;        
+        lock_map_->lock_cnt--;
       }
     }
-};   
+};
 
 class ScopeRecordLock {
  public:
@@ -1173,31 +1149,19 @@ class MultiScopeRecordLock {
   public:
     MultiScopeRecordLock(LockMgr* lock_mgr, const std::vector<std::string>& keys) :
       lock_mgr_(lock_mgr), keys_(keys) {
-      std::string pre_key;
-      std::sort(keys_.begin(), keys_.end());
-      if (!keys_.empty() &&
-        keys_[0].empty()) {
-        lock_mgr_->TryLock(pre_key);
-      }
-
-      for (const auto& key : keys_) {
-        if (pre_key != key) {
-          lock_mgr_->TryLock(key);
-          pre_key = key;
-        }
-      }
+        …
     }
-    
+
     ~MultiScopeRecordLock() {
       std::string pre_key;
         …
       }
-    
+
   private:
     LockMgr* const lock_mgr_;
     std::vector<std::string> keys_;
 };
-}    
+}
 ```
 
 上面代码块的关键就在于 **blackwidow::LockMapStripe**，我理解为 lock 桶【与分片同义】，其作用就是<font color=red>让多个 key 使用同一个 lock 以节省内存使用，不像 **slash::RecordLock** 那样为每个 key 加锁时还有创建销毁 mutex lock 的开销</font>，但是除此之外，同一个桶中多个 key 使用同一个 key 这个 feature 个人并不觉得能提高多少效率。[参考文档15](https://www.cnblogs.com/cchust/p/7107392.html) 认为 **blackwidow::LockMapStripe** 的另一个问题是：`RocksDB首先按Columnfamily进行拆分，每个Columnfamily中的锁通过一个LockMap管理，而每个LockMap再拆分成若干个分片，每个分片通过LockMapStripe管理，而hash表(std::unordered_map<std::string, LockInfo>)则存在于Stripe结构中，Stripe结构中还包含一个mutex和condition_variable，这个主要作用是，互斥访问hash表，当出现锁冲突时，将线程挂起，解锁后，唤醒挂起的线程。这种设计很简单但也带来一个显而易见的问题，就是多个不相关的锁公用一个condition_variable，导致锁释放时，不必要的唤醒一批线程，而这些线程重试后，发现仍然需要等待，造成了无效的上下文切换。`
@@ -1218,7 +1182,7 @@ class Redis {
 
 Redis::Redis()
 	    : lock_mgr_(new LockMgr(1000, 0, std::make_shared<MutexFactoryImpl>())),
-      db_(nullptr) {}   
+      db_(nullptr) {}
 ```
 
 Blackwidow 引擎的其他 Redis 实例都继承自 **blackwidow::Redis**，所以每个 Redis 实例都会包含一个 **blackwidow::LockMgr** 对象。
@@ -1252,7 +1216,7 @@ Status RedisStrings::MSet(const std::vector<KeyValue>& kvs) {
 如同其他数据库一样，对 Pika 的使用和优化也是门玄学。Pika/Codis 线上使用要点大致如下：
 
 - 1 数据量大的业务单独使用一个 Codis 集群；
-- 2 单个 Redis 实例的数据尽量不要超过 8G，最大不能超过 15G，否则单进程的 Redis 管理能力急剧下降； 
+- 2 单个 Redis 实例的数据尽量不要超过 8G，最大不能超过 15G，否则单进程的 Redis 管理能力急剧下降；
 - 3 RocksDB 的数据尽量存储在 SSD 上，360 内部 90% 的情况下，pika 都运行在 ssd上，只有不到 10% 的对读写速度要求不高的情况下写入到 SATA 盘上。
 
 至于调优，Pika 使用了 RocksDB，其性能关键就在于如何通过调参优化 RocksDB。
@@ -1302,17 +1266,17 @@ RocksDB 通过提供常用场景的 API 之外，还提供了一些适用于特�
 ## 扒粪者-于雨氏
 
 > 2018/09/07，于雨氏，初作此文于西二旗。
-> 
+>
 > 2018/09/15，于雨氏，于西二旗添加第二节 “数据备份”。
-> 
+>
 > 2018/09/19，于雨氏，于西二旗添加第三节 “Blackwidow”。
-> 
+>
 > 2018/09/25，于雨氏，于西二旗添加 #3.5 Binlog# 小节。
-> 
+>
 > 2018/09/30，于雨氏，于西二旗添加 #3.4 Blackwidow Lists# 小节。
-> 
+>
 > 2018/10/03，于雨氏，于丰台添加 #4 调优# 一节 和 #3.5.1 Pika 主从 Binlog 处理机制# 小节。
-> 
-> 2018/10/06，于雨氏，于西二旗添加 #3.6 锁# 小节。
-> 
-> 2018/10/06，于雨氏，于西二旗添加 #2.4 Purge# 小节。
+>
+> 2018/10/06，于雨氏，于西二旗添加 #3.6 锁# 小节 以及 “秒删”相关内容。
+>
+> 2018/10/06，于雨氏，于西二旗添加 #3.5.2 Purge Binlog# 小节。
