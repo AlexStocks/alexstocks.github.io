@@ -323,8 +323,17 @@ class DBNemoCheckpointImpl : public DBNemoCheckpoint {
 
 binlog 过时判定由[PikaServer::CouldPurge](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1123)完成，某个后缀为 @index 的数据加锁判断流程为：
 
-- 1 调用 [PikaServer::GetProducerStatus](https://github.com/Qihoo360/pika/blob/d533f6331ac299a913ef825e1628b72d1a51d696/tools/binlog_tools/binlog.cc#L75) 接口获取当前的binlog index @pro_num，如果 @pro_num 与 @index 之差小于等于 10，则@index 对应的文件不过时；
-- 2 遍历 pika 所有的 slave 集合 @slaves_，若同步给某个 slave 的 binlog 的 filenum 小于 @index，则 @index 对应的文件没有被加锁。
+- 1 调用 [**PikaServer::GetProducerStatus**](https://github.com/Qihoo360/pika/blob/d533f6331ac299a913ef825e1628b72d1a51d696/tools/binlog_tools/binlog.cc#L75) 接口获取当前的binlog index @pro_num；
+- 2 如果 @pro_num 与 @index 之差小于等于 10，则@index 对应的文件不过时；
+- 3 遍历 pika 所有的 slave 集合 @slaves_，若同步给某个 slave 的起始 binlog 的 filenum 小于 @index，则 @index 对应的文件没有被加锁。
+
+获取最大可删除 binlog 文件的 index 函数 [**PikaServer::GetPurgeWindow**](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1101) 流程与 [PikaServer::CouldPurge](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1123) 非常类似，一并说明如下：
+
+- 1 调用 [**PikaServer::GetProducerStatus**](https://github.com/Qihoo360/pika/blob/d533f6331ac299a913ef825e1628b72d1a51d696/tools/binlog_tools/binlog.cc#L75) 接口获取当前的binlog index @pro_num，作为起始可删除index @max；
+- 2 遍历 pika 所有的 slave 集合 @slaves_，若同步给某个 slave 的起始 binlog 的 filenum 小于 @max，则赋值 filenum 给@max；
+- 3 如果 @max 大于 10，则返回 true 并把 @max 减小 10，否则返回 false。
+
+函数 [**PikaServer::GetPurgeWindow**](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1101) 会被执行 info 命令的函数 [InfoCmd::InfoLog](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_admin.cc#L836) 调用。
 
 #### 2.4.3 过时 binlog 淘汰
 ---

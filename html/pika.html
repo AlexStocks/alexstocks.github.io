@@ -472,9 +472,20 @@ If the process either catches the signal and returns from the signal handler, or
 <p>binlog 过时判定由<a href="https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1123">PikaServer::CouldPurge</a>完成，某个后缀为 @index 的数据加锁判断流程为：</p>
 
 <ul>
-<li>1 调用 <a href="https://github.com/Qihoo360/pika/blob/d533f6331ac299a913ef825e1628b72d1a51d696/tools/binlog_tools/binlog.cc#L75">PikaServer::GetProducerStatus</a> 接口获取当前的binlog index @pro<em>num，如果 @pro</em>num 与 @index 之差小于等于 10，则@index 对应的文件不过时；</li>
-<li>2 遍历 pika 所有的 slave 集合 @slaves_，若同步给某个 slave 的 binlog 的 filenum 小于 @index，则 @index 对应的文件没有被加锁。</li>
+<li>1 调用 <a href="https://github.com/Qihoo360/pika/blob/d533f6331ac299a913ef825e1628b72d1a51d696/tools/binlog_tools/binlog.cc#L75"><strong>PikaServer::GetProducerStatus</strong></a> 接口获取当前的binlog index @pro_num；</li>
+<li>2 如果 @pro_num 与 @index 之差小于等于 10，则@index 对应的文件不过时；</li>
+<li>3 遍历 pika 所有的 slave 集合 @slaves_，若同步给某个 slave 的起始 binlog 的 filenum 小于 @index，则 @index 对应的文件没有被加锁。</li>
 </ul>
+
+<p>获取最大可删除 binlog 文件的 index 函数 <a href="https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1101"><strong>PikaServer::GetPurgeWindow</strong></a> 流程与 <a href="https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1123">PikaServer::CouldPurge</a> 非常类似，一并说明如下：</p>
+
+<ul>
+<li>1 调用 <a href="https://github.com/Qihoo360/pika/blob/d533f6331ac299a913ef825e1628b72d1a51d696/tools/binlog_tools/binlog.cc#L75"><strong>PikaServer::GetProducerStatus</strong></a> 接口获取当前的binlog index @pro_num，作为起始可删除index @max；</li>
+<li>2 遍历 pika 所有的 slave 集合 @slaves_，若同步给某个 slave 的起始 binlog 的 filenum 小于 @max，则赋值 filenum 给@max；</li>
+<li>3 如果 @max 大于 10，则返回 true 并把 @max 减小 10，否则返回 false。</li>
+</ul>
+
+<p>函数 <a href="https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1101"><strong>PikaServer::GetPurgeWindow</strong></a> 会被执行 info 命令的函数 <a href="https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_admin.cc#L836">InfoCmd::InfoLog</a> 调用。</p>
 
 <h4 id="toc_20">2.4.3 过时 binlog 淘汰</h4>
 
@@ -1478,6 +1489,7 @@ Redis::Redis()
 
 <p>2018/10/06，于雨氏，于西二旗添加 #2.4 Purge# 小节。</p>
 </blockquote>
+
 
 
 <!-- baidu statistic start -->
