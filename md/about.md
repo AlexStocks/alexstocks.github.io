@@ -1,13 +1,10 @@
 ## 扒粪者-于雨氏 * 追述以往 ##
 ---
-*written by Alex Stocks on 2016/02/05*
+*written by Alex Stocks on 2016/02/05，版权所有，无授权不得转载*
 
 ### about me ###
 ---
 - email     : alexstocks at foxmail.com
-- facebook  : Alex Stocks
-- twitter   : @AlexandMStocks
-- weibo.com : @于雨巴巴
 - wechat    : alexanderstocks
 
 ### 以往博客说明:###

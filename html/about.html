@@ -1,518 +1,437 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <title>about</title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<link rel="stylesheet" type="text/css" href="/css/main.css">
+
 
 <style type="text/css">
-/* RESET
-=============================================================================*/
-
-html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-/* BODY
-=============================================================================*/
-
+*{margin:0;padding:0;}
 body {
-  font-family: Helvetica, arial, freesans, clean, sans-serif;
-  font-size: 14px;
-  line-height: 1.6;
-  color: #333;
-  background-color: #fff;
-  padding: 20px;
-  max-width: 960px;
-  margin: 0 auto;
+	font:13.34px helvetica,arial,freesans,clean,sans-serif;
+	color:black;
+	line-height:1.4em;
+	background-color: #F8F8F8;
+	padding: 0.7em;
 }
-
-body>*:first-child {
-  margin-top: 0 !important;
+p {
+	margin:1em 0;
+	line-height:1.5em;
 }
-
-body>*:last-child {
-  margin-bottom: 0 !important;
+table {
+	font-size:inherit;
+	font:100%;
+	margin:1em;
 }
-
-/* BLOCKS
-=============================================================================*/
-
-p, blockquote, ul, ol, dl, table, pre {
-  margin: 15px 0;
-}
-
-/* HEADERS
-=============================================================================*/
-
-h1, h2, h3, h4, h5, h6 {
-  margin: 20px 0 10px;
-  padding: 0;
-  font-weight: bold;
-  -webkit-font-smoothing: antialiased;
-}
-
-h1 tt, h1 code, h2 tt, h2 code, h3 tt, h3 code, h4 tt, h4 code, h5 tt, h5 code, h6 tt, h6 code {
-  font-size: inherit;
-}
-
-h1 {
-  font-size: 28px;
-  color: #000;
-}
-
-h2 {
-  font-size: 24px;
-  border-bottom: 1px solid #ccc;
-  color: #000;
-}
-
-h3 {
-  font-size: 18px;
-}
-
-h4 {
-  font-size: 16px;
-}
-
-h5 {
-  font-size: 14px;
-}
-
-h6 {
-  color: #777;
-  font-size: 14px;
-}
-
-body>h2:first-child, body>h1:first-child, body>h1:first-child+h2, body>h3:first-child, body>h4:first-child, body>h5:first-child, body>h6:first-child {
-  margin-top: 0;
-  padding-top: 0;
-}
-
-a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
-  margin-top: 0;
-  padding-top: 0;
-}
-
-h1+p, h2+p, h3+p, h4+p, h5+p, h6+p {
-  margin-top: 10px;
-}
-
-/* LINKS
-=============================================================================*/
-
-a {
-  color: #4183C4;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-/* LISTS
-=============================================================================*/
-
-ul, ol {
-  padding-left: 30px;
-}
-
-ul li > :first-child,
-ol li > :first-child,
-ul li ul:first-of-type,
-ol li ol:first-of-type,
-ul li ol:first-of-type,
-ol li ul:first-of-type {
-  margin-top: 0px;
-}
-
-ul ul, ul ol, ol ol, ol ul {
-  margin-bottom: 0;
-}
-
-dl {
-  padding: 0;
-}
-
-dl dt {
-  font-size: 14px;
-  font-weight: bold;
-  font-style: italic;
-  padding: 0;
-  margin: 15px 0 5px;
-}
-
-dl dt:first-child {
-  padding: 0;
-}
-
-dl dt>:first-child {
-  margin-top: 0px;
-}
-
-dl dt>:last-child {
-  margin-bottom: 0px;
-}
-
-dl dd {
-  margin: 0 0 15px;
-  padding: 0 15px;
-}
-
-dl dd>:first-child {
-  margin-top: 0px;
-}
-
-dl dd>:last-child {
-  margin-bottom: 0px;
-}
-
-/* CODE
-=============================================================================*/
-
-pre, code, tt {
-  font-size: 12px;
-  font-family: Consolas, "Liberation Mono", Courier, monospace;
-}
-
-code, tt {
-  margin: 0 0px;
-  padding: 0px 0px;
-  white-space: nowrap;
-  border: 1px solid #eaeaea;
-  background-color: #f8f8f8;
-  border-radius: 3px;
-}
-
-pre>code {
-  margin: 0;
-  padding: 0;
-  white-space: pre;
-  border: none;
-  background: transparent;
-}
-
+table th{border-bottom:1px solid #bbb;padding:.2em 1em;}
+table td{border-bottom:1px solid #ddd;padding:.2em 1em;}
+input[type=text],input[type=password],input[type=image],textarea{font:99% helvetica,arial,freesans,sans-serif;}
+select,option{padding:0 .25em;}
+optgroup{margin-top:.5em;}
+pre,code{font:12px Monaco,"Courier New","DejaVu Sans Mono","Bitstream Vera Sans Mono",monospace;}
 pre {
-  background-color: #f8f8f8;
-  border: 1px solid #ccc;
-  font-size: 13px;
-  line-height: 19px;
-  overflow: auto;
-  padding: 6px 10px;
-  border-radius: 3px;
+	margin:1em 0;
+	font-size:12px;
+	background-color:#eee;
+	border:1px solid #ddd;
+	padding:5px;
+	line-height:1.5em;
+	color:#444;
+	overflow:auto;
+	-webkit-box-shadow:rgba(0,0,0,0.07) 0 1px 2px inset;
+	-webkit-border-radius:3px;
+	-moz-border-radius:3px;border-radius:3px;
 }
-
-pre code, pre tt {
-  background-color: transparent;
-  border: none;
+pre code {
+	padding:0;
+	font-size:12px;
+	background-color:#eee;
+	border:none;
 }
-
+code {
+	font-size:12px;
+	background-color:#f8f8ff;
+	color:#444;
+	padding:0 .2em;
+	border:1px solid #dedede;
+}
+img{border:0;max-width:100%;}
+abbr{border-bottom:none;}
+a{color:#4183c4;text-decoration:none;}
+a:hover{text-decoration:underline;}
+a code,a:link code,a:visited code{color:#4183c4;}
+h2,h3{margin:1em 0;}
+h1,h2,h3,h4,h5,h6{border:0;}
+h1{font-size:170%;border-top:4px solid #aaa;padding-top:.5em;margin-top:1.5em;}
+h1:first-child{margin-top:0;padding-top:.25em;border-top:none;}
+h2{font-size:150%;margin-top:1.5em;border-top:4px solid #e0e0e0;padding-top:.5em;}
+h3{margin-top:1em;}
+hr{border:1px solid #ddd;}
+ul{margin:1em 0 1em 2em;}
+ol{margin:1em 0 1em 2em;}
+ul li,ol li{margin-top:.5em;margin-bottom:.5em;}
+ul ul,ul ol,ol ol,ol ul{margin-top:0;margin-bottom:0;}
+blockquote{margin:1em 0;border-left:5px solid #ddd;padding-left:.6em;color:#555;}
+dt{font-weight:bold;margin-left:1em;}
+dd{margin-left:2em;margin-bottom:1em;}
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
+}
 kbd {
-    -moz-border-bottom-colors: none;
-    -moz-border-left-colors: none;
-    -moz-border-right-colors: none;
-    -moz-border-top-colors: none;
-    background-color: #DDDDDD;
-    background-image: linear-gradient(#F1F1F1, #DDDDDD);
-    background-repeat: repeat-x;
-    border-color: #DDDDDD #CCCCCC #CCCCCC #DDDDDD;
-    border-image: none;
-    border-radius: 2px 2px 2px 2px;
-    border-style: solid;
-    border-width: 1px;
-    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-    line-height: 10px;
-    padding: 1px 4px;
+  display: inline-block;padding: 3px 5px;font-size: 11px;line-height: 10px;color: #555;vertical-align: middle;background-color: #fcfcfc;border: solid 1px #ccc;border-bottom-color: #bbb;border-radius: 3px;box-shadow: inset 0 -1px 0 #bbb;
 }
-
-/* QUOTES
-=============================================================================*/
-
-blockquote {
-  border-left: 4px solid #DDD;
-  padding: 0 15px;
-  color: #777;
+* {
+	-webkit-print-color-adjust: exact;
 }
-
-blockquote>:first-child {
-  margin-top: 0px;
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:0 auto;
+    }
 }
-
-blockquote>:last-child {
-  margin-bottom: 0px;
-}
-
-/* HORIZONTAL RULES
-=============================================================================*/
-
-hr {
-  clear: both;
-  margin: 15px 0;
-  height: 0px;
-  overflow: hidden;
-  border: none;
-  background: transparent;
-  border-bottom: 4px solid #ddd;
-  padding: 0;
-}
-
-/* TABLES
-=============================================================================*/
-
-table th {
-  font-weight: bold;
-}
-
-table th, table td {
-  border: 1px solid #ccc;
-  padding: 6px 13px;
-}
-
-table tr {
-  border-top: 1px solid #ccc;
-  background-color: #fff;
-}
-
-table tr:nth-child(2n) {
-  background-color: #f8f8f8;
-}
-
-/* IMAGES
-=============================================================================*/
-
-img {
-  max-width: 100%
+@media print {
+	table, pre {
+		page-break-inside: avoid;
+	}
+	pre {
+		word-wrap: break-word;
+	}
 }
 </style>
+
+
 </head>
+
 <body>
-<h2>扒粪者-于雨氏 * 追述以往</h2>
-<hr />
+
+<h2 id="toc_0">扒粪者-于雨氏 * 追述以往</h2>
+
+<hr>
+
 <p><em>written by Alex Stocks on 2016/02/05，版权所有，无授权不得转载</em></p>
-<h3>about me</h3>
-<hr />
+
+<h3 id="toc_1">about me</h3>
+
+<hr>
+
 <ul>
 <li>email     : alexstocks at foxmail.com</li>
-<li>facebook  : Alex Stocks</li>
-<li>twitter   : @AlexandMStocks</li>
-<li>weibo.com : @于雨巴巴</li>
-<li>wechat: alexanderstocks</li>
+<li>wechat    : alexanderstocks</li>
 </ul>
-<h3>以往博客说明:</h3>
-<hr />
+
+<h3 id="toc_2">以往博客说明:</h3>
+
+<hr>
+
 <ul>
 <li>1 <a href="http://blog.csdn.net/menggucaoyuan/article/category/1269292">csdn blog: menggucaoyuan</a></li>
 <li>2 <a href="http://my.oschina.net/alexstocks/blog?fromerr=ueepi6wH">oschina blog: menggucaoyuan</a> </li>
 <li>3 <a href="http://www.cnblogs.com/menggucaoyuan/">cnblogs blog: menggucaoyuan</a></li>
 </ul>
+
 <p>个人以往写了一些博客，所有的博客林林总总都写在以上三家博客栏里，然而不打算接着在这三家的地盘写了，以后有文章只放在<a href="http://alexstocks.github.io/">github博客系统</a>。对于以往的博客，在本文作为一番综述，以作一个了结。我以往写博客的历史，分为两个阶段：</p>
+
 <ul>
-<li>
-<p>1 2010年工作至今，以上链接里的所有blog主要是关于个人对后台分布式知识的粗浅理解，几乎都是自己的原创，很少转载的几篇都标明了转载来源，但是不注重格式，所以就不搬到github blog上了，下面分别整理一下列出来，算作是梳理下自己的知识系统。</p>
-</li>
-<li>
-<p>2 2008年到2010年,自己也在网易博客上写了一些图形学知识的blog:</p>
+<li><p>1 2010年工作至今，以上链接里的所有blog主要是关于个人对后台分布式知识的粗浅理解，几乎都是自己的原创，很少转载的几篇都标明了转载来源，但是不注重格式，所以就不搬到github blog上了，下面分别整理一下列出来，算作是梳理下自己的知识系统。</p></li>
+<li><p>2 2008年到2010年,自己也在网易博客上写了一些图形学知识的blog:</p>
+
 <blockquote>
-<p>[网易博客：小柳树的博客] ( http://blog.163.com/zhaoxin851055%40126/ )</p>
+<p><a href="http://blog.163.com/zhaoxin851055%40126/">网易博客：小柳树的博客</a></p>
 </blockquote>
-<p>这些blog主要是对OpenGL的一些研究与个人使用心得，这些文字被其他人到处转载很多，但是我也转载了很多其他人的博客，2010年之后更成为了我的杂货铺，再也没有更新文章且只放置一些我认为对我有用的blog。其内容繁杂且庞大，个人也没有余力去整理了，就留作为青春的回忆吧。</p>
-</li>
+
+<p>这些blog主要是对OpenGL的一些研究与个人使用心得，这些文字被其他人到处转载很多，但是我也转载了很多其他人的博客，2010年之后更成为了我的杂货铺，再也没有更新文章且只放置一些我认为对我有用的blog。其内容繁杂且庞大，个人也没有余力去整理了，就留作为青春的回忆吧。</p></li>
 </ul>
-<h3>old blogs</h3>
-<hr />
+
+<h3 id="toc_3">old blogs</h3>
+
+<hr>
+
 <p><strong>由于一些博客在多家的地盘放着，由于用户评论也不同，我就对blog做相应的修改，多版本就造成了数据不一致，故而在此都列出来</strong></p>
+
 <ul>
-<li>
-<p>lisk </p>
+<li><p>lisk </p>
+
 <p><em>个人用C语言实现的一套linux基础库，花费三年有余</em></p>
+
 <blockquote>
 <p>https://github.com/AlexStocks/lisk</p>
-</blockquote>
-</li>
-<li>
-<p>protobuf &amp; flatbuffer</p>
+</blockquote></li>
+<li><p>protobuf &amp; flatbuffer</p>
+
 <p><em>大概2014的时候，当时FlatBuffer刚出来一周，个人出于好奇心花费了一个周末将其代码通读了一遍，并做了一些测试，于是就有了下面以一些文章。时移世易，由于个人工作中也不是用FlatBuffer，后来再也没有碰过它，文章中的一些观点到现在是否还能成立，我不保证。</em></p>
+
 <blockquote>
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/43603829">protobuf v3测试</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/43602915">protobuf一些注意事项</a></p>
+
 <p>github: https://github.com/AlexStocks/flatbuffers</p>
-<p><a href="http://blog.csdn.net/menggucaoyuan/article/details/34436899">Cap'n Proto, FlatBuffers, and SBE</a></p>
+
+<p><a href="http://blog.csdn.net/menggucaoyuan/article/details/34436899">Cap&#39;n Proto, FlatBuffers, and SBE</a></p>
+
 <p><a href="http://my.oschina.net/alexstocks/blog/283779">FlatBuffers与protobuf性能比较</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/34409433">FlatBuffers与protobuf性能比较</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/34408111">定制一个FlatBuffers编译器</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/32942843">FlatBuffers要点</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/16107201">在C语言环境下使用google protobuf</a></p>
 </blockquote>
+
 <p><em>这两篇文章是介绍gogoprotobuf的一些关键语法，于2015年1月初写成，并马上被推荐到oschina.net的首页，其他一堆抄袭网站直接就复制粘贴过去，后来我于2015/12又做了扩充，新添加了三个命令说明，你在那些抄袭网站一定看不到 ^_^</em></p>
+
 <blockquote>
 <p><a href="http://my.oschina.net/alexstocks/blog/387058">gogoprotobuf使用(下)</a></p>
+
 <p><a href="http://my.oschina.net/alexstocks/blog/387031">gogoprotobuf使用(上)</a></p>
-</blockquote>
-</li>
-<li>
-<p>数据结构</p>
+</blockquote></li>
+<li><p>数据结构</p>
+
 <p><em>此文发出后，被intel中国社区的人看到，便把拙作稍作改变，又发到了intel技术社区，名字是《介绍一种服务器缓存结构 --- 多级 Hash》，下面有列出</em></p>
+
 <blockquote>
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/8856589">多级hash</a></p>
-</blockquote>
-</li>
-<li>
-<p>后台分布式系统以及linux系统开发</p>
+</blockquote></li>
+<li><p>后台分布式系统以及linux系统开发</p>
+
 <blockquote>
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/42928559">分布式散记</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/41913555">七牛的存储算法猜测</a></p>
+
 <p><a href="http://my.oschina.net/alexstocks/blog/355849">七牛的存储算法猜测</a></p>
+
 <p><a href="http://my.oschina.net/alexstocks/blog/355849">多线程下写日志</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/40656941">多线程下写日志</a></p>
+
 <p><a href="http://my.oschina.net/alexstocks/blog/397773">Redis Cluster</a></p>
+
 <p><a href="http://my.oschina.net/alexstocks/blog/387715">redis性能提高与Nagel算法</a></p>
+
 <p><a href="http://my.oschina.net/alexstocks/blog/378086">redis的一些坑</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/40042163">docker粗浅理解</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/39058141">bloom filter与dawgdic（一种trie树）</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/38959725">多个线程如何操作同一个epoll fd</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/38470221">高性能web服务器的秘密核武器</a></p>
+
 <p><a href="http://my.oschina.net/alexstocks/blog/299619">如何快速的把日志输出到磁盘上</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/38460419">如何快速的把日志输出到磁盘上</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/8904304">EINTR错误处理</a></p>
+
 <p><a href="https://software.intel.com/zh-cn/articles/hash">介绍一种服务器缓存结构 --- 多级 Hash</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/8126283">select的效率一定比epoll低吗？</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/8114966">opensuse12.2的gdb不能自动加载.gdbinit的解决方法</a></p>
-</blockquote>
-</li>
-<li>
-<p>Windows系统开发</p>
+</blockquote></li>
+<li><p>Windows系统开发</p>
+
 <blockquote>
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/8227501">显示dos命令ping和tracert等输出结果中的ip对应的地域名称</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/7974793">win7下的cmd窗口可以全屏显示吗</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/7749585">在windows上运行linux命令</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/7246567">Windows启动过程</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/6532941">程序员应该知道的关于Windows API、CRT和STL二三事</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/6299013">编译器内部的秘密--微软的编译器是如何解析Try/Catch/Throw的</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/6109595">FAT文件系统格式描述</a></p>
-</blockquote>
-</li>
-<li>
-<p>计算机语言</p>
+</blockquote></li>
+<li><p>计算机语言</p>
+
 <blockquote>
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/43056261">golang中method的传值与传地址</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/43055559">golang中的use-a和has-a</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/42742541">golang中MD5值计算问题</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/40985763">C++11中lock<em>guard和unique</em>lock的区别</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/9054111">关于调用函数gettid的错误提示</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/8554739">C语言运算时的参数符号自动转换</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/8434405">C程序中函数名与宏名称同名</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/8259476">计算今天的凌晨时间</a></p>
-<p><a href="http://blog.csdn.net/menggucaoyuan/article/details/8062180">怎样安全的使用可变参数宏<em><em>VA</em>ARGS</em>_</a></p>
+
+<p><a href="http://blog.csdn.net/menggucaoyuan/article/details/8062180">怎样安全的使用可变参数宏<strong>VA_ARGS</strong></a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/7989038">关于宏的两个bug</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/6766432">数组是否应该初始化？</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/6601934">某公司的几道面试题</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/6525689">双重for循环语句块的优化</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/6299625">避免使用goto语句的几种方法</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/5958238">const型变量与函数重载</a></p>
-</blockquote>
-</li>
-<li>
-<p>图形学</p>
+</blockquote></li>
+<li><p>图形学</p>
+
 <blockquote>
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/6680143">用盛金公式求解一元三次方程</a></p>
+
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/6063216">关于颜色的透明度的形象理解</a></p>
+
 <p>下文链接是http://blog.csdn.net/menggucaoyuan/article/details/6365596，记忆中是2011-04-26 23:22(http://www.boyunjian.com/do/article/s.do?keyword=CUDA%20%E5%AE%89%E8%A3%85&amp;pageno=7显示时间)我翻译自codeproject上的一篇教程文章，后来觉得文章实在不入流就删除了，从Wikipedia链接：https://zh.wikipedia.org/wiki/User:Wissning显示最后修改时间是2012年6月13日 (星期三) 07:14，这个时间应该是删除时间。不过既然有网站转载就说明它还有用，下面附上两个转载链接(但是二者都没声明是转载文章更没有指出转载来源^_^)。</p>
+
 <p><a href="http://www.jeepshoe.org/285540142.htm">CUDA: 通过九个步骤实现在VS2010中加载CUDA 3.2</a></p>
+
 <p><a href="http://www.xuebuyuan.com/2051642.html">CUDA: 通过九个步骤实现在VS2010中加载CUDA 3.2</a></p>
-</blockquote>
-</li>
-<li>
-<p>其他</p>
+</blockquote></li>
+<li><p>其他</p>
+
 <blockquote>
 <p><a href="http://blog.csdn.net/menggucaoyuan/article/details/6873171">互联网新贵英雄谱</a></p>
-</blockquote>
-</li>
+</blockquote></li>
 </ul>
-<h3>tools</h3>
-<hr />
+
+<h3 id="toc_4">tools</h3>
+
+<hr>
+
 <ul>
-<li>
-<p>:
+<li><p>:
 个人于闲暇时候喜欢学习一些新的语言并写一些小工具，下面按照语言分门别类之:</p>
+
 <ul>
 <li>C++11 muduo</li>
 </ul>
+
 <p><em>陈硕先生的muduo库依赖boost且使用了cmake，个人觉得既然有了C++11，就没必要让爱好者继续使用boost了，就用C++11重写了一遍。顺便删除了cmake(muduo只运行在unix类服务器上那就没必要用cmake)，自己手工从零给其写了makefile替代之。</em></p>
+
 <blockquote>
 <p>https://github.com/AlexStocks/muduo</p>
 </blockquote>
+
 <ul>
 <li>golang</li>
 </ul>
+
 <p><em>这个没什么好说的，不想多做解释</em></p>
+
 <blockquote>
 <p>https://github.com/AlexStocks/jinbang</p>
 </blockquote>
+
 <p><em>xorlist，对数据结构研究深入的人应该知道这个玩意的好处</em></p>
+
 <blockquote>
 <p>https://github.com/AlexStocks/test/tree/master/goext/src/container/xorlist</p>
 </blockquote>
+
 <ul>
 <li>python</li>
 </ul>
+
 <p><em>redis数据冷备工具，懂行的人应该知道它会很好用</em></p>
+
 <blockquote>
 <p>https://github.com/AlexStocks/test/tree/master/data_backup/scs-script</p>
+
 <p>https://github.com/AlexStocks/test/tree/master/data_backup/bae-script</p>
 </blockquote>
+
 <ul>
 <li>java</li>
 </ul>
+
 <p><em>bloom &amp; ketama algorithm</em></p>
+
 <blockquote>
 <p>https://github.com/AlexStocks/test/tree/master/bloom</p>
+
 <p>https://github.com/AlexStocks/test/tree/master/ketama/ketama</p>
 </blockquote>
+
 <ul>
 <li>C</li>
 </ul>
+
 <p><em>状态机fsm</em></p>
+
 <blockquote>
 <p>https://github.com/AlexStocks/test/tree/master/fsm</p>
 </blockquote>
+
 <p><em>无锁队列</em></p>
+
 <blockquote>
-<p>https://github.com/AlexStocks/test/tree/master/ring-buffer</p>
+<p>https://github.com/AlexStocks/test/tree/master/ring-buffer
+* protobuf</p>
 </blockquote>
-<ul>
-<li>protobuf</li>
-</ul>
+
 <p><em>对protobuf的测试</em></p>
+
 <blockquote>
 <p>https://github.com/AlexStocks/test/tree/master/pb-test</p>
 </blockquote>
+
 <ul>
 <li>Redis</li>
 </ul>
+
 <p><em>给redis migrate命令提交的一个patch[redis migrate with password，即给migrate命令添加了一个密码验证功能]</em></p>
+
 <blockquote>
 <p>https://github.com/antirez/redis/pull/2507</p>
-<p>https://github.com/AlexStocks/redis/commit/30ef3fa99d60e86816f746ae0877f62e1de394df</p>
-<p><a href="http://my.oschina.net/alexstocks/blog/378086">redis的一些坑</a></p>
-<p><a href="http://my.oschina.net/alexstocks/blog/387715">redis性能提高与Nagel算法</a></p>
-<p><a href="https://github.com/AlexStocks/redis-tool-set">redis工具集</a></p>
-<p><a href="http://alexstocks.github.io/html/redis_replication_readme.html">redis server replication 源码分析</a></p>
-<p><a href="http://alexstocks.github.io/html/redis_cluster.html">一种基于Redis的多租户多粒度分布式内存文件系统</a></p>
-</blockquote>
-</li>
-</ul>
-<h3>跋</h3>
-<hr />
-<p>如果说，开源是个好东西，那么懒惰就是程序员的第一美德。如果有满足需求的开源系统的不用，像我以前一样非要闭门造车再搞一个类似的玩意不可，貌似是一种罪过。个人也是经过北京众多好友一番劝告并自我思想斗争了两年后，接受了这一看法。</p>
-<p>从2014年起自己从redis代码开始看起，边看别做笔记(经黄海大哥推荐，用的是网易笔记)，然后再根据笔记整理出了一些博客文章。尔后就是nginx了，目前于大体流程稍有心得，个别细节有待慢慢补充之，很多笔记也有待整理。</p>
-<p>现在鄙人写blog不似以往，需兼顾格式与版权，而个人记性实在不好，有的东西需反刍后改写好几次，以减少文章中的自相矛盾之处，实在觉得写一篇能让别人稍微能看的blog是种力气活。</p>
-<p>好的开源系统还有很多，根据工作需要以及个人能力，慢慢啃吧。老罗语录：通往牛逼的路上，风景差的让人只想说脏话，但创业者在意的是远方。其实啃代码也一样，这活又脏又累且过程充满荆棘，但是我们的征途是星辰大海！</p></p>
-<h2>扒粪者-于雨氏</h2>
 
+<p>https://github.com/AlexStocks/redis/commit/30ef3fa99d60e86816f746ae0877f62e1de394df</p>
+
+<p><a href="http://my.oschina.net/alexstocks/blog/378086">redis的一些坑</a></p>
+
+<p><a href="http://my.oschina.net/alexstocks/blog/387715">redis性能提高与Nagel算法</a></p>
+
+<p><a href="https://github.com/AlexStocks/redis-tool-set">redis工具集</a></p>
+
+<p><a href="http://alexstocks.github.io/html/redis_replication_readme.html">redis server replication 源码分析</a></p>
+
+<p><a href="http://alexstocks.github.io/html/redis_cluster.html">一种基于Redis的多租户多粒度分布式内存文件系统</a></p>
+</blockquote></li>
+</ul>
+
+<h3 id="toc_5">跋</h3>
+
+<hr>
+
+<p>如果说，开源是个好东西，那么懒惰就是程序员的第一美德。如果有满足需求的开源系统的不用，像我以前一样非要闭门造车再搞一个类似的玩意不可，貌似是一种罪过。个人也是经过北京众多好友一番劝告并自我思想斗争了两年后，接受了这一看法。</p>
+
+<p>从2014年起自己从redis代码开始看起，边看别做笔记(经黄海大哥推荐，用的是网易笔记)，然后再根据笔记整理出了一些博客文章。尔后就是nginx了，目前于大体流程稍有心得，个别细节有待慢慢补充之，很多笔记也有待整理。</p>
+
+<p>现在鄙人写blog不似以往，需兼顾格式与版权，而个人记性实在不好，有的东西需反刍后改写好几次，以减少文章中的自相矛盾之处，实在觉得写一篇能让别人稍微能看的blog是种力气活。</p>
+
+<p>好的开源系统还有很多，根据工作需要以及个人能力，慢慢啃吧。老罗语录：通往牛逼的路上，风景差的让人只想说脏话，但创业者在意的是远方。其实啃代码也一样，这活又脏又累且过程充满荆棘，但是我们的征途是星辰大海！</p></p>
+
+<h2 id="toc_6">扒粪者-于雨氏</h2>
+
+<blockquote>
 <p>2016/02/05，于雨氏，于金箱堂。</p>
+
 <p>2016/02/10，于金箱堂，添加了disqus评论功能。</p>
+</blockquote>
+
 
 <!-- baidu statistic start -->
 <script>
@@ -544,6 +463,7 @@ gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
 
-</body>
-</html>
 
+</body>
+
+</html>
