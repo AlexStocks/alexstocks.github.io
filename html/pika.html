@@ -452,9 +452,19 @@ If the process either catches the signal and returns from the signal handler, or
 
 <p>Pika 存储引擎的最基本作用就是把 Redis 的数据结构映射为 RocksDB 的 KV 数据存入其中。本节主要分析 Pika 最新版的存储引擎 Blackwidow，作为对比需要稍微提及其前一个版本 Nemo。</p>
 
-<p>Pika 存储系统中另外一个比较重要的概念是 timestamp 和 version，其实都与数据删除功能有关。Redis 中数据被淘汰有两种常见场景：set key 时就设置了 ttl，显示调用 del 命令对 key 进行删除。timestamp 与 set key 时的 ttl 有关，其意义就是数据的超时时间。</p>
+<p>Pika 存储系统中另外一个比较重要的概念是 timestamp 和 version，其实都与数据删除功能有关。Redis 中数据被淘汰有两种常见场景：添加（set） key 时就设置了 ttl，显式调用 del 命令对 key 进行删除。timestamp 与添加（set） key 时的 ttl 有关，其值为系统当前 unix 时间与 tll 之和，其意义就是数据的超时时间(系统 unix time)。</p>
 
-<p>version 则与 del 命令删除 key 相关，参照 <strong>base_meta_value_format.h:ParsedBaseMetaValue::UpdateVersion</strong>, 可知其值为执行 del 指令时的当前系统时间【第一次对一个 key 执行 del 指令】 或者 自增【第二次以及后续多次对同一个 key 执行 del 指令】。<a href="http://baotiao.github.io/2016/05/18/pika-introduction/">参考文档13</a> 通过 version 实现了在 “秒删大量的key” 的场景下 “不删除, 只做标记, 时间复杂度O(1)”，“效率就够了”。</p>
+<p>version 则与 del 命令删除 key 相关，参照 <a href="https://github.com/Qihoo360/blackwidow/blob/2490ebd29d95fcbed5356b2113938f3e414a46e7/src/base_meta_value_format.h#L123"><strong>base_meta_value_format.h:ParsedBaseMetaValue::UpdateVersion</strong></a>, 可知 key 的初始 version值为执行添加/删除/更新指令时的当前系统时间【第一次添加 key】 或者 当前值自增【第二次以及后续多次对同一个 key 执行添加/删除/更新指令】。</p>
+
+<p>除了 strings 之外的其他数据结构【string 没有 version】，其 field/member 也有 version 值，field/member version 大于 key 的 version 时才会被认为是有效的 field/member，其初始值等于 key version。<a href="http://baotiao.github.io/2016/05/18/pika-introduction/">参考文档13</a> 通过 version 实现了在 “秒删大量的key” 的场景下 “不删除, <font color=red>只做标记</font>, 时间复杂度O(1)”，“效率就够了”。</p>
+
+<p>秒删操作可以认为是只做标记，把 key version 设置为当前时间，集合中 field/member version 小于 key version 的都是过时的，因为当前所有的 field/member 被添加/删除/更新时其 version 值为写入时的 key version，其值一定小于最新的 key version 值。执行删除 set/zset/list/hashtable 时，<a href="https://github.com/Qihoo360/blackwidow/blob/2490ebd29d95fcbed5356b2113938f3e414a46e7/src/base_meta_value_format.h#L97"><strong>base_meta_value_format.h:ParsedBaseMetaValue::InitialMetaValue</strong></a> 函数会被调用，其操作为：</p>
+
+<ul>
+<li>1 把当前集合的 count 置零；</li>
+<li>2 把 timestamp 置零；</li>
+<li>3 调用 <a href="https://github.com/Qihoo360/blackwidow/blob/2490ebd29d95fcbed5356b2113938f3e414a46e7/src/base_meta_value_format.h#L123"><strong>base_meta_value_format.h:ParsedBaseMetaValue::UpdateVersion</strong></a> 更新 version。</li>
+</ul>
 
 <p>Pika 后续执行 get 指令时，会依据 timestamp 和 version 判断数据是否过时。Rocksdb 进行 compaction 时，也会调用各个 Filter 接口依据  timestamp 和 version 判定数据是否已经超时，若超时则进行物理删除。<a href="http://baotiao.github.io/2016/05/18/pika-introduction/">参考文档13</a> 给出了各个操作过程中 version 的处理：</p>
 
@@ -1454,6 +1464,7 @@ Redis::Redis()
 
 <p>2018/10/07，于雨氏，于西二旗添加 #3.5.2 Purge Binlog# 小节。</p>
 </blockquote>
+
 
 
 <!-- baidu statistic start -->
