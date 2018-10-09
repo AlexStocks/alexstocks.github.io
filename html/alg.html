@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>alg</title>
+
+
+<style type="text/css">
+*{margin:0;padding:0;}
+body {
+	font:13.34px helvetica,arial,freesans,clean,sans-serif;
+	color:black;
+	line-height:1.4em;
+	background-color: #F8F8F8;
+	padding: 0.7em;
+}
+p {
+	margin:1em 0;
+	line-height:1.5em;
+}
+table {
+	font-size:inherit;
+	font:100%;
+	margin:1em;
+}
+table th{border-bottom:1px solid #bbb;padding:.2em 1em;}
+table td{border-bottom:1px solid #ddd;padding:.2em 1em;}
+input[type=text],input[type=password],input[type=image],textarea{font:99% helvetica,arial,freesans,sans-serif;}
+select,option{padding:0 .25em;}
+optgroup{margin-top:.5em;}
+pre,code{font:12px Monaco,"Courier New","DejaVu Sans Mono","Bitstream Vera Sans Mono",monospace;}
+pre {
+	margin:1em 0;
+	font-size:12px;
+	background-color:#eee;
+	border:1px solid #ddd;
+	padding:5px;
+	line-height:1.5em;
+	color:#444;
+	overflow:auto;
+	-webkit-box-shadow:rgba(0,0,0,0.07) 0 1px 2px inset;
+	-webkit-border-radius:3px;
+	-moz-border-radius:3px;border-radius:3px;
+}
+pre code {
+	padding:0;
+	font-size:12px;
+	background-color:#eee;
+	border:none;
+}
+code {
+	font-size:12px;
+	background-color:#f8f8ff;
+	color:#444;
+	padding:0 .2em;
+	border:1px solid #dedede;
+}
+img{border:0;max-width:100%;}
+abbr{border-bottom:none;}
+a{color:#4183c4;text-decoration:none;}
+a:hover{text-decoration:underline;}
+a code,a:link code,a:visited code{color:#4183c4;}
+h2,h3{margin:1em 0;}
+h1,h2,h3,h4,h5,h6{border:0;}
+h1{font-size:170%;border-top:4px solid #aaa;padding-top:.5em;margin-top:1.5em;}
+h1:first-child{margin-top:0;padding-top:.25em;border-top:none;}
+h2{font-size:150%;margin-top:1.5em;border-top:4px solid #e0e0e0;padding-top:.5em;}
+h3{margin-top:1em;}
+hr{border:1px solid #ddd;}
+ul{margin:1em 0 1em 2em;}
+ol{margin:1em 0 1em 2em;}
+ul li,ol li{margin-top:.5em;margin-bottom:.5em;}
+ul ul,ul ol,ol ol,ol ul{margin-top:0;margin-bottom:0;}
+blockquote{margin:1em 0;border-left:5px solid #ddd;padding-left:.6em;color:#555;}
+dt{font-weight:bold;margin-left:1em;}
+dd{margin-left:2em;margin-bottom:1em;}
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
+}
+kbd {
+  display: inline-block;padding: 3px 5px;font-size: 11px;line-height: 10px;color: #555;vertical-align: middle;background-color: #fcfcfc;border: solid 1px #ccc;border-bottom-color: #bbb;border-radius: 3px;box-shadow: inset 0 -1px 0 #bbb;
+}
+* {
+	-webkit-print-color-adjust: exact;
+}
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:0 auto;
+    }
+}
+@media print {
+	table, pre {
+		page-break-inside: avoid;
+	}
+	pre {
+		word-wrap: break-word;
+	}
+}
+</style>
+
+
+</head>
+
+<body>
+
+<h2 id="toc_0">一些著名的算法定理</h2>
+
+<hr>
+
+<p><em>written by Alex Stocks on 2018/10/08，</em></p>
+
+<p>分布式领域有一些非常著名的定理和算法，构筑了当下一些著名分布式系统的基石。下面分别罗列之，以求集腋成裘之效。</p>
+
+<h3 id="toc_1">1 CAP</h3>
+
+<hr>
+
+<p>这个定理鼎鼎大名，<a href="http://mp.weixin.qq.com/s/nyrEtiswAxXUW0YGf_szQg">参考文档2</a> 对其描述如下：</p>
+
+<ul>
+<li>一致性（Consistency）：每次读取要么获得最近写入的数据，要么获得一个错误;</li>
+<li>可用性（Availability）：每次请求都能获得一个（非错误）响应，但不保证返回的是最新写入的数据，即单节点会在有限时间内对服务做出响应，不超时不假死;</li>
+<li>分区容忍（Partition tolerance）：尽管任意数量的消息被节点间的网络丢失（或延迟），系统仍继续运行。</li>
+</ul>
+
+<p>上面的描述其实也不甚清晰，换句话说就是：如果进程之间可能丢失某些消息，那么不可能在实现一致性存储的同时响应所有的请求。 三个特性中最重要的是数据一致性，一致性不可能同时满足以下条件：总是正确; 在异步系统中只要有一台机器发生故障，系统总是能终止运行——停止失败（FLP 不可能性）。一般而言，消息交互少于两轮都不可能达成共识（Consensus）。</p>
+
+<p>在没有发生网络故障时，即分布式系统正常运行时，一致性和可用性是可以同时被满足的。CAP 定理表明，在存在网络分区的情况下，一致性和可用性必须二选一：</p>
+
+<ul>
+<li><p>CA (consistency + availability)，这样的系统关注一致性和可用性，它需要非常严格的全体一致的协议，比如“两阶段提交”（2PC）。CA 系统不能容忍网络错误或节点错误，一旦出现这样的问题，整个系统就会拒绝写请求，因为它并不知道对面的那个结点是否挂掉了，还是只是网络问题。唯一安全的做法就是把自己变成只读的。</p></li>
+<li><p>CP (consistency + partition tolerance)，这样的系统关注一致性和分区容忍性。它关注的是系统里大多数人的一致性协议，比如：Paxos 算法 (Quorum 类的算法)。这样的系统只需要保证大多数结点数据一致，而少数的结点会在没有同步到最新版本的数据时变成不可用的状态。这样能够提供一部分的可用性。</p></li>
+<li><p>AP (availability + partition tolerance)，这样的系统关心可用性和分区容忍性。因此，这样的系统不能达成一致性，需要给出数据冲突，给出数据冲突就需要维护数据版本。</p></li>
+</ul>
+
+<p>以上内容大部分摘自 <a href="http://mp.weixin.qq.com/s/nyrEtiswAxXUW0YGf_szQg">参考文档2</a>。下面分别描述一些著名系统的 CAP 取舍。</p>
+
+<h4 id="toc_2">1.1 zookeeper</h4>
+
+<hr>
+
+<p>Zookeeper是基于CP来设计的，即任何时刻对Zookeeper的访问请求能得到一致的数据结果，同时系统对网络分割具备容错性，但是它不能保证每次服务请求的可用性。从实际情况来分析，在使用Zookeeper获取服务列表时，<font color=purple><strong>如果zookeeper正在选主，或者Zookeeper集群中半数以上机器不可用，那么将无法获得数据。所以说，Zookeeper不能保证服务可用性。</strong></font>涉及到数据存储的场景，数据一致性应该是首先被保证的，这也是zookeeper设计成CP的原因。但是对于服务发现场景来说，情况就不太一样了：针对同一个服务，即使注册中心的不同节点保存的服务提供者信息不尽相同，也并不会造成灾难性的后果。因为对于服务消费者来说，能消费才是最重要的——拿到可能不正确的服务实例信息后尝试消费一下，也好过因为无法获取实例信息而不去消费。（尝试一下可以快速失败，之后可以更新配置并重试）所以，<font color=blue><strong>对于服务发现而言，可用性比数据一致性更加重要——AP胜过CP。</strong></font>而Spring Cloud Netflix在设计Eureka时遵守的就是AP原则。<font color=red><strong>对于不经常变动的配置来说，CP是不合适的，而AP在遇到问题时可以用牺牲一致性来保证可用性，返回旧数据，缓存数据。</strong></font></p>
+
+<p>以上内容摘自 <a href="https://www.cnblogs.com/jieqing/p/8394001.html">参考文档3</a>。 </p>
+
+<h4 id="toc_3">1.2 MongoDB</h4>
+
+<hr>
+
+<p>mongodb 的读写一致性由 WriteConcern 和 ReadConcern 两个参数保证,两者组合可以得到不同的一致性等级。指定 writeConcern:majority 可以保证写入数据不丢失，不会因选举新主节点而被回滚掉。readConcern:majority + writeConcern:majority 可以保证强一致性的读,readConcern:local + writeConcern:majority 可以保证最终一致性的读。mongodb 对configServer全部指定writeConcern:majority 的写入方式，因此元数据可以保证不丢失。对 configServer 的读指定了 ReadPreference:PrimaryOnly 的方式，在 CAP 中舍弃了A与P得到了元数据的强一致性读。</p>
+
+<h3 id="toc_4">2 FLP</h3>
+
+<hr>
+
+<p>上文在描述 CAP 时候 顺带提到了 FLP，<a href="http://jacketwoo.github.io/2018/04/28/FLP%E8%AF%81%E6%98%8E.html">参考文档1</a> 对 FLP 定位为：在存储系统中，任何一个副本意外崩溃，其自身无论重启后如何修复都是无法保证数据完整性的。除了一些存储系统，FLP 也是当前流行的区块链技术（可以认为是一种去中心化的存储系统）用到的共识算法的基石。</p>
+
+<p>FLP论文 由Fischer, Lynch 和 Patterson三位分布式领域大牛于1985年发表，论文要表达的主题是：分布式异步模型中，没有一种一致性协议可以保证系统在某个进程(服务)挂掉后仍然是完全可靠的。一些经典论文，其描述是相当严谨的，其对应的工业实现对一些corner case则不会考虑。因为一些corner case可能发生概率极小，为了在有限时间内完成任务，可以先假设其不会发生，不予以处理，所以在有限时间内可以舍弃一些目标而完成一些核心目标，使得任务可控，bug也能快速收敛。但是，如果迭代了很多版本，时间也足够了，有一些问题是可以解决却不予以解决，这就无法原谅了。当然，还有一些确实难以解决或者为了解决一个很小问题却会导致代码复杂度急剧提高甚至不得不重构，这就要综合考虑各种客观情况譬如人力和时间成本后再考虑是否予以解决了。总之，要有一种严格的科学精神，不要太放低自己的身段放松对自己的要求。</p>
+
+<p>FLP的前提是分布式和异步模型。在分布式系统中，异步模型都适用于 CAP 和 FLP。在工作任务重的部分考虑异步模型，在工作任务轻的部分譬如 metaserver 就可以考虑同步模型，一些一致性算法譬如 Paxos  和 Raft 本质都是运作在同步模型之上的，此时就可以认为一致性是可以达成的。</p>
+
+<h4 id="toc_5">FLP 与 共识问题</h4>
+
+<p>共识问题，就是让网络上的分布式处理者最后都对同一个结果值达成共识。共识问题给出一个处理者的集合，其中每一个处理者都有一个初始值：</p>
+
+<ul>
+<li>所有无错误的进程（处理过程）最终都将决定一个值；</li>
+<li>所有会做决定的无错误进程决定的都将是同一个值；</li>
+<li>最终被决定的值必须被至少一个进程提出过。</li>
+</ul>
+
+<p>这三个特性分别被称为“终止”、“一致同意”和“有效性”。任何一个具备这三点特性的算法都被认为是解决了共识问题。</p>
+
+<p><a href="http://mp.weixin.qq.com/s/nyrEtiswAxXUW0YGf_szQg">参考文档2</a> 对 FLP 与共识问题之间的关系进行了探讨。其描述如下：<code>FLP 不可能性则讨论了异步模型下的情况，主要结论有两条: 在异步模型下不存在一个完全正确的共识算法。不仅上述较“强”形式的共识算法不可能实现，FLP 还证明了比它弱一些的、只需要有一些无错误的进程做决定就足够的共识算法也是不可能实现的; 在异步模型下存在一个部分正确的共识算法，前提是所有无错误的进程都总能做出一个决定，此外没有进程会在它的执行过程中死亡，并且初始情况下超过半数进程都是存活状态。</code></p>
+
+<h2 id="toc_6">参考文档</h2>
+
+<blockquote>
+<p>1 <a href="http://jacketwoo.github.io/2018/04/28/FLP%E8%AF%81%E6%98%8E.html">FLP 证明</a><br>
+2 <a href="http://mp.weixin.qq.com/s/nyrEtiswAxXUW0YGf_szQg">分布式系统架构经典资料</a><br>
+3 <a href="https://www.cnblogs.com/jieqing/p/8394001.html">ZooKeeper、Eureka对比</a> </p>
+</blockquote>
+
+<h2 id="toc_7">扒粪者-于雨氏</h2>
+
+<blockquote>
+<p>2018/10/08，于雨氏，于丰台。</p>
+</blockquote>
+
+
+<!-- baidu statistic start -->
+<script>
+var _hmt = _hmt || [];
+(function() {
+	  var hm = document.createElement("script");
+	    hm.src = "https://hm.baidu.com/hm.js?170a8df8802fbc47c7acc272d270979c";
+		  var s = document.getElementsByTagName("script")[0];
+		    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+<!-- baidu statistic end -->
+
+<!-- Gitalk start -->
+<link rel="stylesheet" href="https://unpkg.com/gitalk@latest/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk@latest/dist/gitalk.min.js"></script>
+<div id="gitalk-container"></div>
+<script type="text/javascript">
+var gitalk = new Gitalk({
+	clientID: '6211d8b94a8106bed6b0',
+	clientSecret: 'bf77ca26c237eabbd45169e01bf03a5e96a1b26f',
+	repo: 'alexstocks.github.io',
+	owner: 'AlexStocks',
+	admin: ['AlexStocks'],
+	id: window.location.pathname,
+	distractionFreeMode: true
+});
+gitalk.render('gitalk-container');
+</script>
+<!-- Gitalk end -->
+
+
+
+</body>
+
+</html>
