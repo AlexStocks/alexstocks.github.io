@@ -213,10 +213,11 @@ kbd {
 <li>4 从Registry路径/pubsub/broker/partition_num获取当前有效的Broker Partition Number；</li>
 <li><p>5 启动一个线程关注Registry上的Broker路径/pubsub/broker，以实时获取以下信息：</p>
 
-<div><pre><code class="language-none">Broker Partition Number；
-新的Broker Partition（此时发生了扩容）；
-Broker Partition内新的broker replica（Partition内发生了replica扩容）；
-Broker Parition内某replica挂掉的信息；</code></pre></div></li>
+<div><pre><code class="language-none">Broker Partition Number；</code></pre></div>
+
+<p>​   新的Broker Partition（此时发生了扩容）；
+​   Broker Partition内新的broker replica（Partition内发生了replica扩容）；
+​   Broker Parition内某replica挂掉的信息；</p></li>
 <li><p>6 定时向各个Broker Partition replica发送心跳，异步等待Broker返回的心跳响应包，以探测其活性，以保证不向超时的replica转发Room Message；</p></li>
 <li><p>7 启动一个线程定时读取Registry上的Broker路径/pubsub/broker下各个子节点的值，以定时轮询的策略观察Broker Partition Number变动，以及各Partition的变动情况，作为实时策略的补充；同时定时检查心跳包超时的Broker，从有效的BrokerList中删除；</p></li>
 <li><p>8 依据规则【BrokerPartitionID = RoomID % BrokerPartitionNum， BrokerReplicaID = RoomID % BrokerPartitionReplicaNum】向某个Partition的replica转发Room Message，收到Client的Heatbeat包时要及时给予响应。</p></li>
@@ -302,10 +303,11 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 <li>4 从Registry路径/pubsub/broker/partition_num获取当前有效的Broker Partition Number；</li>
 <li><p>5 启动一个线程关注Registry上的Broker路径/pubsub/broker，以实时获取以下信息：</p>
 
-<div><pre><code class="language-none">Broker Partition Number；
-新的Broker Partition（此时发生了扩容）；
-Broker Partition内新的broker replica（Partition内发生了replica扩容）；
-Broker Parition内某replica挂掉的信息；</code></pre></div></li>
+<div><pre><code class="language-none">Broker Partition Number；</code></pre></div>
+
+<p>​   新的Broker Partition（此时发生了扩容）；
+​   Broker Partition内新的broker replica（Partition内发生了replica扩容）；
+​   Broker Parition内某replica挂掉的信息；</p></li>
 <li><p>6 定时向各个Broker Partition replica发送心跳，异步等待Broker返回的心跳响应包，以探测其活性，以保证不向超时的replica转发Gateway Message；</p></li>
 <li><p>7 启动一个线程定时读取Registry上的Broker路径/pubsub/broker下各个子节点的值，以定时轮询的策略观察Broker Partition Number变动，以及各Partition的变动情况，作为实时策略的补充；同时定时检查心跳包超时的Broker，从有效的BrokerList中删除；</p></li>
 <li><p>8 从Database全量加载路由 RoomGatewayList 数据放入本地缓存；</p></li>
@@ -408,10 +410,11 @@ Broker Parition内某replica挂掉的信息；</code></pre></div></li>
 <li>2 从Registry路径/pubsub/router/partition_num获取当前有效的Router Partition Number；</li>
 <li><p>3 启动一个线程关注Registry上的Router路径/pubsub/router，以实时获取以下信息：</p>
 
-<div><pre><code class="language-none">Router Partition Number；
-新的Router Partition（此时发生了扩容）；
-Partition内新的replica（Partition内发生了replica扩容）；
-Parition内某replica挂掉的信息；</code></pre></div></li>
+<div><pre><code class="language-none">Router Partition Number；</code></pre></div>
+
+<p>​   新的Router Partition（此时发生了扩容）；
+​   Partition内新的replica（Partition内发生了replica扩容）；
+​   Parition内某replica挂掉的信息；</p></li>
 <li><p>4 定时向各个Partition replica发送心跳，异步等待Router返回的心跳响应包，以探测其活性，以保证不向超时的replica转发Gateway Message；</p></li>
 <li><p>4 启动一个线程定时读取Registry上的Router路径/pubsub/router下各个子节点的值，以定时轮询的策略观察Router Partition Number变动，以及各Partition的变动情况，作为实时策略的补充；同时定时检查心跳包超时的Router，从有效的BrokerList中删除；</p></li>
 <li><p>6 依据规则向某个Partition的replica转发Gateway Message；</p></li>
@@ -469,9 +472,10 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 <li>5 从Registry路径/pubsub/router/partition_num获取当前有效的Router Partition Number；</li>
 <li><p>6 启动一个线程关注Registry路径/pubsub/router，以实时获取以下信息：</p>
 
-<div><pre><code class="language-none">Router Partition Number；
-Partition内新的replica（Partition内发生了replica扩容）；
-Parition内某replica挂掉的信息；</code></pre></div></li>
+<div><pre><code class="language-none">Router Partition Number；</code></pre></div>
+
+<p>​   Partition内新的replica（Partition内发生了replica扩容）；
+​   Parition内某replica挂掉的信息；</p></li>
 <li><p>7 从Database加载数据；</p></li>
 <li><p>8 启动一个线程异步处理MessageQueue内的Gateway Message，把Gateway Message转发给同Partition内其他peer replica，然后依据规则【RoomID % BrokerPartitionNumber == BrokerReplicaPartitionID % BrokerPartitionNumber】转发给BrokerList内每个Broker；处理Broker发来的心跳包，把Broker的信息存入本地BrokerList，然后给Broker发送回包；</p></li>
 <li><p>9 修改Registry路径/pubsub/router/partition3下节点的状态为Running；</p></li>
@@ -499,10 +503,11 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 <li>4 从Registry路径/pubsub/router/partition(x)下获取每个Router Partition的各个replica；</li>
 <li><p>5 启动一个线程关注Registry路径/pubsub/router，以实时获取以下信息：</p>
 
-<div><pre><code class="language-none">Router Partition Number；
-新的Router Partition（此时发生了扩容）；
-Partition内新的replica（Partition内发生了replica扩容）；
-Parition内某replica挂掉的信息；</code></pre></div></li>
+<div><pre><code class="language-none">Router Partition Number；</code></pre></div>
+
+<p>​   新的Router Partition（此时发生了扩容）；
+​   Partition内新的replica（Partition内发生了replica扩容）；
+​   Parition内某replica挂掉的信息；</p></li>
 <li><p>6 依据规则【RouterPartitionID % BrokerPartitionNum == BrokerPartitionID % BrokerPartitionNum，RouterReplicaID = BrokerReplicaID % BrokerPartitionNum】选定目标Router Partition下某个Router replica，向其发送心跳消息，包含BrokerPartitionNum、BrokerPartitionID、BrokerHostAddr和精确到秒级的Timestamp，并异步等待所有Router replica的回复，所有Router转发来的Gateway Message放入GatewayMessageQueue；</p></li>
 <li><p>7 依据规则【BrokerPartitionID == RoomID % BrokerParitionNum】从Database加载数据；</p></li>
 <li><p>8 依据规则【BrokerPartitionID % BrokerParitionNum == RoomID % BrokerParitionNum】异步处理GatewayMessageQueue内的Gateway Message，只留下合乎规则的消息的数据；</p></li>
@@ -528,9 +533,12 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <hr>
 
-<p>前期的系统只考虑了用户在线情况下实时消息的传递，当用户离线时其消息便无法获取。若系统考虑用户离线消息传递，需要考虑如下因素：
-* 消息固化：保证用户上线时收到其离线期间的消息；
-* 消息有序：离线消息和在线消息都在一个消息系统传递，给每个消息分配一个ID以区分消息先后顺序，消息顺序越靠后则ID愈大。</p>
+<p>前期的系统只考虑了用户在线情况下实时消息的传递，当用户离线时其消息便无法获取。若系统考虑用户离线消息传递，需要考虑如下因素：   </p>
+
+<ul>
+<li>消息固化：保证用户上线时收到其离线期间的消息；</li>
+<li>消息有序：离线消息和在线消息都在一个消息系统传递，给每个消息分配一个ID以区分消息先后顺序，消息顺序越靠后则ID愈大。</li>
+</ul>
 
 <p>离线消息的存储和传输，需要考虑用户的状态以及每条消息的发送状态，整个消息核心链路流程会有大的重构。新消息架构如下图：</p>
 
@@ -548,7 +556,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>系统内部代号貔貅(貔貅者，雄貔雌貅)，源自上面两个新模块。</p>
 
-<p>这个版本架构流程的核心思想为“消息ID与消息内容分离，消息与用户状态分离”。消息发送流程涉及到模块Client/Proxy/Pi/Xiu，消息推送流程则涉及到模块Pi/Xiu/Broker/Router/Gateway。</p>
+<p>这个版本架构流程的核心思想为“消息ID与消息内容分离，消息与用户状态分离”。消息发送流程涉及到模块 Client/Proxy/Pi/Xiu，消息推送流程则涉及到模块 Pi/Xiu/Broker/Router/Gateway。</p>
 
 <p>下面先细述Pi和Xiu的接口，然后再详述发送和推送流程。</p>
 
@@ -570,7 +578,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 <li>3 检查 SnowflakeID 对应的消息是否已经被存储过，若已经存储过则返回其对应的消息ID然后退出；</li>
 <li><p>4 给消息分配一个 MsgID；</p>
 
-<p>每个Xiu有自己唯一的 Xiu<em>Partition</em>ID，以及一个初始值为0的 Partition<em>Msg</em>ID。MsgID = 1B[ Xiu<em>Partition</em>ID ] + 1B[ Message Type ] + 6B[ ++ Partition<em>Msg</em>ID ]。每次分配的时候 Partition<em>Msg</em>ID 都自增加一。</p></li>
+<p>每个Xiu有自己唯一的 Xiu_Partition_ID，以及一个初始值为 0 的 Partition_Msg_ID。MsgID = 1B[ Xiu_Partition_ID ] + 1B[ Message Type ] + 6B[ ++ Partition_Msg_ID ]。每次分配的时候 Partition_Msg_ID 都自增加一。</p></li>
 <li><p>5 以 MsgID 为 key 把消息存入基于共享内存的 Hashtable，并存入消息的 CRC32 hash值和插入时间，把 MsgID 存入一个 LRU list 中；</p>
 
 <p>LRU List 自身并不存入共享内存中，当进程重启时，可以根据Hashtable中的数据重构出这个List。把消息存入 Hashtable 中时，如果 Hashtable full，则依据 LRU List 对Hashtable 中的消息进行淘汰。</p></li>
@@ -597,7 +605,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>目前从简，暂定Xiu的副本只有一个。</p>
 
-<p>Xiu节点启动的时候根据自身配置文件中分配的 Xiu<em>Partition</em>ID 到Registry路径 /pubsub/xiu/partition_id 下进行注册一个临时有序节点，注册成功则Registry会返回Xiu的节点 ID。</p>
+<p>Xiu节点启动的时候根据自身配置文件中分配的 Xiu_Partition_ID 到Registry路径 /pubsub/xiu/partition_id 下进行注册一个临时有序节点，注册成功则Registry会返回Xiu的节点 ID。</p>
 
 <p>Xiu节点获取 /pubsub/xiu/partition_id 下的所有节点的ID和地址信息，依据 <code>节点ID最小者为leader</code> 的原则，即可判定自己的角色。只有leader可接受读写数据请求。</p>
 
@@ -605,14 +613,14 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <ul>
 <li>1 follower定时向leader发送心跳信息，心跳信息包含本地最新消息的ID；</li>
-<li>2 leader启动一个数据同步线程处理follower的心跳信息，leader的数据同步线程从LRU list中查找 follower<em>latest</em>msg_id 之后的N条消息的ID，若获取到则读取消息并同步给follower，获取不到则回复其与leader之间消息差距太大；</li>
+<li>2 leader启动一个数据同步线程处理follower的心跳信息，leader的数据同步线程从LRU list中查找 follower_latest_msg_id 之后的N条消息的ID，若获取到则读取消息并同步给follower，获取不到则回复其与leader之间消息差距太大；</li>
 <li>3 follower从leader获取到最新一批消息，则存储之；</li>
 <li>4 follower若获取leader的消息差距太大响应，则请求leader的agent把RocksDB的固化数据全量同步过来，整理完毕后再次启动与leader之间的数据同步流程。</li>
 </ul>
 
 <p>follower会关注Registry路径  /pubsub/xiu/partition_id 下所有所有节点的变化情况，如果leader挂掉则及时转换身份并接受客户端请求。如果follower 与 leader 之间的心跳超时，则follower删掉 leader 的 Registry 路径节点，及时进行身份转换处理客户端请求。</p>
 
-<p>当leader重启或者follower转换为leader的时候，需要把 Partition<em>Msg</em>ID 进行一个大数值增值（譬如增加1000）以防止可能的消息ID乱序情况。</p>
+<p>当leader重启或者follower转换为leader的时候，需要把 Partition_Msg_ID 进行一个大数值增值（譬如增加1000）以防止可能的消息ID乱序情况。</p>
 
 <h5 id="toc_24">6.1.4 集群扩容</h5>
 
@@ -665,7 +673,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 
 <p>同 Xiu 模块，暂定 Pi 的同 Parition 副本只有一个。</p>
 
-<p>Pi 节点启动的时候根据自身配置文件中分配的 Pi<em>Partition</em>ID 到Registry路径 /pubsub/pi/partition_id 下进行注册一个临时有序节点，注册成功则 Registry 会返回 Pi 的节点 ID。</p>
+<p>Pi 节点启动的时候根据自身配置文件中分配的 Pi_Partition_ID 到Registry路径 /pubsub/pi/partition_id 下进行注册一个临时有序节点，注册成功则 Registry 会返回 Pi 的节点 ID。</p>
 
 <p>Pi 节点获取 /pubsub/pi/partition_id 下的所有节点的ID和地址信息，依据 <code>节点ID最小者为leader</code> 的原则，即可判定自己的角色。只有 leader 可接受读写数据请求。</p>
 
@@ -698,7 +706,7 @@ Parition内某replica挂掉的信息；</code></pre></div></li>
 <li>10 当 Registry 路径 /pubsub/xiu/partition_num 的值 PartitionNumber 满足条件 <code>PartitionID &gt;= PartitionNumber</code> 时，意味着扩容完成，处理用户请求时要给用户返回响应。</li>
 </ul>
 
-<p>Proxy 会把读写请求参照条件 <code>UIN % Pi_Partition_Num == Pi_Partition_ID % Pi_Partition_Num</code> 向相关 partition 的 leader 转发用户请求。假设原来 PartitionNumber 值为2，扩容后值为4，则原来转发给 partition0 的写请求现在需同时转发给 partition0 和 partition2，原来转发给 partition1 的写请求现在需同时转发给 partition1 和 partition3。</p>
+<p>Proxy 会把读写请求参照条件 <code>UIN % Pi\_Partition\_Num == Pi\_Partition\_ID % Pi\_Partition\_Num</code> 向相关 partition 的 leader 转发用户请求。假设原来 PartitionNumber 值为2，扩容后值为4，则原来转发给 partition0 的写请求现在需同时转发给 partition0 和 partition2，原来转发给 partition1 的写请求现在需同时转发给 partition1 和 partition3。</p>
 
 <p>另外启动一个工具，当水平扩展后所有新启动的 Partition 内所有 Replica 的状态都是 Running 的时候，修改Registry路径/pubsub/xiu/partition_num的值为扩容后 Partition 的数目。</p>
 
@@ -859,7 +867,6 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
-
 
 
 
