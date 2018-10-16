@@ -315,6 +315,7 @@ num.streams则是指定consumers的个数。经个人测试，共两个kafka top
 
 至于MirrorMaker 集群自身的稳定性，`参考文档12` 认为可以通过检查MirrorMaker的consumer group的lag值来验证，确实是一个好办法。
 
+
 ## 参考文档 ##
 
 - 1 [Kafka Compression Performance Tests](http://blog.yaorenjie.com/2015/03/27/Kafka-Compression-Performance-Tests/)
