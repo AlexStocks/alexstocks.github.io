@@ -23,6 +23,8 @@
 
 Pulsar 的底层数据 以 Fragments 形式存储在多个 BookKeeper 上，当集群扩容添加 Bookies 后，Pulsar 会在新的Bookie上创建新的 Fragment，所以不需要再扩容时候像 Kafka 一样进行 Rebalance 操作。但是这样的结果就是同一个 Ledger 的 Fragments 分布在多个 Bookie 上，导致读取和写入会在多个 Bookies 之间跳跃。Topic的 Ledger 和 Fragment 之间映射关系等元数据存储在Zookeeper中，Pulsar Broker 需要实时跟踪这些关系进行。
 
+Pulsar 有一个 `Ledger的所有权` 的概念，其意义为某个 Ledger 数据所在的 Bookie。除去创建新 Ledger 的情况，当集群扩容 Pulsar 把数据写入新的 Bookie 或者 `当前Fragment使用Bookies发生写入错误或超时` 时，`Ledger的所有权` 都会发生改变。
+
 Pulsar 的 metadata 存储在 zookeeper 上，而消息数据存储在 Bookkeeper 上。Broker 虽然需要这些 metadata，但是其自身并不持久化存储这些数据，所以可以认为是无状态的。
 
 #### 1.2 名词对应表
@@ -35,12 +37,16 @@ Pulsar 的 metadata 存储在 zookeeper 上，而消息数据存储在 Bookkeepe
 | Topic | Topic |
 | Partition | Ledger |
 | Segment | Fragment/Segment |
-| Broker | Bookie |
-| Ensemble Size | Broker Number |
-| Write Quorum Size (Qw) | Replica Number |
+| Bookie  | Broker  |
+| Ensemble Size | Replica Number |
+| Write Quorum Size (Qw) | metadata.broker.list |
 | Ack Quorum Size (Qa) | request.required.acks |
 
-writing.
+Pulsar 的数据存储节点 Bookkeeper 被称为 Bookie，相当于一个 Kafka Broker。Ledger 是 Topic 的若干日志的集合，是 Pulsar 数据删除的最小单元，即 Pulsar 每次淘汰以 Ledger 为单位进行删除。Fragment 是 Bookkeeper 的概念，对应一个日志文件，每个 Ledger 有若干 Fragment 组成。 
+
+Pulsar 进行数据同步时采用相关共识算法保证数据一致性。Ensemble Size 表示 Topic 要用到的物理存储节点 Bookie 个数，类似于 Kafka，其副本数目 Ensemble Size 不能超过 Bookie 个数，因为一个 Bookie 上不可能存储超过一个数据副本。每次写数据时最低写入的 Bookie 个数 Qw 的上限当然是 Ensemble Size。
+
+Qa 是每次写请求发送完毕后需要回复确认的 Bookie 的个数，类似于 Kafka 的 `request.required.acks`，其数值越大则需要确认写成功的时间越长，其值上限当然是 Qw。[参考文档1](https://mp.weixin.qq.com/s/CIpCLCxqpLoQVUKz6QeDJQ) 提到 `为了一致性，Qa应该是：(Qw + 1) / 2 或者更大`，即为了确保数据安全性，Qa 下限是 `(Qw + 1) / 2`。
 
 ### 2 Pulsar 读写过程
 ---
