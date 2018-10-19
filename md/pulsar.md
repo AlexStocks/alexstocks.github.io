@@ -150,7 +150,7 @@ Pulsar 的数据最终是靠 Bookkeeper(Bookie) 落地的，其数据写流程�
 
 > 1 [理解Apache Pulsar工作原理](https://mp.weixin.qq.com/s/CIpCLCxqpLoQVUKz6QeDJQ)  
 > 2 [Twitter高性能分布式日志系统架构解析](https://mp.weixin.qq.com/s/0dkgA8swNPkpcY5H6CU62w)  
-> 3 [Kafka vs Pulsar - Rebalancing (Sketch)](https://jack-vanlightly.com/sketches/2018/10/2/kafka-vs-pulsar-rebalancing-sketch)
+> 3 [Kafka vs Pulsar - Rebalancing (Sketch)](https://jack-vanlightly.com/sketches/2018/10/2/kafka-vs-pulsar-rebalancing-sketch)  
 > 4 [
 Spark生态系统解析及基于Redis的开源分布式服务Codis](https://www.csdn.net/article/2015-02-02/2823796-spark-codis-crazyjvm-goroutine/2)
 
