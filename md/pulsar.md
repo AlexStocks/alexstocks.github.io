@@ -17,8 +17,8 @@
 | Pulsar | Kafka |
 | :---- | :--- |
 | Topic | Topic |
-| Partition | Ledger |
-| Segment | Fragment/Segment |
+| Ledger | Partition |
+| Fragment | Fragment/Segment |
 | Bookie  | Broker  |
 | Broker | Client SDK |
 | Ensemble Size | Replica Number |
@@ -49,7 +49,7 @@ Qa 是每次写请求发送完毕后需要回复确认的 Bookie 的个数，类
 
 Pulsar 的底层数据 以 Fragments 形式存储在多个 BookKeeper 上，当集群扩容添加 Bookies 后，Pulsar 会在新的Bookie上创建新的 Fragment，所以不需要再扩容时候像 Kafka 一样进行 Rebalance 操作，其结果就是 `Fragments跨多个Bookies以带状分布`。但是这样的结果就是同一个 Ledger 的 Fragments 分布在多个 Bookie 上，导致读取和写入会在多个 Bookies 之间跳跃。Topic的 Ledger 和 Fragment 之间映射关系等元数据存储在 Zookeeper 中，Pulsar Broker 需要实时跟踪这些关系进行读写流程。
 
-Pulsar 有一个 `Ledger的所有权` 的概念，其意义为某个 Ledger 数据所在的 Bookie。除去创建新 Ledger 的情况，当集群扩容 Pulsar 把数据写入新的 Bookie 或者 `当前Fragment使用Bookies发生写入错误或超时` 时，`Ledger的所有权` 都会发生改变。
+Pulsar 有一个 `Ledger的所有权(ownership)` 的概念，其意义为某个 Ledger 数据所在的 Bookie。除去创建新 Ledger 的情况，当集群扩容 Pulsar 把数据写入新的 Bookie 或者 `当前Fragment使用Bookies发生写入错误或超时` 时，`Ledger的所有权` 都会发生改变。
 
 Pulsar 的 metadata 存储在 zookeeper 上，而消息数据存储在 Bookkeeper 上。Broker 虽然需要这些 metadata，但是其自身并不持久化存储这些数据，所以可以认为是无状态的。不像 Kafka 是在 Partition 级别拥有一个 leader Broker，Pulsar 是在 Topic 级别拥有一个 leader Broker，称之为拥有 Topic 的所有权，针对该 Topic 所有的 R/W 都经过改 Broker 完成。
 
@@ -60,6 +60,8 @@ Pulsar Broker 可以认为是一种 Proxy，它对 client 屏蔽了服务端读�
 ![](../pic/pulsar/pulsar_proxy.webp) 
 
 上图中的 Writer Proxy 和 Read Proxy 两个逻辑角色的功能由 Pulsar Broker 这一物理模块完成。
+
+Kafka 的所有 Broker 会选出一个 Leader，作为 Broker Leader 决定 Broker 宕机判断、集群扩容、创建删除 Topic、Topic Replica分布、Topic Partition 的 Leader 的选举。Pulsar 的所有 Broker 也会选举一个 Leader【或者称为 Master 更合适，以区分于 Topic 的 Leader】，对 Broker 宕机判断（Failover）、根据 Bookie 集群负载Topic Ledger 所有权【即 Ledger 所在的 Bookie】等任务。
 
 ### 2 Pulsar 读写过程
 ---
