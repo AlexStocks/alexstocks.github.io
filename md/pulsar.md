@@ -27,7 +27,7 @@
 
 Pulsar 的数据存储节点 Bookkeeper 被称为 Bookie，相当于一个 Kafka Broker。Ledger 是 Topic 的若干日志的集合，是 Pulsar 数据删除的最小单元，即 Pulsar 每次淘汰以 Ledger 为单位进行删除。Fragment 是 Bookkeeper 的概念，对应一个日志文件，每个 Ledger 有若干 Fragment 组成。 
 
-Pulsar 进行数据同步时采用相关共识算法保证数据一致性。Ensemble Size 表示 Topic 要用到的物理存储节点 Bookie 个数，类似于 Kafka，其副本数目 Ensemble Size 不能超过 Bookie 个数，因为一个 Bookie 上不可能存储超过一个数据副本。每次写数据时最低写入的 Bookie 个数 Qw 的上限当然是 Ensemble Size。
+Pulsar 进行数据同步时采用相关共识算法保证数据一致性。Ensemble Size 表示 Topic 要用到的物理存储节点 Bookie 个数，类似于 Kafka，其副本数目 Ensemble Size 不能超过 Bookie 个数，因为一个 Bookie 上不可能存储超过一个以上的数据副本。每次写数据时最低写入的 Bookie 个数 Qw 的上限当然是 Ensemble Size。
 
 Qa 是每次写请求发送完毕后需要回复确认的 Bookie 的个数，类似于 Kafka 的 `request.required.acks`，其数值越大则需要确认写成功的时间越长，其值上限当然是 Qw。[参考文档1](https://mp.weixin.qq.com/s/CIpCLCxqpLoQVUKz6QeDJQ) 提到 `为了一致性，Qa应该是：(Qw + 1) / 2 或者更大`，即为了确保数据安全性，Qa 下限是 `(Qw + 1) / 2`。
 
@@ -50,6 +50,35 @@ Qa 是每次写请求发送完毕后需要回复确认的 Bookie 的个数，类
 Pulsar 的底层数据 以 Fragments 形式存储在多个 BookKeeper 上，当集群扩容添加 Bookies 后，Pulsar 会在新的Bookie上创建新的 Fragment，所以不需要再扩容时候像 Kafka 一样进行 Rebalance 操作，其结果就是 `Fragments跨多个Bookies以带状分布`。但是这样的结果就是同一个 Ledger 的 Fragments 分布在多个 Bookie 上，导致读取和写入会在多个 Bookies 之间跳跃。Topic的 Ledger 和 Fragment 之间映射关系等元数据存储在 Zookeeper 中，Pulsar Broker 需要实时跟踪这些关系进行读写流程。
 
 Pulsar 有一个 `Ledger的所有权(ownership)` 的概念，其意义为某个 Ledger 数据所在的 Bookie。除去创建新 Ledger 的情况，当集群扩容 Pulsar 把数据写入新的 Bookie 或者 `当前Fragment使用Bookies发生写入错误或超时` 时，`Ledger的所有权` 都会发生改变。
+ 
+#### 1.2.1 Pulsar Producer/Consumer
+---
+
+Pulsar 自身支持多租户，在 zookeeper 中以 `/root/property/namespace/topic/ledger` 形式组织映射关系，[参考文档5](https://mp.weixin.qq.com/s/4UMz2REmn7rMYHwLjGE2RQ)中的下图清晰地描述了多租户之间的组织关系：
+
+![](../pic/pulsar/pulsar_tenant.webp)
+
+其中 property 是租户名称，namespace 则是业务线名称，故一个租户可以有多个 namespace，租户可以针对 namespace 设置 ACL、调整副本数目、消息过期时间等参数，至于多租户的资源控制无非是借助配额、限流、流控等手段进行。租户实质上是一种资源隔离手段，把不同业务婚部在一起，可以提高资源的利用率。
+
+向 Pulsar 中写入数据者称为 Producer。Producer 向某个 Topic 写入数据时，采用不同的路由策略则一条日志消息会落入不同的 Ledger，[参考文档7](https://mp.weixin.qq.com/s/uwmLR-1Jo_VNXRFA0yYWlg)中给出了如下四种路由策略：
+
+- 单个分区——生产者随机挑选一个分区，并将数据写入该分区。该策略与非分区主题提供的保证是一样的，不过如果有多个生产者向同一个主题写入数据，该策略就会很有用。
+- 轮询（round robin）分区——生产者通过轮询的方式将数据平均地分布到各个分区上。比如，第一个消息写入第一个分区，第二个消息写入第二个分区，并以此类推。
+- 哈希（hash）分区——每个消息会带上一个键，要写入哪个分区取决于它所带的键。这种分区方式可以保证次序。
+- 自定义分区——生产者使用自定义函数生成分区对应的数值，然后根据这个数值将消息写入对应的分区。
+
+Pulsar 的 Consumer 消费消息有不同的消费模式，亦有不同的获取方式。其获取消息的方式有同步等待、异步等待和注册 MessageListener 三种方式，Consumer 可以主动向 Pulsar 拉取消息也可以等待 Pulsar 的推送，无论采用哪种方式 Consumer 接收到消息后都需要给 Pulsar 回复 acknowledgement，回复方式有逐条回复和批量回复两种。Pulsar 会记录 Consumer 的 ack 并移动其消息消费游标。Pulsar 和 Consumer 之间消费消息的方式是一种推拉相结合的方式，详细内容见[参考文档6](http://www.cnblogs.com/hzmark/p/pulsar-consumer.html) 。
+
+
+![](../pic/pulsar/pulsar_sub.webp)
+
+
+Pulsar 不同 Consumer 可以针对同一个 Topic 指定不同的消费模式。如上图所示，消费模式主要有独享（Exclusive）、共享（Shared）或故障转移（Failover）三种。Exclusive 可以认为是 Failover 的一个特例，两种消费方式都可以保证消息有序的传递给 Consumer，并方便 Consumer 以批量方式提交 acknowledgement，区别就是 Exclusive 无法保证消费者高可用。
+
+Shared 消费方式则类似于 kafka 的 Consumer Group 的消费方式，Pulsar 以 Round-Robin 的方式把消息分发给一组消费群内的每个 Consumer，缺点是无法保证消息的有序性，且每个 Consumer 须对每个消息都回复 acknowledgement。由于消息乱序，某个 Consumer 对某个 offset 比较大的消息回复 acknowledgement 时，可能某些 offset 比较小的消息并未被其他 Consumer 正确地处理，但是 Pulsar 会标记这个消费群对此 offset 以前的消息标记为已处理状态。
+
+#### 1.2.2 Pulsar Broker
+---
 
 Pulsar 的 metadata 存储在 zookeeper 上，而消息数据存储在 Bookkeeper 上。Broker 虽然需要这些 metadata，但是其自身并不持久化存储这些数据，所以可以认为是无状态的。不像 Kafka 是在 Partition 级别拥有一个 leader Broker，Pulsar 是在 Topic 级别拥有一个 leader Broker，称之为拥有 Topic 的所有权，针对该 Topic 所有的 R/W 都经过改 Broker 完成。
 
@@ -61,7 +90,7 @@ Pulsar Broker 可以认为是一种 Proxy，它对 client 屏蔽了服务端读�
 
 上图中的 Writer Proxy 和 Read Proxy 两个逻辑角色的功能由 Pulsar Broker 这一物理模块完成。
 
-Kafka 的所有 Broker 会选出一个 Leader，作为 Broker Leader 决定 Broker 宕机判断、集群扩容、创建删除 Topic、Topic Replica分布、Topic Partition 的 Leader 的选举。Pulsar 的所有 Broker 也会选举一个 Leader【或者称为 Master 更合适，以区分于 Topic 的 Leader】，对 Broker 宕机判断（Failover）、根据 Bookie 集群负载Topic Ledger 所有权【即 Ledger 所在的 Bookie】等任务，具体代码细节可参见 Pulsar LoadManager 相关流程。
+Kafka 的所有 Broker 会选出一个 Leader，作为 Broker Leader 决定 Broker 宕机判断、集群扩容、创建删除 Topic、Topic Replica分布、Topic Partition 的 Leader 的选举。Pulsar 的所有 Broker 也会借助 zookeeper 加锁的方式选举一个 Leader【或者称为 Master 更合适，以区分于 Topic 的 Leader】，对 Broker 宕机判断（Failover）、根据 Bookie 集群负载Topic Ledger 所有权【即 Ledger 所在的 Bookie】等任务，具体代码细节可参见 Pulsar LoadManager 相关流程。
 
 ### 2 Pulsar 读写过程
 ---
@@ -75,9 +104,15 @@ Pulsar 的写流程如下图：
 
 ![](../pic/pulsar/pulsar_write.webp) 
 
-Broker 接收到 client 的请求后，把数据写入 Qw 个 Bookie，收到 Qa 个 Bookie 的回应后，可以认为写成功。Kafka 中这个角色是由 client 自身完成的。
+Pulsar Broker 接收到 client 的请求后，依据 Topic 所使用的 Ensemble 集合以及相关参数，把数据写入 Qw 个 Bookie，收到 Qa 个 Bookie 的回应后，可以认为写成功。<font color=blue>至于 Ensemble 的选择，则由 Pulsar Broker Leader 通过如同机房同机柜以及负载等相应的策略在创建 Topic 的时候从 Bookie 集合中选择。</font>
+
+![](../pic/pulsar/pulsar_bookie_striple.webp)
+
+如上图，Bookie Ensemble 数目是 5，Qw 为 3，Broker 可以用这种条带化方式把数据 Entry x 写入各个 Bookie。<font color=blue>每个 Bookie 有一个 Auditor 线程跟踪自身负责的 Entry 集合是否有数据副本缺失【如当 Bookie 1 接收到 Entry 6 时，Auditor 会检测 Entry 5 是否已经收到】，当其发现数据有缺失的时候会从副本集中其他副本复制数据。</font>
 
 如果写流程中有 Bookie 返回错误或者超时没有返回，<font color=red>则 Broker 会用新的 Bookie 替换之</font>，并把数据写入其中的 Ledger/Fragment上。通过这个称之为 `Ensemble Change` 的方法能够保证 Pulsar 肯定能够写成功，而不是由于某个节点故障导致写流程阻塞住进而影响后面 Entry 的写流程。
+
+![](../pic/pulsar/pulsar_striple.png)
 
 如果写流程中 Pulsar Broker 发生崩溃，Failover 流程【#2.3 fencing#小节会详述之】完成后，新的 Pulsar Broker 会关闭上个 Broker 写的 Ledger，而后创建新的 Ledger 进行写入。
 
@@ -89,6 +124,12 @@ Pulsar 可以缓存写流程中的部分尾部数据用于加快 client 的读�
 
 #### 2.2 读流程
 ---
+
+Pulsar Consumer 读取消息的不需要关心数据数据存储所在的介质，因为 Pulsar 很好的使用了缓存功能以提高读取速度，并利用分级方式降低存储成本。
+
+![](../pic/pulsar/pulsar_cache.png)
+
+如上图所示，除了 Broker 自身的 Cache，这个层级存储方式使用了 AWS S3 以及其他的一些存储介质，但对整体集群性能影响并不大。 
 
 Pulsar 的读流程如下图：
 
@@ -120,19 +161,26 @@ Pulsar Broker 获取可靠的 LAC 之后，其读取可以从任一 Bookie 开�
 
 Codis 也是一种基于 Proxy 的分布式存储系统，架构实质与 Pulsar 无多大差别，所以二者流程类似也在清理之中。Fencing 本质就是一个分布式加锁协议，与 2PC 协议类似，本质上与多 CPU core 之间数据一致性协议 MESI 协议也无差。
 
+
 #### 2.4 Bookie 数据读写流程
 ---
 
-Pulsar 的数据最终是靠 Bookkeeper(Bookie) 落地的，其数据写流程如下：
+Pulsar 的数据最终是靠 Bookkeeper(Bookie) 落地的，各个 Pulsar Bookie 之间是平等的，kafka 的存储节点在 Partition 层次上有主从之分。单个 Broker 数据写流程如下：
 
-- 1 将写请求记入 WAL；
+- 1 将写请求记入 WAL【类似于数据库的 Journal 文件】；
+
+    > 一般工程实践上建议把 WAL 和数据存储文件分别存储到两种存储盘上，如把 WAL 存入一个 SSD 盘，而数据文件存入另一个 SSD 或者 SATA 盘。 
 - 2 将数据写入内存缓存中；
 - 3 写缓存写满后，进行数据排序并进行 Flush 操作，排序时将同一个 Ledger 的数据聚合后以时间先后进行排序，以便数据读取时快速顺序读取；
 - 4 将 <(LedgerID, EntryID), EntryLogID> 写入 RocksDB。
 
     > LedgerID 相当于 kafka 的 ParitionID，EntryID 即是 Log Message 的逻辑 ID，EntryLogId 就是 Log消息在 Pulsar Fragment文件的物理 Offset。
-
-若与对 Elasticsearch 的写入刷盘流程进行比较，会发现二者流程比较相似。其实其与 RocksDB 写流程也有相似之处，只不过 RocksDB 需要维持数据的状态机，而日志型存储系统 Pulsar 不需要对数据进行计算或者整理，故其还有 Bookkeeper 没有的基于 LSM 的对数据进行 compaction 的整理流程，或者也可以说 Pulsar 把对数据的重新整理交个 Consumer 自己进行处理，自身只负责按照提交先后顺序维持 Entry 的有序存储即可。
+    >
+    > 这里把这个映射关系存储 RocksDB 只是为了加快写入速度，其自身并不是 Pulsar Bookie 的关键组件。
+   
+![](../pic/pulsar/pulsar_read_write_isolation.png)   
+   
+结合上图，可以对上述流程有更清晰的认识。若与对 Elasticsearch 的写入刷盘流程进行比较，会发现二者流程比较相似。其实其与 RocksDB 写流程也有相似之处，只不过 RocksDB 需要维持数据的状态机，而日志型存储系统 Pulsar 不需要对数据进行计算或者整理，故其还有 Bookkeeper 没有的基于 LSM 的对数据进行 compaction 的整理流程，或者也可以说 Pulsar 把对数据的重新整理交个 Consumer 自己进行处理，自身只负责按照提交先后顺序维持 Entry 的有序存储即可。
     
 Bookie 的整个写入流程除了自身把内存缓存数据批量刷盘一步外，整个流程几乎不需要跟磁盘进行IO，所以速度也是极快。
 
@@ -150,13 +198,23 @@ Bookie 的整个写入流程除了自身把内存缓存数据批量刷盘一步�
 
 如果 Bookie 意外崩溃，则其重启后需要进行数据恢复，执行这个任务的流程称之为 AutoRecoveryMain。AutoRecoveryMain 任务是由若干个 worker 线程构成的线程池执行的，每个 worker 线程从由自己负责的 zookeeper path 上找到要恢复数据的 Ledger 进行数据复制。
 
+![](../pic/pulsar/pulsar_striple.png)
+
+如果集群发生扩容，则由 Auditor 线程负责 Segment 数据的迁移复制。
+
 ## 参考文档
 
 > 1 [理解Apache Pulsar工作原理](https://mp.weixin.qq.com/s/CIpCLCxqpLoQVUKz6QeDJQ)  
 > 2 [Twitter高性能分布式日志系统架构解析](https://mp.weixin.qq.com/s/0dkgA8swNPkpcY5H6CU62w)  
 > 3 [Kafka vs Pulsar - Rebalancing (Sketch)](https://jack-vanlightly.com/sketches/2018/10/2/kafka-vs-pulsar-rebalancing-sketch)  
 > 4 [
-Spark生态系统解析及基于Redis的开源分布式服务Codis](https://www.csdn.net/article/2015-02-02/2823796-spark-codis-crazyjvm-goroutine/2)
+Spark生态系统解析及基于Redis的开源分布式服务Codis](https://www.csdn.net/article/2015-02-02/2823796-spark-codis-crazyjvm-goroutine/2)   
+> 5 [Apache Pulsar的多租户](https://mp.weixin.qq.com/s/4UMz2REmn7rMYHwLjGE2RQ)   
+> 6 [Pulsar Consumer实现介绍](http://www.cnblogs.com/hzmark/p/pulsar-consumer.html)    
+> 7 [简介Apache Pulsar-下一代分布式消息系统](https://mp.weixin.qq.com/s/uwmLR-1Jo_VNXRFA0yYWlg)   
+> 8 [Apache Pulsar中的多地互备，第1篇：概念和功能](https://mp.weixin.qq.com/s/qWgLsDYYL2G1V6O2XHVxbw)   
+> 9 [Apache Pulsar中的多地互备，第2篇：模式和实践](https://mp.weixin.qq.com/s/3cfs7pXQDmMWGJRB8criRg)   
+
 
 ## 扒粪者-于雨氏 ##
 
