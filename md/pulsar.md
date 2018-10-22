@@ -67,15 +67,15 @@ Pulsar 自身支持多租户，在 zookeeper 中以 `/root/property/namespace/to
 - 哈希（hash）分区——每个消息会带上一个键，要写入哪个分区取决于它所带的键。这种分区方式可以保证次序。
 - 自定义分区——生产者使用自定义函数生成分区对应的数值，然后根据这个数值将消息写入对应的分区。
 
-Pulsar 的 Consumer 消费消息有不同的消费模式，亦有不同的获取方式。其获取消息的方式有同步等待、异步等待和注册 MessageListener 三种方式，Consumer 可以主动向 Pulsar 拉取消息也可以等待 Pulsar 的推送，无论采用哪种方式 Consumer 接收到消息后都需要给 Pulsar 回复 acknowledgement，回复方式有逐条回复和批量回复两种。Pulsar 会记录 Consumer 的 ack 并移动其消息消费游标。Pulsar 和 Consumer 之间消费消息的方式是一种推拉相结合的方式，详细内容见[参考文档6](http://www.cnblogs.com/hzmark/p/pulsar-consumer.html) 。
-
+Pulsar 的 Consumer 消费消息有不同的消费模式，亦有不同的获取方式。其获取消息的方式有同步等待、异步等待和注册 MessageListener 三种方式，Consumer 可以主动向 Pulsar 拉取消息也可以等待 Pulsar 的推送，无论采用哪种方式 Consumer 接收到消息后都需要给 Pulsar 回复 acknowledgement(以下简称为ack)，回复方式有逐条回复（Individual Ack）和批量回复（Cumulative Ack）两种，关于二者的区别详见[参考文档10](https://mp.weixin.qq.com/s/XJ3vj9xeDpdqZr-um8wBug)。类似于 Kafka 有一个内置的保存各个消费者消费 topic offset 信息的 名为 __consumer_offsets 的 topic，Pulsar 也有专门的 ledger 记录 Consumer 的 ack 并移动其消息消费游标(Cursor)。Pulsar 和 Consumer 之间消费消息的方式是一种推拉相结合的方式，详细内容见[参考文档6](http://www.cnblogs.com/hzmark/p/pulsar-consumer.html) 。
 
 ![](../pic/pulsar/pulsar_sub.webp)
 
+Pulsar 不同 Consumer 可以针对同一个 Topic 指定不同的消费模式。如上图所示，消费模式主要有独享（Exclusive）、共享（Shared）或故障转移（Failover）三种。Exclusive 可以认为是 Failover 的一个特例，两种消费方式都可以保证消息有序的传递给 Consumer，并方便 Consumer 以批量方式提交 ack，区别就是 Exclusive 无法保证消费者高可用。
 
-Pulsar 不同 Consumer 可以针对同一个 Topic 指定不同的消费模式。如上图所示，消费模式主要有独享（Exclusive）、共享（Shared）或故障转移（Failover）三种。Exclusive 可以认为是 Failover 的一个特例，两种消费方式都可以保证消息有序的传递给 Consumer，并方便 Consumer 以批量方式提交 acknowledgement，区别就是 Exclusive 无法保证消费者高可用。
+![](../pic/pulsar/pulsar_consumer_group.webp)
 
-Shared 消费方式则类似于 kafka 的 Consumer Group 的消费方式，Pulsar 以 Round-Robin 的方式把消息分发给一组消费群内的每个 Consumer，缺点是无法保证消息的有序性，且每个 Consumer 须对每个消息都回复 acknowledgement。由于消息乱序，某个 Consumer 对某个 offset 比较大的消息回复 acknowledgement 时，可能某些 offset 比较小的消息并未被其他 Consumer 正确地处理，但是 Pulsar 会标记这个消费群对此 offset 以前的消息标记为已处理状态。
+如上图，Shared 消费方式则类似于 kafka 的 Consumer Group 的消费方式，Pulsar 以 Round-Robin 的方式把消息分发给一组消费群内的每个 Consumer，缺点是无法保证消息的有序性，且每个 Consumer 须对每个消息都回复 ack。
 
 #### 1.2.2 Pulsar Broker
 ---
@@ -214,7 +214,8 @@ Spark生态系统解析及基于Redis的开源分布式服务Codis](https://www.
 > 7 [简介Apache Pulsar-下一代分布式消息系统](https://mp.weixin.qq.com/s/uwmLR-1Jo_VNXRFA0yYWlg)   
 > 8 [Apache Pulsar中的多地互备，第1篇：概念和功能](https://mp.weixin.qq.com/s/qWgLsDYYL2G1V6O2XHVxbw)   
 > 9 [Apache Pulsar中的多地互备，第2篇：模式和实践](https://mp.weixin.qq.com/s/3cfs7pXQDmMWGJRB8criRg)   
-
+> 10 [Pulsar VS. Kafka（1）: 统一的消息消费模型（Queue + Stream）](https://mp.weixin.qq.com/s/XJ3vj9xeDpdqZr-um8wBug)   
+> 11 [Pulsar VS. Kafka（2）: 以Segment为中心的架构](https://mp.weixin.qq.com/s/zcole6BuAzP9durwAbrUpg)  
 
 ## 扒粪者-于雨氏 ##
 
