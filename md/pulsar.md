@@ -104,6 +104,10 @@ Kafka 的所有 Broker 会选出一个 Leader，作为 Broker Leader 决定 Brok
 #### 2.3 Pulsar Bookie
 ---
 
+![](../pic/pulsar/pulsar_bookie_sharding.png)
+
+前文说过 Pulsar Bookie 就是 Bookkeeper，其实如上图所示， Bookkeeper 自身就可以组成一个集群，这个集群是 `Client --- Server` 模型，集群的 metadata 可以利用一个 Ledger 语义存储，在 Client 层面保证 各个 Bookie 之间的数据一致性。Pulsar 则是一种 `Client --- Proxy --- Server` 模型，基于 Broker 这个 Proxy 来保证一个 Topic Parition 内的数据一致性。
+
 ![](../pic/pulsar/pulsar_bookie_segment.webp)
 
 Pulsar 的底层数据 以 Ledger（上图中的 Segment 就是 Ledger） 形式存储在多个 BookKeeper 上，当集群扩容添加 Bookies 后，Pulsar 会在新的 Bookie 上创建新的 Segment(即 Bookeeper 的 Ledger)，所以不需要再扩容时候像 Kafka 一样进行 Rebalance 操作，其结果就是 `Fragments跨多个Bookies以带状分布`。但是这样的结果就是同一个 Ledger 的 Fragments 分布在多个 Bookie 上，导致读取和写入会在多个 Bookies 之间跳跃。Topic的 Ledger 和 Fragment 之间映射关系等元数据存储在 Zookeeper 中，Pulsar Broker 需要实时跟踪这些关系进行读写流程。
@@ -112,7 +116,7 @@ Pulsar 有一个 `Ledger的所有权(ownership)` 的概念，其意义为某个 
 
 ![](../pic/pulsar/pulsar_bookie_expand.webp)
 
-上图描述了 Bookie 集群扩容的情况。图中 Bookie X 和 Bookie Y 被添加到集群中，Broker 根据 IDC、机架、各个 Bookie 的容量等信息根据各种策略把 Segment X+1 和 X+2 存储到两个 Bookie 节点中，最终确保群集中各个 Bookie 之间的流量均衡。
+上图描述了 Bookie 集群扩容的情况。图中 Bookie X 和 Bookie Y 被添加到集群中，Broker 根据 IDC、机架、各个 Bookie 的容量等信息根据各种策略把 Segment X+1 和 X+2 存储到两个 Bookie 节点中，最终确保群集中各个 Bookie 之间的流量均衡。<font color=blue>Pulsar 的 Partition 也可以扩容，但不能缩容。</font>
 
 ![](../pic/pulsar/pulsar_bookie_failover.webp)
 
@@ -167,6 +171,10 @@ Kafka 的 Consumer 会从 Partition 对应的 leader Broker 上读取数据，Pu
 
 Pulsar Broker 获取可靠的 LAC 之后，其读取可以从任一 Bookie 开始，如果在限定时间内没有响应则给第二个 Bookie 发送读取请求，然后同时等待这两个 Bookie，谁先响应就意味着读取成功，这个流程称之为 Speculative Read。
 
+![](../pic/pulsar/pulsar_read_write_isolation.png)
+
+上图描述了 Pulsar 通过 LAC 和 LAP 实现读写分离机制， 从而使得整个读写机制很简洁。
+
 #### 3.3 fencing
 ---
 
@@ -187,6 +195,13 @@ Pulsar Broker 获取可靠的 LAC 之后，其读取可以从任一 Bookie 开�
 
 Codis 也是一种基于 Proxy 的分布式存储系统，架构实质与 Pulsar 无多大差别，所以二者流程类似也在清理之中。Fencing 本质就是一个分布式加锁协议，与 2PC 协议类似，本质上与多 CPU core 之间数据一致性协议 MESI 协议也无差。
 
+![](../pic/pulsar/pulsar_raft_bk.png)
+
+上图比较了 Raft 和 Bookkeeper 之间的异同，很显然 fencing 就相当于 Raft 的 election 流程。可以把 Broker 理解为一个无状态的 leader，而相互之间平等的 Bookie 则是有状态的 follower，整体就相构成了一个 leader - follower 集群。而无状态的 Broker 的 Leadership change 相对于 Raft 来说就简单的多了。
+
+![](../pic/pulsar/pulsar_raft_bk_normal.png)
+
+上图是 Raft 与 Bookie 的正常数据写流程对比图，可见二者之间也是很类似的，差异在于 Raft 有一个状态机，而 Bookie 仅仅是一个日志型存储系统，对数据的计算交给了 Broker 或者 Consumer，所以其写数据流程也比 Raft 简单很多。
 
 #### 3.4 Bookie 数据读写流程
 ---
@@ -200,11 +215,10 @@ Pulsar 的数据最终是靠 Bookkeeper(Bookie) 落地的，各个 Pulsar Bookie
 - 3 写缓存写满后，进行数据排序并进行 Flush 操作，排序时将同一个 Ledger 的数据聚合后以时间先后进行排序，以便数据读取时快速顺序读取；
 - 4 将 <(LedgerID, EntryID), EntryLogID> 写入 RocksDB。
 
-    > LedgerID 相当于 kafka 的 ParitionID，EntryID 即是 Log Message 的逻辑 ID，EntryLogId 就是 Log消息在 Pulsar Fragment文件的物理 Offset。
-    >
+    > LedgerID 相当于 kafka 的 ParitionID，EntryID 即是 Log Message 的逻辑 ID，EntryLogId 就是 Log消息在 Pulsar Fragment文件的物理 Offset。   
     > 这里把这个映射关系存储 RocksDB 只是为了加快写入速度，其自身并不是 Pulsar Bookie 的关键组件。
    
-![](../pic/pulsar/pulsar_read_write_isolation.png)   
+![](../pic/pulsar/pulsar_bk_read_write_isolation.png)   
    
 结合上图，可以对上述流程有更清晰的认识。若与对 Elasticsearch 的写入刷盘流程进行比较，会发现二者流程比较相似。其实其与 RocksDB 写流程也有相似之处，只不过 RocksDB 需要维持数据的状态机，而日志型存储系统 Pulsar 不需要对数据进行计算或者整理，故其还有 Bookkeeper 没有的基于 LSM 的对数据进行 compaction 的整理流程，或者也可以说 Pulsar 把对数据的重新整理交个 Consumer 自己进行处理，自身只负责按照提交先后顺序维持 Entry 的有序存储即可。
     
@@ -241,9 +255,7 @@ Spark生态系统解析及基于Redis的开源分布式服务Codis](https://www.
 
 ## 扒粪者-于雨氏 ##
 
-> 2018/10/18，于雨氏，初作此文于西二旗。
-> 
-> 2018/10/20，于雨氏，于丰台完成 #3 Pulsar 读写过程#。
-> 
-> 2018/10/22，于雨氏，于丰台完成 #2 Pulsar 组件#。
+> 2018/10/18，于雨氏，初作此文于西二旗。   
+> 2018/10/20，于雨氏，于丰台完成 #3 Pulsar 读写过程#。   
+> 2018/10/22，于雨氏，于丰台完成 #2 Pulsar 组件#、# 3.4 小节中 “Raft 和 BK 之间比较” 部分内容。
 
