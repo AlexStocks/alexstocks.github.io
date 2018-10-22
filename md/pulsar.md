@@ -72,7 +72,7 @@ Pulsar 自身支持多租户，在 zookeeper 中以 `/root/property/namespace/to
 - 哈希（hash）分区——每个消息会带上一个键，要写入哪个分区取决于它所带的键。这种分区方式可以保证次序。
 - 自定义分区——生产者使用自定义函数生成分区对应的数值，然后根据这个数值将消息写入对应的分区。
 
-Pulsar 的 Consumer 消费消息有不同的消费模式，亦有不同的获取方式。其获取消息的方式有同步等待、异步等待和注册 MessageListener 三种方式，Consumer 可以主动向 Pulsar 拉取消息也可以等待 Pulsar 的推送，无论采用哪种方式 Consumer 接收到消息后都需要给 Pulsar 回复 acknowledgement(以下简称为ack)，回复方式有逐条回复（Individual Ack）和批量回复（Cumulative Ack）两种，关于二者的区别详见[参考文档10](https://mp.weixin.qq.com/s/XJ3vj9xeDpdqZr-um8wBug)。类似于 Kafka 有一个内置的保存各个消费者消费 topic offset 信息的 名为 \_\_consumer\_offsets 的 topic，Pulsar 也有专门的 ledger 记录 Consumer 的 ack 并移动其消息消费游标(Cursor)。Pulsar 和 Consumer 之间消费消息的方式是一种推拉相结合的方式，详细内容见[参考文档6](http://www.cnblogs.com/hzmark/p/pulsar-consumer.html) 。
+Pulsar 的 Consumer 消费消息有不同的消费模式，亦有不同的获取方式。其获取消息的方式有同步等待、异步等待和注册 MessageListener 三种方式，Consumer 可以主动向 Pulsar 拉取消息也可以等待 Pulsar 的推送，无论采用哪种方式 Consumer 接收到消息后都需要给 Pulsar 回复 acknowledgement(以下简称为ack)，回复方式有逐条回复（Individual Ack）和批量回复（Cumulative Ack）两种，关于二者的区别详见[参考文档10](https://mp.weixin.qq.com/s/XJ3vj9xeDpdqZr-um8wBug)。类似于 Kafka 有一个内置的保存各个消费者消费 topic offset 信息的 名为 \_\_consumer\_offsets 的 topic，Pulsar 也有专门的 ledger 记录 Consumer 的 ack 并移动其消息消费游标(Cursor)，由 Broker 管理游标。Pulsar 和 Consumer 之间消费消息的方式是一种推拉相结合的方式，详细内容见[参考文档6](http://www.cnblogs.com/hzmark/p/pulsar-consumer.html) 。
 
 ![](../pic/pulsar/pulsar_sub.webp)
 
