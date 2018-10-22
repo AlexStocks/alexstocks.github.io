@@ -2,11 +2,10 @@
 ---
 *written by Alex Stocks on 2018/10/16，版权所有，无授权不得转载*
 
-刚开始看 Apache Pulsar 一些资料，后面逐步补充。
+Pulsar 是由 Yahoo 于 2016 年开源并捐赠给 Apache 基金会的一款消息中间件，其主要特点是多租户且易于扩展，本文根据自己对 Pulsar 相关文档的理解并请教相关 PMC 后写成，囿于水平有限，错误难免，欢迎留言指正。
 
 ### 1 Pulsar vs Kafka
 ---
-
 
 ![](../pic/pulsar/pulsar_vs_kafka.webp)
 
@@ -20,15 +19,17 @@
 | Pulsar | Kafka |
 | :---- | :--- |
 | Topic | Topic |
-| Ledger | Partition |
-| Fragment | Fragment/Segment |
+| Partition | Partition |
+| Ledger(Segment)/Fragment | Fragment/Segment |
 | Bookie  | Broker  |
 | Broker | Client SDK |
 | Ensemble Size | Replica Number |
 | Write Quorum Size (Qw) | metadata.broker.list |
 | Ack Quorum Size (Qa) | request.required.acks |
 
-Pulsar 的数据存储节点 Bookkeeper 被称为 Bookie，相当于一个 Kafka Broker。Ledger 是 Topic 的若干日志的集合，是 Pulsar 数据删除的最小单元，即 Pulsar 每次淘汰以 Ledger 为单位进行删除。Fragment 是 Bookkeeper 的概念，对应一个日志文件，每个 Ledger 有若干 Fragment 组成。 
+Pulsar 和 Kafka 都是以 Topic 描述一个基本的数据集合，Topic 数据又分为若干 Partition，即对数据进行逻辑上的 sharding 后存储为若干子集合。但 Kafka 以 partition 作为物理存储单位，每个 partition 必须作为一个整体（一个目录）存储在某一个 broker 上。 而 Pulsar 的每个 partition 是以 segment（对应到 Bookkeeper 的 Ledger） 作为物理存储的单位，所以 Pulsar 中的一个逻辑上有序的 partition 数据集合在物理上会均匀分散到多个 bookie 节点中。
+
+Pulsar 的数据存储节点 Bookkeeper 被称为 Bookie，相当于一个 Kafka Broker。Ledger 是 Topic 的若干日志的集合，是 Pulsar 数据删除的最小单元，即 Pulsar 每次淘汰以 Ledger 为单位进行删除。Fragment 是 Bookkeeper 的概念，对应一个日志文件，每个 Ledger 由若干 Fragment 组成。 
 
 Pulsar 进行数据同步时采用相关共识算法保证数据一致性。Ensemble Size 表示 Topic 要用到的物理存储节点 Bookie 个数，类似于 Kafka，其副本数目 Ensemble Size 不能超过 Bookie 个数，因为一个 Bookie 上不可能存储超过一个以上的数据副本。每次写数据时最低写入的 Bookie 个数 Qw 的上限当然是 Ensemble Size。
 
@@ -38,7 +39,7 @@ Qa 是每次写请求发送完毕后需要回复确认的 Bookie 的个数，类
 
 本小节的所有概念，以上面来自于[参考文档1](https://mp.weixin.qq.com/s/CIpCLCxqpLoQVUKz6QeDJQ)的一幅图作为总结比较合适。
 
-#### 1.2 Kafka 的缺陷与 Pulsar 各个组件
+#### 1.2 Kafka 的缺陷
 ---
 
 [参考文档1](https://mp.weixin.qq.com/s/CIpCLCxqpLoQVUKz6QeDJQ) 给出了 Kafka 的一些不足：
@@ -50,11 +51,12 @@ Qa 是每次写请求发送完毕后需要回复确认的 Bookie 的个数，类
 
 ![](../pic/pulsar/KafkaPulsarScaling.png) 
 
-Pulsar 的底层数据 以 Fragments 形式存储在多个 BookKeeper 上，当集群扩容添加 Bookies 后，Pulsar 会在新的Bookie上创建新的 Fragment，所以不需要再扩容时候像 Kafka 一样进行 Rebalance 操作，其结果就是 `Fragments跨多个Bookies以带状分布`。但是这样的结果就是同一个 Ledger 的 Fragments 分布在多个 Bookie 上，导致读取和写入会在多个 Bookies 之间跳跃。Topic的 Ledger 和 Fragment 之间映射关系等元数据存储在 Zookeeper 中，Pulsar Broker 需要实时跟踪这些关系进行读写流程。
+### 2 Pulsar 组件
+---
 
-Pulsar 有一个 `Ledger的所有权(ownership)` 的概念，其意义为某个 Ledger 数据所在的 Bookie。除去创建新 Ledger 的情况，当集群扩容 Pulsar 把数据写入新的 Bookie 或者 `当前Fragment使用Bookies发生写入错误或超时` 时，`Ledger的所有权` 都会发生改变。
+Pulsar 是一种基于 Proxy 的分布式系统，Pulsar 团队开发了 Broker 模块作为 Proxy，存储系统使用了 Bookkeeper，使用 zookeeper 存储 metadata【据 PMC 讲下一步打算用 etcd 替换 zookeeper】，下面分别详述各个模块的内部机制。
  
-#### 1.2.1 Pulsar Producer/Consumer
+#### 2.1 Pulsar Producer/Consumer
 ---
 
 Pulsar 自身支持多租户，在 zookeeper 中以 `/root/property/namespace/topic/ledger` 形式组织映射关系，[参考文档5](https://mp.weixin.qq.com/s/4UMz2REmn7rMYHwLjGE2RQ)中的下图清晰地描述了多租户之间的组织关系：
@@ -63,14 +65,14 @@ Pulsar 自身支持多租户，在 zookeeper 中以 `/root/property/namespace/to
 
 其中 property 是租户名称，namespace 则是业务线名称，故一个租户可以有多个 namespace，租户可以针对 namespace 设置 ACL、调整副本数目、消息过期时间等参数，至于多租户的资源控制无非是借助配额、限流、流控等手段进行。租户实质上是一种资源隔离手段，把不同业务婚部在一起，可以提高资源的利用率。
 
-向 Pulsar 中写入数据者称为 Producer。Producer 向某个 Topic 写入数据时，采用不同的路由策略则一条日志消息会落入不同的 Ledger，[参考文档7](https://mp.weixin.qq.com/s/uwmLR-1Jo_VNXRFA0yYWlg)中给出了如下四种路由策略：
+向 Pulsar 中写入数据者称为 Producer。Producer 向某个 Topic 写入数据时，采用不同的路由策略则一条日志消息会落入不同的 Partition，[参考文档7](https://mp.weixin.qq.com/s/uwmLR-1Jo_VNXRFA0yYWlg)中给出了如下四种路由策略：
 
 - 单个分区——生产者随机挑选一个分区，并将数据写入该分区。该策略与非分区主题提供的保证是一样的，不过如果有多个生产者向同一个主题写入数据，该策略就会很有用。
 - 轮询（round robin）分区——生产者通过轮询的方式将数据平均地分布到各个分区上。比如，第一个消息写入第一个分区，第二个消息写入第二个分区，并以此类推。
 - 哈希（hash）分区——每个消息会带上一个键，要写入哪个分区取决于它所带的键。这种分区方式可以保证次序。
 - 自定义分区——生产者使用自定义函数生成分区对应的数值，然后根据这个数值将消息写入对应的分区。
 
-Pulsar 的 Consumer 消费消息有不同的消费模式，亦有不同的获取方式。其获取消息的方式有同步等待、异步等待和注册 MessageListener 三种方式，Consumer 可以主动向 Pulsar 拉取消息也可以等待 Pulsar 的推送，无论采用哪种方式 Consumer 接收到消息后都需要给 Pulsar 回复 acknowledgement(以下简称为ack)，回复方式有逐条回复（Individual Ack）和批量回复（Cumulative Ack）两种，关于二者的区别详见[参考文档10](https://mp.weixin.qq.com/s/XJ3vj9xeDpdqZr-um8wBug)。类似于 Kafka 有一个内置的保存各个消费者消费 topic offset 信息的 名为 __consumer_offsets 的 topic，Pulsar 也有专门的 ledger 记录 Consumer 的 ack 并移动其消息消费游标(Cursor)。Pulsar 和 Consumer 之间消费消息的方式是一种推拉相结合的方式，详细内容见[参考文档6](http://www.cnblogs.com/hzmark/p/pulsar-consumer.html) 。
+Pulsar 的 Consumer 消费消息有不同的消费模式，亦有不同的获取方式。其获取消息的方式有同步等待、异步等待和注册 MessageListener 三种方式，Consumer 可以主动向 Pulsar 拉取消息也可以等待 Pulsar 的推送，无论采用哪种方式 Consumer 接收到消息后都需要给 Pulsar 回复 acknowledgement(以下简称为ack)，回复方式有逐条回复（Individual Ack）和批量回复（Cumulative Ack）两种，关于二者的区别详见[参考文档10](https://mp.weixin.qq.com/s/XJ3vj9xeDpdqZr-um8wBug)。类似于 Kafka 有一个内置的保存各个消费者消费 topic offset 信息的 名为 \_\_consumer\_offsets 的 topic，Pulsar 也有专门的 ledger 记录 Consumer 的 ack 并移动其消息消费游标(Cursor)。Pulsar 和 Consumer 之间消费消息的方式是一种推拉相结合的方式，详细内容见[参考文档6](http://www.cnblogs.com/hzmark/p/pulsar-consumer.html) 。
 
 ![](../pic/pulsar/pulsar_sub.webp)
 
@@ -80,7 +82,7 @@ Pulsar 不同 Consumer 可以针对同一个 Topic 指定不同的消费模式�
 
 如上图，Pulsar Shared 消费方式则类似于 kafka 的 Consumer Group 的消费方式，Pulsar 以 Round-Robin 的方式把消息分发给一组消费群内的每个 Consumer，缺点是无法保证消息的有序性，且每个 Consumer 须对每个消息都回复 ack。
 
-#### 1.2.2 Pulsar Broker
+#### 2.2 Pulsar Broker
 ---
 
 Pulsar 的 metadata 存储在 zookeeper 上，而消息数据存储在 Bookkeeper 上。Broker 虽然需要这些 metadata，但是其自身并不持久化存储这些数据，所以可以认为是无状态的。不像 Kafka 是在 Partition 级别拥有一个 leader Broker，Pulsar 是在 Topic 级别拥有一个 leader Broker，称之为拥有 Topic 的所有权，针对该 Topic 所有的 R/W 都经过改 Broker 完成。
@@ -95,12 +97,33 @@ Pulsar Broker 可以认为是一种 Proxy，它对 client 屏蔽了服务端读�
 
 Kafka 的所有 Broker 会选出一个 Leader，作为 Broker Leader 决定 Broker 宕机判断、集群扩容、创建删除 Topic、Topic Replica分布、Topic Partition 的 Leader 的选举。Pulsar 的所有 Broker 也会借助 zookeeper 加锁的方式选举一个 Leader【或者称为 Master 更合适，以区分于 Topic 的 Leader】，对 Broker 宕机判断（Failover）、根据 Bookie 集群负载Topic Ledger 所有权【即 Ledger 所在的 Bookie】等任务，具体代码细节可参见 Pulsar LoadManager 相关流程。
 
-### 2 Pulsar 读写过程
+![](..pic/pulsar/pulsar_bookie_resume.webp)
+
+当 Broker 发生宕机事故后，其 Failover 过程几乎瞬间完成。如上图，当 Broker 2 宕机后，其负责的 Topic-Part2 的读写职责会被 Boker 3 接替，不管就的 Fragment（Segment X）中数据完整性以及文件容量是否使用完毕，Broker 3会立即为 Topic1-Part2 创建行的 Fragment：Segment x + 1，新来的写请求的数据会被写入其中。
+
+#### 2.3 Pulsar Bookie
+---
+
+![](../pic/pulsar/pulsar_bookie_segment.webp)
+
+Pulsar 的底层数据 以 Ledger（上图中的 Segment 就是 Ledger） 形式存储在多个 BookKeeper 上，当集群扩容添加 Bookies 后，Pulsar 会在新的 Bookie 上创建新的 Segment(即 Bookeeper 的 Ledger)，所以不需要再扩容时候像 Kafka 一样进行 Rebalance 操作，其结果就是 `Fragments跨多个Bookies以带状分布`。但是这样的结果就是同一个 Ledger 的 Fragments 分布在多个 Bookie 上，导致读取和写入会在多个 Bookies 之间跳跃。Topic的 Ledger 和 Fragment 之间映射关系等元数据存储在 Zookeeper 中，Pulsar Broker 需要实时跟踪这些关系进行读写流程。
+
+Pulsar 有一个 `Ledger的所有权(ownership)` 的概念，其意义为某个 Ledger 数据所在的 Bookie。除去创建新 Ledger 的情况，当集群扩容 Pulsar 把数据写入新的 Bookie 或者 `当前Fragment使用Bookies发生写入错误或超时` 时，`Ledger的所有权` 都会发生改变。
+
+![](../pic/pulsar/pulsar_bookie_expand.webp)
+
+上图描述了 Bookie 集群扩容的情况。图中 Bookie X 和 Bookie Y 被添加到集群中，Broker 根据 IDC、机架、各个 Bookie 的容量等信息根据各种策略把 Segment X+1 和 X+2 存储到两个 Bookie 节点中，最终确保群集中各个 Bookie 之间的流量均衡。
+
+![](../pic/pulsar/pulsar_bookie_failover.webp)
+
+上图描述了 Bookie 2 发生故障时，其 Segment 4 的修复过程。Broker 2 选取 Bookie 1 作为 Segment 4 的副本集，然后由 Bookie 自己的 Auditor 线程完成数据复制工作，整个过程对 Broker 和应用透明，就能的可用性不受影响。
+
+### 3 Pulsar 读写过程
 ---
 
 在第一章节详细介绍了 Pulsar 的相关概念。对 Kafka 读写流程比较熟悉的人应该会对 Pulsar 的读写流程了然于胸，本节借用[参考文档1](https://mp.weixin.qq.com/s/CIpCLCxqpLoQVUKz6QeDJQ)的两幅图对读写流程简略叙述后，重点详述 Pulsar 的 fencing 机制，其是保证 Pulsar 数据 CAP 特性中的 Consistency 一项的关键。
 
-#### 2.1 写流程
+#### 3.1 写流程
 ---
 
 Pulsar 的写流程如下图：
@@ -117,7 +140,7 @@ Pulsar Broker 接收到 client 的请求后，依据 Topic 所使用的 Ensemble
 
 ![](../pic/pulsar/pulsar_striple.png)
 
-如果写流程中 Pulsar Broker 发生崩溃，Failover 流程【#2.3 fencing#小节会详述之】完成后，新的 Pulsar Broker 会关闭上个 Broker 写的 Ledger，而后创建新的 Ledger 进行写入。
+如果写流程中 Pulsar Broker 发生崩溃，Failover 流程【#3.3 fencing#小节会详述之】完成后，新的 Pulsar Broker 会关闭上个 Broker 写的 Ledger，而后创建新的 Ledger 进行写入。
 
 Pulsar Bookie 是一种日志型存储引擎，每条 Log 称之为 Entry，每个 Log 的 ID 称谓 Entry ID。Entry ID 从0开始有序递增，<Ledger ID, Entry ID> 即唯一的确定了一个 Entry 的坐标。
 
@@ -125,7 +148,7 @@ Pulsar 可以缓存写流程中的部分尾部数据用于加快 client 的读�
 
 与 LAC 相应的，Pulsar 还有一个称谓 LAP 的概念，其全称为 Last-Add-Pushed，即已经发送给 Bookie 但是尚未收到 Ack 的日志条目，整个机制类似于 TCP 发送端的滑动窗口。
 
-#### 2.2 读流程
+#### 3.2 读流程
 ---
 
 Pulsar Consumer 读取消息的不需要关心数据数据存储所在的介质，因为 Pulsar 很好的使用了缓存功能以提高读取速度，并利用分级方式降低存储成本。
@@ -138,16 +161,16 @@ Pulsar 的读流程如下图：
 
 ![](../pic/pulsar/pulsar_read.webp) 
 
-Kafka 的 Consumer 会从 Partition 对应的 leader Broker 上读取数据，Pulsar 的 client 是从 Topic owner 对应的 Broker 读取数据。如果该 Broker 有缓存，则直接返回相应数据，否则就从任一个 Bookie 读取数据并返回给 client。
+Kafka 的 Consumer 会从 Partition 对应的 leader Broker 上读取数据，Pulsar 的 client 是从 Topic/Partition owner 对应的 Broker 读取数据。如果该 Broker 有缓存，则直接返回相应数据，否则就从任一个 Bookie 读取数据并返回给 client。
 
 一个新的 Pulsar Broker 发起读取请求之前，需要知道 Pulsar 集群的 LAC，Broker 会向所有 Bookie 发送获取 LAC 请求，得到大多数回复后即可计算出一个安全的 LAC 值，这个流程就是采用了 Quorum Read 的方式。 
 
 Pulsar Broker 获取可靠的 LAC 之后，其读取可以从任一 Bookie 开始，如果在限定时间内没有响应则给第二个 Bookie 发送读取请求，然后同时等待这两个 Bookie，谁先响应就意味着读取成功，这个流程称之为 Speculative Read。
 
-#### 2.3 fencing
+#### 3.3 fencing
 ---
 
-上面提到 Pulsar Broker 本质上是一个 Proxy，其区别就是自身是无状态的：不存储任何状态数据。Broker 决定了数据如何分片，保证数据一致性，具有常见分布式系统 leader-follower 架构中 leader 的部分职权：当一个 Topic owner 所在的 Broker 宕机时，要选举出一个新的 Broker 作为 Topic owner。同 Raft leader 选举一样，选举过程中不处理数据读写请求。
+上面提到 Pulsar Broker 本质上是一个 Proxy，其区别就是自身是无状态的：不存储任何状态数据。Broker 决定了数据如何分片，保证数据一致性，具有常见分布式系统 leader-follower 架构中 leader 的部分职权：当一个 Topic/Partition owner 所在的 Broker 宕机时，要选举出一个新的 Broker 作为 Topic owner。同 Raft leader 选举一样，选举过程中不处理数据读写请求。
 
 [参考文档1](https://mp.weixin.qq.com/s/CIpCLCxqpLoQVUKz6QeDJQ)描述了整个选举流程如下：
 
@@ -165,7 +188,7 @@ Pulsar Broker 获取可靠的 LAC 之后，其读取可以从任一 Bookie 开�
 Codis 也是一种基于 Proxy 的分布式存储系统，架构实质与 Pulsar 无多大差别，所以二者流程类似也在清理之中。Fencing 本质就是一个分布式加锁协议，与 2PC 协议类似，本质上与多 CPU core 之间数据一致性协议 MESI 协议也无差。
 
 
-#### 2.4 Bookie 数据读写流程
+#### 3.4 Bookie 数据读写流程
 ---
 
 Pulsar 的数据最终是靠 Bookkeeper(Bookie) 落地的，各个 Pulsar Bookie 之间是平等的，kafka 的存储节点在 Partition 层次上有主从之分。单个 Broker 数据写流程如下：
@@ -199,11 +222,7 @@ Bookie 的整个写入流程除了自身把内存缓存数据批量刷盘一步�
 
 ![](../pic/pulsar/pulsar_data_storage.webp)
 
-如果 Bookie 意外崩溃，则其重启后需要进行数据恢复，执行这个任务的流程称之为 AutoRecoveryMain。AutoRecoveryMain 任务是由若干个 worker 线程构成的线程池执行的，每个 worker 线程从由自己负责的 zookeeper path 上找到要恢复数据的 Ledger 进行数据复制。
-
-![](../pic/pulsar/pulsar_striple.png)
-
-如果集群发生扩容，则由 Auditor 线程负责 Segment 数据的迁移复制。
+如果 Bookie 意外崩溃，则其重启后需要进行数据恢复，执行这个任务的流程称之为 AutoRecoveryMain。AutoRecoveryMain 任务是由若干个 worker 线程构成的线程池执行的，每个 worker 线程从由自己负责的 zookeeper path 上找到要恢复数据的 Ledger 进行数据复制。如果集群发生扩容，则由 Auditor 线程负责 Segment 数据的迁移复制。
 
 ## 参考文档
 
@@ -224,5 +243,7 @@ Spark生态系统解析及基于Redis的开源分布式服务Codis](https://www.
 
 > 2018/10/18，于雨氏，初作此文于西二旗。
 > 
-> 2018/10/20，于雨氏，于丰台完成 # 2 Pulsar 读写过程 #。
+> 2018/10/20，于雨氏，于丰台完成 #3 Pulsar 读写过程#。
+> 
+> 2018/10/22，于雨氏，于丰台完成 #2 Pulsar 组件#。
 
