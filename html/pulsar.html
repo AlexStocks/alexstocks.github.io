@@ -360,7 +360,7 @@ kbd {
 
 <p><img src="../pic/pulsar/pulsar_raft_bk.png" alt=""></p>
 
-<p>上图比较了 Raft 和 Bookkeeper 之间的异同，很显然 fencing 就相当于 Raft 的 election 流程。可以把 Broker 理解为一个无状态的 leader，而相互之间平等的 Bookie 则是有状态的 follower，整体就相构成了一个 leader - follower 集群。而无状态的 Broker 的 Leadership change 相对于 Raft 来说就简单的多了。</p>
+<p>上图比较了 Raft 和 Bookkeeper 之间的异同，很显然 fencing 就相当于 Raft 的 election 流程。可以把 Broker 理解为一个无状态的 leader，而相互之间平等的 Bookie 则是有状态的 follower，整体就相构成了一个 leader - follower 集群，Topic 下多个 Topic Partition -- Brokers 构成的群集就相当于一个 DB table 的 Multi-Raft 群集。而无状态的 Broker 的 Leadership change 相对于 Raft 来说就简单的多了。</p>
 
 <p><img src="../pic/pulsar/pulsar_raft_bk_normal.png" alt=""></p>
 
@@ -390,9 +390,9 @@ kbd {
 
 <p><img src="../pic/pulsar/pulsar_bk_read_write_isolation.png" alt="">   </p>
 
-<p>结合上图，可以对上述流程有更清晰的认识。若与对 Elasticsearch 的写入刷盘流程进行比较，会发现二者流程比较相似。其实其与 RocksDB 写流程也有相似之处，只不过 RocksDB 需要维持数据的状态机，而日志型存储系统 Pulsar 不需要对数据进行计算或者整理，故其还有 Bookkeeper 没有的基于 LSM 的对数据进行 compaction 的整理流程，或者也可以说 Pulsar 把对数据的重新整理交个 Consumer 自己进行处理，自身只负责按照提交先后顺序维持 Entry 的有序存储即可。</p>
-
-<p>Bookie 的整个写入流程除了自身把内存缓存数据批量刷盘一步外，整个流程几乎不需要跟磁盘进行IO，所以速度也是极快。</p>
+<p>结合上图，可以对上述流程有更清晰的认识。若与对 Elasticsearch 的写入刷盘流程进行比较，会发现二者流程比较相似。其实其与 RocksDB 写流程也有相似之处，使用了 Log-Structured Hash Table 数据结构的 Pulsar 不需要对数据进行计算或者整理，使用了 Log-Structured Merge Tree 的 RocksDB 则需要维持数据的状态机，故 RocksDB 还有 Bookkeeper 没有的基于 LSM 的对数据进行 compaction 的整理流程，或者也可以说 Pulsar 把对数据的重新整理交个 Consumer 自己进行处理，自身只负责按照提交先后顺序维持 Entry 的有序存储即可。
+​<br>
+Bookie 的整个写入流程除了自身把内存缓存数据批量刷盘一步外，整个流程几乎不需要跟磁盘进行IO，所以速度也是极快。</p>
 
 <p>其读取流程如下：</p>
 

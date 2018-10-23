@@ -55,7 +55,7 @@ Qa 是每次写请求发送完毕后需要回复确认的 Bookie 的个数，类
 ---
 
 Pulsar 是一种基于 Proxy 的分布式系统，Pulsar 团队开发了 Broker 模块作为 Proxy，存储系统使用了 Bookkeeper，使用 zookeeper 存储 metadata【据 PMC 讲下一步打算用 etcd 替换 zookeeper】，下面分别详述各个模块的内部机制。
- 
+
 #### 2.1 Pulsar Producer/Consumer
 ---
 
@@ -197,7 +197,7 @@ Codis 也是一种基于 Proxy 的分布式存储系统，架构实质与 Pulsar
 
 ![](../pic/pulsar/pulsar_raft_bk.png)
 
-上图比较了 Raft 和 Bookkeeper 之间的异同，很显然 fencing 就相当于 Raft 的 election 流程。可以把 Broker 理解为一个无状态的 leader，而相互之间平等的 Bookie 则是有状态的 follower，整体就相构成了一个 leader - follower 集群。而无状态的 Broker 的 Leadership change 相对于 Raft 来说就简单的多了。
+上图比较了 Raft 和 Bookkeeper 之间的异同，很显然 fencing 就相当于 Raft 的 election 流程。可以把 Broker 理解为一个无状态的 leader，而相互之间平等的 Bookie 则是有状态的 follower，整体就相构成了一个 leader - follower 集群，Topic 下多个 Topic Partition -- Brokers 构成的群集就相当于一个 DB table 的 Multi-Raft 群集。而无状态的 Broker 的 Leadership change 相对于 Raft 来说就简单的多了。
 
 ![](../pic/pulsar/pulsar_raft_bk_normal.png)
 
@@ -217,11 +217,11 @@ Pulsar 的数据最终是靠 Bookkeeper(Bookie) 落地的，各个 Pulsar Bookie
 
     > LedgerID 相当于 kafka 的 ParitionID，EntryID 即是 Log Message 的逻辑 ID，EntryLogId 就是 Log消息在 Pulsar Fragment文件的物理 Offset。   
     > 这里把这个映射关系存储 RocksDB 只是为了加快写入速度，其自身并不是 Pulsar Bookie 的关键组件。
-   
+
 ![](../pic/pulsar/pulsar_bk_read_write_isolation.png)   
-   
-结合上图，可以对上述流程有更清晰的认识。若与对 Elasticsearch 的写入刷盘流程进行比较，会发现二者流程比较相似。其实其与 RocksDB 写流程也有相似之处，只不过 RocksDB 需要维持数据的状态机，而日志型存储系统 Pulsar 不需要对数据进行计算或者整理，故其还有 Bookkeeper 没有的基于 LSM 的对数据进行 compaction 的整理流程，或者也可以说 Pulsar 把对数据的重新整理交个 Consumer 自己进行处理，自身只负责按照提交先后顺序维持 Entry 的有序存储即可。
-    
+
+结合上图，可以对上述流程有更清晰的认识。若与对 Elasticsearch 的写入刷盘流程进行比较，会发现二者流程比较相似。其实其与 RocksDB 写流程也有相似之处，使用了 Log-Structured Hash Table 数据结构的 Pulsar 不需要对数据进行计算或者整理，使用了 Log-Structured Merge Tree 的 RocksDB 则需要维持数据的状态机，故 RocksDB 还有 Bookkeeper 没有的基于 LSM 的对数据进行 compaction 的整理流程，或者也可以说 Pulsar 把对数据的重新整理交个 Consumer 自己进行处理，自身只负责按照提交先后顺序维持 Entry 的有序存储即可。
+​    
 Bookie 的整个写入流程除了自身把内存缓存数据批量刷盘一步外，整个流程几乎不需要跟磁盘进行IO，所以速度也是极快。
 
 其读取流程如下：
