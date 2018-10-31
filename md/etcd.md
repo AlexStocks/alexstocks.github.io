@@ -90,14 +90,14 @@ etcd单节点启动命令如下：
      ETCD_INITIAL_CLUSTER="etcd_node1=http://192.168.11.1:12380,etcd_node2=http://192.168.11.1:22380,etcd_node0=http://192.168.11.1:2380,etcd_node3=http://192.168.11.1:32379"
      ETCD_INITIAL_CLUSTER_STATE="existing"
 
-* 2 etcd --name=etcd_node3 \
-	--data-dir=/tmp/etcd/etcd_node3/./data/ \
-	--wal-dir=/tmp/etcd/etcd_node3/./wal/ \
-	--listen-peer-urls=http://192.168.11.100:32380 \
-	--initial-advertise-peer-urls=http://192.168.11.100:32380 \
-	--listen-client-urls=http://192.168.11.100:32379,http://127.0.0.1:32379 \
-	--advertise-client-urls=http://192.168.11.100:32379 \
-	--initial-cluster-state=existing \
+* 2 etcd --name=etcd_node3 \   
+	--data-dir=/tmp/etcd/etcd_node3/./data/ \     
+	--wal-dir=/tmp/etcd/etcd_node3/./wal/ \  
+	--listen-peer-urls=http://192.168.11.100:32380 \  
+	--initial-advertise-peer-urls=http://192.168.11.100:32380 \  
+	--listen-client-urls=http://192.168.11.100:32379,http://127.0.0.1:32379 \  
+	--advertise-client-urls=http://192.168.11.100:32379 \   
+	--initial-cluster-state=existing \   
 	--initial-cluster="etcd_node2=http://192.168.11.100:22380,etcd_node1=http://192.168.11.100:12380,etcd_node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380"
 
 一定要注意，”initial-cluster”里面一定要有新成员的peer地址。参考文档7#Strict Reconfiguration Check Mode#提到：etcdctl执行完毕”etcdctl member add“后，etcd cluster就把这个还未存在的node算进quorum了，**第二步必须准确完成**。
@@ -267,11 +267,11 @@ v3 与 v2 的主要对比，[参考文档28](http://dockone.io/article/801) 罗�
 
 + etcd 2保存了一个仅保存了1000个历史更改，如果watch过慢就无法得到之前的变更。etcd 3为了支持多纪录，采用了历史记录为主索引的存储结构。etcd3可以存储上十万个纪录，进行快速查询并且支持根据用户的要求进行compaction。
 
-+ etcd 2和其它类似开源一致性系统一样最多只能数十万级别的key。主要原因是一致性系统都采用了基于log的复制。log不能无限增长，所以在某一时刻系统需要做一个完整的snapshot并且将snapshot存储到磁盘。在存储snapshot之后才能将之前的log丢弃。每次存储完整的snapshot是非常没有效率的，但是对于一致性系统来说设计增量snapshot以及传输同步大量数据都是非常繁琐的。etcd 3通过对raft和存储系统的重构，能够很好的支持增量snapshot和传输相对较大的snapshot。目前etcd 3可以存储百万到千万级别的key。
++ etcd 2和其它类似开源一致性系统一样最多只能存储数十万级别的key。主要原因是一致性系统都采用了基于log的复制，log不能无限增长，所以在某一时刻系统需要做一个完整的snapshot并且将snapshot存储到磁盘。在存储snapshot之后才能将之前的log丢弃。每次存储完整的snapshot是非常没有效率的，但是对于一致性系统来说设计增量snapshot以及传输同步大量数据都是非常繁琐的。etcd 3通过对raft和存储系统的重构，能够很好的支持增量snapshot和传输相对较大的snapshot。目前etcd 3可以存储百万到千万级别的key。
 
 + 另外一个问题是支持大规模watch。我们主要工作是减小每个watch带来的资源消耗。首先我们利用了HTTP/2的multiple stream per tcp connection，这样同一个client的不同watch可以share同一个tcp connection。另一方面我们对于同一个用户的不同watch只使用一个go routine来serve，这样再一次减轻了server的资源消耗。【v2 每个watch都会占用一个tcp资源和一个go routine资源，大概要消耗30-40kb。】
 
-+ 我们在性能方面也做了很多相关的优化。etcd 3目前的性能远强于etcd 2，我们相信etcd 3的性能在不进行特殊优化的情况下就可以足够应付绝大部分的使用。在一个由3台8核节点组成的的云服务器上，<font color=red>**etcd 3可以做到每秒数万次的写操作和十万次读操作**</font>。
++ 我们在性能方面也做了很多相关的优化。etcd 3目前的性能远强于etcd 2，我们相信etcd 3的性能在不进行特殊优化的情况下就可以足够应付绝大部分的使用场景。在一个由3台8核节点组成的的云服务器上，<font color=red>**etcd 3可以做到每秒数万次的写操作和十万次读操作**</font>。
 
 
 ### 4.4 Raft ###
@@ -353,7 +353,7 @@ leader向follower发送数据的方式类同于kafka每个topic partition级别l
 + 1. 原来的 Quorum 中有处于崩溃状态的 follower，一定要先把这个节点从 Quorum 中删除；
 + 2. learner 没有 vote 权限，不算入 Quorum；
 + 3. 一次向一个 Quorom 中最多添加一个 node；
-+ 4. Raft 中正确向其中添加一个节点的算法是支持 Joint Consensus 算法， “虽然我知道理论上面 100% 的事情怎么做，但为了更加简单，我可以稍微放低一点要求。  TiKV 和 etcd 现在都是没有用 joint consensus 的，但我们现在在开始添加 Learner，后面如果真的遇到了其他的 corner case，会不会考虑一下，没准也不是不可能的事情。”[参考文档30](http://www.sohu.com/a/204912012_505827)。
++ 4. Raft 中正确向其中添加一个节点的算法是支持 Joint Consensus 算法，`虽然我知道理论上面 100% 的事情怎么做，但为了更加简单，我可以稍微放低一点要求。TiKV 和 etcd 现在都是没有用 joint consensus 的，但我们现在在开始添加 Learner，后面如果真的遇到了其他的 corner case，会不会考虑一下，没准也不是不可能的事情。`[引自参考文档30](http://www.sohu.com/a/204912012_505827)。
 
 [参考文档31](http://www.sohu.com/a/202861958_736949) 给出了Etcd Raft 正常工作流程优化的几个关键点如下：
 
@@ -482,22 +482,16 @@ bbolt中存储的value是这样一个json序列化后的结构，包括key创建
 ---
 
 官方文档【参考文档4】给出了etcd稳定运行系统的一些硬件参考指标，本文精简如下：
-> 1 CPU: 2~4 core即可保证etcd流畅运行，当每秒的请求成千上万时，CPU需要频繁地从内存加载数据，此时建议使用8 ~ 16个core；
->
-> 2 Memory: 平常情况下8G内存即可保证etcd流畅运行，其中主要存储kv cache数据和客户端watch的数据，当处理的qps上万的时候，建议16 ~ 64GB的内存量，参考文档15#System requirements#提到etcd要求的内存最小容量是2GB；
->
-> 3 Disk: 存储介质的质量是etcd运行performance和stability的关键，差劲的存储介质会导致延迟增加和系统不稳定。一般情况下顺序读写能达到50 IOPS(如7200RPM的磁盘)即可满足要求，当压力大的时候，要求能达到500 IOPS（SSD盘或者其他虚拟的block设备）。需要注意的是，一般云厂商提供的磁盘IOPS是并行而非顺序的，这个并行的指标一般是顺序指标的十倍以上，可以使用diskbench or fio工具去测试之。
-> ​        当etcd死掉重启后，为了快速恢复服务，etcd需要快速进行数据恢复。通常情况下恢复100MB数据需要15s（每秒10MB/s），在大etcd集群中要求1GB数据15s内恢复完毕（每秒100MB/s）。
-> ​        通常情况下建议使用SSD作为存储介质。如果用磁盘，要求能达到15,000 RPM的RAID0。
->
-> 4 Network: 一般情况下1GbE（千兆）网卡可以保证稳定运行，对于大的集群则要求10GbE(万兆)网卡。不仅是速度，同时尽量把etcd集群部署在同一个IDC以保证网络稳定，否则很容易出现网络分区导致的集群被划分成大集群和小集群的情况。
->
-> 5 System: 拒参考文档5，etcd官方保证etcd可在amd64 + linux & ppc64Ie + linux上稳定运行，其他硬件凭他不推荐，由于go runtime在32-bit系统上的bug，也不推荐32位操作系统；
->
-> 6 Etcd： 集群的数目一般为3或者5即可，成员不是越多越好，参考文档7的#Change the cluster size#就提到etcd集群成员越多，leader的通信任务就越繁重，可能导致响应延迟上升，参考文档15 #What is maximum cluster size# 则提到Google Chubby认为最适宜的数目是5，最大数目为7。
-> ​         参考文档15#Should I add a member before removing an unhealthy member#一节提到，当集群出现unhealthy节点的时候，应该先下线这个节点，然后及时添加新节点以保证quorum。
->
-> 7 Go: 参考文档16#Best Practices#要求Go的最低版本是1.4。
+
+- 1 CPU: 2~4 core即可保证etcd流畅运行，当每秒的请求成千上万时，CPU需要频繁地从内存加载数据，此时建议使用8 ~ 16个core；
+- 2 Memory: 平常情况下8G内存即可保证etcd流畅运行，其中主要存储kv cache数据和客户端watch的数据，当处理的qps上万的时候，建议16 ~ 64GB的内存量，参考文档15#System requirements#提到etcd要求的内存最小容量是2GB；
+- 3 Disk: 存储介质的质量是etcd运行performance和stability的关键，差劲的存储介质会导致延迟增加和系统不稳定。一般情况下顺序读写能达到50 IOPS(如7200RPM的磁盘)即可满足要求，当压力大的时候，要求能达到500 IOPS（SSD盘或者其他虚拟的block设备）。需要注意的是，一般云厂商提供的磁盘IOPS是并行而非顺序的，这个并行的指标一般是顺序指标的十倍以上，可以使用diskbench or fio工具去测试之。当etcd死掉重启后，为了快速恢复服务，etcd需要快速进行数据恢复。通常情况下恢复100MB数据需要15s（每秒10MB/s），在大etcd集群中要求1GB数据15s内恢复完毕（每秒100MB/s）。<font color=blue>通常情况下建议使用SSD作为存储介质。如果用磁盘，要求能达到15,000 RPM的RAID0。</font>   
+- 4 Network: 一般情况下1GbE（千兆）网卡可以保证稳定运行，对于大的集群则要求10GbE(万兆)网卡。不仅是速度，同时尽量把etcd集群部署在同一个IDC以保证网络稳定，否则很容易出现网络分区导致的集群被划分成大集群和小集群的情况。
+- 5 System: 拒参考文档5，etcd官方保证etcd可在amd64 + linux & ppc64Ie + linux上稳定运行，其他硬件凭他不推荐，由于go runtime在32-bit系统上的bug，也不推荐32位操作系统；
+- 6 Etcd： 集群的数目一般为3或者5即可，成员不是越多越好，参考文档7的#Change the cluster size#就提到etcd集群成员越多，leader的通信任务就越繁重，可能导致响应延迟上升，参考文档15 #What is maximum cluster size# 则提到Google Chubby认为最适宜的数目是5，最大数目为7。
+
+ ​         参考文档15#Should I add a member before removing an unhealthy member#一节提到，当集群出现unhealthy节点的时候，应该先下线这个节点，然后及时添加新节点以保证quorum。
+- 7 Go: [参考文档16](https://github.com/coreos/etcd/blob/master/Documentation/v2/admin_guide.md)#Best Practices#一节要求Go的最低版本是1.4。
 
 ### 5.1 与运行环境有关的faq ###
 ---
@@ -601,7 +595,8 @@ etcd v3兼容v2，所以进行数据操作前，需要检查数据的版本，�
 ​	+———————————+———————————+—————————————+————————————+
 ​	| fe01cf57  |   10      |       7     |   2.1 MB   |
 ​	+———————————+———————————+—————————————+————————————+
-
+​
+​
 参考文档10#Snapshotting the keyspace#一节中提到了另一种方法：直接把数据目录member/snap/db下的数据拷贝备份。
 
 至于用冷备数据如何恢复一个cluster，请参见参考文档10#Restoring a cluster#。

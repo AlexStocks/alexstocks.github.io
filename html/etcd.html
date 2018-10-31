@@ -211,14 +211,14 @@ etcdctl --endpoints=“http://localhost:2379“ cluster-health</code></pre></div
 <p>ETCD<em>NAME=&quot;etcd</em>node3&quot;
  ETCD<em>INITIAL</em>CLUSTER=&quot;etcd<em>node1=http://192.168.11.1:12380,etcd</em>node2=http://192.168.11.1:22380,etcd<em>node0=http://192.168.11.1:2380,etcd</em>node3=http://192.168.11.1:32379&quot;
  ETCD<em>INITIAL</em>CLUSTER_STATE=&quot;existing&quot;</p></li>
-<li><p>2 etcd --name=etcd<em>node3 \
---data-dir=/tmp/etcd/etcd</em>node3/./data/ \
---wal-dir=/tmp/etcd/etcd<em>node3/./wal/ \
---listen-peer-urls=http://192.168.11.100:32380 \
---initial-advertise-peer-urls=http://192.168.11.100:32380 \
---listen-client-urls=http://192.168.11.100:32379,http://127.0.0.1:32379 \
---advertise-client-urls=http://192.168.11.100:32379 \
---initial-cluster-state=existing \
+<li><p>2 etcd --name=etcd<em>node3 \<br>
+--data-dir=/tmp/etcd/etcd</em>node3/./data/ \<br>
+--wal-dir=/tmp/etcd/etcd<em>node3/./wal/ \<br>
+--listen-peer-urls=http://192.168.11.100:32380 \<br>
+--initial-advertise-peer-urls=http://192.168.11.100:32380 \<br>
+--listen-client-urls=http://192.168.11.100:32379,http://127.0.0.1:32379 \<br>
+--advertise-client-urls=http://192.168.11.100:32379 \<br>
+--initial-cluster-state=existing \<br>
 --initial-cluster=&quot;etcd</em>node2=http://192.168.11.100:22380,etcd<em>node1=http://192.168.11.100:12380,etcd</em>node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380&quot;</p></li>
 </ul>
 
@@ -402,9 +402,9 @@ exit 1</code></pre></div>
 <ul>
 <li><p>mini transaction支持原子性比较多个键值并且操作多个键值。之前的CompareAndSwap实际上一个针对单个key的mini transaction。一个简单的例子是 Tx(compare: A=1 &amp;&amp; B=2, success: C = 3, D = 3, fail: C = 0, D = 0)。当etcd收到这条transcation请求，etcd会原子性的判断A和B当前的值和期待的值。如果判断成功，C和D的值会被设置为3。</p></li>
 <li><p>etcd 2保存了一个仅保存了1000个历史更改，如果watch过慢就无法得到之前的变更。etcd 3为了支持多纪录，采用了历史记录为主索引的存储结构。etcd3可以存储上十万个纪录，进行快速查询并且支持根据用户的要求进行compaction。</p></li>
-<li><p>etcd 2和其它类似开源一致性系统一样最多只能数十万级别的key。主要原因是一致性系统都采用了基于log的复制。log不能无限增长，所以在某一时刻系统需要做一个完整的snapshot并且将snapshot存储到磁盘。在存储snapshot之后才能将之前的log丢弃。每次存储完整的snapshot是非常没有效率的，但是对于一致性系统来说设计增量snapshot以及传输同步大量数据都是非常繁琐的。etcd 3通过对raft和存储系统的重构，能够很好的支持增量snapshot和传输相对较大的snapshot。目前etcd 3可以存储百万到千万级别的key。</p></li>
+<li><p>etcd 2和其它类似开源一致性系统一样最多只能存储数十万级别的key。主要原因是一致性系统都采用了基于log的复制，log不能无限增长，所以在某一时刻系统需要做一个完整的snapshot并且将snapshot存储到磁盘。在存储snapshot之后才能将之前的log丢弃。每次存储完整的snapshot是非常没有效率的，但是对于一致性系统来说设计增量snapshot以及传输同步大量数据都是非常繁琐的。etcd 3通过对raft和存储系统的重构，能够很好的支持增量snapshot和传输相对较大的snapshot。目前etcd 3可以存储百万到千万级别的key。</p></li>
 <li><p>另外一个问题是支持大规模watch。我们主要工作是减小每个watch带来的资源消耗。首先我们利用了HTTP/2的multiple stream per tcp connection，这样同一个client的不同watch可以share同一个tcp connection。另一方面我们对于同一个用户的不同watch只使用一个go routine来serve，这样再一次减轻了server的资源消耗。【v2 每个watch都会占用一个tcp资源和一个go routine资源，大概要消耗30-40kb。】</p></li>
-<li><p>我们在性能方面也做了很多相关的优化。etcd 3目前的性能远强于etcd 2，我们相信etcd 3的性能在不进行特殊优化的情况下就可以足够应付绝大部分的使用。在一个由3台8核节点组成的的云服务器上，<font color=red><strong>etcd 3可以做到每秒数万次的写操作和十万次读操作</strong></font>。</p></li>
+<li><p>我们在性能方面也做了很多相关的优化。etcd 3目前的性能远强于etcd 2，我们相信etcd 3的性能在不进行特殊优化的情况下就可以足够应付绝大部分的使用场景。在一个由3台8核节点组成的的云服务器上，<font color=red><strong>etcd 3可以做到每秒数万次的写操作和十万次读操作</strong></font>。</p></li>
 </ul>
 
 <h3 id="toc_15">4.4 Raft</h3>
@@ -489,7 +489,7 @@ receives msgAppResp(rej=true)
 <li>1. 原来的 Quorum 中有处于崩溃状态的 follower，一定要先把这个节点从 Quorum 中删除；</li>
 <li>2. learner 没有 vote 权限，不算入 Quorum；</li>
 <li>3. 一次向一个 Quorom 中最多添加一个 node；</li>
-<li>4. Raft 中正确向其中添加一个节点的算法是支持 Joint Consensus 算法， “虽然我知道理论上面 100% 的事情怎么做，但为了更加简单，我可以稍微放低一点要求。  TiKV 和 etcd 现在都是没有用 joint consensus 的，但我们现在在开始添加 Learner，后面如果真的遇到了其他的 corner case，会不会考虑一下，没准也不是不可能的事情。”<a href="http://www.sohu.com/a/204912012_505827">参考文档30</a>。</li>
+<li>4. Raft 中正确向其中添加一个节点的算法是支持 Joint Consensus 算法，<code>虽然我知道理论上面 100% 的事情怎么做，但为了更加简单，我可以稍微放低一点要求。TiKV 和 etcd 现在都是没有用 joint consensus 的，但我们现在在开始添加 Learner，后面如果真的遇到了其他的 corner case，会不会考虑一下，没准也不是不可能的事情。</code><a href="http://www.sohu.com/a/204912012_505827">引自参考文档30</a>。</li>
 </ul>
 
 <p><a href="http://www.sohu.com/a/202861958_736949">参考文档31</a> 给出了Etcd Raft 正常工作流程优化的几个关键点如下：</p>
@@ -497,7 +497,7 @@ receives msgAppResp(rej=true)
 <ul>
 <li><p>Pipeline</p>
 
-<p>Raft 工作流程分为Propose，Append，Broadcast 和 Apply。客户发起交易，我们叫做 Propose，然后我们记录交易，这个叫做 Append，再就是通知其他网点，这个叫做 Broadcast，等我们最后知道大部分网点都确认了这笔交易记录，我们就执行交易，也就是 Apply。 </p>
+<p>Raft 工作流程分为Propose，Append，Broadcast 和 Apply。客户发起交易，我们叫做 Propose，然后我们记录交易，这个叫做 Append，再就是通知其他网点，这个叫做 Broadcast，等我们最后知道大部分网点都确认了这笔交易记录，我们就执行交易，也就是 Apply。</p>
 
 <p>对于客户 A，操作是 Propose，Append，Broadcast， Apply，对于客户 B 也是一样的流程，之前我们必须等 A 完成了，才能处理 B。当 A 在 Append 之后，我们就可以开始处理 B 的 Propose 了。我们只要保证的是所有银行网点的交易记录是一致有序的，那么我们就一定能保证最终所有银行的数据是一致的，所以只要 A Append 了，B 开始 Propose，B Append 的时候交易记录一定在 A 的后面，这样记录就一定是有序的了。</p>
 
@@ -507,7 +507,7 @@ receives msgAppResp(rej=true)
 <p>如果很多客户同时要发起交易，那么我们可以将这些交易记录，用一个消息发送过去到其他网点，这样我们就不需要一个一个的发送消息了，这就是 Batch。</p>
 
 <p>各个网点之间距离还是有点远的，消息传递的时间开销还是有点大的。使用 Batch 可以减少消息的发送次数，自然就能提高效率了。</p></li>
-<li><p>Leader 并发写盘   </p>
+<li><p>Leader 并发写盘</p>
 
 <p>整个 Raft 的流程：Leader 收到 Propose，Append Log，然后 Broadcast Log，等收到 Follower 的回复确定 Log 被 Committed 之后，开始 Apply。而对应的 Follower，在收到 Log 之后，先 Append Log，然后给 Leader reply 消息，等下次 Leader 发过来的消息知道 Log 被 Committed 了，就可以 Apply 了。</p>
 
@@ -527,7 +527,7 @@ receives msgAppResp(rej=true)
 <div><pre><code class="language-none">type treeIndex struct {
     sync.RWMutex
     tree *btree.BTree
-} </code></pre></div>
+}</code></pre></div>
 
 <p>当存储大量的K-V时，因为用户的value一般比较大，全部放在内存btree里内存耗费过大，所以etcd将用户value保存在磁盘中。</p>
 
@@ -554,7 +554,7 @@ type revision struct {
     // atomically. Each change has different increasing sub revision in that
     // set.
     sub int64
-} </code></pre></div>
+}</code></pre></div>
 
 <p>内存索引中，每个原始key会关联一个key_index结构，里面维护了多版本信息：</p>
 
@@ -569,7 +569,7 @@ type generation struct {
     ver     int64
     created revision // 记录了引起本次key创建的revision信息
     revs    []revision
-} </code></pre></div>
+}</code></pre></div>
 
 <p>key 初始创建的时候，generations[0]会被创建，当用户继续更新这个key的时候，generations[0].revs数组会不断追加记录本次的revision信息（main，sub）。在bbolt中，每个revision将作为key，即序列化（revision.main+revision.sub）作为key。因此，我们先通过内存btree在keyIndex.generations[0].revs中找到最后一条revision，即可去bbolt中读取对应的数据。如果我们持续更新同一个key，那么generations[0].revs就会一直变大，这怎么办呢？在多版本中的，一般采用compact来压缩历史版本，即当历史版本到达一定数量时，会删除一些历史版本，只保存最近的一些版本。</p>
 
@@ -579,43 +579,43 @@ type generation struct {
 
 <!--- golang --->
 
-<div><pre><code class="language-none">ibytes := newRevBytes()
-idxRev := revision{main: rev, sub: int64(len(tw.changes))}
-revToBytes(idxRev, ibytes)</code></pre></div>
+<p>​   ibytes := newRevBytes()
+​   idxRev := revision{main: rev, sub: int64(len(tw.changes))}
+​   revToBytes(idxRev, ibytes)</p>
 
-<p>delete 操作的 key 由 main+sub+”t” 构成：   </p>
+<p>delete 操作的 key 由 main+sub+”t” 构成：</p>
 
 <!--- golang --->
 
-<div><pre><code class="language-none">idxRev := revision{main: tw.beginRev + 1, sub: int64(len(tw.changes))}
-revToBytes(idxRev, ibytes)
-ibytes = appendMarkTombstone(ibytes)
-​
-// appendMarkTombstone appends tombstone mark to normal revision bytes.
-func appendMarkTombstone(b []byte) []byte {
-    if len(b) != revBytesLen {
-        plog.Panicf(“cannot append mark to non normal revision bytes”)
-    }
-    return append(b, markTombstone)
-}
+<p>​   idxRev := revision{main: tw.beginRev + 1, sub: int64(len(tw.changes))}
+​   revToBytes(idxRev, ibytes)
+​   ibytes = appendMarkTombstone(ibytes)
+​   ​
+​   // appendMarkTombstone appends tombstone mark to normal revision bytes.
+​   func appendMarkTombstone(b []byte) []byte {
+​       if len(b) != revBytesLen {
+​           plog.Panicf(“cannot append mark to non normal revision bytes”)
+​       }
+​       return append(b, markTombstone)
+​   }</p>
 
-// isTombstone checks whether the revision bytes is a tombstone.
+<div><pre><code class="language-none">// isTombstone checks whether the revision bytes is a tombstone.
 func isTombstone(b []byte) bool {
     return len(b) == markedRevBytesLen &amp;&amp; b[markBytePosition] == markTombstone
-} </code></pre></div>
+}</code></pre></div>
 
 <p>bbolt中存储的value是这样一个json序列化后的结构，包括key创建时的revision（对应某一代generation的created），本次更新版本，sub ID（Version ver），Lease ID（租约ID）：</p>
 
 <!--- golang --->
 
-<div><pre><code class="language-none">kv := mvccpb.KeyValue{
-    Key:            key,
-    Value:          value,
-    CreateRevision: c,
-    ModRevision:    rev,
-    Version:        ver,  // version is the version of the key. A deletion resets the version to zero and any modification of the key increases its version.
-    Lease:          int64(leaseID),
-} </code></pre></div>
+<p>​   kv := mvccpb.KeyValue{
+​       Key:            key,
+​       Value:          value,
+​       CreateRevision: c,
+​       ModRevision:    rev,
+​       Version:        ver,  // version is the version of the key. A deletion resets the version to zero and any modification of the key increases its version.
+​       Lease:          int64(leaseID),
+​   }</p>
 
 <p>总结来说：内存btree维护的是用户key =&gt; keyIndex的映射，keyIndex内维护多版本的revision信息，而revision可以映射到磁盘bbolt中的用户value。</p>
 
@@ -627,24 +627,17 @@ func isTombstone(b []byte) bool {
 
 <p>官方文档【参考文档4】给出了etcd稳定运行系统的一些硬件参考指标，本文精简如下：</p>
 
-<blockquote>
-<p>1 CPU: 2~4 core即可保证etcd流畅运行，当每秒的请求成千上万时，CPU需要频繁地从内存加载数据，此时建议使用8 ~ 16个core；</p>
+<ul>
+<li>1 CPU: 2~4 core即可保证etcd流畅运行，当每秒的请求成千上万时，CPU需要频繁地从内存加载数据，此时建议使用8 ~ 16个core；</li>
+<li>2 Memory: 平常情况下8G内存即可保证etcd流畅运行，其中主要存储kv cache数据和客户端watch的数据，当处理的qps上万的时候，建议16 ~ 64GB的内存量，参考文档15#System requirements#提到etcd要求的内存最小容量是2GB；</li>
+<li>3 Disk: 存储介质的质量是etcd运行performance和stability的关键，差劲的存储介质会导致延迟增加和系统不稳定。一般情况下顺序读写能达到50 IOPS(如7200RPM的磁盘)即可满足要求，当压力大的时候，要求能达到500 IOPS（SSD盘或者其他虚拟的block设备）。需要注意的是，一般云厂商提供的磁盘IOPS是并行而非顺序的，这个并行的指标一般是顺序指标的十倍以上，可以使用diskbench or fio工具去测试之。当etcd死掉重启后，为了快速恢复服务，etcd需要快速进行数据恢复。通常情况下恢复100MB数据需要15s（每秒10MB/s），在大etcd集群中要求1GB数据15s内恢复完毕（每秒100MB/s）。<font color=blue>通常情况下建议使用SSD作为存储介质。如果用磁盘，要求能达到15,000 RPM的RAID0。</font><br></li>
+<li>4 Network: 一般情况下1GbE（千兆）网卡可以保证稳定运行，对于大的集群则要求10GbE(万兆)网卡。不仅是速度，同时尽量把etcd集群部署在同一个IDC以保证网络稳定，否则很容易出现网络分区导致的集群被划分成大集群和小集群的情况。</li>
+<li>5 System: 拒参考文档5，etcd官方保证etcd可在amd64 + linux &amp; ppc64Ie + linux上稳定运行，其他硬件凭他不推荐，由于go runtime在32-bit系统上的bug，也不推荐32位操作系统；</li>
+<li><p>6 Etcd： 集群的数目一般为3或者5即可，成员不是越多越好，参考文档7的#Change the cluster size#就提到etcd集群成员越多，leader的通信任务就越繁重，可能导致响应延迟上升，参考文档15 #What is maximum cluster size# 则提到Google Chubby认为最适宜的数目是5，最大数目为7。</p>
 
-<p>2 Memory: 平常情况下8G内存即可保证etcd流畅运行，其中主要存储kv cache数据和客户端watch的数据，当处理的qps上万的时候，建议16 ~ 64GB的内存量，参考文档15#System requirements#提到etcd要求的内存最小容量是2GB；</p>
-
-<p>3 Disk: 存储介质的质量是etcd运行performance和stability的关键，差劲的存储介质会导致延迟增加和系统不稳定。一般情况下顺序读写能达到50 IOPS(如7200RPM的磁盘)即可满足要求，当压力大的时候，要求能达到500 IOPS（SSD盘或者其他虚拟的block设备）。需要注意的是，一般云厂商提供的磁盘IOPS是并行而非顺序的，这个并行的指标一般是顺序指标的十倍以上，可以使用diskbench or fio工具去测试之。
-        当etcd死掉重启后，为了快速恢复服务，etcd需要快速进行数据恢复。通常情况下恢复100MB数据需要15s（每秒10MB/s），在大etcd集群中要求1GB数据15s内恢复完毕（每秒100MB/s）。
-        通常情况下建议使用SSD作为存储介质。如果用磁盘，要求能达到15,000 RPM的RAID0。</p>
-
-<p>4 Network: 一般情况下1GbE（千兆）网卡可以保证稳定运行，对于大的集群则要求10GbE(万兆)网卡。不仅是速度，同时尽量把etcd集群部署在同一个IDC以保证网络稳定，否则很容易出现网络分区导致的集群被划分成大集群和小集群的情况。</p>
-
-<p>5 System: 拒参考文档5，etcd官方保证etcd可在amd64 + linux &amp; ppc64Ie + linux上稳定运行，其他硬件凭他不推荐，由于go runtime在32-bit系统上的bug，也不推荐32位操作系统；</p>
-
-<p>6 Etcd： 集群的数目一般为3或者5即可，成员不是越多越好，参考文档7的#Change the cluster size#就提到etcd集群成员越多，leader的通信任务就越繁重，可能导致响应延迟上升，参考文档15 #What is maximum cluster size# 则提到Google Chubby认为最适宜的数目是5，最大数目为7。
-         参考文档15#Should I add a member before removing an unhealthy member#一节提到，当集群出现unhealthy节点的时候，应该先下线这个节点，然后及时添加新节点以保证quorum。</p>
-
-<p>7 Go: 参考文档16#Best Practices#要求Go的最低版本是1.4。</p>
-</blockquote>
+<p>​         参考文档15#Should I add a member before removing an unhealthy member#一节提到，当集群出现unhealthy节点的时候，应该先下线这个节点，然后及时添加新节点以保证quorum。</p></li>
+<li><p>7 Go: <a href="https://github.com/coreos/etcd/blob/master/Documentation/v2/admin_guide.md">参考文档16</a>#Best Practices#一节要求Go的最低版本是1.4。</p></li>
+</ul>
 
 <h3 id="toc_18">5.1 与运行环境有关的faq</h3>
 
@@ -748,15 +741,17 @@ tc filter add dev eth0 parent 1: protocol ip prio 2 u32 match ip dport 2739 0xff
 
 <p>参考文档9建议定期对etcd数据进行冷备，其#Snapshot backup#一节给出了冷备的用法：</p>
 
-<div><pre><code class="language-none">$ etcdctl snapshot save backup.db
-$ etcdctl  --endpoints $ENDPOINT —write-out=table snapshot status backup.db
-+———————————+———————————+—————————————+————————————+
-|   HASH    | REVISION  | TOTAL KEYS  | TOTAL SIZE |
-+———————————+———————————+—————————————+————————————+
-| fe01cf57  |   10      |       7     |   2.1 MB   |
-+———————————+———————————+—————————————+————————————+</code></pre></div>
+<div><pre><code class="language-none">$ etcdctl snapshot save backup.db</code></pre></div>
 
-<p>参考文档10#Snapshotting the keyspace#一节中提到了另一种方法：直接把数据目录member/snap/db下的数据拷贝备份。</p>
+<p>​   $ etcdctl  --endpoints $ENDPOINT —write-out=table snapshot status backup.db
+​   +———————————+———————————+—————————————+————————————+
+​   |   HASH    | REVISION  | TOTAL KEYS  | TOTAL SIZE |
+​   +———————————+———————————+—————————————+————————————+
+​   | fe01cf57  |   10      |       7     |   2.1 MB   |
+​   +———————————+———————————+—————————————+————————————+
+​
+​
+参考文档10#Snapshotting the keyspace#一节中提到了另一种方法：直接把数据目录member/snap/db下的数据拷贝备份。</p>
 
 <p>至于用冷备数据如何恢复一个cluster，请参见参考文档10#Restoring a cluster#。</p>
 
@@ -862,8 +857,9 @@ Finished defragmenting etcd member[127.0.0.1:2379]</code></pre></div>
     int64 mod_revision = 3;
     int64 version = 4;
     bytes value = 5;
-    int64 lease = 6;
-}</code></pre></div>
+    int64 lease = 6;</code></pre></div>
+
+<p>​   }</p>
 
 <p>各个字段意义如下：</p>
 
@@ -1201,7 +1197,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <ul>
 <li>Key, Range_End - 被观察的key的range[key, range_end)，如果 range_end 没有设置，则只有参数key被观察，如果 range_end 等同于&#39;\0&#39;， 则大于等于参数 key 的所有 key 都将被观察；</li>
-<li>Start_Revision - 观察的起始revision，如果不设置则是最新的revision；</li>
+<li>Start_Revision - 观察的起始的revision，如果不设置则是最新的revision；</li>
 <li>Progress_Notify - 如果设置为true，则etcd将定期发送不带任何事件的空WatchResponse。当一个watch连接断开后，客户端进行重连时候会指定开始的revision，server会根据当前系统的负载决定把发送watch event的频率；</li>
 <li>Filters - event过滤器，server给watch客户端发送通知的时候，会先把相关事件过滤掉；</li>
 <li>Prev_kv - 如果设置为true，则被创建的观察者在事件发生前获取上一次的kv，如果上一次的kv在etcd compaction的时候被删除掉，则不会返回任何值。</li>
@@ -1304,7 +1300,7 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 <p>github.com/coreos/etcd/clientv3/lease.go:Lease 接口提供了以下一些功能函数：</p>
 
 <ul>
-<li>Grante: 创建一个 lease 对象； </li>
+<li>Grante: 创建一个 lease 对象；</li>
 <li>Revoke: 释放一个 lease 对象；</li>
 <li>TimeToLive: 获取 lease 剩余的 TTL 时间；</li>
 <li>Leases: 列举 etcd 中的所有 lease；</li>
@@ -1388,8 +1384,9 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>2018/04/10，于雨氏，与海淀补充 <code>v2 &amp; v3</code> 小节。</p>
 
-<p>2018/06/22，于雨氏，与海淀给 <code>Raft</code> 小节补充 <code>learner 以及 Pipeline &amp; Batch &amp; leader Append</code>  相关内容。 </p>
+<p>2018/06/22，于雨氏，与海淀给 <code>Raft</code> 小节补充 <code>learner 以及 Pipeline &amp; Batch &amp; leader Append</code>  相关内容。</p>
 </blockquote>
+
 
 
 <!-- baidu statistic start -->
@@ -1421,7 +1418,6 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
-
 
 
 
