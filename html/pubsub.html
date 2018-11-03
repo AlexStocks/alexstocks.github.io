@@ -128,7 +128,7 @@ kbd {
 <p>系统名词解释：</p>
 
 <blockquote>
-<p>1 Client : 消息发布者【或者叫做服务端群聊消息系统调用者】，publisher；</p>
+<p>1 Client : 消息发布者【其位于服务端内，亦可叫做服务端群聊消息系统调用者，不要与APP Client混淆】，publisher；</p>
 
 <p>2 Proxy : 系统代理，对外统一接口，收集Client发来的消息转发给Broker；</p>
 
@@ -143,7 +143,7 @@ kbd {
 <p>7 Gateway Message : Room内某成员 登录 或者 登出 某Gateway消息，包含用户UIN/RoomID/Gateway地址{IP:Port}等消息；</p>
 </blockquote>
 
-<p>当一个 Room 中多个 Client 连接一个 Gateway 的时候，Broker只会根据 RoomID 把房间内的消息转发一次给这个Gateway，由Gateway再把消息复制多份分别发送给连接这个 Gateway 的 Room 中的所有用户的客户端。</p>
+<p>当一个 Room 中多个用户的 APP 连接一个 Gateway 的时候，Broker只会根据 RoomID 把房间内的消息转发一次给这个Gateway，由Gateway再把消息复制多份分别发送给连接这个 Gateway 的 Room 中的所有用户的客户端。</p>
 
 <p>这套系统有如下特点：</p>
 
