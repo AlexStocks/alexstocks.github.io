@@ -20,7 +20,7 @@ Ardb 作者在[参考文档5](http://yinqiwen.github.io/)文中对 Pika 的评�
 
 八月初运维的同事提出了一个需求：把 Pika 数据实时同步到 Codis 集群，即把 Pika 集群作为数据固化层，把 Codis 作为数据缓存层。
 
-#### 1.1 Pika-port V1
+#### 1.1 Pika-port 初始版本
 
 刚开始得到这个需求，愚人的实现思路是：
 
@@ -41,9 +41,9 @@ V1 虽然半途而废，但是开发过程中遇到的两个问题比较有意�
 
 + pika 内部有一个特殊的 set 用于记录当前 migrate 信息，set key 前缀是 `_internal:slotkey:4migrate:`，这个在进行数据同步时也需要过滤掉；
 
-#### 1.2 Pika-port V2
+#### 1.2 Pika-port 改进版
 
-V2 版本的 pika-port 相当于是 pika 和 Codis / Redis 之间的 proxy，实现流程是：
+改进版本的 pika-port 相当于是 pika 和 Codis/Redis 之间的 proxy，实现流程是：
 
 + 1 pika-port 启动时候伪装从 pika 的 slave，向 pika 发送 trysync 指令，如`trysync 10.33.80.155 20847 0 0`，10.33.80.155:20847 为 pika-port 的启动监听地址，后两个参数分别为 filenum 和 offset，同时监听 +1000 地址;
 + 2 pika-port 收到 pika 发来的 wait ack 后，监听 +3000 端口，启动 rsync deamon 等待全量数据同步；
@@ -57,6 +57,8 @@ V2 版本的 pika-port 相当于是 pika 和 Codis / Redis 之间的 proxy，实
 整个流程需要对 pika 的主从复制流程非常熟悉，关于主从复制流程可以详细阅读[参考文档2](https://www.jianshu.com/p/01bd76eb7a93)。目前 pika-port 已经开发完毕，支持 v2.3.6 版本的 pika数据实时迁移到 Codis/Redis。
 
 在开发过程中遇到了一些坑，有的是自己对 pika 理解不透彻，有的是 pika 自身一些缺陷，下面详细分小节记录之，以备将来作参考之用。
+
+**补1**：目前我针对 v2.3.x 和 v3.0.x 两个主流版本的 Pika 分别开发了响应版本的 [Pika-Port v1.4](https://github.com/divebomb/pika/tree/master/tools/pika_port) 和 [pika-port v1.5](https://github.com/Axlgrep/pika-tools/tree/master/pika_port)，[pika-port v1.5](https://github.com/Axlgrep/pika-tools/tree/master/pika_port) 已经合并到官方工具集，敬请使用。 
 
 ##### 1.2.1 rsync 启动失败
 
@@ -1290,3 +1292,5 @@ RocksDB 通过提供常用场景的 API 之外，还提供了一些适用于特�
 > 2018/10/06，于雨氏，于西二旗添加 #3.6 锁# 小节 以及 “秒删”相关内容。
 >
 > 2018/10/07，于雨氏，于西二旗添加 #3.5.2 Purge Binlog# 小节。
+> 
+> 2018/11/08，于雨氏，于西二旗在 #1.2 Pika-port 改进版# 小节添加 “**补1**” 内容。  
