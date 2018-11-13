@@ -767,6 +767,10 @@ Pika 把心跳和数据发收分开处理，[参考文档9](https://github.com/Q
 
 个人对于这一处理机制持有异议，心跳和数据收发逻辑处理分开后，有这样一种 case 这种机制无法很好处理：如果 slave 逻辑处理函数写流程机制有问题【譬如陷入无限循环或者写 log 时因为 log 库的 bug 而永久阻塞】，把收数据处理逻辑处理流程的线程阻塞住（或者说叫做卡死），整个进程其实处于假死状态（什么也不做，与僵尸无疑），但是心跳逻辑线程正常工作，其结果就是 master 以为 slave 正常存活而继续发送数据！此时相对于不能正常 work， “重连的代价” 就不算什么了。所以个人以为应当把心跳和逻辑处理机制在同一个线程【或者线程池】处理。
 
+2018/11/13日读到[参考文档19](https://mp.weixin.qq.com/s/dykiX156iOVJf_1ycum6KQ)，其中提到 `心跳包（监控包）与业务包采用相同的通道：当业务包处理能力不足而阻塞时会导致心跳包处理超时，而引起DPDK LD的误判。此时虽然部分请求可能会出现短暂超时，但服务器本身并没有出现故障，总体服务还是可用的。此时将服务器剔除出集群并不是一个正确的做法`，最终腾讯的 HttpDNS 的做法是 `心跳包与业务包通道的隔离：在dispatch进程与业务处理进程间设计只存储心跳包的ring， 用于进行心跳包的传输。` 
+
+结合 Pika 的心跳与逻辑线程处理隔离，现在想来是有道理的。心跳的意义仅在于探测网路的通顺与否，不应该作为逻辑处理能力的判断标准。每个节点提供服务的能力（或者称为逻辑处理能力）是一个动态变化的过程，其服务能力权衡应该是一个区间内浮动，其状态变化是一个灰度的过程，而非仅仅 0【不可用】 和 1【可用】 两个状态，不能仅仅因为一时的服务能力下降就将它从可能节点中摘除掉。因此服务节点服务能力的权衡应该是逻辑（业务）层负载均衡算法的职责，而非心跳的职责，所以二者分开也是有道理的。如果有应用【如早期的kafka consumer sdk】把二者合并在一起，可能是不想采用复杂的负载均衡衡量算法，以最简单的 0【不可用】 和 1【可用】 两个相态对节点的处理能力进行判断。
+
 Pika 主从对 binlog 的处理不一样，[参考文档9](https://github.com/Qihoo360/pika/wiki/FAQ)这样描述：`master是先写db再写binlog，之前slave只用一个worker来同步会在master写入压力很大的情况下由于slave一个worker写入太慢而造成同步差距过大，后来我们调整结构，让slave通过多个worker来写提高写入速度，不过这时候有一个问题，为了保证主从binlog顺序一致，写binlog的操作还是只能又一个线程来做，也就是receiver，所以slave这边是先写binlog在写db，所以slave存在写完binlog挂掉导致丢失数据的问题，不过redis在master写完db后挂掉同样会丢失数据，所以redis采用全同步的办法来解决这一问题，pika同样，默认使用部分同步来继续，如果业务对数据十分敏感，此处可以强制slave重启后进行全同步即可`。
 
 Pika master 处理写请求的流程是先写 DB 后生成对应的 binlog，似乎与时下常见的 leader-follower 架构下 leader处理写请求流程 “先把写请求内容写入 WAL（类似于binlog） 然后再应用到状态机（DB）” 不同，个人以为可能的一个原因是因为 leader-follower 对写请求的处理是一种同步机制，而 master-slave 对写请求的处理是一个异步过程。假设 master-slave 架构下 master 对写请求的处理过程是先写 binlog 然后再写 DB，则 slave DB 的数据有可能比 master DB 数据更新：写请求内容被 master 写入 binlog 后迅速同步给slave，然后 slave 将其写入 DB，而此时 master 还未完成相应数据的更新。可以类比地，同样使用了 master-slave 架构的 Redis master 收到写请求之后先把数据写入 DB，然后再放入 backlog 同步给 slave。
@@ -845,7 +849,6 @@ binlog 过时判定由[PikaServer::CouldPurge](https://github.com/Qihoo360/pika/
 	- 起始 file index 为用户指令指定的 @index；
 	- 手工调用参数 @manual 为 true；
 	- 强制删除参数 @force 为 false。
-
 
 PikaServer 自身执行定时任务 [PikaServer::DoTimingTask](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1738) 时也会启用 purge 任务 [PikaServer::AutoPurge](https://github.com/Qihoo360/pika/blob/8ff15e88ae8a924999c4ac169dcd208c327aea57/src/pika_server.cc#L1287)，调用方式为 `PurgeLogs(0, false, false)`：
 
@@ -1274,6 +1277,7 @@ RocksDB 通过提供常用场景的 API 之外，还提供了一些适用于特�
 - 16 [pika-config](https://github.com/Qihoo360/pika/wiki/pika-config)
 - 17 [Pika 运维指南](https://may.ac.cn/2018/04/16/how-to-use-pika/)
 - 18 [pika 差异化管理命令](https://github.com/qihoo360/pika/wiki/pika-%E5%B7%AE%E5%BC%82%E5%8C%96%E7%AE%A1%E7%90%86%E5%91%BD%E4%BB%A4)
+- 19 [千亿级HttpDNS服务是怎样炼成的](https://mp.weixin.qq.com/s/dykiX156iOVJf_1ycum6KQ)
 
 ## 扒粪者-于雨氏
 
@@ -1293,4 +1297,6 @@ RocksDB 通过提供常用场景的 API 之外，还提供了一些适用于特�
 >
 > 2018/10/07，于雨氏，于西二旗添加 #3.5.2 Purge Binlog# 小节。
 > 
-> 2018/11/08，于雨氏，于西二旗在 #1.2 Pika-port 改进版# 小节添加 “**补1**” 内容。  
+> 2018/11/08，于雨氏，于西二旗在 #1.2 Pika-port 改进版# 小节添加 “**补1**” 内容。
+> 
+> 2018/11/13，于雨氏，于西二旗结合 参考文档19 在 #Pika 主从 Binlog 处理机制# 小节中补充`心跳与逻辑`部分内容。 
