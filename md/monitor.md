@@ -1,4 +1,4 @@
-## 一套完备的实时监控告警系统实现 ##
+## 一套完备的实时监控告警系统实现
 ---
 *written by Alex Stocks on 2018/11/17，版权所有，无授权不得转载*
 
@@ -107,17 +107,79 @@ int Attr_API_Get(int attr,int *iValue);//获得属性ID为attr的值，如果不
 
 诚所谓“筚路蓝缕，以启山林”，QQ 的系统作为前辈在前面树立了标杆，吾辈参照其原理实现一套类似的系统就是了。
 
-愚人去年通过公开渠道搜集了这套系统的相关资料进行理解后，便自己设计了一套类似系统的架构实现，当项目立项开工时相关准备工作已经完成，最后在农历2018年新年前夕共用三周时间便完成了系统的原型开发。下面分章节详述愚人的架构方案。
+愚人去年通过公开渠道搜集了这套系统的相关资料进行理解后，便自己设计了一套类似系统的架构实现，当项目立项开工时相关准备工作已经完成，最后在农历2018年新年前夕共用三周时间便完成了系统的原型开发。
 
 #### 2.1 总体架构
 
+[参考文档1](https://baike.baidu.com/item/%E5%90%AC%E8%AF%8A%E5%99%A8) 中描述 `听诊器由听诊头、导音管、耳挂组成`，听诊器与医生构成了一套器人复合诊断系统。其实告警监控系统（下文称之为 Monitor）与这个复合体基本无差，其由数据采集节点(Client)、监控代理(Agent)、数据传输节点(Proxy)、计算中心(Judger)、存储节点(Database)、展示中心(Dashboard)、控制中心(Console)、告警中心(Alarm)和注册中心(Registry)等部分构成。
 
+本系统考虑到公司业务跨 IDC 特点，其总体架构如下：
 
+![](../pic/monitor/monitor_system_arch.jpg)
 
-### 尾声
+#### 2.2 子模块介绍
+
+下面分别依据介绍各个子模块的功能。
+
+- 1 Client 是上报数据流的源头，通过调用 Monitor SDK 代码预埋监控点，在程序运行时上报数据到本机的 Agent。
+
+> 注：Client 是服务端的服务节点，因为其调用了 Monitor 的服务，故而称之为 Client，不要与常用的 APP 引用混淆。
+
+- 2 Agent 从 SHM 队列中接收 Client 上报数据，进行规整后定时上报给监控中心，如果 Agent 在监控中心所在的 IDC 的 Proxy。
+- 3 Proxy 是数据传输通道，从 Agent 或者外部 IDC 的 Proxy 传输来的监控流量包，把数据传输给 Calculator。
+
+	> 注：Proxy有两种工作模式：工作的计算节点所在 IDC（称之为 Monitor Center）的 Bonnie 和工作在所有业务机房的 Clyde，二者都是跨 IDC 的 Monitor 系统的数据传输代理，本身无状态。每个 IDC 的 Clyde 群集向自己所在机房的 Registry 注册，然后每个服务节点的 Agent 采用随机的路由策略把监控数据网络包发给某个固定的 Clyde 节点
+ 
+- 4 Registry 是一个分布式的注册中心，提供服务注册、服务发现和服务通知服务，实际采用当下被广泛使用的 Zookeeper，每个 IDC 单独部署一套 Registry，Proxy/Judger 都需要按照约定的schema规则向Registry注册。
+- 5 Judger 是 Monitor 系统的中枢所在，对上报的原始数据进行第一次加工然后存入本地 DB，并根据预设的规则进行告警判断。
+
+	> Judger 存储一段时间内的监控数据，最终各种计算结果存入 Database 中，所以其是弱状态的服务节点，所有 Service 的监控数据都会从Proxy 集中路由到某个固定的 Judger，Service 与 Judger 之间的映射关系可在 Console 上设定，并存入 Database 和 Registry 中。
+
+- 6 Database 作为归并计算后的监控数据的最终目的地，本系统使用 Elasticsearch/InfluxDB/Mysql 多种开源组件。在 Mysql 中存储告警参数以及告警结果，在 InfluxDB 中存储归并后的结果，归并前的原始结果则在 Elasticsearch 中落地。
+
+	> 注：本系统把告警原始结果存储 Elasticsearch 中是合适的，因为公司体量并不大，Monitor 把所有的原始上报结果以 day 为单位汇总存入一个 Elasticsearch index。如果数据量非常大，可以考虑存入 HDFS。
+
+- 7 Console 用于设定 Monitor 的告警规则，并把相应规则存入Mysql alarm table中。
+- 8 Dashboard 用于用于展示从某个维度加工后的监控数据，本系统采用 Grafana 作为展示 Panel。
+- 9 Alarm 顾名思义就是 Monitor 的告警系统，它依据 Judger 处理的告警判断结果，把告警内容以短信、邮件等形式推送给相关人员。
+
+Monitor 作为一个业务告警监控系统，其自身的运行 Metrics 亦须予以收集，以防止因为其自身故障引起误报警。Agent/Proxy/Judger 定时地把自身的 qps、监控数据量等参数设定在 MySQL monitor db 里，Console 可以查看到这些 metrics 数据。运维人员可以在 Console 中设定一些规则对 Monitor 进行监控，其定时地汇总出一个 Monitor 运行报表通过邮件方式通知相关人员。Consle 还需要监控 Registry 中各个 Schema 路径，当某个 Monitor 系统节点宕机时发出最高级别的告警。Console 相当于 Monitor 系统的监控者。
+
+### 3 详细设计实现
+
+第二章介绍了 Monitor 系统的总体设计，下面分章节详述愚人的架构方案。
+
+#### 3.1 Console
+
+Console用于告警参数设置以及新服务上线时候通知某server负责即可。
+Monitor Console与Server之并不用直接数据通信，相关数据交互发生在MySQL层。Monitor Server须定时从MySQL加载新配置的数据。
+整个Console的实现借鉴我以往使用的一套用Java Web开发的系统，功能列表如下：
+- 1 实现多用户权限控制；
+- 2 实现告警参数设置；
+- 3 实现告警结果查收；
+- 4 实现服务上线管理；
+
+#### 3.2 SDK
+
+#### 3.3 Agent
+
+#### 3.4 Clyde & Bonie
+
+#### 3.5 Judger
+
+#### 3.6 Kafka & Kafka Connector
+
+#### 3.7 InfluxDB Cluster
+
+#### 3.8 Dashboard
 
 ## 参考文档
 
 - 1 [听诊器](https://baike.baidu.com/item/%E5%90%AC%E8%AF%8A%E5%99%A8)
 - 2 [1.1 万亿交易量级下的秒级监控](http://www.cnblogs.com/hujiapeng/p/6235761.html)
 - 2 [从无到有：微信后台系统的演进之路](https://www.infoq.cn/article/the-road-of-the-growth-weixin-background)
+
+
+## 扒粪者-于雨氏
+
+> 2018/11/17，于雨氏，初作此文于丰台。
