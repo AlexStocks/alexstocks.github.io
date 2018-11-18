@@ -481,7 +481,15 @@ Clyde 和 Bonie 是上世纪 30 年代米国大萧条时期的一对雌雄大盗
 
 <p><img src="../pic/monitor/grafana_ceph_cluster.png" alt=""></p>
 
-<h2 id="toc_17">参考文档</h2>
+<h3 id="toc_17">4 展望</h3>
+
+<p>Monitor 系统完成上线后，服务端同事们仅仅使用了 Dashboard 而抛弃了 Alarm，有同事嫌弃设置参数太麻烦，需不断调整，而且即便收到告警也可能及时处理，因为会影响其休息。这个一方面原因是工程师素质确实不高，对服务质量确实不够关心，习惯于重启大法，另一方面也确实说明了系统的智能化水平有待提高。</p>
+
+<p>Monitor 系统进一步的方向即是加入一些智能算法进行智能告警，譬如去除毛刺，减少误报率等等各方面的工作。</p>
+
+<p>愚人后来又开发了服务端的日志收集系统，可以追踪整个用户的某次请求链路所有相关日志。囿于技术之外的原因未被使用，后来因为大数据部门需要采集客户端的一些指标而被当做客户端的日志收集通道，算是墙内开发墙外香的奇葩例子吧。</p>
+
+<h2 id="toc_18">参考文档</h2>
 
 <ul>
 <li>1 <a href="https://baike.baidu.com/item/%E5%90%AC%E8%AF%8A%E5%99%A8">听诊器</a></li>
@@ -489,12 +497,11 @@ Clyde 和 Bonie 是上世纪 30 年代米国大萧条时期的一对雌雄大盗
 <li>2 <a href="https://www.infoq.cn/article/the-road-of-the-growth-weixin-background">从无到有：微信后台系统的演进之路</a></li>
 </ul>
 
-<h2 id="toc_18">扒粪者-于雨氏</h2>
+<h2 id="toc_19">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>2018/11/17，于雨氏，初作此文于丰台。</p>
 </blockquote>
-
 
 
 <!-- baidu statistic start -->
