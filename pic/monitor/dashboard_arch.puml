@@ -1,0 +1,46 @@
+@startuml
+
+' inherit
+'A--|>B
+
+[Kafka]
+
+package "Kafka Connect InfluxDB" as KCI {
+  (KCI1)
+  (KCI2)
+}
+
+node "InfluxDB Pool" {
+  database InfluxDB1
+  database InfluxDB2
+}
+
+[Registry]
+(Keeper)
+'note top/bottom/left/right of KCI1: Kafka-Connect-InfluxDB
+
+KCI <-> Registry : Reg/Watch
+'KCI2 <-> Registry : Reg/Watch
+
+:Console: as C
+note "Add/Remove InfluxDB" as ARI
+C .. ARI
+ARI ..> Keeper
+Keeper ..> Registry
+
+(Kafka) --> (KCI1)
+(Kafka) --> (KCI2)
+(KCI1) ---> InfluxDB1
+(KCI1) ---> InfluxDB2
+(KCI2) ---> InfluxDB1:Consistent Hash
+(KCI2) ---> InfluxDB2
+
+(GrafanaProxy) as GP
+InfluxDB1 ..> GP
+InfluxDB2 ..> GP
+Keeper ..> GP : HTTP get
+GP ..> (Grafana)
+
+'note right of InfluxDB2: "InfluxDB Pool"
+
+@enduml

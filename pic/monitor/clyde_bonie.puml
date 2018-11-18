@@ -1,0 +1,23 @@
+@startuml
+title Clyde & Bonie work progress
+
+Agent -> Clyde: send monitor data
+
+== heartbeat ==
+
+Clyde -> Clyde: get a start up Boine list from configure file
+Clyde -> ClydeRegistry: register
+
+Bonie -> BonieRegistry: register
+Bonie -> BonieRegistry: watch to get Bonie Cluster List
+Judger -> BonieRegistry: register
+
+Clyde --> Bonie: send heartbeat
+Bonie --> Clyde: send back Bonie Cluster List
+
+== data transfer ==
+
+Clyde --> Bonie: send monitor data
+Bonie -> Judger: send monitor data
+
+@enduml

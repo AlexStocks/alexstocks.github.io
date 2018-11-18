@@ -109,7 +109,21 @@ int Attr_API_Get(int attr,int *iValue);//获得属性ID为attr的值，如果不
 
 愚人去年通过公开渠道搜集了这套系统的相关资料进行理解后，便自己设计了一套类似系统的架构实现，当项目立项开工时相关准备工作已经完成，最后在农历2018年新年前夕共用三周时间便完成了系统的原型开发。
 
-#### 2.1 总体架构
+#### 2.1 服务监控
+
+描述监控告警系统之前，先对监控的对象进行一番剖析。
+
+开发一套业务系统时，其架构师或者设计者在思虑其实现细节之前，会先对其进行拆分成各个子模块，然后再考虑各个子模块的实现。业务系统上线时，相同的子模块会被部署在多个服务节点上。有的公司以 Host IP 标识每个服务节点，但若这个节点是个虚机，则其 IP 会漂移，二者之间并非一一对应关系，故而用 Host IP 并不合适，可以统一给每个服务节点分配一个 ID。
+
+监控告警系统对整个业务系统称之为 Service，对各个子模块称之为 Attribute（缩写为 Attr），每个服务节点则称为 ServerID。
+
+第一章曾描述 QQ 后台有两种数据上报类型 `累加属性值上报` 和 `设置属性值上报`，并分别设置了两个 API 以示区别。实际的线上系统这两种类型许是不能满足要求的，可能需要更多的计算类型，譬如一个监控时段（AlarmTime，本系统的监控时段为分钟）内某指标的 最大值/最小值/平均值 等， 监控系统称之为监控类型（AlarmType）。监控系统收集各个指标时应该获取其 AlarmType。
+
+监控告警系统的最终计算结果（Metrics）是以 KV 形式存储和展示的，根据上面对业务系统的分析，最终一个监控指标的 Key 应是 `Service + Attr + AlarmType + AlarmTime + ServerID`，其 Value 即为监控统计值。
+
+考虑到某个 Attr 会在多个服务节点上部署，监控告警系统使用者常常需要知道所有节点上某个监控指标的总量，并基于总量对系统当前的服务能力进行分析，这种总量形式的监控指标的 Key 是 `Service + Attr + AlarmType + AlarmTime`，其 `Value = ∑(Service + Attr + AlarmType + AlarmTime + ServerIDi, i = 1, 2, …, n)`，n 为服务节点总数。
+
+#### 2.2 总体架构
 
 [参考文档1](https://baike.baidu.com/item/%E5%90%AC%E8%AF%8A%E5%99%A8) 中描述 `听诊器由听诊头、导音管、耳挂组成`，听诊器与医生构成了一套器人复合诊断系统。其实告警监控系统（下文称之为 Monitor）与这个复合体基本无差，其由数据采集节点(Client)、监控代理(Agent)、数据传输节点(Proxy)、计算中心(Judger)、存储节点(Database)、展示中心(Dashboard)、控制中心(Console)、告警中心(Alarm)和注册中心(Registry)等部分构成。
 
@@ -117,21 +131,27 @@ int Attr_API_Get(int attr,int *iValue);//获得属性ID为attr的值，如果不
 
 ![](../pic/monitor/monitor_system_arch.jpg)
 
-#### 2.2 子模块介绍
+#### 2.3 子模块介绍
 
 下面分别依据介绍各个子模块的功能。
 
 - 1 Client 是上报数据流的源头，通过调用 Monitor SDK 代码预埋监控点，在程序运行时上报数据到本机的 Agent。
 
-> 注：Client 是服务端的服务节点，因为其调用了 Monitor 的服务，故而称之为 Client，不要与常用的 APP 引用混淆。
+	> Client 是服务端的服务节点，因为其调用了 Monitor 的服务，故而称之为 Client，不要与常用的 APP 引用混淆。
 
-- 2 Agent 从 SHM 队列中接收 Client 上报数据，进行规整后定时上报给监控中心，如果 Agent 在监控中心所在的 IDC 的 Proxy。
+- 2 Agent 从 SHM 队列中接收 Client 上报数据，进行规整聚合（Aggravation）后定时上报给监控中心。
+
+	> Agent 对原始上报数据进行了第一次初步加工，其目的是减少 Judger 模块的计算量，并减少网络通信量。
+
 - 3 Proxy 是数据传输通道，从 Agent 或者外部 IDC 的 Proxy 传输来的监控流量包，把数据传输给 Calculator。
 
-	> 注：Proxy有两种工作模式：工作的计算节点所在 IDC（称之为 Monitor Center）的 Bonnie 和工作在所有业务机房的 Clyde，二者都是跨 IDC 的 Monitor 系统的数据传输代理，本身无状态。每个 IDC 的 Clyde 群集向自己所在机房的 Registry 注册，然后每个服务节点的 Agent 采用随机的路由策略把监控数据网络包发给某个固定的 Clyde 节点
- 
-- 4 Registry 是一个分布式的注册中心，提供服务注册、服务发现和服务通知服务，实际采用当下被广泛使用的 Zookeeper，每个 IDC 单独部署一套 Registry，Proxy/Judger 都需要按照约定的schema规则向Registry注册。
-- 5 Judger 是 Monitor 系统的中枢所在，对上报的原始数据进行第一次加工然后存入本地 DB，并根据预设的规则进行告警判断。
+	> Proxy有两种工作模式：工作的计算节点所在 IDC（称之为 Monitor Center）的 Bonnie 和工作在所有业务机房的 Clyde，二者都是跨 IDC 的 Monitor 系统的数据传输代理，本身无状态。
+	> 每个 IDC 的 Clyde 群集向自己所在机房的 Registry 注册，然后每个服务节点的 Agent 采用随机的路由策略把监控数据网络包发给某个固定的 Clyde 节点。
+	> Monitor 所在机房的 Proxy 称之为 Bonie，它向 Monitor 所在 IDC 的 Registry 注册，Clyde 采用随机路由策略把上报数据均衡地发送给 Bonie 群集中某个 Bonie Proxy，Bonie 收到数据后根据 Service 字段发送给其对应的 Judger。
+	> Clyde 和 Bonie 是上世纪 30 年代米国大萧条时期的一对雌雄大盗。
+
+- 4 Registry 是一个分布式的注册中心，提供服务注册、服务发现和服务通知服务，实际采用当下被广泛使用的 Zookeeper，每个 IDC 单独部署一套 Registry，Proxy/Judger 都需要按照约定的 schema 规则向Registry注册。
+- 5 Judger 是 Monitor 系统的中枢所在，对上报的原始数据进行第二次加工然后存入本地 DB，并根据预设的规则进行告警判断。
 
 	> Judger 存储一段时间内的监控数据，最终各种计算结果存入 Database 中，所以其是弱状态的服务节点，所有 Service 的监控数据都会从Proxy 集中路由到某个固定的 Judger，Service 与 Judger 之间的映射关系可在 Console 上设定，并存入 Database 和 Registry 中。
 
@@ -145,33 +165,175 @@ int Attr_API_Get(int attr,int *iValue);//获得属性ID为attr的值，如果不
 
 Monitor 作为一个业务告警监控系统，其自身的运行 Metrics 亦须予以收集，以防止因为其自身故障引起误报警。Agent/Proxy/Judger 定时地把自身的 qps、监控数据量等参数设定在 MySQL monitor db 里，Console 可以查看到这些 metrics 数据。运维人员可以在 Console 中设定一些规则对 Monitor 进行监控，其定时地汇总出一个 Monitor 运行报表通过邮件方式通知相关人员。Consle 还需要监控 Registry 中各个 Schema 路径，当某个 Monitor 系统节点宕机时发出最高级别的告警。Console 相当于 Monitor 系统的监控者。
 
-### 3 详细设计实现
+### 3 详细实现
 
-第二章介绍了 Monitor 系统的总体设计，下面分章节详述愚人的架构方案。
+第二章介绍了 Monitor 系统的总体设计，本章分列多个小节详述愚人的架构方案的各个子系统相关实现。
 
 #### 3.1 Console
 
-Console用于告警参数设置以及新服务上线时候通知某server负责即可。
-Monitor Console与Server之并不用直接数据通信，相关数据交互发生在MySQL层。Monitor Server须定时从MySQL加载新配置的数据。
-整个Console的实现借鉴我以往使用的一套用Java Web开发的系统，功能列表如下：
-- 1 实现多用户权限控制；
-- 2 实现告警参数设置；
-- 3 实现告警结果查收；
-- 4 实现服务上线管理；
+Console 用于告警参数设置，以及新服务上线时候通知某 Judger 由其负责某服务的相关计算。
 
-#### 3.2 SDK
+Console 系统并不追求并发性能，只是作为 Monitor 系统的控制中心，其功能比较繁复，罗列如下：
+
+- 1 创建用户
+
+![](../pic/monitor/console_user.png)
+
+- 2 添加告警规则
+
+![](../pic/monitor/console_monitor_type.png)
+
+- 3 添加服务
+
+![](../pic/monitor/console_monitor_service.png)
+
+- 4 添加服务子模块
+
+![](../pic/monitor/console_monitor_attr.png)
+
+- 5 告警参数设置
+
+![](../pic/monitor/console_monitor_rule.png)
+
+- 6 添加服务节点
+
+![](../pic/monitor/console_monitor_service_add.png)
+
+- 7 用户权限控制
+
+![](../pic/monitor/console_role.png)
+
+	> 角色与数据库中的 “角色” 概念一样，不同角色可以查看的不同的服务。Console 给真实用户分配权限，为其绑定不同的 角色 即可。 
+
+- 8 告警启停
+
+![](../pic/monitor/console_monitor_online.png)
+
+- 9 告警结果查看
+
+![](../pic/monitor/console_monitor_record_panel.png)
+
+业务上线时，通过添加服务功能把服务相关数据存入 Mysql Service Database 中，并在 Registry 中注册相应的 Schema Key，并把 Judger 节点作为其 Value。
+
+运维人员启用某个 Judger 后，Judger 会定时把自身的 CPU 负载、内存使用量、负责的 Service 列表等 metrics 定时存入 Mysql 中，Console 会监控各个 Judger 的运行情况，并以图表形式展示给运维人员。运维人员上线新服务时，就可以根据这个图表让某个 Judger 负责响应服务的上报结果汇总计算和告警判断。
+
+#### 3.2 Client SDK
+
+Monitor 系统作为一种埋点式监控告警服务，具有侵入性，其使用的简易友好程度直接影响了业务开发人员对其接受程度。Monitor 的 Client C++ SDK 接口如下：
+
+```C++
+     /*
+     监控上报,monitor可统计此接口设置过的累加值、最大值、最小值、平均值以及每n秒内的第一次上报和最后一次上报
+     @param in service_name 服务名称,最大长度不超过MONITOR_MAX_NAME_LEN，命名规则：【业务名称.服务名称】首字母大些，以点隔开，如：Monitor.MonitorApi
+     @param in attr_name 属性名称,最大长度不超过MONITOR_MAX_NAME_LEN，命名规则：【模块.监控点】首字母大些，以点隔开，如：MemoryQueue.TotalProcessCount
+     @param in server_id 服务id
+     @param in value 上报值
+     @param in op_mask 上报类型，AlarmType，由 Console 分配
+     @return
+          MONITOR_ERR_OK - 成功
+          其它 - 错误
+     */
+     MONITOR_API int monitor(const char* service_name, const char* attr_name, int64_t server_id, int64_t value, int32_t op_mask);
+```
+
+业务人员在调用上面接口时，Client SDK 会补充当前机器的 Host IP、精确到纳秒的时间点等信息后写入基于 SHM 实现的环形队列，其读写形式是多写一读。线上最终实现的队列的指标如下：
+
+- 1 单进程每秒可写入 100 万次；
+- 2 单进程每秒可读取 220 万次；
+- 3 占用共享内存近 300 MB；
+
+即一次写入耗费 1 微妙，几乎不会影响业务调用方性能。而队列占用了一块大容量内存，Agent 每次读取大概只耗费 0.5 微妙，几乎可以保证业务调用方的每次写入不会因为争抢内存栅栏（一种内存锁）发生阻塞。
 
 #### 3.3 Agent
 
-#### 3.4 Clyde & Bonie
+Agent 负责收集本机所有 Client 通过 SHM队列 上报的原始监控数据，然后按照一定的路由规则经某个 Proxy 上报给 Service 对应的 Judger，在上报数据流中起着承上启下的作用。
+
+Agent 并不是从队列中读取结果后立即上报。Monitor 的实时单位是分钟级，原始上报结果时间单位是纳秒，Agent 对某指标 `Service + Attr + AlarmType + ServerID` 以秒级为单位进行聚合（Aggregate）计算。
+
+Agent 从注册中心获取其所在 IDC 的 Clyde 群集，并按照随机路由策略定时地把初步聚合后的数据上报给某个 Clyde 群集中的某个 Proxy。
+
+**#3.2** 小节中给出了 C++ 形式的 SDK，当其他语言（譬如 Go）的业务系统若要接入 Monitor，便不能使用这套 SDK。Agent 专门启动了一个线程，称之为 Client Puppet Thread，监听一个 Unix Socket 地址，其他语言可以通过 Unix Socket 把上报数据发送给 Client Puppet Thread。Client Puppet Thread 收到数据后写入 SHM 队列，正因为其模拟了 C++ Client 的写入行为，所以称之为 Client Puppet。
+
+#### 3.4 Clyde & Bonie Proxy
+
+Proxy 的作用是接收上报数据，并根据数据中的 Service 字段把数据转发给对应的 Judger，是监控数据中转者。其详细工作流程如下：
+
+![](../pic/monitor/clyde_bonie.png)
+
+Proxy 启动时根据配置文件获取自身角色(Clyde/Bonnie)，如果自身角色是 Clyde 还须加载一个 含有初始 Bonnie 成员列表的配置文件，然后分别向其 IDC 机房的 Registry 注册。
+
+Bonie 启动后向 Registry 注册，并获取其所在群集的所有成员列表。
+
+由于 Clyde 和 Bonie 分别使用不同的 IDC，Clyde 不可能通过 Bonie 所在机房的 Registry 获取 Bonie 群集成员列表，所以每个 Clyde 都有一个初始 Bonie 成员列表配置文件，启动加载配置文件后，依据一定的规则依次向各个 Bonie 发送心跳包，探测出一个可用的 Bonie Proxy 后即固定地与这个 Proxy 进行心跳通信。Bonnie 接收 Clyde 发来的心跳包后，把包括自身在内的 Bonnie 群集成员列表返回给 Clyde。Clyde 定时向 Bonnie 发送心跳包，如果回包中的 Bonnie 群集成员列表与本地缓存中的 Bonnie 群集成员列表有差异，则用最新的 Bonnie 群集成员列表数据更新相应的配置文件。
+
+Bonnie 从 Registry 中获取 Service 与 Judger 之间的映射关系。Bonnie 接收到监控数据网络包并对其拆包（一个上报网络包可能存在多个 Service 的上报数据）后，首先判断每条上报数据是否合法，若不合法（如不存在的 Service 和 Attr）则丢弃不处理，以防止未在 Console 注册的服务向 Monitor 发送监控数据，然后根据 Service 名字分别发往不同的 Judger。
+
+最终线上运行的 Proxy 每秒可转发 20万 的网络包。
 
 #### 3.5 Judger
 
+如 **#2.2** 中所述，Judger 职责有：把自身信息注册入 Registry，汇总 Proxy 转发的告警数据存入本地，处理读取告警汇总数据等读请求，告警判断，接收新服务上线通知，把自身运行 metrics 上报到 Console。
+
+Judger 收到 Proxy 转发来的以秒为计时单位数据后，分别计入两个 KV（`Service + Attr + AlarmType + AlarmTime + ServerID` 和 `Service + Attr + AlarmType + AlarmTime`）进行计算，同时把这种相对原始的数据通过 Kafka 传输通道存入 Elasticsearch 中。
+
+Judger 对报警数据进行聚合归并计算后的以分钟为计时单位的数据也通过 Kafka 传输通道存入 Dashboard 所使用的 Database InfluxDB 中进行时间序列展示，并依据每个服务的告警条件的参数进行告警判断。如果某 Service 的某个告警判断被触发，则通过告警系统发送告警通知。
+
+最终线上实现的 Judger 每秒可接收 10万 的网络包。
+
 #### 3.6 Kafka & Kafka Connector
 
-#### 3.7 InfluxDB Cluster
+Kafka 作为一种大数据系统常用的 MQ，其作用就是 Monitor 的数据传输通道。
 
-#### 3.8 Dashboard
+Monitor 的 Kafka Connector 采用 Go 语言实现，依据 Kafka 的 Consumer Group 的消费方式构成了一个群集。
+
+收到 Kafka 消息并解析后，根据数据的不同类型以 Batch 方式分别发往 InfluxDB 群集和 Elasticsearch 群集。
+
+#### 3.7 Dashboard
+
+Dashboard 用于从不同维度展示统计结果，是对 Judger 归并计算结果的再加工，其存储依赖时间序列数据库 InfluxDB，展示 Panel 则使用 Grafana。Dashboard 还使用了一个名为 [influxdb-timeshift-proxy](https://github.com/maxsivanov/influxdb-timeshift-proxy) 的开源组件作为 Grafana Proxy，以实现在 Grafana 同一个 Panel 上聚合对同一 Key 的不同时间维度的数据。
+
+##### 3.7.1 InfluxDB Cluster
+
+原始的 Dashboard 只用一个 InfluxDB，随着线上汇总数据的增多，数据量已近其极限，
+
+初始版本的 Dashboard 仅仅使用了一个 InfluxDB 作为线上展示数据汇总终点，后来随着数据量的增长，一个 InfluxDB 已然不能承受巨大的数据量，故有必要通过 InfluxDB 集群分散数据压力。而 InfluxDB 集群是收费的，所以愚人就自己撸起袖子通过 一致性Hash 算法攒了一个 InfluxDB 集群，放大的UML架构图如下（其流程与总架构图一致）：
+
+![](../pic/monitor/dashboard_arch.png)
+
+集群中各个成员功能如下：
+
+- Registry: 集群 Metadata 存储中心
+- Keeper: 集群管理者，通过 HTTP 服务接口提供 添加\删除 InfluxDB\获取集群的 metadata 三个功能，并把集群的 Metadata 存入 Registry 中
+- KCI： 全称是 Kafka Connect InfluxDB，从 Registry 获取 InfluxDB 集群信息，从 Kafka 获取数据后 根据服务名称 把数据传输到相应的 InfluxDB 实例
+- GrafanaProxy： 从 Keeper 获取 InfluxDB 集群信息，然后根据用户在 Grafana 端设置的相关参数从 InfluxDB 获取相关数据并返回给 Grafana
+
+##### 3.7.2 Grafana
+
+Grafana 的强大之处无需愚人庸言，下面分别展示其结合 Monitor 系统后的强大功用。
+
+- 1 通过模板对单个 Panel 配置各个 Serial 的数据来源
+
+![](../pic/monitor/grafana_single_panel_sql.png)
+
+- 2 在单个 Panel 展示单个 Service + Attr + ServerID 的多个 AlarmType 
+
+![](../pic/monitor/grafana_multiple_service_names.png)
+
+- 3 在单个 Panel 展示对单个 Service + Attr + ServerID 展示多个时间维度的数据
+
+![](../pic/monitor/grafana_today_yesterday.png)
+
+- 4 在一个页面把某 Service 下所有 Attr 聚合展示
+
+![](../pic/monitor/grafana_multiple_services_all_nodes.png)
+
+- 5 在一个页面把某服务节点（ServiceID）的所有 Service 聚合展示
+
+![](../pic/monitor/grafana_multiple_services.png)
+
+- 6 展示已有系统 Ceph 的 Metrics 数据
+
+![](../pic/monitor/grafana_ceph_cluster.png)
 
 ## 参考文档
 
