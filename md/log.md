@@ -127,7 +127,7 @@ Log Agent 收到 UDS 日志数据包时会解析出 BizType（服务名称），
 
 最终实现的 Log Agent 系统有一个 Service Agent 机制：定时向 Log Kafka 发起 HTTP 请求并读取其响应，获取 Log Kafka 节点列表。以及时对 Log Kafka 进行服务发现。  
 
-#### 2.3 Log Kafka
+#### 2.4 Log Kafka
 
 Log Kafka 从 Log Agent 接收日志数据包，进行解析后根据服务名称写入相应的 Kafka 传输通道。日志系统中 Log Kafka 以多群集方式进行部署，每个群集都有唯一标识，即 Console UI 界面中的 “集群编号”。
 
@@ -145,7 +145,7 @@ Log Kafka 根据 Console 在注册中心存储的服务对应的各个服务对�
 
 Log Kafka 提供 HTTP 接口，Log Agent可通过这个 HTTP 接口获取所有的 ServiceName 与 各个 LogKafka 群集的映射数据，以及各个 Log Kafka 群集（LKC）内成员列表。
 
-#### 2.4 Kafka Connector
+#### 2.6 Kafka Connector
 
 Kafka Connector 是日志系统中日志数据的迁移通道，把不同服务的日志数据写入不同的 Elasticsearch 数据库（Index）中。
 
@@ -155,13 +155,13 @@ Kafka Connector 自身调用 Kafka 和 Elasticsearch 的相关 API 即可完成�
 
 Kafka Connector 同时可以根据 Console 相应配置把 Log Data 写入 HDFS 中，以方便大数据部门进一步清洗加工处理。
 
-#### 2.5 Es Log Server
+#### 2.6 Es Log Server
 
 Es Log Server 是一个 Web Server，提供日志数据的查询和过滤功能，响应对 Log View 发来的请求。
 
 最终的系统实现采用 Python Flask 框架实现相应的功能，因为考虑到日志系统的写多读少特性，Es Log Server并无很高的性能追求。
 
-#### 2.4 Log View
+#### 2.7 Log View
 
 Log View 可以认作是 Es Log Server 的前端展示，采用 Js 实现，其 UI 界面如下：
 
