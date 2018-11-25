@@ -307,7 +307,7 @@ Log Kafka 对 APP 的响应亦由 Nginx 原路由转回。
 
 ## 参考文档
 
-NULL
+- 1 [一套实时监控告警系统实现](http://alexstocks.github.io/html/monitor.html)
 
 ## 扒粪者-于雨氏
 
