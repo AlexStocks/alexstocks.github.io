@@ -145,7 +145,7 @@ Log Kafka 根据 Console 在注册中心存储的服务对应的各个服务对�
 
 Log Kafka 提供 HTTP 接口，Log Agent可通过这个 HTTP 接口获取所有的 ServiceName 与 各个 LogKafka 群集的映射数据，以及各个 Log Kafka 群集（LKC）内成员列表。
 
-#### 2.6 Kafka Connector
+#### 2.5 Kafka Connector
 
 Kafka Connector 是日志系统中日志数据的迁移通道，把不同服务的日志数据写入不同的 Elasticsearch 数据库（Index）中。
 
@@ -278,7 +278,7 @@ Es Log Server 和 Log View 系统是愚人用了两天时间搭建的一个简�
 - 2 日志过期；
 - 3 日志上传成功；
 
-##### 3.2.2 客户端日志上传规则
+##### 3.2.3 客户端日志上传规则
  
 客户端日志上传上传条件为：应用运行在前台，网络（移动 或者 wifi）连通，有满足配置规则的日志。
 
