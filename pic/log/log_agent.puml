@@ -1,0 +1,16 @@
+@startuml
+title Log Agent work progress
+
+== 启动服务 ==
+
+Service -> LogAgent: 连接 UDS
+LogAgent -> LogAgent: 监听 UDS
+LogAgent -> LogKafka: 发送 HTTP 请求
+LogAgent <- LogKafka: 获取 LogKafka 集群信息
+LogAgent <- LogKafka: 获取 ServiceName 与 LogKafka 集群之间映射关系
+
+== 数据传输 ==
+Service -> LogAgent: 通过 UDS 发送日志
+LogAgent -> LogKafka: 以 UDP 方式发送日志数据
+
+@enduml

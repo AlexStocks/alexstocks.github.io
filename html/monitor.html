@@ -109,7 +109,7 @@ kbd {
 
 <body>
 
-<h2 id="toc_0">一套完备的实时监控告警系统实现</h2>
+<h2 id="toc_0">一套实时监控告警系统实现</h2>
 
 <hr>
 
@@ -254,10 +254,13 @@ int Attr_API_Get(int attr,int *iValue);//获得属性ID为attr的值，如果不
 <li><p>3 Proxy 是数据传输通道，从 Agent 或者外部 IDC 的 Proxy 传输来的监控流量包，把数据传输给 Calculator。</p>
 
 <blockquote>
-<p>Proxy有两种工作模式：工作的计算节点所在 IDC（称之为 Monitor Center）的 Bonnie 和工作在所有业务机房的 Clyde，二者都是跨 IDC 的 Monitor 系统的数据传输代理，本身无状态。
-每个 IDC 的 Clyde 群集向自己所在机房的 Registry 注册，然后每个服务节点的 Agent 采用随机的路由策略把监控数据网络包发给某个固定的 Clyde 节点。
-Monitor 所在机房的 Proxy 称之为 Bonie，它向 Monitor 所在 IDC 的 Registry 注册，Clyde 采用随机路由策略把上报数据均衡地发送给 Bonie 群集中某个 Bonie Proxy，Bonie 收到数据后根据 Service 字段发送给其对应的 Judger。
-Clyde 和 Bonie 是上世纪 30 年代米国大萧条时期的一对雌雄大盗。</p>
+<p>Proxy有两种工作模式：工作的计算节点所在 IDC（称之为 Monitor Center）的 Bonnie 和工作在所有业务机房的 Clyde，二者都是跨 IDC 的 Monitor 系统的数据传输代理，本身无状态。</p>
+
+<p>每个 IDC 的 Clyde 群集向自己所在机房的 Registry 注册，然后每个服务节点的 Agent 采用随机的路由策略把监控数据网络包发给某个固定的 Clyde 节点。</p>
+
+<p>Monitor 所在机房的 Proxy 称之为 Bonie，它向 Monitor 所在 IDC 的 Registry 注册，Clyde 采用随机路由策略把上报数据均衡地发送给 Bonie 群集中某个 Bonie Proxy，Bonie 收到数据后根据 Service 字段发送给其对应的 Judger。</p>
+
+<p>Clyde 和 Bonie 是上世纪 30 年代米国大萧条时期的一对雌雄大盗。</p>
 </blockquote></li>
 <li><p>4 Registry 是一个分布式的注册中心，提供服务注册、服务发现和服务通知服务，实际采用当下被广泛使用的 Zookeeper，每个 IDC 单独部署一套 Registry，Proxy/Judger 都需要按照约定的 schema 规则向Registry注册。</p></li>
 <li><p>5 Judger 是 Monitor 系统的中枢所在，对上报的原始数据进行第二次加工然后存入本地 DB，并根据预设的规则进行告警判断。</p>
@@ -367,12 +370,12 @@ Clyde 和 Bonie 是上世纪 30 年代米国大萧条时期的一对雌雄大盗
 <p>业务人员在调用上面接口时，Client SDK 会补充当前机器的 Host IP、精确到纳秒的时间点等信息后写入基于 SHM 实现的环形队列，其读写形式是多写一读。线上最终实现的队列的指标如下：</p>
 
 <ul>
-<li>1 单进程每秒可写入 100 万次；</li>
+<li>1 10个进程每秒可写入 100 万次(每项数据长度48B)；</li>
 <li>2 单进程每秒可读取 220 万次；</li>
 <li>3 占用共享内存近 300 MB；</li>
 </ul>
 
-<p>即一次写入耗费 1 微妙，几乎不会影响业务调用方性能。而队列占用了一块大容量内存，Agent 每次读取大概只耗费 0.5 微妙，几乎可以保证业务调用方的每次写入不会因为争抢内存栅栏（一种内存锁）发生阻塞。</p>
+<p>即一次写入耗费约 10 微妙，几乎不会影响业务调用方性能。而队列占用了一块大容量内存，Agent 每次读取大概只耗费 0.5 微妙，几乎可以保证业务调用方的每次写入不会因为争抢内存栅栏（一种内存锁）发生阻塞。</p>
 
 <h4 id="toc_10">3.3 Agent</h4>
 
@@ -503,7 +506,7 @@ Clyde 和 Bonie 是上世纪 30 年代米国大萧条时期的一对雌雄大盗
 <h2 id="toc_19">扒粪者-于雨氏</h2>
 
 <blockquote>
-<p>2018/11/17，于雨氏，初作此文于丰台。</p>
+<p>2018/11/17，于雨氏，于丰台，初作此文。</p>
 </blockquote>
 
 

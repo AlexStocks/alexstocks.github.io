@@ -1,0 +1,15 @@
+@startuml
+title Log Kafka work progress
+
+== 启动服务 ==
+
+Registry <- LogKafka: 注册本节点
+Registry -> LogKafka: 获取 ServiceName 与 LogKafka 集群之间映射关系
+
+== 数据传输 ==
+
+LogAgent -> LogKafka: 接收日志数据
+LogKafka -> Kafka: 写入日志数据
+
+@enduml
+
