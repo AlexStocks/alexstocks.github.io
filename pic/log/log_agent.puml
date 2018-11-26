@@ -1,5 +1,5 @@
 @startuml
-title Log Agent work progress
+title Log Agent work flow
 
 == 启动服务 ==
 

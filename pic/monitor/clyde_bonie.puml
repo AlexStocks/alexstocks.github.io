@@ -1,5 +1,5 @@
 @startuml
-title Clyde & Bonie work progress
+title Clyde & Bonie work flow
 
 Agent -> Clyde: send monitor data
 

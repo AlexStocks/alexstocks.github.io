@@ -1,5 +1,5 @@
 @startuml
-title Log Kafka work progress
+title Log Kafka work flow
 
 == 启动服务 ==
 
