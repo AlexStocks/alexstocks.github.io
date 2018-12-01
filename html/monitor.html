@@ -495,7 +495,8 @@ int Attr_API_Get(int attr,int *iValue);//获得属性ID为attr的值，如果不
 <li>2 在 Alarm 模块加入智能算法进行智能告警，去除毛刺，减少误报率；</li>
 <li>3 和日志收集系统集合，每次告警发送邮件时，把相关上下文日志一并抄送；</li>
 <li>4 改进 InfluxDB 群集，每次扩容把旧有的数据一并复制到新系统;</li>
-<li>5 开发 Grafana 增强版，每次上线服务时可以自动根据用户在 Console 中配置的参数自动配置 Panel 的相关参数和 SQL 查询语句。 </li>
+<li>5 开发 Grafana 增强版，每次上线服务时可以自动根据用户在 Console 中配置的参数自动配置 Panel 的相关参数和 SQL 查询语句；</li>
+<li>6 上报数据时使用一个整数 ID 代替 <code>Service + Attr</code>，可以使用数据库中 MySQL 给二者分配的 ID，以减少数据冗余和网络包长度；</li>
 </ul>
 
 <h2 id="toc_18">参考文档</h2>
@@ -542,6 +543,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 
 
