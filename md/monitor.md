@@ -310,6 +310,8 @@ Dashboard 用于从不同维度展示统计结果，是对 Judger 归并计算�
 - KCI： 全称是 Kafka Connect InfluxDB，从 Registry 获取 InfluxDB 集群信息，从 Kafka 获取数据后 根据服务名称 把数据传输到相应的 InfluxDB 实例
 - GrafanaProxy： 从 Keeper 获取 InfluxDB 集群信息，然后根据用户在 Grafana 端设置的相关参数从 InfluxDB 获取相关数据并返回给 Grafana
 
+KCI 实现时候依据 PIPELINE 模式对整个数据传输流程进行了优化：把数据传输过程分解为 `**Kafka 消息数据读取**`、`**Kafka 消息数据解析**`、`**数据流水写入 InfluxDB**`三个步骤，分解后可以分别加大并行处理速度，实现了数据高速地写入 InfluxDB 群集。
+
 ##### 3.7.2 Grafana
 
 Grafana 的强大之处无需愚人庸言，下面分别展示其结合 Monitor 系统后的强大功用。
