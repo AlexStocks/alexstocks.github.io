@@ -476,7 +476,21 @@ pre[class*="language-"] {
 
 <p>分布式领域有一些非常著名的定理和算法，构筑了当下一些著名分布式系统的基石。下面分别罗列之，以求集腋成裘之效。</p>
 
-<h3 id="toc_1">1 CAP</h3>
+<h3 id="toc_1">0 Grosch 定律</h3>
+
+<hr>
+
+<p>之所以先提及这个定律，是为了说明一个道理：计算机科学很多定律仅仅是经验的总结，存在一定的先决条件，当条件改变后，它也就失效了。也即：没有一成不变的放之四海而皆准的计算机定律。</p>
+
+<p><a href="https://mp.weixin.qq.com/s/DXmQb9t29VKUQYGUzL68iQ">参考文档5</a> 在大中型计算机时代，有一个 Grosch 定律：<code>计算机性能随着成本的平方而增加。如果计算机 A 的成本是计算机 B 的两倍，那么计算机 A 的速度应该是计算机 B 的四倍</code>，这个定律简单而有效，在大型机时代工程师想的是如何提高单个大型机的性能，使用方则尽其所能购买预算范围内的最贵的大型机。</p>
+
+<p>到 1965 年微型处理器（CPU）出现后，Gordon Moore 提出了<code>摩尔定律</code>，这意味着计算机性能的提升除了金钱这一因素外，还要考虑时间这一因素，其结果就是<a href="https://mp.weixin.qq.com/s/DXmQb9t29VKUQYGUzL68iQ">参考文档5</a>提到的：<font color=red><code>如果你的系统需承载的计算量的增长速度大于摩尔定律的预测，那么在未来的某一个时间点，集中式系统将无法承载你所需的计算量</code></font>。</p>
+
+<p>摩尔定律说明单机的性能取决于金钱和时间，在时间恒定的一个时刻，即使金钱再多，其性能也有一个天花板极限。聪明如人类，必然会想到计算机互联，即他通过多个单机构成一个分布式系统的方法，以系统性能提升的方式达到提升计算机性能的目的。</p>
+
+<p>分布式系统的另一个好处就是系统稳定性的提升。两台计算机互联并不是 <code>1 + 1 &gt; 2</code>，不能带来两倍的计算机性能的提升，甚至是 1.5 倍的性能提升都很难，但是却能提高系统的可靠性：即使其中一台计算机出现故障，整体系统还是具备可用性，虽然牺牲了系统的性能。</p>
+
+<h3 id="toc_2">1 CAP</h3>
 
 <hr>
 
@@ -500,7 +514,7 @@ pre[class*="language-"] {
 
 <p>以上内容大部分摘自 <a href="http://mp.weixin.qq.com/s/nyrEtiswAxXUW0YGf_szQg">参考文档2</a>。下面分别描述一些著名系统的 CAP 取舍。</p>
 
-<h4 id="toc_2">1.1 zookeeper</h4>
+<h4 id="toc_3">1.1 zookeeper</h4>
 
 <hr>
 
@@ -508,13 +522,13 @@ pre[class*="language-"] {
 
 <p>以上内容摘自 <a href="https://www.cnblogs.com/jieqing/p/8394001.html">参考文档3</a>。 </p>
 
-<h4 id="toc_3">1.2 MongoDB</h4>
+<h4 id="toc_4">1.2 MongoDB</h4>
 
 <hr>
 
 <p>mongodb 的读写一致性由 WriteConcern 和 ReadConcern 两个参数保证,两者组合可以得到不同的一致性等级。指定 writeConcern:majority 可以保证写入数据不丢失，不会因选举新主节点而被回滚掉。readConcern:majority + writeConcern:majority 可以保证强一致性的读,readConcern:local + writeConcern:majority 可以保证最终一致性的读。mongodb 对configServer全部指定writeConcern:majority 的写入方式，因此元数据可以保证不丢失。对 configServer 的读指定了 ReadPreference:PrimaryOnly 的方式，在 CAP 中舍弃了A与P得到了元数据的强一致性读。</p>
 
-<h3 id="toc_4">2 FLP</h3>
+<h3 id="toc_5">2 FLP</h3>
 
 <hr>
 
@@ -524,7 +538,7 @@ pre[class*="language-"] {
 
 <p>FLP的前提是分布式和异步模型。在分布式系统中，异步模型都适用于 CAP 和 FLP。在工作任务重的部分考虑异步模型，在工作任务轻的部分譬如 metaserver 就可以考虑同步模型，一些一致性算法譬如 Paxos  和 Raft 本质都是运作在同步模型之上的，此时就可以认为一致性是可以达成的。</p>
 
-<h4 id="toc_5">FLP 与 共识问题</h4>
+<h4 id="toc_6">FLP 与 共识问题</h4>
 
 <p>共识问题，就是让网络上的分布式处理者最后都对同一个结果值达成共识。共识问题给出一个处理者的集合，其中每一个处理者都有一个初始值：</p>
 
@@ -538,7 +552,7 @@ pre[class*="language-"] {
 
 <p><a href="http://mp.weixin.qq.com/s/nyrEtiswAxXUW0YGf_szQg">参考文档2</a> 对 FLP 与共识问题之间的关系进行了探讨。其描述如下：<code>FLP 不可能性则讨论了异步模型下的情况，主要结论有两条: 在异步模型下不存在一个完全正确的共识算法。不仅上述较“强”形式的共识算法不可能实现，FLP 还证明了比它弱一些的、只需要有一些无错误的进程做决定就足够的共识算法也是不可能实现的; 在异步模型下存在一个部分正确的共识算法，前提是所有无错误的进程都总能做出一个决定，此外没有进程会在它的执行过程中死亡，并且初始情况下超过半数进程都是存活状态。</code></p>
 
-<h3 id="toc_6">3 广播算法</h3>
+<h3 id="toc_7">3 广播算法</h3>
 
 <hr>
 
@@ -552,22 +566,24 @@ pre[class*="language-"] {
 
 <p>这个方法足够简单有效，Redis Sentinel 就是使用了这个方法，但是其缺点依然避免不了部分广播包传播过程有广播路径重合。还有更简单的算法：生成树广播。其核心内容是：<code>先选出一个中心节点，然后其他节点向这个中心节点发送加入树报文，加入树报文经过的路径，都会被嫁接到生成树上</code>。</p>
 
-<h2 id="toc_7">参考文档</h2>
+<h2 id="toc_8">参考文档</h2>
 
 <blockquote>
 <p>1 <a href="http://jacketwoo.github.io/2018/04/28/FLP%E8%AF%81%E6%98%8E.html">FLP 证明</a><br><br>
 2 <a href="http://mp.weixin.qq.com/s/nyrEtiswAxXUW0YGf_szQg">分布式系统架构经典资料</a><br><br>
 3 <a href="https://www.cnblogs.com/jieqing/p/8394001.html">ZooKeeper、Eureka对比</a> <br>
 4 <a href="https://www.cnblogs.com/kubidemanong/p/10133097.html"><br>
-广播路由算法 ：我是如何优雅着把悄悄话带给其他人的</a></p>
+广播路由算法 ：我是如何优雅着把悄悄话带给其他人的</a><br>
+5 <a href="https://mp.weixin.qq.com/s/DXmQb9t29VKUQYGUzL68iQ">分布式系统的本质其实就是这两个问题</a></p>
 </blockquote>
 
-<h2 id="toc_8">扒粪者-于雨氏</h2>
+<h2 id="toc_9">扒粪者-于雨氏</h2>
 
 <blockquote>
 <ul>
 <li>2018/10/08，于雨氏，于丰台。</li>
 <li>2018/12/18，于雨氏，于西二旗完成 #3 广播算法#。</li>
+<li>2018/12/24，于雨氏，于西二旗完成 #0 Grosch 定律#。</li>
 </ul>
 </blockquote>
 
@@ -625,6 +641,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 
 </body>
