@@ -499,7 +499,7 @@ pre[class*="language-"] {
 3.开发统计代码；
 4.实现统计监控页面。</code></pre></div>
 
-<p>这种套路的系统的缺点，<a href="http://www.cnblogs.com/hujiapeng/p/6235761.html">参考文档3</a> 文中有道是：<code>这种费时费力的模式会反过来降低开发人员对加入业务监控的积极性，每次故障后，是由 QA 牵头出一份故障报告，着重点是对故障影响的评估和故障定级</code>，此文稍后便提及 <code>出乎意料地简单且强大的公司内的标杆——即通后台（QQ 后台）</code> 的监控告警系统：</p>
+<p>这种套路的系统的缺点，<a href="http://www.cnblogs.com/hujiapeng/p/6235761.html">参考文档2</a> 文中有道是：<code>这种费时费力的模式会反过来降低开发人员对加入业务监控的积极性，每次故障后，是由 QA 牵头出一份故障报告，着重点是对故障影响的评估和故障定级</code>，此文稍后便提及 <code>出乎意料地简单且强大的公司内的标杆——即通后台（QQ 后台）</code> 的监控告警系统：</p>
 
 <p><img src="../pic/%E5%9F%BA%E4%BA%8E%20ID-Value%20%E7%9A%84%E7%9B%91%E6%8E%A7%E5%91%8A%E8%AD%A6%E4%BD%93%E7%B3%BB.png" alt=""></p>
 
@@ -858,6 +858,8 @@ int Attr_API_Get(int attr,int *iValue);//获得属性ID为attr的值，如果不
 <li>4 改进 InfluxDB 群集，每次扩容把旧有的数据一并复制到新系统;</li>
 <li>5 开发 Grafana 增强版，每次上线服务时可以自动根据用户在 Console 中配置的参数自动配置 Panel 的相关参数和 SQL 查询语句；</li>
 <li>6 上报数据时使用一个整数 ID 代替 <code>Service + Attr</code>，可以使用数据库中 MySQL 给二者分配的 ID，以减少数据冗余和网络包长度；</li>
+<li>7 <a href="https://mp.weixin.qq.com/s/3Flnn4mkh-euF3mKzpnMsQ">参考文档4</a>中指出的<code>告警信息延时合并并区分优先级，报警形式多样化</code>；</li>
+<li>8 <a href="https://mp.weixin.qq.com/s/3Flnn4mkh-euF3mKzpnMsQ">参考文档4</a>中指出的<code>通过故障演练验证报警是否符合预期</code>；</li>
 </ul>
 
 <h2 id="toc_18">参考文档</h2>
@@ -865,7 +867,8 @@ int Attr_API_Get(int attr,int *iValue);//获得属性ID为attr的值，如果不
 <ul>
 <li>1 <a href="https://baike.baidu.com/item/%E5%90%AC%E8%AF%8A%E5%99%A8">听诊器</a></li>
 <li>2 <a href="http://www.cnblogs.com/hujiapeng/p/6235761.html">1.1 万亿交易量级下的秒级监控</a></li>
-<li>2 <a href="https://www.infoq.cn/article/the-road-of-the-growth-weixin-background">从无到有：微信后台系统的演进之路</a></li>
+<li>3 <a href="https://www.infoq.cn/article/the-road-of-the-growth-weixin-background">从无到有：微信后台系统的演进之路</a></li>
+<li>4 <a href="https://mp.weixin.qq.com/s/3Flnn4mkh-euF3mKzpnMsQ">微服务架构下的监控需要注意哪些方面</a></li>
 </ul>
 
 <h2 id="toc_19">扒粪者-于雨氏</h2>

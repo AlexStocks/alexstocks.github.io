@@ -29,7 +29,7 @@
 4.实现统计监控页面。
 ```
 
-这种套路的系统的缺点，[参考文档3](http://www.cnblogs.com/hujiapeng/p/6235761.html) 文中有道是：`这种费时费力的模式会反过来降低开发人员对加入业务监控的积极性，每次故障后，是由 QA 牵头出一份故障报告，着重点是对故障影响的评估和故障定级`，此文稍后便提及 `出乎意料地简单且强大的公司内的标杆——即通后台（QQ 后台）` 的监控告警系统：
+这种套路的系统的缺点，[参考文档2](http://www.cnblogs.com/hujiapeng/p/6235761.html) 文中有道是：`这种费时费力的模式会反过来降低开发人员对加入业务监控的积极性，每次故障后，是由 QA 牵头出一份故障报告，着重点是对故障影响的评估和故障定级`，此文稍后便提及 `出乎意料地简单且强大的公司内的标杆——即通后台（QQ 后台）` 的监控告警系统：
 
 ![](../pic/基于 ID-Value 的监控告警体系.png)
 
@@ -352,12 +352,15 @@ Monitor 系统有待改进的工作如下：
 - 4 改进 InfluxDB 群集，每次扩容把旧有的数据一并复制到新系统;
 - 5 开发 Grafana 增强版，每次上线服务时可以自动根据用户在 Console 中配置的参数自动配置 Panel 的相关参数和 SQL 查询语句；
 - 6 上报数据时使用一个整数 ID 代替 `Service + Attr`，可以使用数据库中 MySQL 给二者分配的 ID，以减少数据冗余和网络包长度；
+- 7 [参考文档4](https://mp.weixin.qq.com/s/3Flnn4mkh-euF3mKzpnMsQ)中指出的`告警信息延时合并并区分优先级，报警形式多样化`；
+- 8 [参考文档4](https://mp.weixin.qq.com/s/3Flnn4mkh-euF3mKzpnMsQ)中指出的`通过故障演练验证报警是否符合预期`；
 
 ## 参考文档
 
 - 1 [听诊器](https://baike.baidu.com/item/%E5%90%AC%E8%AF%8A%E5%99%A8)
 - 2 [1.1 万亿交易量级下的秒级监控](http://www.cnblogs.com/hujiapeng/p/6235761.html)
-- 2 [从无到有：微信后台系统的演进之路](https://www.infoq.cn/article/the-road-of-the-growth-weixin-background)
+- 3 [从无到有：微信后台系统的演进之路](https://www.infoq.cn/article/the-road-of-the-growth-weixin-background)
+- 4 [微服务架构下的监控需要注意哪些方面](https://mp.weixin.qq.com/s/3Flnn4mkh-euF3mKzpnMsQ)
 
 
 ## 扒粪者-于雨氏
