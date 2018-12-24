@@ -87,12 +87,11 @@ FLP的前提是分布式和异步模型。在分布式系统中，异步模型�
 
 ## 参考文档
 
-> 1 [FLP 证明](http://jacketwoo.github.io/2018/04/28/FLP%E8%AF%81%E6%98%8E.html)  
-> 2 [分布式系统架构经典资料](http://mp.weixin.qq.com/s/nyrEtiswAxXUW0YGf_szQg)  
-> 3 [ZooKeeper、Eureka对比](https://www.cnblogs.com/jieqing/p/8394001.html) 
-> 4 [
-广播路由算法 ：我是如何优雅着把悄悄话带给其他人的](https://www.cnblogs.com/kubidemanong/p/10133097.html)
-> 5 [分布式系统的本质其实就是这两个问题](https://mp.weixin.qq.com/s/DXmQb9t29VKUQYGUzL68iQ)
+>- 1 [FLP 证明](http://jacketwoo.github.io/2018/04/28/FLP%E8%AF%81%E6%98%8E.html)  
+>- 2 [分布式系统架构经典资料](http://mp.weixin.qq.com/s/nyrEtiswAxXUW0YGf_szQg)  
+>- 3 [ZooKeeper、Eureka对比](https://www.cnblogs.com/jieqing/p/8394001.html) 
+>- 4 [广播路由算法 ：我是如何优雅着把悄悄话带给其他人的](https://www.cnblogs.com/kubidemanong/p/10133097.html)
+>- 5 [分布式系统的本质其实就是这两个问题](https://mp.weixin.qq.com/s/DXmQb9t29VKUQYGUzL68iQ)
 
 ## 扒粪者-于雨氏 ##
 
