@@ -9,82 +9,301 @@
 
 
 <style type="text/css">
-*{margin:0;padding:0;}
 body {
-	font:13.34px helvetica,arial,freesans,clean,sans-serif;
-	color:black;
-	line-height:1.4em;
-	background-color: #F8F8F8;
-	padding: 0.7em;
+  font-family: Helvetica, arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: white;
+  padding: 30px; }
+
+body > *:first-child {
+  margin-top: 0 !important; }
+body > *:last-child {
+  margin-bottom: 0 !important; }
+
+a {
+  color: #4183C4; }
+a.absent {
+  color: #cc0000; }
+a.anchor {
+  display: block;
+  padding-left: 30px;
+  margin-left: -30px;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0; }
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+  cursor: text;
+  position: relative; }
+
+h1:hover a.anchor, h2:hover a.anchor, h3:hover a.anchor, h4:hover a.anchor, h5:hover a.anchor, h6:hover a.anchor {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA09pVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoMTMuMCAyMDEyMDMwNS5tLjQxNSAyMDEyLzAzLzA1OjIxOjAwOjAwKSAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OUM2NjlDQjI4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OUM2NjlDQjM4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5QzY2OUNCMDg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5QzY2OUNCMTg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PsQhXeAAAABfSURBVHjaYvz//z8DJYCRUgMYQAbAMBQIAvEqkBQWXI6sHqwHiwG70TTBxGaiWwjCTGgOUgJiF1J8wMRAIUA34B4Q76HUBelAfJYSA0CuMIEaRP8wGIkGMA54bgQIMACAmkXJi0hKJQAAAABJRU5ErkJggg==) no-repeat 10px center;
+  text-decoration: none; }
+
+h1 tt, h1 code {
+  font-size: inherit; }
+
+h2 tt, h2 code {
+  font-size: inherit; }
+
+h3 tt, h3 code {
+  font-size: inherit; }
+
+h4 tt, h4 code {
+  font-size: inherit; }
+
+h5 tt, h5 code {
+  font-size: inherit; }
+
+h6 tt, h6 code {
+  font-size: inherit; }
+
+h1 {
+  font-size: 28px;
+  color: black; }
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #cccccc;
+  color: black; }
+
+h3 {
+  font-size: 18px; }
+
+h4 {
+  font-size: 16px; }
+
+h5 {
+  font-size: 14px; }
+
+h6 {
+  color: #777777;
+  font-size: 14px; }
+
+p, blockquote, ul, ol, dl, li, table, pre {
+  margin: 15px 0; }
+
+hr {
+  background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAECAYAAACtBE5DAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OENDRjNBN0E2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OENDRjNBN0I2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo4Q0NGM0E3ODY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo4Q0NGM0E3OTY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqqezsUAAAAfSURBVHjaYmRABcYwBiM2QSA4y4hNEKYDQxAEAAIMAHNGAzhkPOlYAAAAAElFTkSuQmCC) repeat-x 0 0;
+  border: 0 none;
+  color: #cccccc;
+  height: 4px;
+  padding: 0;
 }
-p {
-	margin:1em 0;
-	line-height:1.5em;
-}
+
+body > h2:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+body > h1:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+  body > h1:first-child + h2 {
+    margin-top: 0;
+    padding-top: 0; }
+body > h3:first-child, body > h4:first-child, body > h5:first-child, body > h6:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0; }
+
+h1 p, h2 p, h3 p, h4 p, h5 p, h6 p {
+  margin-top: 0; }
+
+li p.first {
+  display: inline-block; }
+li {
+  margin: 0; }
+ul, ol {
+  padding-left: 30px; }
+
+ul :first-child, ol :first-child {
+  margin-top: 0; }
+
+dl {
+  padding: 0; }
+  dl dt {
+    font-size: 14px;
+    font-weight: bold;
+    font-style: italic;
+    padding: 0;
+    margin: 15px 0 5px; }
+    dl dt:first-child {
+      padding: 0; }
+    dl dt > :first-child {
+      margin-top: 0; }
+    dl dt > :last-child {
+      margin-bottom: 0; }
+  dl dd {
+    margin: 0 0 15px;
+    padding: 0 15px; }
+    dl dd > :first-child {
+      margin-top: 0; }
+    dl dd > :last-child {
+      margin-bottom: 0; }
+
+blockquote {
+  border-left: 4px solid #dddddd;
+  padding: 0 15px;
+  color: #777777; }
+  blockquote > :first-child {
+    margin-top: 0; }
+  blockquote > :last-child {
+    margin-bottom: 0; }
+
 table {
-	font-size:inherit;
-	font:100%;
-	margin:1em;
-}
-table th{border-bottom:1px solid #bbb;padding:.2em 1em;}
-table td{border-bottom:1px solid #ddd;padding:.2em 1em;}
-input[type=text],input[type=password],input[type=image],textarea{font:99% helvetica,arial,freesans,sans-serif;}
-select,option{padding:0 .25em;}
-optgroup{margin-top:.5em;}
-pre,code{font:12px Monaco,"Courier New","DejaVu Sans Mono","Bitstream Vera Sans Mono",monospace;}
-pre {
-	margin:1em 0;
-	font-size:12px;
-	background-color:#eee;
-	border:1px solid #ddd;
-	padding:5px;
-	line-height:1.5em;
-	color:#444;
-	overflow:auto;
-	-webkit-box-shadow:rgba(0,0,0,0.07) 0 1px 2px inset;
-	-webkit-border-radius:3px;
-	-moz-border-radius:3px;border-radius:3px;
-}
+  padding: 0;border-collapse: collapse; }
+  table tr {
+    border-top: 1px solid #cccccc;
+    background-color: white;
+    margin: 0;
+    padding: 0; }
+    table tr:nth-child(2n) {
+      background-color: #f8f8f8; }
+    table tr th {
+      font-weight: bold;
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr td {
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr th :first-child, table tr td :first-child {
+      margin-top: 0; }
+    table tr th :last-child, table tr td :last-child {
+      margin-bottom: 0; }
+
+img {
+  max-width: 100%; }
+
+span.frame {
+  display: block;
+  overflow: hidden; }
+  span.frame > span {
+    border: 1px solid #dddddd;
+    display: block;
+    float: left;
+    overflow: hidden;
+    margin: 13px 0 0;
+    padding: 7px;
+    width: auto; }
+  span.frame span img {
+    display: block;
+    float: left; }
+  span.frame span span {
+    clear: both;
+    color: #333333;
+    display: block;
+    padding: 5px 0 0; }
+span.align-center {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-center > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: center; }
+  span.align-center span img {
+    margin: 0 auto;
+    text-align: center; }
+span.align-right {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px 0 0;
+    text-align: right; }
+  span.align-right span img {
+    margin: 0;
+    text-align: right; }
+span.float-left {
+  display: block;
+  margin-right: 13px;
+  overflow: hidden;
+  float: left; }
+  span.float-left span {
+    margin: 13px 0 0; }
+span.float-right {
+  display: block;
+  margin-left: 13px;
+  overflow: hidden;
+  float: right; }
+  span.float-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: right; }
+
+code, tt {
+  margin: 0 2px;
+  padding: 0 5px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px; }
+
 pre code {
-	padding:0;
-	font-size:12px;
-	background-color:#eee;
-	border:none;
-}
-code {
-	font-size:12px;
-	background-color:#f8f8ff;
-	color:#444;
-	padding:0 .2em;
-	border:1px solid #dedede;
-}
-img{border:0;max-width:100%;}
-abbr{border-bottom:none;}
-a{color:#4183c4;text-decoration:none;}
-a:hover{text-decoration:underline;}
-a code,a:link code,a:visited code{color:#4183c4;}
-h2,h3{margin:1em 0;}
-h1,h2,h3,h4,h5,h6{border:0;}
-h1{font-size:170%;border-top:4px solid #aaa;padding-top:.5em;margin-top:1.5em;}
-h1:first-child{margin-top:0;padding-top:.25em;border-top:none;}
-h2{font-size:150%;margin-top:1.5em;border-top:4px solid #e0e0e0;padding-top:.5em;}
-h3{margin-top:1em;}
-hr{border:1px solid #ddd;}
-ul{margin:1em 0 1em 2em;}
-ol{margin:1em 0 1em 2em;}
-ul li,ol li{margin-top:.5em;margin-bottom:.5em;}
-ul ul,ul ol,ol ol,ol ul{margin-top:0;margin-bottom:0;}
-blockquote{margin:1em 0;border-left:5px solid #ddd;padding-left:.6em;color:#555;}
-dt{font-weight:bold;margin-left:1em;}
-dd{margin-left:2em;margin-bottom:1em;}
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent; }
+
+.highlight pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+  pre code, pre tt {
+    background-color: transparent;
+    border: none; }
+
 sup {
     font-size: 0.83em;
     vertical-align: super;
     line-height: 0;
 }
+
 kbd {
-  display: inline-block;padding: 3px 5px;font-size: 11px;line-height: 10px;color: #555;vertical-align: middle;background-color: #fcfcfc;border: solid 1px #ccc;border-bottom-color: #bbb;border-radius: 3px;box-shadow: inset 0 -1px 0 #bbb;
+  display: inline-block;
+  padding: 3px 5px;
+  font-size: 11px;
+  line-height: 10px;
+  color: #555;
+  vertical-align: middle;
+  background-color: #fcfcfc;
+  border: solid 1px #ccc;
+  border-bottom-color: #bbb;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 #bbb
 }
+
 * {
 	-webkit-print-color-adjust: exact;
 }
@@ -101,6 +320,146 @@ kbd {
 	pre {
 		word-wrap: break-word;
 	}
+}
+</style>
+
+<style type="text/css">
+/**
+ * prism.js default theme for JavaScript, CSS and HTML
+ * Based on dabblet (http://dabblet.com)
+ * @author Lea Verou
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: black;
+	background: none;
+	text-shadow: 0 1px white;
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
+code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
+	text-shadow: none;
+	background: #b3d4fc;
+}
+
+pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
+code[class*="language-"]::selection, code[class*="language-"] ::selection {
+	text-shadow: none;
+	background: #b3d4fc;
+}
+
+@media print {
+	code[class*="language-"],
+	pre[class*="language-"] {
+		text-shadow: none;
+	}
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: #f5f2f0;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: slategray;
+}
+
+.token.punctuation {
+	color: #999;
+}
+
+.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #905;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #690;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+	color: #a67f59;
+	background: hsla(0, 0%, 100%, .5);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+	color: #07a;
+}
+
+.token.function {
+	color: #DD4A68;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+	color: #e90;
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
 }
 </style>
 
@@ -137,7 +496,7 @@ kbd {
 
 <p>LSM 大致结构如上图所示。LSM 树而且通过批量存储技术规避磁盘随机写入问题。 LSM 树的设计思想非常朴素, 它的原理是把一颗大树拆分成N棵小树， 它首先写入到内存中（内存没有寻道速度的问题，随机写的性能得到大幅提升），在内存中构建一颗有序小树，随着小树越来越大，内存的小树会flush到磁盘上。磁盘中的树定期可以做 merge 操作，合并成一棵大树，以优化读性能【读数据的过程可能需要从内存 memtable 到磁盘 sstfile 读取多次，称之为读放大】。RocksDB 的 LSM 体现在多 level 文件格式上，最热最新的数据尽在 L0 层，数据在内存中，最冷最老的数据尽在 LN 层，数据在磁盘或者固态盘上。RocksDB 还有一种日志文件叫做 manifest，用于记录对 sstfile 的更改，可以认为是 RocksDB 的 GIF，后面将会详述。</p>
 
-<p>LSM-Tree(Log-Structured-Merge-Tree)
+<p>LSM-Tree(Log-Structured-Merge-Tree)<br>
 LSM从命名上看，容易望文生义成一个具体的数据结构，一个tree。但LSM并不是一个具体的数据结构，也不是一个tree。LSM是一个数据结构的概念，是一个数据结构的设计思想。实际上，要是给LSM的命名断句，Log和Structured这两个词是合并在一起的，LSM-Tree应该断句成Log-Structured、Merge、Tree三个词汇，这三个词汇分别对应以下三点LSM的关键性质：</p>
 
 <ul>
@@ -204,7 +563,7 @@ LSM从命名上看，容易望文生义成一个具体的数据结构，一个tr
 
 <hr>
 
-<p>不管是 <code>it-&gt;key()</code> 还是 <code>it-&gt;value()</code>，其值类型都是 <code>rocksdb::Slice</code>。 Slice 自身由一个长度字段[ size<em>t size</em> ]以及一个指向外部一个内存区域的指针[ const char* data_ ]构成，返回 Slice 比返回一个 string 廉价，并不存在内存拷贝的问题。RocksDB 自身会给 key 和 value 添加一个 C-style 的 ‘\0’，所以 slice 的指针指向的内存区域自身作为字符串输出没有问题。</p>
+<p>不管是 <code>it-&gt;key()</code> 还是 <code>it-&gt;value()</code>，其值类型都是 <code>rocksdb::Slice</code>。 Slice 自身由一个长度字段[ size<u>t size</u> ]以及一个指向外部一个内存区域的指针[ const char* data_ ]构成，返回 Slice 比返回一个 string 廉价，并不存在内存拷贝的问题。RocksDB 自身会给 key 和 value 添加一个 C-style 的 ‘\0’，所以 slice 的指针指向的内存区域自身作为字符串输出没有问题。</p>
 
 <p>Slice 与 string 之间的转换代码如下：</p>
 
@@ -328,7 +687,7 @@ virtual Status Get(const ReadOptions&amp; options,
 
 <p>RocksDB 控制写内存 buffer 数目的参数是 <code>Options::max_write_buffer_number</code>。这个值默认是 2，当一个 buffer 的数据被 flush 到磁盘上的时候，RocksDB 就用另一个 buffer 作为数据读写缓冲区。</p>
 
-<p>‘Options::min<em>write</em>buffer<em>number</em>to_merge’ 设定了把写 buffer 的数据固化到磁盘上时对多少个 buffer 的数据进行合并然后再固化到磁盘上。这个值如果为 1，则 L0 层文件只有一个，这会导致读放大，这个值太小会导致数据固化到磁盘上之前数据去重效果太差劲。</p>
+<p>‘Options::min<u>write</u>buffer<u>number</u>to_merge’ 设定了把写 buffer 的数据固化到磁盘上时对多少个 buffer 的数据进行合并然后再固化到磁盘上。这个值如果为 1，则 L0 层文件只有一个，这会导致读放大，这个值太小会导致数据固化到磁盘上之前数据去重效果太差劲。</p>
 
 <p>这两个值并不是越大越好，太大会延迟一个 DB 被重新打开时的数据加载时间。</p>
 
@@ -338,12 +697,12 @@ virtual Status Get(const ReadOptions&amp; options,
 
 <p>在 <strong>1.8</strong> 章节里提到 “block 是数据存储和传递的基本单元”，RocksDB 的数据是一个 range 的 key-value 构成一个 Region，根据局部性原理每次访问一个 Region 的 key 的时候，有很多概率会访问其相邻的 key，每个 Region 的 keys 放在一个 block 里，多个 Region 的 keys 放在多个 block 里。</p>
 
-<p>下面以文件系统作为类比，详细解释下 RocksDB 的文件系统：
-​<br>
-​   filename -&gt; permission-bits, length, list of file<em>block</em>ids
-​   file<em>block</em>id -&gt; data</p>
+<p>下面以文件系统作为类比，详细解释下 RocksDB 的文件系统：<br>
+​<br><br>
+​   filename -&gt; permission-bits, length, list of file<u>block</u>ids<br>
+​   file<u>block</u>id -&gt; data</p>
 
-<p>以多个维度组织 key 的时候，我们可能希望 filename 的前缀都是 ‘/‘， 而 file<em>block</em>id 的前缀都是 ‘0’，这样可以把他们分别放在不同的 block 里，以方便快速查询。</p>
+<p>以多个维度组织 key 的时候，我们可能希望 filename 的前缀都是 ‘/‘， 而 file<u>block</u>id 的前缀都是 ‘0’，这样可以把他们分别放在不同的 block 里，以方便快速查询。</p>
 
 <h4 id="toc_13">1.11 Checksums</h4>
 
@@ -434,7 +793,7 @@ options.max_background_flushes = 1;
 rocksdb::Status status = rocksdb::DB::Open(options, “/tmp/testdb”, &amp;db);
 assert(status.ok());</code></pre></div>
 
-<p>还有其他一些参数，可详细阅读参考文档4。
+<p>还有其他一些参数，可详细阅读参考文档4。<br>
 ​   </p>
 
 <h4 id="toc_20">1.18 Bloom Filter</h4>
@@ -501,11 +860,11 @@ assert(status.ok());</code></pre></div>
 
 <p>如果 <code>cache_index_and_filter_blocks</code> 被设置为 false （其值默认就是 false），index/filter 个数就会受 <code>max_open_files</code> 影响，官方建议把这个选项设置为 -1，以方便 RocksDB 加载所有的 index 和 filter 文件，最大化程序性能。</p>
 
-<p>可以通过如下代码获取 index &amp; filter 内存量大小：
-​<br>
-<code>c++
-    std::string out;
-    db-&gt;GetProperty(“rocksdb.estimate-table-readers-mem”, &amp;out);
+<p>可以通过如下代码获取 index &amp; filter 内存量大小：<br>
+​<br><br>
+<code>c++<br>
+    std::string out;<br>
+    db-&gt;GetProperty(“rocksdb.estimate-table-readers-mem”, &amp;out);<br>
 </code></p>
 
 <h4 id="toc_25">2.3 Indexes and bloom filters</h4>
@@ -525,10 +884,10 @@ assert(status.ok());</code></pre></div>
 
 <p>这部分内存空间一般占用总量不多，但是如果有 100k 之多的transactions 发生，每个 iterator 与一个 data block 外加一个 L1 的 data block，所以内存使用量大约为 <code>num_iterators * block_size * ((num_levels-1) + num_l0_files)</code>。</p>
 
-<p>可以通过如下代码获取 Pin Blocks 内存量大小：
-​<br>
-<code>c++
-    table_options.block_cache-&gt;GetPinnedUsage();
+<p>可以通过如下代码获取 Pin Blocks 内存量大小：<br>
+​<br><br>
+<code>c++<br>
+    table_options.block_cache-&gt;GetPinnedUsage();<br>
 </code></p>
 
 <h4 id="toc_27">2.5 读流程</h4>
@@ -596,7 +955,7 @@ assert(status.ok());</code></pre></div>
 
 <p>默认情况下RocksDB用的是 LRUCache，大小是 8MB， 每个 shard 单独维护自己的 LRU list 和独立的 hash table，以及自己的 Mutex。</p>
 
-<p>RocksDB还提供了一个 ClockCache，每个 shard 有自己的一个 circular list，有一个 clock handle 会轮询这个 circular list，寻找过时的 kv，如果 entry 中的 kv 已经被访问过则可以继续存留，相对于 LRU 好处是无 mutex lock，circular list 本质是 tbb::concurrent<em>hash</em>map，从 benchmark 来看，二者命中率相似，但吞吐率 Clock 比 LRU 稍高。</p>
+<p>RocksDB还提供了一个 ClockCache，每个 shard 有自己的一个 circular list，有一个 clock handle 会轮询这个 circular list，寻找过时的 kv，如果 entry 中的 kv 已经被访问过则可以继续存留，相对于 LRU 好处是无 mutex lock，circular list 本质是 tbb::concurrent<u>hash</u>map，从 benchmark 来看，二者命中率相似，但吞吐率 Clock 比 LRU 稍高。</p>
 
 <p>Block Cache初始化之时相关参数：</p>
 
@@ -612,21 +971,21 @@ assert(status.ok());</code></pre></div>
 <div><pre><code class="language-cpp">BlockBasedTableOptions table_options;
 table_options.cache_index_and_filter_blocks = true;</code></pre></div>
 
-<p>index 与 filter 一般访问频次比 data 高，所以把他们放到一起会导致内存空间与 cpu 资源竞争，进而导致 cache 性能抖动厉害。有如下两个参数需要注意：cache<em>index</em>filter<em>blocks</em>with<em>high</em>priority 和 high<em>pri</em>pool<em>ratio 一样，这个参数只对 LRU Cache 有效，两者须同时生效。这个选项会把 LRU Cache 划分为高 prio 和低 prio 区，data 放在 low 区，index 和 filter 放在 high 区，如果高区占用的内存空间超过了 capacity * high</em>pri<em>pool</em>ratio，则会侵占 low 区的尾部数据空间。</p>
+<p>index 与 filter 一般访问频次比 data 高，所以把他们放到一起会导致内存空间与 cpu 资源竞争，进而导致 cache 性能抖动厉害。有如下两个参数需要注意：cache<u>index</u>filter<u>blocks</u>with<u>high</u>priority 和 high<u>pri</u>pool<u>ratio 一样，这个参数只对 LRU Cache 有效，两者须同时生效。这个选项会把 LRU Cache 划分为高 prio 和低 prio 区，data 放在 low 区，index 和 filter 放在 high 区，如果高区占用的内存空间超过了 capacity * high</u>pri<u>pool</u>ratio，则会侵占 low 区的尾部数据空间。</p>
 
 <ul>
 <li>pin_l0_filter_and_index_blocks_in_cache 把 level0 的 index 以及 filter block 放到 Block Cache 中，因为 l0 访问频次最高，一般内存容量不大，占用不了多大内存空间。</li>
 </ul>
 
-<p>SimCache 用于评测 Cache 的命中率，它封装了一个真正的 Cache，然后用给定的 capacity 进行 LRU 测算，代码如下:
-​<br>
-​<code>c++
-​// This cache is the actual cache use by the DB.
-​std::shared_ptr&lt;Cache&gt; cache = NewLRUCache(capacity);
-​// This is the simulated cache.
-​std::shared_ptr&lt;Cache&gt; sim_cache = NewSimCache(cache, sim_capacity, sim_num_shard_bits);
-​BlockBasedTableOptions table_options;
-​table_options.block_cache = sim_cache;
+<p>SimCache 用于评测 Cache 的命中率，它封装了一个真正的 Cache，然后用给定的 capacity 进行 LRU 测算，代码如下:<br>
+​<br><br>
+​<code>c++<br>
+​// This cache is the actual cache use by the DB.<br>
+​std::shared_ptr&lt;Cache&gt; cache = NewLRUCache(capacity);<br>
+​// This is the simulated cache.<br>
+​std::shared_ptr&lt;Cache&gt; sim_cache = NewSimCache(cache, sim_capacity, sim_num_shard_bits);<br>
+​BlockBasedTableOptions table_options;<br>
+​table_options.block_cache = sim_cache;<br>
 </code></p>
 
 <p>大概只有容量的 2% 会被用于测算。</p>
@@ -722,13 +1081,13 @@ table_options.cache_index_and_filter_blocks = true;</code></pre></div>
 
 <hr>
 
-<p>RocksDB 的内存数据在 memtable 中存着，有 active-memtable 和 immutable-memtable 两种。active-memtable 是当前被写操作使用的 memtable，当 active-memtable 空间写满之后( Options.write<em>buffer</em>size 控制其内存空间大小 )这个空间会被标记为 readonly 成为 immutable-memtable。memtable 实质上是一种有序 SkipList，所以写过程其实是写 WAL 日志和数据插入 SkipList 的过程。</p>
+<p>RocksDB 的内存数据在 memtable 中存着，有 active-memtable 和 immutable-memtable 两种。active-memtable 是当前被写操作使用的 memtable，当 active-memtable 空间写满之后( Options.write<u>buffer</u>size 控制其内存空间大小 )这个空间会被标记为 readonly 成为 immutable-memtable。memtable 实质上是一种有序 SkipList，所以写过程其实是写 WAL 日志和数据插入 SkipList 的过程。</p>
 
 <p><img src="../pic/rocksdb_write_process.png" alt=""></p>
 
 <p>RocksDB 的数据删除过程跟写过程相同，只不过 插入的数据是 “key:删除标记”。</p>
 
-<p>immutable-memtable 被写入 L0 的过程被称为 flush 或者 minor compaction。flush 的触发条件是 immutable memtable数量超过 min<em>write</em>buffer<em>number</em>to_merge。flush 过程以 column family 为单位，一个 column family 会使用一个或者多个 immutable-memtable，flush 会一次把所有这些文件合并后写入磁盘的 L0 sstfile 中。</p>
+<p>immutable-memtable 被写入 L0 的过程被称为 flush 或者 minor compaction。flush 的触发条件是 immutable memtable数量超过 min<u>write</u>buffer<u>number</u>to_merge。flush 过程以 column family 为单位，一个 column family 会使用一个或者多个 immutable-memtable，flush 会一次把所有这些文件合并后写入磁盘的 L0 sstfile 中。</p>
 
 <p>在 compaction 过程中如果某个被标记为删除的 key 在某个 snapshot 中存在，则会被一直保留，直到 snapshot 不存在才会被删除。</p>
 
@@ -738,7 +1097,7 @@ table_options.cache_index_and_filter_blocks = true;</code></pre></div>
 
 <hr>
 
-<p>compaction 的触发条件是文件个数和文件大小。L0 的触发条件是 sst 文件个数（level0<em>file</em>num<em>compaction</em>trigger 控制），触发 compaction score 是 L0 sst 文件个数与 level0<em>file</em>num<em>compaction</em>trigger 的比值或者所有文件的 size 超过 max<em>bytes</em>for<em>level</em>base。L1 ~ LN 的触发条件则是 sst 文件的大小。</p>
+<p>compaction 的触发条件是文件个数和文件大小。L0 的触发条件是 sst 文件个数（level0<u>file</u>num<u>compaction</u>trigger 控制），触发 compaction score 是 L0 sst 文件个数与 level0<u>file</u>num<u>compaction</u>trigger 的比值或者所有文件的 size 超过 max<u>bytes</u>for<u>level</u>base。L1 ~ LN 的触发条件则是 sst 文件的大小。</p>
 
 <p>如果 <code>level_compaction_dynamic_level_bytes</code> 为 false，L1 ~ LN 每个 level 的最大容量由 <code>max_bytes_for_level_base</code> 和 <code>max_bytes_for_level_multiplier</code> 决定，其 compaction score 就是当前总容量与设定的最大容量之比，如果某 level 满足 compaction 的条件则会被加入 compaction 队列。</p>
 
@@ -762,19 +1121,19 @@ table_options.cache_index_and_filter_blocks = true;</code></pre></div>
 
 <tbody>
 <tr>
-<td style="text-align: left">level0<em>file</em>num<em>compaction</em>trigger</td>
+<td style="text-align: left">level0<u>file</u>num<u>compaction</u>trigger</td>
 <td style="text-align: left">4</td>
 <td style="text-align: left">num 为 4 时，达到 compact 条件</td>
 <td style="text-align: left">num &lt; 20 时 Score = num / 4</td>
 </tr>
 <tr>
-<td style="text-align: left">level0<em>slowdown</em>writes_trigger</td>
+<td style="text-align: left">level0<u>slowdown</u>writes_trigger</td>
 <td style="text-align: left">20</td>
 <td style="text-align: left">num 为 20 时，RocksDB 会减慢写入速度</td>
 <td style="text-align: left">20 &lt;= num &amp;&amp; num &lt; 24 时 Score = 10000</td>
 </tr>
 <tr>
-<td style="text-align: left">level0<em>stop</em>writes_trigger</td>
+<td style="text-align: left">level0<u>stop</u>writes_trigger</td>
 <td style="text-align: left">24</td>
 <td style="text-align: left">num 为 24 时，RocksDB 停止写入文件，尽快对 L0 进行 compact</td>
 <td style="text-align: left">24 &lt;= num 时 Score = 1000000</td>
@@ -782,7 +1141,7 @@ table_options.cache_index_and_filter_blocks = true;</code></pre></div>
 </tbody>
 </table>
 
-<p>对于 L1+ 层，score = Level<em>Bytes / Target</em>Size。</p>
+<p>对于 L1+ 层，score = Level<u>Bytes / Target</u>Size。</p>
 
 <h5 id="toc_37">5.1.2 Level Max Bytes</h5>
 
@@ -801,17 +1160,17 @@ table_options.cache_index_and_filter_blocks = true;</code></pre></div>
 
 <tbody>
 <tr>
-<td style="text-align: left">max<em>bytes</em>for<em>level</em>base</td>
+<td style="text-align: left">max<u>bytes</u>for<u>level</u>base</td>
 <td style="text-align: left">10485760</td>
 <td style="text-align: left">L1 总大小</td>
 </tr>
 <tr>
-<td style="text-align: left">max<em>bytes</em>for<em>level</em>multiplier</td>
+<td style="text-align: left">max<u>bytes</u>for<u>level</u>multiplier</td>
 <td style="text-align: left">10</td>
 <td style="text-align: left">最大乘法因子</td>
 </tr>
 <tr>
-<td style="text-align: left">max<em>bytes</em>for<em>level</em>multiplier_addtl[2…6]</td>
+<td style="text-align: left">max<u>bytes</u>for<u>level</u>multiplier_addtl[2…6]</td>
 <td style="text-align: left">1</td>
 <td style="text-align: left">L2 ~ L6 总大小调整参数</td>
 </tr>
@@ -857,7 +1216,7 @@ table_options.cache_index_and_filter_blocks = true;</code></pre></div>
 
 <hr>
 
-<p>参数 max<em>background</em>compactions 大于 1 时，RocksDB 会进行并行 Compact，但 L0 和 L1 层的 Compaction 任务不能进行并行。</p>
+<p>参数 max<u>background</u>compactions 大于 1 时，RocksDB 会进行并行 Compact，但 L0 和 L1 层的 Compaction 任务不能进行并行。</p>
 
 <p><img src="../pic/rocksdb_subcompaction.png" alt=""></p>
 
@@ -879,7 +1238,7 @@ table_options.cache_index_and_filter_blocks = true;</code></pre></div>
 
 <p><code>Universal Compaction</code> 主要针对低写放大场景，跟 <code>Leveled Compaction</code> 相比一次合并文件较多但因为一次只处理 L0 所以写放大整体较低，但是空间放大效应比较大。</p>
 
-<p>RocksDB 还支持一种 FIFO 的 compaction。FIFO 顾名思义就是先进先出，这种模式周期性地删除旧数据。在 FIFO 模式下，所有文件都在 L0，当 sst 文件总大小超过阀值 max<em>table</em>files_size，则删除最老的 sst 文件。</p>
+<p>RocksDB 还支持一种 FIFO 的 compaction。FIFO 顾名思义就是先进先出，这种模式周期性地删除旧数据。在 FIFO 模式下，所有文件都在 L0，当 sst 文件总大小超过阀值 max<u>table</u>files_size，则删除最老的 sst 文件。<a href="https://www.jianshu.com/p/0fdeed70b36a">参考文档21</a>中提到可以基于 FIFO compaction 机制把 RocksDB 当做一个时序数据库：<code>对于 FIFO 来说，它的策略非常的简单，所有的 SST 都在 Level 0，如果超过了阈值，就从最老的 SST 开始删除，其实可以看到，这套机制非常适合于存储时序数据</code>。</p>
 
 <p>整个 compaction 是 LSM-tree 数据结构的核心，也是rocksDB的核心，详细内容请阅读 <a href="https://github.com/facebook/rocksdb/wiki/Universal-Compaction">参考文档8</a> 和 <a href="https://github.com/facebook/rocksdb/wiki/Leveled-Compaction">参考文档9</a>。</p>
 
@@ -1011,21 +1370,21 @@ table_options.cache_index_and_filter_blocks = true;</code></pre></div>
 <li><strong>PartialMerge 和 Stacking</strong></li>
 </ul>
 
-<p>有时候, 在调用FullMerge之前, 可以先对某些merge操作数进行合并处理, 而不是将它们保存起来, 这就是PartialMerge的作用: 将两个操作数合并为一个, 减少FullMerge的工作量.
+<p>有时候, 在调用FullMerge之前, 可以先对某些merge操作数进行合并处理, 而不是将它们保存起来, 这就是PartialMerge的作用: 将两个操作数合并为一个, 减少FullMerge的工作量.<br>
 当遇到两个merge操作数时, RocksDB总是先会尝试调用用户的PartialMerge方法来做合并, 如果PartialMerge返回false才会保存操作数. 当遇到Put/Delete操作, 就会调用FullMerge将已存在的值和操作数序列传入, 计算出最终的值.</p>
 
 <ul>
 <li><strong>使用Associative Merge的场景</strong></li>
 </ul>
 
-<p>merge 操作数的格式和Put相同
+<p>merge 操作数的格式和Put相同<br>
 多个顺序的merge操作数可以合并成一个</p>
 
 <ul>
 <li><strong>使用Generic Merge的场景</strong></li>
 </ul>
 
-<p>merge 操作数的格式和Put不同
+<p>merge 操作数的格式和Put不同<br>
 当多个merge操作数可以合并时，PartialMerge()方法返回true</p>
 
 <p>*!!!: 本节文字摘抄自 <a href="https://www.jianshu.com/p/e13338a3f161">参考文档14</a>  。</p>
@@ -1205,8 +1564,8 @@ manifest-log-file = { version, version-edit* }
 <ul>
 <li>依次读取Manifest文件中的每一个Block， 将从文件中读出的Record反序列化为VersionEdit；</li>
 <li>将每一个的VersionEdit Apply到VersionSet::Builder中，之后从VersionSet::Builder的信息中生成Version；</li>
-<li>计算compaction<em>level</em>、compaction<em>score</em>；</li>
-<li>将新生成的Version挂到VersionSet中，并初始化VersionSet的manifest<em>file</em>number<em>， next</em>file<em>number</em>，last<em>sequence</em>，log<em>number</em>，prev<em>log</em>number_ 信息；</li>
+<li>计算compaction<u>level</u>、compaction<u>score</u>；</li>
+<li>将新生成的Version挂到VersionSet中，并初始化VersionSet的manifest<u>file</u>number<u>， next</u>file<u>number</u>，last<u>sequence</u>，log<u>number</u>，prev<u>log</u>number_ 信息；</li>
 </ul>
 
 <h4 id="toc_50">6.7 Snapshot</h4>
@@ -1245,7 +1604,7 @@ manifest-log-file = { version, version-edit* }
 
 <p>sst 文件只有在 compact 时才会被删除，所以禁止删除就相当于禁止了 compaction。别的 RocksDB 在获取这些备份数据文件后会依据 Manifest 文件重构 LSM 结构的同时，也能恢复出 WAL 文件，进而重构出当时的 memtable 文件。</p>
 
-<p>在进行 Backup 的过程中，写操作是不会被阻塞的，所以 WAL 文件内容会在 backup 过程中发生改变。RocksDB 的 flush<em>before</em>backup 选项用来控制在 backup 时是否也拷贝 WAL，其值为 true 则不拷贝。</p>
+<p>在进行 Backup 的过程中，写操作是不会被阻塞的，所以 WAL 文件内容会在 backup 过程中发生改变。RocksDB 的 flush<u>before</u>backup 选项用来控制在 backup 时是否也拷贝 WAL，其值为 true 则不拷贝。</p>
 
 <h5 id="toc_53">6.8.1 Backup 编程接口</h5>
 
@@ -1292,13 +1651,13 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 <li><code>rocksdb::LoadLatestOptions()</code> or <code>rocksdb:: LoadOptionsFromFile()</code> RocksDB 现在也能对 RocksDB 的 options 进行备份，可以通过这两个接口获取相应备份的 Options；</li>
 <li><code>BackupableDBOptions::backup_env</code> 用于设置备份目录的 ENV；</li>
 <li><code>BackupableDBOptions::backup_dir</code> 用于设置备份文件的根目录；</li>
-<li><code>BackupableDBOptions::share_table_files</code> 如果这个选项为 true，则 <code>BackupEngine</code> 会进行增量备份，把所有的 SST 文件存储到 &quot;shared/&quot; 子目录，其危险是 SST 文件名字可能相同【在多个 RocksDB 对象共用同一备份目录的场景下】；</li>
+<li><code>BackupableDBOptions::share_table_files</code> 如果这个选项为 true，则 <code>BackupEngine</code> 会进行增量备份，把所有的 SST 文件存储到 <q>shared/</q> 子目录，其危险是 SST 文件名字可能相同【在多个 RocksDB 对象共用同一备份目录的场景下】；</li>
 <li><code>BackupableDBOptions::share_files_with_checksum</code> 在多个 RocksDB 对象共用同一备份目录的场景下，SST 文件名字可能相同，把这个选项设置为 true 可以处理这个冲突，SST 文件会被 <code>BackupEngine</code> 通过 checksum/size/seqnum 三个参数进行校验；</li>
 <li><code>BackupableDBOptions::max_background_operations</code> 这个参数用于设置备份和恢复数据的线程数，在使用分布式文件系统如 HDFS 场景下，这个参数会大大提高备份和恢复的效率；</li>
 <li><code>BackupableDBOptions::info_log</code> 用于设置 LOG 对象，可以在备份和恢复数据时进行日志输出；</li>
 <li><code>BackupableDBOptions::sync</code> 如果设置为 true，<code>BackupEngine</code> 会调用 <code>fsync</code> 系统接口进行文件数据和 metadata 的数据写入，以防备系统重启或者崩溃时的数据不一致现象，大部分情况下如果为追求性能，这个参数可以设置为 false；</li>
 <li><code>BackupableDBOptions::destroy_old_data</code> 如果这个选项为 true，新的 <code>BackupEngine</code> 被创建出来之后备份目录下旧的备份数据会被清空；</li>
-<li><code>BackupEngine::CreateNewBackup(db, flush_before_backup = false)</code> flush<em>before</em>backup 被设置为 true 时，<code>BackupEngine</code> 首先 flush memtable，然后再进行数据复制，而 WAL log 文件不会被复制，因为 flush 时候它会被删掉，如果这个为 false 则相应的 WAL 日志文件也会被复制以保证备份数据与当前 RocksDB 状态一致；</li>
+<li><code>BackupEngine::CreateNewBackup(db, flush_before_backup = false)</code> flush<u>before</u>backup 被设置为 true 时，<code>BackupEngine</code> 首先 flush memtable，然后再进行数据复制，而 WAL log 文件不会被复制，因为 flush 时候它会被删掉，如果这个为 false 则相应的 WAL 日志文件也会被复制以保证备份数据与当前 RocksDB 状态一致；</li>
 </ul>
 
 <h3 id="toc_56">7 FAQ</h3>
@@ -1330,8 +1689,8 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 <li>19 RocksDB 接受一个写请求的时候，可能因为 compact 会导致 RocksDB 多次读取数据文件进行数据合并操作；</li>
 <li>20 RocksDB 不直接支持数据的复制，但是提供了 API GetUpdatesSince() 供用户调用以获取某个时间点以后更新的 kv；</li>
 <li>21 Options 的 block_size 是指 block 的内存空间大小，与数据是否压缩无关；</li>
-<li>22 options.prefix<em>extractor 一旦启用，就无法继续使用 Prev() 和 SeekToLast() 两个 API，可以把 ReadOptions.total</em>order_seek 设置为 true，以禁用 <code>prefix iterating</code>；</li>
-<li>23 当 BlockBaseTableOptions::cache<em>index</em>and<em>filter</em>blocks 的值为 true 时，在进行 Get() 调用的时候相应数据的 bloom filter 和 index block 会被放进 LRU cache 中，如果这个参数为 false 则只有 memtable 的 index 和 bloom filter 会被放进内存中；</li>
+<li>22 options.prefix<u>extractor 一旦启用，就无法继续使用 Prev() 和 SeekToLast() 两个 API，可以把 ReadOptions.total</u>order_seek 设置为 true，以禁用 <code>prefix iterating</code>；</li>
+<li>23 当 BlockBaseTableOptions::cache<u>index</u>and<u>filter</u>blocks 的值为 true 时，在进行 Get() 调用的时候相应数据的 bloom filter 和 index block 会被放进 LRU cache 中，如果这个参数为 false 则只有 memtable 的 index 和 bloom filter 会被放进内存中；</li>
 <li>24 当调用 Put() 或者 Write() 时参数 WriteOptions.sync 的值为 true，则本次写以前的所有 WriteOptions.disableWAL 为 false 的写的内容都会被固化到磁盘上；</li>
 <li>25 禁用 WAL 时，DB::Flush() 只对单个 Column Family 的数据固化操作是原子的，对多个 Column Family 的数据操作则不是原子的，官方考虑将来会支持这个 feature；</li>
 <li>26 当使用自定义的 comparators 或者 merge operators 时，ldb 工具就无法读取 sst 文件数据；</li>
@@ -1343,7 +1702,7 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 <li>32 Column Family 使用场景：(1) 不同的 Column Family 可以使用不同的 setting/comparators/compression types/merge operators/compaction filters；(2) 对数据进行逻辑隔离，方便分别删除；(3) 一个 Column Family 存储 metadata，另一个存储 data；</li>
 <li>33 使用一个 RocksDB 就是使用一个物理存储系统，使用一个 Column Family 则是使用一个逻辑存储系统，二者主要区别体现在 数据备份、原子写以及写性能表现上。DB 是数据备份和复制以及 checkpoint 的基本单位，但是 Column Family 则利用 BatchWrite，因为这个操作是可以跨 Column Family 的，而且多个 Column Family 可以共享同一个 WAL，多个 DB 则无法做到这一点；</li>
 <li>34 RocksDB 不支持多列；</li>
-<li>35 RocksDB 的读并不是无锁的，有如下情况：(1) 访问 sharded block cache (2) 如果 table cache options.max<em>open</em>files 不等于 -1 (3) 如果 flush 或者 compaction 刚刚完成，RocksDB 此时会使用全局 mutex lock 以获取 LSM 树的最新 metadata (4) RocksDB 使用的内存分配器如 jemalloc 有时也会加锁，这四种情况总体很少发生，总体可以认为读是无锁的；</li>
+<li>35 RocksDB 的读并不是无锁的，有如下情况：(1) 访问 sharded block cache (2) 如果 table cache options.max<u>open</u>files 不等于 -1 (3) 如果 flush 或者 compaction 刚刚完成，RocksDB 此时会使用全局 mutex lock 以获取 LSM 树的最新 metadata (4) RocksDB 使用的内存分配器如 jemalloc 有时也会加锁，这四种情况总体很少发生，总体可以认为读是无锁的；</li>
 <li>36 如果想高效的对所有数据进行 iterate，则可以创建 snapshot 然后再遍历；</li>
 <li>37 如果一个 key space range (minkey, maxkey) 很大，则使用 Column Family 对其进行 sharding，如果这个 range 不大则不要单独使用一个 Column Family；</li>
 <li>38 RocksDB 没有进行 compaction 的时候，可以通过 <code>rocksdb.estimate-live-data-size</code> 可以估算 RocksDB 使用的磁盘空间；</li>
@@ -1351,7 +1710,7 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 <li>40 推荐使用压缩算法 LZ4，Snappy 次之，压缩之后如果为了更好的压缩效果可以使用 Zlib；</li>
 <li>41 即使没有被标记为删除的 key，也没有数据过期，RocksDB 仍然会执行 compaction，以提高读性能；</li>
 <li>42 RocksDB 的 key 和 value 是存在一起的，遍历一个 key 的时候，RocksDB 已经把其 value 读入 cache 中；</li>
-<li>43 对于一个离线 DB 可以通过 &quot;sst<em>dump --show</em>properties --command=none&quot; 命令获取特定 sst 文件的 index &amp; filter 的 size，对于正在运行的 DB 可以通过读取 DB 的属性 &quot;kAggregatedTableProperties&quot; 或者调用 DB::GetPropertiesOfAllTables() 获取 DB 的 index &amp; filter 的 size。</li>
+<li>43 对于一个离线 DB 可以通过 <q>sst<u>dump --show</u>properties --command=none</q> 命令获取特定 sst 文件的 index &amp; filter 的 size，对于正在运行的 DB 可以通过读取 DB 的属性 <q>kAggregatedTableProperties</q> 或者调用 DB::GetPropertiesOfAllTables() 获取 DB 的 index &amp; filter 的 size。</li>
 </ul>
 
 <h2 id="toc_57">参考文档</h2>
@@ -1379,12 +1738,13 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 <li>18 <a href="https://www.jianshu.com/p/46bb78bca726?utm_source=oschina-app">RocksDB系列十三:How to persist in memory RocksDB database?</a></li>
 <li>19 <a href="https://github.com/facebook/rocksdb/wiki/Checkpoints">Checkpoints</a></li>
 <li>20 <a href="https://www.tuicool.com/articles/7ju2UfI">LSM-Tree与RocksDB</a></li>
+<li>21 <a href="https://www.jianshu.com/p/0fdeed70b36a">自动调优 RocksDB</a></li>
 </ul>
 
 <h2 id="toc_58">扒粪者-于雨氏</h2>
 
 <blockquote>
-<p>2018/03/28，于雨氏，初作此文于海淀。</p>
+<p>1 2018/03/28，于雨氏，初作此文于海淀。</p>
 
 <p>2018/07/06，添加 5.4 节 <code>Merge Operator</code>。</p>
 
@@ -1399,6 +1759,42 @@ private/1/000009.log crc32 3494278128</code></pre></div>
 <p>2018/10/03，于丰台，在 1.1 节中补充了个人对 <code>LSM</code> 的理解。</p>
 </blockquote>
 
+
+
+<script type="text/javascript">
+var _self="undefined"!=typeof window?window:"undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?self:{},Prism=function(){var e=/\blang(?:uage)?-(\w+)\b/i,t=0,n=_self.Prism={util:{encode:function(e){return e instanceof a?new a(e.type,n.util.encode(e.content),e.alias):"Array"===n.util.type(e)?e.map(n.util.encode):e.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\u00a0/g," ")},type:function(e){return Object.prototype.toString.call(e).match(/\[object (\w+)\]/)[1]},objId:function(e){return e.__id||Object.defineProperty(e,"__id",{value:++t}),e.__id},clone:function(e){var t=n.util.type(e);switch(t){case"Object":var a={};for(var r in e)e.hasOwnProperty(r)&&(a[r]=n.util.clone(e[r]));return a;case"Array":return e.map&&e.map(function(e){return n.util.clone(e)})}return e}},languages:{extend:function(e,t){var a=n.util.clone(n.languages[e]);for(var r in t)a[r]=t[r];return a},insertBefore:function(e,t,a,r){r=r||n.languages;var l=r[e];if(2==arguments.length){a=arguments[1];for(var i in a)a.hasOwnProperty(i)&&(l[i]=a[i]);return l}var o={};for(var s in l)if(l.hasOwnProperty(s)){if(s==t)for(var i in a)a.hasOwnProperty(i)&&(o[i]=a[i]);o[s]=l[s]}return n.languages.DFS(n.languages,function(t,n){n===r[e]&&t!=e&&(this[t]=o)}),r[e]=o},DFS:function(e,t,a,r){r=r||{};for(var l in e)e.hasOwnProperty(l)&&(t.call(e,l,e[l],a||l),"Object"!==n.util.type(e[l])||r[n.util.objId(e[l])]?"Array"!==n.util.type(e[l])||r[n.util.objId(e[l])]||(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,l,r)):(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,null,r)))}},plugins:{},highlightAll:function(e,t){var a={callback:t,selector:'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'};n.hooks.run("before-highlightall",a);for(var r,l=a.elements||document.querySelectorAll(a.selector),i=0;r=l[i++];)n.highlightElement(r,e===!0,a.callback)},highlightElement:function(t,a,r){for(var l,i,o=t;o&&!e.test(o.className);)o=o.parentNode;o&&(l=(o.className.match(e)||[,""])[1],i=n.languages[l]),t.className=t.className.replace(e,"").replace(/\s+/g," ")+" language-"+l,o=t.parentNode,/pre/i.test(o.nodeName)&&(o.className=o.className.replace(e,"").replace(/\s+/g," ")+" language-"+l);var s=t.textContent,u={element:t,language:l,grammar:i,code:s};if(!s||!i)return n.hooks.run("complete",u),void 0;if(n.hooks.run("before-highlight",u),a&&_self.Worker){var c=new Worker(n.filename);c.onmessage=function(e){u.highlightedCode=e.data,n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(u.element),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},c.postMessage(JSON.stringify({language:u.language,code:u.code,immediateClose:!0}))}else u.highlightedCode=n.highlight(u.code,u.grammar,u.language),n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(t),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},highlight:function(e,t,r){var l=n.tokenize(e,t);return a.stringify(n.util.encode(l),r)},tokenize:function(e,t){var a=n.Token,r=[e],l=t.rest;if(l){for(var i in l)t[i]=l[i];delete t.rest}e:for(var i in t)if(t.hasOwnProperty(i)&&t[i]){var o=t[i];o="Array"===n.util.type(o)?o:[o];for(var s=0;s<o.length;++s){var u=o[s],c=u.inside,g=!!u.lookbehind,h=!!u.greedy,f=0,d=u.alias;u=u.pattern||u;for(var p=0;p<r.length;p++){var m=r[p];if(r.length>e.length)break e;if(!(m instanceof a)){u.lastIndex=0;var y=u.exec(m),v=1;if(!y&&h&&p!=r.length-1){var b=r[p+1].matchedStr||r[p+1],k=m+b;if(p<r.length-2&&(k+=r[p+2].matchedStr||r[p+2]),u.lastIndex=0,y=u.exec(k),!y)continue;var w=y.index+(g?y[1].length:0);if(w>=m.length)continue;var _=y.index+y[0].length,P=m.length+b.length;if(v=3,P>=_){if(r[p+1].greedy)continue;v=2,k=k.slice(0,P)}m=k}if(y){g&&(f=y[1].length);var w=y.index+f,y=y[0].slice(f),_=w+y.length,S=m.slice(0,w),O=m.slice(_),j=[p,v];S&&j.push(S);var A=new a(i,c?n.tokenize(y,c):y,d,y,h);j.push(A),O&&j.push(O),Array.prototype.splice.apply(r,j)}}}}}return r},hooks:{all:{},add:function(e,t){var a=n.hooks.all;a[e]=a[e]||[],a[e].push(t)},run:function(e,t){var a=n.hooks.all[e];if(a&&a.length)for(var r,l=0;r=a[l++];)r(t)}}},a=n.Token=function(e,t,n,a,r){this.type=e,this.content=t,this.alias=n,this.matchedStr=a||null,this.greedy=!!r};if(a.stringify=function(e,t,r){if("string"==typeof e)return e;if("Array"===n.util.type(e))return e.map(function(n){return a.stringify(n,t,e)}).join("");var l={type:e.type,content:a.stringify(e.content,t,r),tag:"span",classes:["token",e.type],attributes:{},language:t,parent:r};if("comment"==l.type&&(l.attributes.spellcheck="true"),e.alias){var i="Array"===n.util.type(e.alias)?e.alias:[e.alias];Array.prototype.push.apply(l.classes,i)}n.hooks.run("wrap",l);var o="";for(var s in l.attributes)o+=(o?" ":"")+s+'="'+(l.attributes[s]||"")+'"';return"<"+l.tag+' class="'+l.classes.join(" ")+'" '+o+">"+l.content+"</"+l.tag+">"},!_self.document)return _self.addEventListener?(_self.addEventListener("message",function(e){var t=JSON.parse(e.data),a=t.language,r=t.code,l=t.immediateClose;_self.postMessage(n.highlight(r,n.languages[a],a)),l&&_self.close()},!1),_self.Prism):_self.Prism;var r=document.currentScript||[].slice.call(document.getElementsByTagName("script")).pop();return r&&(n.filename=r.src,document.addEventListener&&!r.hasAttribute("data-manual")&&document.addEventListener("DOMContentLoaded",n.highlightAll)),_self.Prism}();"undefined"!=typeof module&&module.exports&&(module.exports=Prism),"undefined"!=typeof global&&(global.Prism=Prism);
+</script>
+
+<script type="text/javascript">
+Prism.languages.clike={comment:[{pattern:/(^|[^\\])\/\*[\w\W]*?\*\//,lookbehind:!0},{pattern:/(^|[^\\:])\/\/.*/,lookbehind:!0}],string:{pattern:/(["'])(\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,greedy:!0},"class-name":{pattern:/((?:\b(?:class|interface|extends|implements|trait|instanceof|new)\s+)|(?:catch\s+\())[a-z0-9_\.\\]+/i,lookbehind:!0,inside:{punctuation:/(\.|\\)/}},keyword:/\b(if|else|while|do|for|return|in|instanceof|function|new|try|throw|catch|finally|null|break|continue)\b/,"boolean":/\b(true|false)\b/,"function":/[a-z0-9_]+(?=\()/i,number:/\b-?(?:0x[\da-f]+|\d*\.?\d+(?:e[+-]?\d+)?)\b/i,operator:/--?|\+\+?|!=?=?|<=?|>=?|==?=?|&&?|\|\|?|\?|\*|\/|~|\^|%/,punctuation:/[{}[\];(),.:]/};
+</script>
+
+<script type="text/javascript">
+Prism.languages.c=Prism.languages.extend("clike",{keyword:/\b(asm|typeof|inline|auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|int|long|register|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while)\b/,operator:/\-[>-]?|\+\+?|!=?|<<?=?|>>?=?|==?|&&?|\|?\||[~^%?*\/]/,number:/\b-?(?:0x[\da-f]+|\d*\.?\d+(?:e[+-]?\d+)?)[ful]*\b/i}),Prism.languages.insertBefore("c","string",{macro:{pattern:/(^\s*)#\s*[a-z]+([^\r\n\\]|\\.|\\(?:\r\n?|\n))*/im,lookbehind:!0,alias:"property",inside:{string:{pattern:/(#\s*include\s*)(<.+?>|("|')(\\?.)+?\3)/,lookbehind:!0},directive:{pattern:/(#\s*)\b(define|elif|else|endif|error|ifdef|ifndef|if|import|include|line|pragma|undef|using)\b/,lookbehind:!0,alias:"keyword"}}},constant:/\b(__FILE__|__LINE__|__DATE__|__TIME__|__TIMESTAMP__|__func__|EOF|NULL|stdin|stdout|stderr)\b/}),delete Prism.languages.c["class-name"],delete Prism.languages.c["boolean"];
+</script>
+
+<script type="text/javascript">
+Prism.languages.cpp=Prism.languages.extend("c",{keyword:/\b(alignas|alignof|asm|auto|bool|break|case|catch|char|char16_t|char32_t|class|compl|const|constexpr|const_cast|continue|decltype|default|delete|do|double|dynamic_cast|else|enum|explicit|export|extern|float|for|friend|goto|if|inline|int|long|mutable|namespace|new|noexcept|nullptr|operator|private|protected|public|register|reinterpret_cast|return|short|signed|sizeof|static|static_assert|static_cast|struct|switch|template|this|thread_local|throw|try|typedef|typeid|typename|union|unsigned|using|virtual|void|volatile|wchar_t|while)\b/,"boolean":/\b(true|false)\b/,operator:/[-+]{1,2}|!=?|<{1,2}=?|>{1,2}=?|\->|:{1,2}|={1,2}|\^|~|%|&{1,2}|\|?\||\?|\*|\/|\b(and|and_eq|bitand|bitor|not|not_eq|or|or_eq|xor|xor_eq)\b/}),Prism.languages.insertBefore("cpp","keyword",{"class-name":{pattern:/(class\s+)[a-z0-9_]+/i,lookbehind:!0}});
+</script>
+
+<script type="text/x-mathjax-config">
+(function () {
+
+MathJax.Hub.Config({
+	'showProcessingMessages': false,
+	'messageStyle': 'none'
+});
+
+if (typeof MathJaxListener !== 'undefined') {
+	MathJax.Hub.Register.StartupHook('End', function () {
+		MathJaxListener.invokeCallbackForKey_('End');
+	});
+}
+
+})();
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 <!-- baidu statistic start -->
 <script>
@@ -1429,7 +1825,6 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
-
 
 
 

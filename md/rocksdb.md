@@ -695,7 +695,7 @@ L0 中所有的 sst 文件都可能存在重叠的 key range，假设所有的 s
 
 `Universal Compaction` 主要针对低写放大场景，跟 `Leveled Compaction` 相比一次合并文件较多但因为一次只处理 L0 所以写放大整体较低，但是空间放大效应比较大。
 
-RocksDB 还支持一种 FIFO 的 compaction。FIFO 顾名思义就是先进先出，这种模式周期性地删除旧数据。在 FIFO 模式下，所有文件都在 L0，当 sst 文件总大小超过阀值 max_table_files_size，则删除最老的 sst 文件。
+RocksDB 还支持一种 FIFO 的 compaction。FIFO 顾名思义就是先进先出，这种模式周期性地删除旧数据。在 FIFO 模式下，所有文件都在 L0，当 sst 文件总大小超过阀值 max_table_files_size，则删除最老的 sst 文件。[参考文档21](https://www.jianshu.com/p/0fdeed70b36a)中提到可以基于 FIFO compaction 机制把 RocksDB 当做一个时序数据库：`对于 FIFO 来说，它的策略非常的简单，所有的 SST 都在 Level 0，如果超过了阈值，就从最老的 SST 开始删除，其实可以看到，这套机制非常适合于存储时序数据`。
 
 整个 compaction 是 LSM-tree 数据结构的核心，也是rocksDB的核心，详细内容请阅读 [参考文档8](https://github.com/facebook/rocksdb/wiki/Universal-Compaction) 和 [参考文档9](https://github.com/facebook/rocksdb/wiki/Leveled-Compaction)。
 
@@ -1161,10 +1161,11 @@ Private 目录则包含一些非 SST 文件：options, current, manifest, WALs�
 - 18 [RocksDB系列十三:How to persist in memory RocksDB database?](https://www.jianshu.com/p/46bb78bca726?utm_source=oschina-app)
 - 19 [Checkpoints](https://github.com/facebook/rocksdb/wiki/Checkpoints)
 - 20 [LSM-Tree与RocksDB](https://www.tuicool.com/articles/7ju2UfI)
+- 21 [自动调优 RocksDB](https://www.jianshu.com/p/0fdeed70b36a)
 
 ## 扒粪者-于雨氏 ##
 
-> 2018/03/28，于雨氏，初作此文于海淀。
+> 1 2018/03/28，于雨氏，初作此文于海淀。
 >
 > 2018/07/06，添加 5.4 节 `Merge Operator`。
 >
