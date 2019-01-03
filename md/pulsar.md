@@ -31,9 +31,11 @@ Pulsar 和 Kafka 都是以 Topic 描述一个基本的数据集合，Topic 数�
 
 Pulsar 的数据存储节点 Bookkeeper 被称为 Bookie，相当于一个 Kafka Broker。Ledger 是 Topic 的若干日志的集合，是 Pulsar 数据删除的最小单元，即 Pulsar 每次淘汰以 Ledger 为单位进行删除。Fragment 是 Bookkeeper 的概念，对应一个日志文件，每个 Ledger 由若干 Fragment 组成。 
 
-Pulsar 进行数据同步时采用相关共识算法保证数据一致性。Ensemble Size 表示 Topic 要用到的物理存储节点 Bookie 个数，类似于 Kafka，其副本数目 Ensemble Size 不能超过 Bookie 个数，因为一个 Bookie 上不可能存储超过一个以上的数据副本。每次写数据时最低写入的 Bookie 个数 Qw 的上限当然是 Ensemble Size。
+Pulsar 进行数据同步时采用相关共识算法保证数据一致性。Ensemble Size 表示 Topic 要用到的物理存储节点 Bookie 个数，类似于 Kafka 的 Replica Number，其副本数目 Ensemble Size 不能超过 Bookie 个数，因为一个 Bookie 上不可能存储超过一个以上的数据副本。每次写数据时最低写入的 Bookie 个数 Qw 的上限当然是 Ensemble Size。
 
 Qa 是每次写请求发送完毕后需要回复确认的 Bookie 的个数，类似于 Kafka 的 `request.required.acks`，其数值越大则需要确认写成功的时间越长，其值上限当然是 Qw。[参考文档1](https://mp.weixin.qq.com/s/CIpCLCxqpLoQVUKz6QeDJQ) 提到 `为了一致性，Qa应该是：(Qw + 1) / 2 或者更大`，即为了确保数据安全性，Qa 下限是 `(Qw + 1) / 2`。
+
+Pulsar 还有一个模块称为 Pulsar Broker，其详细作用机制下文有详述，用于处理 Client 的读写请求，不要与 Kafka Broker 相混淆，暂时可以认为其作用等同于 Kafka Client SDK。
 
 ![](../pic/pulsar/pulsar_notions.webp)
 
@@ -63,7 +65,7 @@ Pulsar 自身支持多租户，在 zookeeper 中以 `/root/property/namespace/to
 
 ![](../pic/pulsar/pulsar_tenant.webp)
 
-其中 property 是租户名称，namespace 则是业务线名称，故一个租户可以有多个 namespace，租户可以针对 namespace 设置 ACL、调整副本数目、消息过期时间等参数，至于多租户的资源控制无非是借助配额、限流、流控等手段进行。租户实质上是一种资源隔离手段，把不同业务婚部在一起，可以提高资源的利用率。
+其中 property 是租户名称，namespace 则是业务线名称，故一个租户可以有多个 namespace，租户可以针对 namespace 设置 ACL、调整副本数目、消息过期时间等参数，至于多租户的资源控制无非是借助配额、限流、流控等手段进行。租户实质上是一种资源隔离手段，把不同业务混部在一起，可以提高资源的利用率。
 
 向 Pulsar 中写入数据者称为 Producer。Producer 向某个 Topic 写入数据时，采用不同的路由策略则一条日志消息会落入不同的 Partition，[参考文档7](https://mp.weixin.qq.com/s/uwmLR-1Jo_VNXRFA0yYWlg)中给出了如下四种路由策略：
 
@@ -85,7 +87,7 @@ Pulsar 不同 Consumer 可以针对同一个 Topic 指定不同的消费模式�
 #### 2.2 Pulsar Broker
 ---
 
-Pulsar 的 metadata 存储在 zookeeper 上，而消息数据存储在 Bookkeeper 上。Broker 虽然需要这些 metadata，但是其自身并不持久化存储这些数据，所以可以认为是无状态的。不像 Kafka 是在 Partition 级别拥有一个 leader Broker，Pulsar 是在 Topic 级别拥有一个 leader Broker，称之为拥有 Topic 的所有权，针对该 Topic 所有的 R/W 都经过改 Broker 完成。
+Pulsar 的 metadata 存储在 zookeeper 上，而消息数据存储在 Bookkeeper 上。Broker 虽然需要这些 metadata，但是其自身并不持久化存储这些数据，所以可以认为是无状态的。不像 Kafka 是在 Partition 级别拥有一个 leader Broker，Pulsar 是在 Topic 级别拥有一个 leader Broker，称之为拥有 Topic 的所有权，针对该 Topic 所有的 R/W 都经过该 Broker 完成。
 
 Pulsar Broker 可以认为是一种 Proxy，它对 client 屏蔽了服务端读写流程的复杂性，是保证数据一致性与数据负载均衡的重要角色，所以 Pulsar 可以认为是一种基于 Proxy 的分布式系统。与之形成对比的 kafka 可以认为是一种基于 SmartClient 的系统，所以 Kafka 服务端自身的数据一致性流程还需要 Client SDK 与之配合完成。
 
@@ -150,7 +152,7 @@ Pulsar Bookie 是一种日志型存储引擎，每条 Log 称之为 Entry，每�
 
 Pulsar 可以缓存写流程中的部分尾部数据用于加快 client 的读取数据流程，并记下最后一条写成功的消息的 ID（Last Add Confirmed ID，称之为 LAC），可以用来检验读请求的合法性。所有 Entry ID 小于 LAC 的即可确认是 commited index，都可以被安全读出。
 
-与 LAC 相应的，Pulsar 还有一个称谓 LAP 的概念，其全称为 Last-Add-Pushed，即已经发送给 Bookie 但是尚未收到 Ack 的日志条目，整个机制类似于 TCP 发送端的滑动窗口。
+与 LAC 相应的，Pulsar 还有一个称谓 LAP 的概念，其全称为 Last-Add-Pushed，即已经发送给 Bookie 但是尚未收到 Ack 的日志条目，其原理类似于 TCP 发送端的滑动窗口机制。
 
 #### 3.2 读流程
 ---
