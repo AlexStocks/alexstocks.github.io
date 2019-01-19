@@ -1,4 +1,4 @@
-## 一套高可用群聊消息系统实现
+## 一套高可用的实时消息系统
 ---
 *written by Alex Stocks on 2017/12/31，版权所有，无授权不得转载*
 
@@ -19,7 +19,7 @@
 >
 > 3 Broker ：系统消息转发Server，Broker 会根据 Gateway Message 组织一个 RoomGatewayList【key为 RoomID，value为 Gateway IP:Port 地址列表】，然后把 Proxy 发来的消息转发到 Room 中所有成员登录的所有 Gateway；
 >
-> 4 Router ：用户登录消息转发者，把Gateway转发来的用户登入登出消息转发给所有的 Broker；
+> 4 Router ：用户登录消息转发者，把 Gateway 转发来的用户登入登出消息转发给所有的 Broker；
 >
 > 5 Gateway ：所有服务端的入口，接收合法客户端的连接，并把客户端的登录登出消息通过 Router 转发给所有的 Broker；
 >
@@ -593,7 +593,88 @@ Ack 消息处理流程如下：
 
 总体上，PiXiu 转发消息流程采用拉取（pull）转发模型，以上面五种消息为驱动进行状态转换，并作出相应的动作行为。
 
-### 7 总结 ###
+### 7 单聊消息
+---
+
+前几章所述之系统架构都是基于群聊这一实时通信场景，这一群聊消息系统在公司内部稳定运行近一年半时间，期间经历了6个大版本的迭代演进，赢得了各个业务线同事的新人，承担了从群聊、聊天室到游戏信令传递等等各种场景的实时通信业务。
+
+2017 年 9 月份刚开始接手系统时，已有业务方提出把对单人下发的消息【以下称之为 Chat Message】也接入这套系统，即消息系统不仅是一个群聊消息下发通道，也应该是一个单聊消息下发通道，但是考虑到当时处于系统实现初期，个人基于系统小作的考量边直接拒绝了。随着这一年半其接入的业务范围的扩展，目下公司正考虑拆分 Gateway，这套系统需要被重构以处理单聊消息就是势然了。
+
+公司的 Gateway 大概是我见过的最复杂的接口系统，各种本应该放在逻辑层处理的子系统都被糅合进了接口层 Gateway 这一单个模块之内，除了公司几个创始人很少有人清楚其它内部逻辑，据说陆续有四个高薪招聘的高手在接手这套系统后三个月内跑路了。Gateway 内部与聊天场景有关的状态数据主要有两种：用户所在的群信息【以下简称 Router Data】以及用户自身的状态信息【包括在线状态以及客户端地址信息，以下简称 Relay Data】。
+
+Router Data 已经被群聊系统的 Router 模块替代掉，当下的 Gateway 已经不需要存储 Router Data。若扩展此系统使其能够处理单聊消息，能够存储用户的在线状态以及用户接入的 Gateway 信息，则 Gateway 就可以不用存储任何有关用户的状态数据了。
+
+#### 7.1 实时消息系统架构
+---
+
+Relay Data 迥异于 Router Data：Relay Data 的 key 是 UIN，其数据传递依赖于 Relay Message；而 Router Data 的 key 是 GroupID，其数据传递依赖于 Gateway Message。此二者差异决定了这两种数据的处理不可能在一个单一的模块之内。
+
+新的实时通信系统添加了一个 Relay 模块用于处理 Relay Message 并存储 Relay Data。添加了单聊消息处理能力的实时消息系统架构如下：
+
+![](../pic/pubsub/pubsub_chat.png)
+
+下面详述新架构下各个模块的功能和消息处理流程，至于系统注册、系统扩容以及注册通知等相关流程与以往处理机制雷同，下面不再详述。
+
+注意：新架构图中把原来的专门存储 Router Data 的 Database 模块改称为 Router DB，并添加了一个 Relay DB，以专门存储 Relay Data。
+
+##### 7.2 Gateway
+---
+
+Gateway 不再存储 Router Data 和 Relay Data，几乎成了 APP 的透明代理，其功能如下：
+
+>- 接收 APP 的连接请求，并把用户连接消息以 Relay Message 形式发送给 Relay；
+>- APP 与 Gateway 连接断开时以 Relay Message 形式发送给 Relay；
+>- 把用户登录登出某 Room 的消息转发给 Router；
+>- 接收 Relay 转发来的 Room Message 和 Chat Message，并下发给 APP。
+
+##### 7.3 Relay
+---
+
+Relay 是一个新模块，但其组织方式类似于 Router，亦是分 Partition 分 Replica，处理 Relay Message。
+
+Relay 模块依据用户的 UIN 进行把不同用户的 Relay Data 放入不同的 Parition，同 Partition 内的 所有 Relay Replica 数据一致。 
+
+Relay 功能列表如下：
+
+>- 接收由 Gateway 转发来的 Relay Message，存储为 Relay Data，并把 Relay Data 异步存入 Relay DB；
+>- 起始时先从 Relay DB 获取其 Partiton 内所有用户的 Relay Data，以与 Partiton 内其他 Replica 保持数据一致性；
+>- 接收由 Broker 转发来的 Room Message，依据 Relay Data 记录的用户所在的 Gateway 把消息复制转发给 Gateway；
+>- 接收由 Proxy 转发来的 Chat Message，依据 Relay Data 记录的用户所在的 Gateway 把消息复制转发给 Gateway；
+
+前面提及所有处理 Room Message 系统都是一个写放大的系统，究其原因是一条 Room Message 需要被复制下发给 Room 内每个人，所以 Relay 处理 Room Message 时需要根据 Room Message 内的 Room UIN List 对消息进行复制后下发给每个 User APP 所连接的 Gateway。
+
+当然，如果用户不在线，Relay 会对 Room Message 和 Chat Message 都作丢弃处理，因为此系统只处理实时消息。 
+
+Relay 承担了群聊消息与单聊消息的下发。
+
+##### 7.4 Broker
+---
+
+新架构下 Broker 模块不再直接把 Room Message 转发给 Gateway，而是转发给 Relay。有了 Relay，Broker 自身只需要存储每个 Group 的 UIN List 即可，大大减轻了自身的任务流程，Broker 可以把 Relay 视作 `pseudo-gateway`。
+
+Broker 功能列表如下：
+
+>- 接收 Router 转发来的 Gateway Message，存储为 Router Data，并把 Router Data 异步存入 Router DB；
+>- 起始时先从 Router DB 获取其 Partiton 内所有用户的 Router Data，以与 Partiton 内其他 Replica 保持数据一致性；
+>- 接收由 Proxy 转发来的 Room Message，依据 Router Data 记录的 Group 内的 UIN List 把消息复制转发给各个 Relay；
+
+Broker 仅仅承担了群聊消息下发。
+
+##### 7.4 Proxy
+---
+
+Proxy 接收 Client 发来的消息时，需要区分消息是 Room Message 还是 Chat Message，新架构下其功能列表如下：
+
+>- 关注 Registry Broker Path，以实时获取正确的 Broker List；
+>- 关注 Registry Relay Path，以实时获取正确的 Relya List；
+>- 接收 Client 发来的 Room Message，依据 Group 把消息转发给 Broker；
+>- 接收 Client 发来的 Chat Message，依据 UIN 把消息转发给 Relay；
+
+Proxy 对 Group Message 的处理仅仅是转发了事，并不需要复制，所以不存在写放大的问题。
+
+其实还可以把 Proxy 区分为 Group Message Proxy 和 Chat Message Proxy，以期收逻辑清晰职责明了之效。
+
+### 8 总结 ###
 ---
 
 这套群聊消息系统尚有以下task list需完善：
@@ -614,18 +695,12 @@ Ack 消息处理流程如下：
 - 1 [一种支持自由规划无须数据迁移和修改路由代码的Replicaing扩容方案](http://blog.csdn.net/bluishglc/article/details/7970268)
 
 ## 扒粪者-于雨氏 ##
-> 于雨氏，2017/12/31，初作此文于丰台金箱堂。
->
-> 于雨氏，2018/01/16，于海淀添加“系统稳定性”一节。
->
-> 于雨氏，2018/01/29，于海淀添加“消息可靠性”一节。
->
-> 于雨氏，2018/02/11，于海淀添加“Router”一节，并重新格式化全文。
->
-> 于雨氏，2018/03/05，于海淀添加“PiXiu”一节。
->
-> 于雨氏，2018/03/14，于海淀添加负反馈机制、根据Gateway Message ID保证Gateway Message数据一致性 和 Gateway用户退出消息产生机制 等三个细节。
->
-> 于雨氏，2018/08/05，于海淀添加 “pipeline” 一节。
-> 
-> 于雨氏，2018/08/28，于海淀添加 “大房间消息处理” 一节。
+>- 于雨氏，2017/12/31，初作此文于丰台金箱堂。
+>- 于雨氏，2018/01/16，于海淀添加“#3 系统稳定性”一节。
+>- 于雨氏，2018/01/29，于海淀添加“#4 消息可靠性”一节。
+>- 于雨氏，2018/02/11，于海淀添加 “#5 Router” 一章节，并重新格式化全文。
+>- 于雨氏，2018/03/05，于海淀添加 “#6 离线消息” 一章节。
+>- 于雨氏，2018/03/14，于海淀添加负反馈机制、根据Gateway Message ID保证Gateway Message数据一致性 和 Gateway用户退出消息产生机制 等三个细节。
+>- 于雨氏，2018/08/05，于海淀添加 “#2.2.1 pipeline” 一节。
+>- 于雨氏，2018/08/28，于海淀添加 “#2.2.2 大房间消息处理” 一节。
+>- 于雨氏，2019/01/19，于丰台添加 “#7 单聊消息” 一章节。

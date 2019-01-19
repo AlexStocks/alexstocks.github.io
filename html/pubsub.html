@@ -9,82 +9,301 @@
 
 
 <style type="text/css">
-*{margin:0;padding:0;}
 body {
-	font:13.34px helvetica,arial,freesans,clean,sans-serif;
-	color:black;
-	line-height:1.4em;
-	background-color: #F8F8F8;
-	padding: 0.7em;
+  font-family: Helvetica, arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: white;
+  padding: 30px; }
+
+body > *:first-child {
+  margin-top: 0 !important; }
+body > *:last-child {
+  margin-bottom: 0 !important; }
+
+a {
+  color: #4183C4; }
+a.absent {
+  color: #cc0000; }
+a.anchor {
+  display: block;
+  padding-left: 30px;
+  margin-left: -30px;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0; }
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+  cursor: text;
+  position: relative; }
+
+h1:hover a.anchor, h2:hover a.anchor, h3:hover a.anchor, h4:hover a.anchor, h5:hover a.anchor, h6:hover a.anchor {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA09pVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoMTMuMCAyMDEyMDMwNS5tLjQxNSAyMDEyLzAzLzA1OjIxOjAwOjAwKSAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OUM2NjlDQjI4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OUM2NjlDQjM4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5QzY2OUNCMDg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5QzY2OUNCMTg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PsQhXeAAAABfSURBVHjaYvz//z8DJYCRUgMYQAbAMBQIAvEqkBQWXI6sHqwHiwG70TTBxGaiWwjCTGgOUgJiF1J8wMRAIUA34B4Q76HUBelAfJYSA0CuMIEaRP8wGIkGMA54bgQIMACAmkXJi0hKJQAAAABJRU5ErkJggg==) no-repeat 10px center;
+  text-decoration: none; }
+
+h1 tt, h1 code {
+  font-size: inherit; }
+
+h2 tt, h2 code {
+  font-size: inherit; }
+
+h3 tt, h3 code {
+  font-size: inherit; }
+
+h4 tt, h4 code {
+  font-size: inherit; }
+
+h5 tt, h5 code {
+  font-size: inherit; }
+
+h6 tt, h6 code {
+  font-size: inherit; }
+
+h1 {
+  font-size: 28px;
+  color: black; }
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #cccccc;
+  color: black; }
+
+h3 {
+  font-size: 18px; }
+
+h4 {
+  font-size: 16px; }
+
+h5 {
+  font-size: 14px; }
+
+h6 {
+  color: #777777;
+  font-size: 14px; }
+
+p, blockquote, ul, ol, dl, li, table, pre {
+  margin: 15px 0; }
+
+hr {
+  background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAECAYAAACtBE5DAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OENDRjNBN0E2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OENDRjNBN0I2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo4Q0NGM0E3ODY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo4Q0NGM0E3OTY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqqezsUAAAAfSURBVHjaYmRABcYwBiM2QSA4y4hNEKYDQxAEAAIMAHNGAzhkPOlYAAAAAElFTkSuQmCC) repeat-x 0 0;
+  border: 0 none;
+  color: #cccccc;
+  height: 4px;
+  padding: 0;
 }
-p {
-	margin:1em 0;
-	line-height:1.5em;
-}
+
+body > h2:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+body > h1:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+  body > h1:first-child + h2 {
+    margin-top: 0;
+    padding-top: 0; }
+body > h3:first-child, body > h4:first-child, body > h5:first-child, body > h6:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0; }
+
+h1 p, h2 p, h3 p, h4 p, h5 p, h6 p {
+  margin-top: 0; }
+
+li p.first {
+  display: inline-block; }
+li {
+  margin: 0; }
+ul, ol {
+  padding-left: 30px; }
+
+ul :first-child, ol :first-child {
+  margin-top: 0; }
+
+dl {
+  padding: 0; }
+  dl dt {
+    font-size: 14px;
+    font-weight: bold;
+    font-style: italic;
+    padding: 0;
+    margin: 15px 0 5px; }
+    dl dt:first-child {
+      padding: 0; }
+    dl dt > :first-child {
+      margin-top: 0; }
+    dl dt > :last-child {
+      margin-bottom: 0; }
+  dl dd {
+    margin: 0 0 15px;
+    padding: 0 15px; }
+    dl dd > :first-child {
+      margin-top: 0; }
+    dl dd > :last-child {
+      margin-bottom: 0; }
+
+blockquote {
+  border-left: 4px solid #dddddd;
+  padding: 0 15px;
+  color: #777777; }
+  blockquote > :first-child {
+    margin-top: 0; }
+  blockquote > :last-child {
+    margin-bottom: 0; }
+
 table {
-	font-size:inherit;
-	font:100%;
-	margin:1em;
-}
-table th{border-bottom:1px solid #bbb;padding:.2em 1em;}
-table td{border-bottom:1px solid #ddd;padding:.2em 1em;}
-input[type=text],input[type=password],input[type=image],textarea{font:99% helvetica,arial,freesans,sans-serif;}
-select,option{padding:0 .25em;}
-optgroup{margin-top:.5em;}
-pre,code{font:12px Monaco,"Courier New","DejaVu Sans Mono","Bitstream Vera Sans Mono",monospace;}
-pre {
-	margin:1em 0;
-	font-size:12px;
-	background-color:#eee;
-	border:1px solid #ddd;
-	padding:5px;
-	line-height:1.5em;
-	color:#444;
-	overflow:auto;
-	-webkit-box-shadow:rgba(0,0,0,0.07) 0 1px 2px inset;
-	-webkit-border-radius:3px;
-	-moz-border-radius:3px;border-radius:3px;
-}
+  padding: 0;border-collapse: collapse; }
+  table tr {
+    border-top: 1px solid #cccccc;
+    background-color: white;
+    margin: 0;
+    padding: 0; }
+    table tr:nth-child(2n) {
+      background-color: #f8f8f8; }
+    table tr th {
+      font-weight: bold;
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr td {
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr th :first-child, table tr td :first-child {
+      margin-top: 0; }
+    table tr th :last-child, table tr td :last-child {
+      margin-bottom: 0; }
+
+img {
+  max-width: 100%; }
+
+span.frame {
+  display: block;
+  overflow: hidden; }
+  span.frame > span {
+    border: 1px solid #dddddd;
+    display: block;
+    float: left;
+    overflow: hidden;
+    margin: 13px 0 0;
+    padding: 7px;
+    width: auto; }
+  span.frame span img {
+    display: block;
+    float: left; }
+  span.frame span span {
+    clear: both;
+    color: #333333;
+    display: block;
+    padding: 5px 0 0; }
+span.align-center {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-center > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: center; }
+  span.align-center span img {
+    margin: 0 auto;
+    text-align: center; }
+span.align-right {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px 0 0;
+    text-align: right; }
+  span.align-right span img {
+    margin: 0;
+    text-align: right; }
+span.float-left {
+  display: block;
+  margin-right: 13px;
+  overflow: hidden;
+  float: left; }
+  span.float-left span {
+    margin: 13px 0 0; }
+span.float-right {
+  display: block;
+  margin-left: 13px;
+  overflow: hidden;
+  float: right; }
+  span.float-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: right; }
+
+code, tt {
+  margin: 0 2px;
+  padding: 0 5px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px; }
+
 pre code {
-	padding:0;
-	font-size:12px;
-	background-color:#eee;
-	border:none;
-}
-code {
-	font-size:12px;
-	background-color:#f8f8ff;
-	color:#444;
-	padding:0 .2em;
-	border:1px solid #dedede;
-}
-img{border:0;max-width:100%;}
-abbr{border-bottom:none;}
-a{color:#4183c4;text-decoration:none;}
-a:hover{text-decoration:underline;}
-a code,a:link code,a:visited code{color:#4183c4;}
-h2,h3{margin:1em 0;}
-h1,h2,h3,h4,h5,h6{border:0;}
-h1{font-size:170%;border-top:4px solid #aaa;padding-top:.5em;margin-top:1.5em;}
-h1:first-child{margin-top:0;padding-top:.25em;border-top:none;}
-h2{font-size:150%;margin-top:1.5em;border-top:4px solid #e0e0e0;padding-top:.5em;}
-h3{margin-top:1em;}
-hr{border:1px solid #ddd;}
-ul{margin:1em 0 1em 2em;}
-ol{margin:1em 0 1em 2em;}
-ul li,ol li{margin-top:.5em;margin-bottom:.5em;}
-ul ul,ul ol,ol ol,ol ul{margin-top:0;margin-bottom:0;}
-blockquote{margin:1em 0;border-left:5px solid #ddd;padding-left:.6em;color:#555;}
-dt{font-weight:bold;margin-left:1em;}
-dd{margin-left:2em;margin-bottom:1em;}
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent; }
+
+.highlight pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+  pre code, pre tt {
+    background-color: transparent;
+    border: none; }
+
 sup {
     font-size: 0.83em;
     vertical-align: super;
     line-height: 0;
 }
+
 kbd {
-  display: inline-block;padding: 3px 5px;font-size: 11px;line-height: 10px;color: #555;vertical-align: middle;background-color: #fcfcfc;border: solid 1px #ccc;border-bottom-color: #bbb;border-radius: 3px;box-shadow: inset 0 -1px 0 #bbb;
+  display: inline-block;
+  padding: 3px 5px;
+  font-size: 11px;
+  line-height: 10px;
+  color: #555;
+  vertical-align: middle;
+  background-color: #fcfcfc;
+  border: solid 1px #ccc;
+  border-bottom-color: #bbb;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 #bbb
 }
+
 * {
 	-webkit-print-color-adjust: exact;
 }
@@ -104,12 +323,152 @@ kbd {
 }
 </style>
 
+<style type="text/css">
+/**
+ * prism.js default theme for JavaScript, CSS and HTML
+ * Based on dabblet (http://dabblet.com)
+ * @author Lea Verou
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: black;
+	background: none;
+	text-shadow: 0 1px white;
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
+code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
+	text-shadow: none;
+	background: #b3d4fc;
+}
+
+pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
+code[class*="language-"]::selection, code[class*="language-"] ::selection {
+	text-shadow: none;
+	background: #b3d4fc;
+}
+
+@media print {
+	code[class*="language-"],
+	pre[class*="language-"] {
+		text-shadow: none;
+	}
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: #f5f2f0;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: slategray;
+}
+
+.token.punctuation {
+	color: #999;
+}
+
+.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #905;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #690;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+	color: #a67f59;
+	background: hsla(0, 0%, 100%, .5);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+	color: #07a;
+}
+
+.token.function {
+	color: #DD4A68;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+	color: #e90;
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+</style>
+
 
 </head>
 
 <body>
 
-<h2 id="toc_0">一套高可用群聊消息系统实现</h2>
+<h2 id="toc_0">一套高可用的实时消息系统</h2>
 
 <hr>
 
@@ -123,24 +482,24 @@ kbd {
 
 <p>2017年9月初初步实现了一套极简的消息系统，其大致架构如下：</p>
 
-<p><img src="../pic/pubsub_simple.png" alt=""></p>
+<p><img src="../pic/pubsub/pubsub_simple.png" alt=""></p>
 
 <p>系统名词解释：</p>
 
 <blockquote>
 <p>1 Client : 消息发布者【其位于服务端内，亦可叫做服务端群聊消息系统调用者，不要与APP Client混淆】，publisher；</p>
 
-<p>2 Proxy : 系统代理，对外统一接口，收集Client发来的消息转发给Broker；</p>
+<p>2 Proxy : 系统代理，对外统一接口，收集 Client 发来的消息转发给 Broker；</p>
 
-<p>3 Broker ：系统消息转发Server，Broker 会根据 Gateway Message 组织一个 RoomGatewayList【key为RoomID，value为 Gateway IP:Port 地址列表】，然后把 Proxy 发来的消息转发到 Room 中所有成员登录的所有 Gateway；</p>
+<p>3 Broker ：系统消息转发Server，Broker 会根据 Gateway Message 组织一个 RoomGatewayList【key为 RoomID，value为 Gateway IP:Port 地址列表】，然后把 Proxy 发来的消息转发到 Room 中所有成员登录的所有 Gateway；</p>
 
-<p>4 Router ：用户登录消息转发者，把Gateway转发来的用户登入登出消息转发给所有的Broker；</p>
+<p>4 Router ：用户登录消息转发者，把 Gateway 转发来的用户登入登出消息转发给所有的 Broker；</p>
 
-<p>5 Gateway ：所有服务端的入口，接收合法客户端的连接，并把客户端的登录登出消息通过Router转发给所有的Broker；</p>
+<p>5 Gateway ：所有服务端的入口，接收合法客户端的连接，并把客户端的登录登出消息通过 Router 转发给所有的 Broker；</p>
 
-<p>6 Room Message : Room聊天消息；</p>
+<p>6 Room Message : Room 聊天消息；</p>
 
-<p>7 Gateway Message : Room内某成员 登录 或者 登出 某Gateway消息，包含用户UIN/RoomID/Gateway地址{IP:Port}等消息；</p>
+<p>7 Gateway Message : Room 内某成员 登录 或者 登出 某Gateway消息，包含用户 UIN/RoomID/Gateway 地址 {IP:Port} 等消息；</p>
 </blockquote>
 
 <p>当一个 Room 中多个用户的 APP 连接一个 Gateway 的时候，Broker只会根据 RoomID 把房间内的消息转发一次给这个Gateway，由Gateway再把消息复制多份分别发送给连接这个 Gateway 的 Room 中的所有用户的客户端。</p>
@@ -149,16 +508,16 @@ kbd {
 
 <ul>
 <li>1 系统只转发房间内的聊天消息，每个节点收到后立即转发出去，不存储任何房间内的聊天消息，不考虑消息丢失以及消息重复的问题；</li>
-<li>2 系统固定地由一个Proxy、三个Broker和一个Router构成；</li>
-<li>3 Proxy接收后端发送来的房间消息，然后按照一定的负载均衡算法把消息发往某个Broker，Broker则把消息发送到所有与Room有关系的接口机Gateway；</li>
-<li>4 Router接收Gateway转发来的某个Room内某成员在这个Gateway的登出或者登录消息，然后把消息发送到所有Broker；</li>
-<li>5 Broker收到Router转发来的Gateway消息后，更新（添加或者删除）与某Room相关的Gateway集合记录；</li>
-<li>6 整个系统的通信链路采用UDP通信方式；</li>
+<li>2 系统固定地由一个 Proxy、三个 Broker 和一个 Router 构成；</li>
+<li>3 Proxy 接收后端发送来的房间消息，然后按照一定的负载均衡算法把消息发往某个 Broker，Broker 则把消息发送到所有与 Room 有关系的接口机 Gateway；</li>
+<li>4 Router 接收 Gateway 转发来的某个 Room 内某成员在这个 Gateway 的登出或者登录消息，然后把消息发送到所有 Broker；</li>
+<li>5 Broker 收到 Router 转发来的 Gateway 消息后，更新（添加或者删除）与某 Room 相关的 Gateway 集合记录；</li>
+<li>6 整个系统的通信链路采用 UDP 通信方式；</li>
 </ul>
 
 <p>从以上特点，整个消息系统足够简单，<strong>不考虑扩缩容问题</strong>，当系统负载到达极限的时候，就<strong>重新再部署一套系统</strong>以应对后端client的消息压力。</p>
 
-<p>这种处理方式本质是把系统的扩容能力甩锅给了后端Client以及前端Gateway：<strong>每次扩容一个系统，所有Client需要在本地配置文件中添加一个Proxy地址然后全部重启，所有Gateway则需要再本地配置文件添加一个Router地址然后全部重启。</strong></p>
+<p>这种处理方式本质是把系统的扩容能力甩锅给了后端 Client 以及前端 Gateway：<strong>每次扩容一个系统，所有 Client 需要在本地配置文件中添加一个 Proxy 地址然后全部重启，所有 Gateway 则需要再本地配置文件添加一个 Router 地址然后全部重启。</strong></p>
 
 <p>这种“幸福我一人，辛苦千万家”的扩容应对方式，必然导致公司内部这套系统的使用者怨声载道，升级之路就是必然的了。</p>
 
@@ -166,23 +525,23 @@ kbd {
 
 <hr>
 
-<p>大道之行也，天下为公，不同的系统有不同的构架，相同的系统总有类似的实现。类似于数据库的分库分表【关于分库分表，目前看到的最好的文章是参考文档1】，其扩展实现核心思想是分Partition分Replica，但各Replica之间还区分leader（leader-follower，只有leader可接受写请求）和non-leader（所有replica均可接收写请求）两种机制。</p>
+<p>大道之行也，天下为公，不同的系统有不同的构架，相同的系统总有类似的实现。类似于数据库的分库分表【关于分库分表，目前看到的最好的文章是参考文档1】，其扩展实现核心思想是分 Partition 分 Replica，但各 Replica 之间还区分leader（leader-follower，只有leader可接受写请求）和 non-leader（所有replica均可接收写请求）两种机制。</p>
 
-<p>从数据角度来看，这套系统接收两种消息：Room Message（房间聊天消息）和Gateway Message（用户登录消息）。两种消息的交汇之地就是Broker，所以应对扩展的紧要地方就是Broker，Broker的每个Partition采用non-leader机制，各replica均可接收Gateway Message消息写请求和Room Message转发请求。</p>
+<p>从数据角度来看，这套系统接收两种消息：Room Message（房间聊天消息）和 Gateway Message（用户登录消息）。两种消息的交汇之地就是Broker，所以应对扩展的紧要地方就是 Broker，Broker 的每个 Partition 采用 non-leader 机制，各 replica 均可接收 Gateway Message 消息写请求和 Room Message 转发请求。</p>
 
-<p>首先，当Room Message量加大时可以对Proxy进行水平扩展，多部署Proxy即可因应Room Message的流量。</p>
+<p>首先，当 Room Message 量加大时可以对 Proxy 进行水平扩展，多部署 Proxy 即可因应 Room Message 的流量。</p>
 
-<p>其次，当Gateway Message量加大时可以对Router进行水平扩展，多部署Router即可因应Gateway Message的流量。</p>
+<p>其次，当 Gateway Message 量加大时可以对 Router 进行水平扩展，多部署 Router 即可因应 Gateway Message 的流量。</p>
 
-<p>最后，两种消息的交汇之地Broker如何扩展呢？可以把若干Broker Replica组成一个Partition，因为Gateway Message是在一个Partition内广播的，所有Broker Replica都会有相同的RoomGatewayList 数据，因此当Gateway Message增加时扩容Partition即可。当Room Message量增加时，水平扩容Partition内的Broker Replica即可，因为Room Message只会发送到Partition内某个Replica上。</p>
+<p>最后，两种消息的交汇之地 Broker 如何扩展呢？可以把若干 Broker Replica 组成一个 Partition，因为 Gateway Message 是在一个 Partition 内广播的，所有 Broker Replica 都会有相同的 RoomGatewayList 数据，因此当 Gateway Message 增加时扩容 Partition 即可。当 Room Message 量增加时，水平扩容Partition 内的 Broker Replica 即可，因为 Room Message 只会发送到 Partition 内某个R eplica 上。</p>
 
-<p>从个人经验来看，Room ID的增长以及Room内成员的增加量在一段时间内可以认为是直线增加，而Room Message可能会以指数级增长，所以若设计得当则Partition扩容的概率很小，而Partition内Replica水平增长的概率几乎是100%。</p>
+<p>从个人经验来看，Room ID 的增长以及 Room 内成员的增加量在一段时间内可以认为是线性增加，而 Room Message 可能会以指数级增长，所以若部署得当则 Partition 扩容的概率很小，而 Partition 内 Replica 水平增长的概率几乎是 100%。</p>
 
-<p>不管是Partition级别的水平扩容还是Partition Replica级别的水平扩容，不可能像系统极简版本那样每次扩容后都需要Client或者Gateway去更新配置文件然后重启，因应之道就是可用zookeeper充当角色的Registriy。通过这个zookeeper注册中心，相关角色扩容的时候在Registry注册后，与之相关的其他模块得到通知即可获取其地址等信息。采用zookeeper作为Registry的时候，所以程序实现的时候采用实时watch和定时轮询的策略保证数据可靠性，因为一旦网络有任何的抖动，zk就会认为客户端已经宕机把链接关闭。</p>
+<p>不管是 Partition 级别的水平扩容还是 Partition Replica 级别的水平扩容，不可能像系统极简版本那样每次扩容后都需要 Client 或者 Gateway 去更新配置文件然后重启，因应之道就是可用 zookeeper 充当角色的 Registry。通过这个 zookeeper 注册中心，相关角色扩容的时候在 Registry 注册后，与之相关的其他模块得到通知即可获取其地址等信息。采用 zookeeper 作为 Registry 的时候，所以程序实现的时候采用实时watch和定时轮询的策略保证数据可靠性，因为一旦网络有任何的抖动，zk就会认为客户端已经宕机把链接关闭。</p>
 
 <p>分析完毕，与之相对的架构图如下：</p>
 
-<p><img src="../pic/pubsub_scalable.png" alt=""></p>
+<p><img src="../pic/pubsub/pubsub_scalable.png" alt=""></p>
 
 <p>分章节描述各个模块详细流程。</p>
 
@@ -193,12 +552,14 @@ kbd {
 <p>Client详细流程如下：</p>
 
 <ul>
-<li>1 从配置文件加载Registry地址；</li>
-<li>2 从Registy上Proxy注册路径/pubsub/proxy下获取所有的Proxy，依据各个Proxy ID大小顺序递增组成一个ProxyArray；</li>
-<li>3 启动一个线程实时关注Registry路径/pubsub/proxy，以获取Proxy的动态变化，及时更新ProxyArray；</li>
-<li>4 启动一个线程定时轮询获取Registry路径/pubsub/proxy下各个Proxy实例，作为关注策略的补充，以期本地ProxyArray内各个Proxy成员与Registry上的各个Proxy保持一致；定时给各个Proxy发送心跳，异步获取心跳回包；定时清除ProxyArray中心跳超时的Proxy成员；</li>
-<li>5 发送消息的时候采用snowflake算法给每个消息分配一个MessageID，然后采用相关负载均衡算法把消息转发给某个Proxy。</li>
+<li>1 从配置文件加载 Registry 地址；</li>
+<li>2 从 Registy 路径 <code>/pubsub/proxy</code>(Proxy 注册路径) 下获取所有的 Proxy，依据各个 Proxy ID 大小顺序递增组成一个 ProxyArray；</li>
+<li>3 启动一个线程实时关注 Registry 路径 <code>/pubsub/proxy</code>，以获取Proxy的动态变化，及时更新 ProxyArray；</li>
+<li>4 启动一个线程定时轮询获取 Registry 路径 <code>/pubsub/proxy</code> 下各个 Proxy 实例，作为关注策略的补充，以期本地ProxyArray 内各个 Proxy 成员与 Registry 上的各个 Proxy 保持一致；定时给各个 Proxy 发送心跳，异步获取心跳回包；定时清除 ProxyArray 中心跳超时的 Proxy 成员；</li>
+<li>5 发送消息的时候采用 snowflake 算法给每个消息分配一个 MessageID ，然后采用相关负载均衡算法把消息转发给某个 Proxy。</li>
 </ul>
+
+<p><strong>本系统使用 Zookeeper 作为 Registry，而 Zookeeper 的通知机制有名的不可靠且延迟高（15s），所以采用 Zookeeper 自身的 Watch 机制的同时使用定时查询策略作为补偿机制。定时策略的定时时间单位应该是分钟级，不能小于 Zookeeper 自身的通知延时时长，以防止 Zookeeper 系统的轻微抖动造成消息系统的服务波动。</strong></p>
 
 <h4 id="toc_4">2.2 Proxy</h4>
 
@@ -207,29 +568,31 @@ kbd {
 <p>Proxy详细流程如下：</p>
 
 <ul>
-<li>1 读取配置文件，获取Registry地址；</li>
-<li>2 把自身信息注册到Registry路径/pubsub/proxy下，把Registry返回的ReplicaID作为自身ID；</li>
-<li>3 从Registry路径/pubsub/broker/partition(x)下获取每个Broker Partition的各个replica；</li>
-<li>4 从Registry路径/pubsub/broker/partition_num获取当前有效的Broker Partition Number；</li>
-<li><p>5 启动一个线程关注Registry上的Broker路径/pubsub/broker，以实时获取以下信息：</p>
-
-<div><pre><code class="language-none">Broker Partition Number；</code></pre></div>
-
-<p>​   新的Broker Partition（此时发生了扩容）；
-​   Broker Partition内新的broker replica（Partition内发生了replica扩容）；
-​   Broker Parition内某replica挂掉的信息；</p></li>
-<li><p>6 定时向各个Broker Partition replica发送心跳，异步等待Broker返回的心跳响应包，以探测其活性，以保证不向超时的replica转发Room Message；</p></li>
-<li><p>7 启动一个线程定时读取Registry上的Broker路径/pubsub/broker下各个子节点的值，以定时轮询的策略观察Broker Partition Number变动，以及各Partition的变动情况，作为实时策略的补充；同时定时检查心跳包超时的Broker，从有效的BrokerList中删除；</p></li>
-<li><p>8 依据规则【BrokerPartitionID = RoomID % BrokerPartitionNum， BrokerReplicaID = RoomID % BrokerPartitionReplicaNum】向某个Partition的replica转发Room Message，收到Client的Heatbeat包时要及时给予响应。</p></li>
+<li>1 读取配置文件，获取 Registry 地址；</li>
+<li>2 把自身信息注册到 Registry 路径 <code>/pubsub/proxy</code> 下，把 Registry 返回的 ID 作为自身 ReplicaID；</li>
+<li>3 从 Registry 路径 <code>/pubsub/broker/partition(x)</code> 下获取每个 Broker Partition 的各个 replica；</li>
+<li>4 从 Registry 路径 <code>/pubsub/broker/partition_num</code> 获取当前有效的 Broker Partition Number；</li>
+<li>5 启动一个线程关注 Registry 上的 Broker 路径 <code>/pubsub/broker</code>，以实时获取以下信息：</li>
 </ul>
 
-<p><font color=blue><strong>之所以把Room Message和Heartbeat Message放在一个线程处理，是为了防止进程假死这种情况。</strong></font></p>
+<div><pre><code class="language-none">    Broker Partition Number；
+    ​新的Broker Partition（此时发生了扩容）；
+    Broker Partition内新的broker replica（Partition内发生了replica扩容）；
+    Broker Parition内某replica挂掉的信息；</code></pre></div>
 
-<p>当/pubsub/broker/partition_num的值发生改变的时候(譬如值改为4)，意味着Router Partition进行了扩展，Proxy要及时获取新Partition路径（如/pubsub/broker/Partition2和/pubsub/broker/Partition3）下的实例，并关注这些路径，获取新Partition下的实例。</p>
+<ul>
+<li>6 定时向各个 Broker replica 发送心跳，异步等待 Broker 返回的心跳响应包，以探测其活性，以保证不向超时的 replica 转发 Room Message；</li>
+<li>7 启动一个线程定时读取 Registry 上的 Broker 路径 /pubsub/broker 下各个子节点的值，以定时轮询的策略观察 Broker Partition Number 变动，以及各 Partition 的变动情况，作为实时策略的补充；同时定时检查心跳包超时的 Broker，从有效的 BrokerList 中删除；</li>
+<li>8 依据规则<code>BrokerPartitionID = RoomID % BrokerPartitionNum， BrokerReplicaID = RoomID % BrokerPartitionReplicaNum</code> 向某个 Partition 的 replica 转发 Room Message，收到 Client 的 Heatbeat 包时要及时给予响应。</li>
+</ul>
 
-<p>之所以Proxy在获取Registry下所有当前的Broker实例信息后再注册自身信息，是因为此时它才具有转发消息的资格。</p>
+<p><font color=blue><strong>之所以把 Room Message 和 Heartbeat Message 放在一个线程处理，是为了防止进程假死这种情况。</strong></font></p>
 
-<p>Proxy转发某个Room消息时候，只发送给处于Running状态的Broker。为Broker Partition内所有replica依据Registry给其分配的replicaID进行递增排序，组成一个Broker Partition Replica Array，规则中BrokerPartitionReplicaNum为Array的size，而BrokerReplicaID为replica在Array中的下标。</p>
+<p>当 <code>/pubsub/broker/partition_num</code> 的值发生改变的时候(譬如值改为4)，意味着 Router Partition 进行了扩展，Proxy 需及时获取新 Partition 路径（如 <code>/pubsub/broker/Partition2</code> 和 <code>/pubsub/broker/Partition3</code>）下的实例，并关注这些路径，获取新 Partition 下的实例。</p>
+
+<p>之所以 Proxy 在获取 Registry 下所有当前的 Broker 实例信息后再注册自身信息，是因为此时 Broker 子系统扩容完成，才具有转发消息的资格。</p>
+
+<p>Proxy 转发某个 Room 消息时候，只发送给处于 Running 状态的 Broker。为 Broker Partition 内所有 replica 依据Registry 给其分配的 replicaID 进行递增排序，组成一个 Broker Replica Array，规则中BrokerPartitionReplicaNum 为 Array 的 size，而 BrokerReplicaID 为 replica 在 Array 中的下标。</p>
 
 <h4 id="toc_5">2.2.1 Pipeline</h4>
 
@@ -246,8 +609,6 @@ kbd {
 </ul>
 
 <p>经过以上流水线改造后，Proxy 的整体吞吐率可达 200 000 Msg/s。</p>
-
-<p>关于 pipeline 自身的解释，本文不做详述，可以参考<a href="https://mmbiz.qpic.cn/mmbiz_jpg/5WXEuGYZIibCvMNgZ6zymiceCibpUOtGhtUfzVO88C3zxWQeP6Ziau77ib0vTmiczZ667PAXczYticxCWpbsBqNLB6T3Q/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1">此图</a>。</p>
 
 <h4 id="toc_6">2.2.2 大房间消息处理</h4>
 
@@ -268,27 +629,27 @@ kbd {
 <p>Broker详细流程如下：</p>
 
 <ul>
-<li>1 Broker加载配置，获取自身所在Partition的ID（假设为3）；</li>
-<li>2 向Registry路径/pubsub/broker/partition3注册，设置其状态为Init，注册中心返回的ID作为自身的ID(replicaID)；</li>
-<li>3 接收Router转发来的Gateway Message，放入GatewayMessageQueue；</li>
-<li>4 从Database加载数据，把自身所在的Broker Partition所应该负责的 RoomGatewayList 数据加载进来；</li>
-<li>5 异步处理GatewayMessageQueue内的Gateway Message，只处理满足规则【PartitionID == RoomID % PartitionNum】的消息，把数据存入本地路由信息缓存；</li>
-<li>6 修改Registry路径/pubsub/broker/partition3下自身节点的状态为Running；</li>
-<li>7 启动线程实时关注Registry路径/pubsub/broker/partition_num的值；</li>
-<li>8 启动线程定时查询Registry路径/pubsub/broker/partition_num的值；</li>
-<li>9 当Registry路径/pubsub/broker/partition_num的值发生改变的时候，依据规则【PartitionID == RoomID % PartitionNum】清洗本地路由信息缓存中每条数据；</li>
-<li>10 接收Proxy发来的Room Message，依据RoomID从路由信息缓存中查找Room有成员登陆的所有Gateway，把消息转发给这些Gateway；</li>
+<li>1 Broker 加载配置，获取自身所在 Partition 的 ID（假设为3）；</li>
+<li>2 向 Registry 路径 <code>/pubsub/broker/partition3</code> 注册，设置其状态为 Init ，注册中心返回的 ID 作为自身的 ID(replicaID)；</li>
+<li>3 接收 Router 转发来的 Gateway Message，放入 GatewayMessageQueue；</li>
+<li>4 从 Database 加载数据，把自身所在的 Broker Partition 所应该负责的 RoomGatewayList 数据加载进来；</li>
+<li>5 异步处理 GatewayMessageQueue 内的 Gateway Message，只处理满足规则【PartitionID == RoomID % PartitionNum】的消息，把数据存入本地路由信息缓存；</li>
+<li>6 修改 Registry 路径 <code>/pubsub/broker/partition3</code> 下自身节点的状态为Running；</li>
+<li>7 启动线程实时关注 Registry 路径 <code>/pubsub/broker/partition_num</code> 的值；</li>
+<li>8 启动线程定时查询 Registry 路径 <code>/pubsub/broker/partition_num</code> 的值；</li>
+<li>9 当 Registry 路径 <code>/pubsub/broker/partition_num</code> 的值发生改变的时候，依据规则【PartitionID == RoomID % PartitionNum】清洗本地路由信息缓存中每条数据；</li>
+<li>10 接收 Proxy 发来的 Room Message，依据 RoomID 从路由信息缓存中查找 Room 有成员登陆的所有 Gateway，把消息转发给这些 Gateway；</li>
 </ul>
 
-<p>注意Broker之所以先注册然后再加载Database中的数据，是为了在加载数据的时候同时接收Router转发来的Gateway Message，但是在数据加载完前这些受到的数据先被缓存起来，待所有 RoomGatewayList 数据加载完后就把这些数据重放一遍；</p>
+<p>注意 Broker 之所以先注册然后再加载 Database 中的数据，是为了在加载数据的时候同时接收 Router 转发来的 Gateway Message，但是在数据加载完前这些受到的数据先被缓存起来，待所有 RoomGatewayList 数据加载完后就把这些数据重放一遍；</p>
 
-<p>Broker之所以区分状态，是为了在加载完毕 RoomGatewayList 数据前不对Proxy提供转发消息的服务，同时也方便Broker Partition应对的消息量增大时进行水平扩展。</p>
+<p>Broker 之所以区分状态，是为了在加载完毕 RoomGatewayList 数据前不对 Proxy 提供转发消息的服务，同时也方便 Broker Partition 应对消息量增大时进行水平扩展。</p>
 
-<p>当Broker发生Partition扩展的时候，新的Partition个数必须是2的幂，只有新Partition内所有Broker Replica都加载实例完毕，再更改/pubsub/broker/partition_num的值。</p>
+<p>当 Broker 发生 Partition 扩展的时候，新的 Partition 个数必须是 2 的幂，只有新 Partition 内所有 Broker Replica 都加载实例完毕，再更改 <code>/pubsub/broker/partition_num</code> 的值。</p>
 
-<p>老的Broker也要watch路径/pubsub/broker/partition_num的值，当这个值增加的时候，它也需要清洗本地的路由信息缓存。</p>
+<p>老的 Broker 也要 watch 路径 <code>/pubsub/broker/partition_num</code> 的值，当这个值增加的时候，它也需要清洗本地的路由信息缓存。</p>
 
-<p>Broker的扩容过程犹如细胞分裂，形成中的两个细胞有着完全相同的数据，分裂完成后【Registry路径/pubsub/broker/partition_num的值翻倍】则需要清洗垃圾信息。这种方法称为翻倍法。</p>
+<p>Broker 的扩容过程犹如细胞分裂，形成中的两个细胞有着完全相同的数据，分裂完成后【Registry路径 <code>/pubsub/broker/partition_num</code> 的值翻倍】则需要清洗垃圾信息。这种方法称为翻倍法。</p>
 
 <h4 id="toc_8">2.4 Router</h4>
 
@@ -297,22 +658,24 @@ kbd {
 <p>Router详细流程如下：</p>
 
 <ul>
-<li>1 Router加载配置，Registry地址；</li>
-<li>2 把自身信息注册到Registry路径/pubsub/router下，把Registry返回的ReplicaID作为自身ID；</li>
-<li>3 从Registry路径/pubsub/broker/partition(x)下获取每个Broker Partition的各个replica；</li>
-<li>4 从Registry路径/pubsub/broker/partition_num获取当前有效的Broker Partition Number；</li>
-<li><p>5 启动一个线程关注Registry上的Broker路径/pubsub/broker，以实时获取以下信息：</p>
+<li>1 Router 加载配置文件中的 Registry 地址；</li>
+<li>2 把自身信息注册到 Registry 路径 <code>/pubsub/router</code> 下，把 Registry 返回的 ID 作为自身 ReplicaID；</li>
+<li>3 从 Registry 路径 <code>/pubsub/broker/partition(x)</code> 下获取每个 Broker Partition 的各个 replica；</li>
+<li>4 从 Registry 路径 <code>/pubsub/broker/partition_num</code> 获取当前有效的 Broker Partition Number；</li>
+<li>5 启动一个线程关注 Registry 上的 Broker 路径 <code>/pubsub/broker</code>，以实时获取以下信息：</li>
+</ul>
 
-<div><pre><code class="language-none">Broker Partition Number；</code></pre></div>
+<div><pre><code class="language-none">    Broker Partition Number；
+    ​新的Broker Partition（此时发生了扩容）；
+    Broker Partition内新的broker replica（Partition内发生了replica扩容）；
+    Broker Parition内某replica挂掉的信息；</code></pre></div>
 
-<p>​   新的Broker Partition（此时发生了扩容）；
-​   Broker Partition内新的broker replica（Partition内发生了replica扩容）；
-​   Broker Parition内某replica挂掉的信息；</p></li>
-<li><p>6 定时向各个Broker Partition replica发送心跳，异步等待Broker返回的心跳响应包，以探测其活性，以保证不向超时的replica转发Gateway Message；</p></li>
-<li><p>7 启动一个线程定时读取Registry上的Broker路径/pubsub/broker下各个子节点的值，以定时轮询的策略观察Broker Partition Number变动，以及各Partition的变动情况，作为实时策略的补充；同时定时检查心跳包超时的Broker，从有效的BrokerList中删除；</p></li>
-<li><p>8 从Database全量加载路由 RoomGatewayList 数据放入本地缓存；</p></li>
-<li><p>9 收取Gateway发来的心跳消息，及时返回ack包；</p></li>
-<li><p>10 收取Gateway转发来的Gateway Message，按照一定规则【BrokerPartitionID % BrokerPartitionNum = RoomID % BrokerPartitionNum】转发给<font color=blue><strong>某个Broker Partition下所有Broker Replica</strong></font>，保证Partition下所有replica拥有同样的路由 RoomGatewayList 数据，再把Message内数据存入本地缓存，当检测到数据不重复的时候把数据异步写入Database；</p></li>
+<ul>
+<li>6 定时向各个 Broker replica 发送心跳，异步等待 Broker 返回的心跳响应包，以探测其活性，以保证不向超时的 replica 转发 Gateway Message；</li>
+<li>7 启动一个线程定时读取 Registry 上的 Broker 路径 <code>/pubsub/broker</code> 下各个子节点的值，以定时轮询的策略观察 Broker Partition Number 变动，以及各 Partition 的变动情况，作为实时策略的补充；同时定时检查心跳包超时的 Broker，从有效的 BrokerList 中删除；</li>
+<li>8 从 Database 全量加载路由 RoomGatewayList 数据放入本地缓存；</li>
+<li>9 收取 Gateway 发来的客户端心跳消息，及时返回 ack 包；</li>
+<li>10 收取 Gateway 转发来的 Gateway Message，按照一定规则【BrokerPartitionID % BrokerPartitionNum = RoomID % BrokerPartitionNum】转发给<font color=blue>**某个 Broker Partition 下所有 Broker Replica **</font>，保证 Partition 下所有 replica 拥有同样的路由 RoomGatewayList 数据，再把 Message 内数据存入本地缓存，当检测到数据不重复的时候把数据异步写入 Database；</li>
 </ul>
 
 <h4 id="toc_9">2.5 Gateway</h4>
@@ -322,21 +685,21 @@ kbd {
 <p>Gateway详细流程如下：</p>
 
 <ul>
-<li>1 读取配置文件，加载Registry地址；</li>
-<li>2 从Registry路径/pubsub/router/下获取所有router replica，依据各Replica的ID递增排序组成replica数组RouterArray；</li>
-<li>3 启动一个线程实时关注Registry路径/pubsub/router，以获取Router的动态变化，及时更新RouterArray；</li>
-<li>4 启动一个线程定时轮询获取Registry路径/pubsub/router下各个Router实例，作为关注策略的补充，以期本地RouterArray及时更新；定时给各个Router发送心跳，异步获取心跳回包；定时清除RouterArray中心跳超时的Router成员；</li>
-<li>5 当有Room内某成员客户端连接上来或者Room内所有成员都不连接当前Gateway节点时，依据规则【RouterArrayIndex = RoomID % RouterNum】向某个Router发送Gateway Message；</li>
-<li>6 收到Broker转发来的Room Message时，根据MessageID进行去重，如果不重复则把消息发送到连接到当前Gateway的Room内所有客户端，同时把MessageID缓存起来以用于去重判断。</li>
+<li>1 读取配置文件，加载 Registry 地址；</li>
+<li>2 获取 Registry 路径 <code>/pubsub/router/</code> 下所有 router replica，依据各 Replica 的 ID 递增排序组成 replica 数组 RouterArray；</li>
+<li>3 启动一个线程实时关注 Registry 路径 <code>/pubsub/router</code>，以获取 Router 的动态变化，及时更新 RouterArray；</li>
+<li>4 启动一个线程定时轮询获取 Registry 路径 <code>/pubsub/router</code> 下各个Router实例，作为关注策略的补充，以期本地 RouterArray 及时更新；定时给各个 Router 发送心跳，异步获取心跳回包；定时清除 RouterArray 中心跳超时的 Router 成员；</li>
+<li>5 当有 Room 内某成员客户端连接上来或者 Room 内所有成员都不连接当前 Gateway 节点时，依据规则【RouterArrayIndex = RoomID % RouterNum】向某个 Router 发送 Gateway Message；</li>
+<li>6 收到 Broker 转发来的 Room Message 时，根据 MessageID 进行去重，如果不重复则把消息发送到连接到当前 Gateway 的 Room 内所有客户端，同时把 MessageID 缓存起来以用于去重判断。</li>
 </ul>
 
-<p>Gateway本地有一个基于共享内存的LRU Cache，存储最近一段时间发送的消息的MessageID。</p>
+<p>Gateway 本地有一个基于共享内存的 LRU Cache，存储最近一段时间发送的消息的 MessageID。</p>
 
 <h3 id="toc_10">3 系统稳定性</h3>
 
 <hr>
 
-<p>系统具有了可扩展性仅仅是系统可用的初步，整个系统要保证最低粒度的SLA（0.99），就必须在两个维度对系统的可靠性就行感知：消息延迟和系统内部组件的高可用。</p>
+<p>系统具有了可扩展性仅仅是系统可用的初步，整个系统要保证最低粒度的 SLA（0.99），就必须在两个维度对系统的可靠性就行感知：消息延迟和系统内部组件的高可用。</p>
 
 <h4 id="toc_11">3.1 消息延迟</h4>
 
@@ -344,9 +707,9 @@ kbd {
 
 <p>准确的消息延迟的统计，通用的做法可以基于日志系统对系统所有消息或者以一定概率抽样后进行统计，但限于人力目前没有这样做。</p>
 
-<p>目前使用了一个方法：通过一种构造一组伪用户ID，定时地把消息发送给proxy，每条消息经过一层就把在这层的进入时间和发出时间以及组件自身的一些信息填入消息，这组伪用户的消息最终会被发送到一个伪Gateway端，伪Gateway对这些消息的信息进行归并统计后，即可计算出当前系统的平均消息延迟时间。</p>
+<p>目前使用了一个方法：通过一种构造一组伪用户 ID，定时地把消息发送给 proxy，每条消息经过一层就把在这层的进入时间和发出时间以及组件自身的一些信息填入消息，这组伪用户的消息最终会被发送到一个伪 Gateway 端，伪 Gateway 对这些消息的信息进行归并统计后，即可计算出当前系统的平均消息延迟时间。</p>
 
-<p>通过所有消息的平均延迟可以评估系统的整体性能。同时，因为系统消息路由的哈希方式已知，当固定时间内伪Gateway没有收到消息时，就把消息当做发送失败，当某条链路失败一定次数后就可以产生告警了。</p>
+<p>通过所有消息的平均延迟可以评估系统的整体性能。同时，因为系统消息路由的哈希方式已知，当固定时间内伪 Gateway 没有收到消息时，就把消息当做发送失败，当某条链路失败一定次数后就可以产生告警了。</p>
 
 <h4 id="toc_12">3.2 高可用</h4>
 
@@ -356,48 +719,48 @@ kbd {
 
 <p>为了保证各个组件的高可用，系统引入了另一种评估方法：每个层次都给后端组件发送心跳包，通过心跳包的延迟和成功率判断其下一级组件的当前的可用状态。</p>
 
-<p>譬如proxy定时给每个Partition内每个broker发送心跳，可以依据心跳的成功率来快速判断broker是否处于“假死”状态（最近业务就遇到过broker进程还活着，但是对任何收到的消息都不处理的情况）。</p>
+<p>譬如 proxy 定时给每个 Partition 内每个 broker 发送心跳，可以依据心跳的成功率来快速判断 broker 是否处于“假死”状态（最近业务就遇到过 broker 进程还活着，但是对任何收到的消息都不处理的情况）。</p>
 
-<p>同时依靠心跳包的延迟还可以判断broker的处理能力，基于此延迟值可在同一Partition内多broker端进行负载均衡。</p>
+<p>同时依靠心跳包的延迟还可以判断 broker 的处理能力，基于此延迟值可在同一 Partition 内多 broker 端进行负载均衡。</p>
 
 <h3 id="toc_13">4 消息可靠性</h3>
 
 <hr>
 
-<p>公司内部内部原有一个走tcp通道的群聊消息系统，但是经过元旦一次大事故（几乎全线崩溃）后，相关业务的一些重要消息改走这套基于UDP的群聊消息系统了。这些消息如服务端下达给客户端的游戏动作指令，是不允许丢失的，但其特点是相对于聊天消息来说量非常小（单人1秒最多一个），所以需要在目前UDP链路传递消息的基础之上再构建一个可靠消息链路。</p>
+<p>公司内部内部原有一个走 tcp 通道的群聊消息系统，但是经过元旦一次大事故（几乎全线崩溃）后，相关业务的一些重要消息改走这套基于 UDP 的群聊消息系统了。这些消息如服务端下达给客户端的游戏动作指令，是不允许丢失的，但其特点是相对于聊天消息来说量非常小（单人1秒最多一个），所以需要在目前UDP链路传递消息的基础之上再构建一个可靠消息链路。</p>
 
-<p>国内某IM大厂的消息系统也是以UDP链路为基础的，他们的做法是消息重试加ack构建了可靠消息稳定传输链路。但是这种做法会降低系统的吞吐率，所以需要独辟蹊径。</p>
+<p>国内某 IM 大厂的消息系统也是以 UDP 链路为基础的，他们的做法是消息重试加 ack 构建了可靠消息稳定传输链路。但是这种做法会降低系统的吞吐率，所以需要独辟蹊径。</p>
 
-<p>UDP通信的本质就是伪装的IP通信，TCP自身的稳定性无非是重传、去重和ack，所以不考虑消息顺序性的情况下可以通过重传与去重来保证消息的可靠性。</p>
+<p>UDP 通信的本质就是伪装的 IP 通信，TCP 自身的稳定性无非是重传、去重和 ack，所以不考虑消息顺序性的情况下可以通过重传与去重来保证消息的可靠性。</p>
 
 <p>基于目前系统的可靠消息传输流程如下：</p>
 
 <ul>
-<li>1 Client给每个命令消息依据snowflake算法配置一个ID，复制三份，立即发送给不同的Proxy；</li>
-<li>2 Proxy收到命令消息以后随机发送给一个Broker；</li>
-<li>3 Broker收到后传输给Gateway；</li>
-<li>4 Gateway接收到命令消息后根据消息ID进行重复判断，如果重复则丢弃，否则就发送给APP，并缓存之。</li>
+<li>1 Client 给每个命令消息依据 snowflake 算法配置一个 ID，复制三份，立即发送给不同的 Proxy；</li>
+<li>2 Proxy 收到命令消息以后随机发送给一个 Broker；</li>
+<li>3 Broker 收到后传输给 Gateway；</li>
+<li>4 Gateway 接收到命令消息后根据消息 ID 进行重复判断，如果重复则丢弃，否则就发送给 APP，并缓存之。</li>
 </ul>
 
-<p>正常的消息在群聊消息系统中传输时，Proxy会根据消息的Room ID传递给固定的Broker，以保证消息的有序性。</p>
+<p>正常的消息在群聊消息系统中传输时，Proxy 会根据消息的 Room ID 传递给固定的 Broker，以保证消息的有序性。</p>
 
 <h3 id="toc_14">5 Router</h3>
 
 <hr>
 
-<p>当线上需要部署多套群聊消息系统的时候，Gateway需要把同样的Room Message复制多份转发给多套群聊消息系统，会增大Gateway压力，可以把Router单独独立部署，然后把Room Message向所有的群聊消息系统转发。</p>
+<p>当线上需要部署多套群聊消息系统的时候，Gateway 需要把同样的 Room Message 复制多份转发给多套群聊消息系统，会增大 Gateway 压力，可以把 Router 单独独立部署，然后把 Room Message 向所有的群聊消息系统转发。</p>
 
-<p>Router系统原有流程是：Gateway按照Room ID把消息转发给某个Router，然后Router把消息转发给下游Broker实例。新部署一套群聊消息系统的时候，新系统Broker的schema需要通过一套约定机制通知Router，使得Router自身逻辑过于复杂。</p>
+<p>Router 系统原有流程是：Gateway 按照 Room ID 把消息转发给某个 Router，然后 Router 把消息转发给下游 Broker 实例。新部署一套群聊消息系统的时候，新系统 Broker 的schema 需要通过一套约定机制通知 Router，使得 Router 自身逻辑过于复杂。</p>
 
-<p><img src="../pic/pubsub_router.png" alt=""></p>
+<p><img src="../pic/pubsub/pubsub_router.png" alt=""></p>
 
-<p>重构后的Router架构参照上图，也采用分Partition分Replica设计，Partition内部各Replica之间采用non-leader机制；各Router Replica不会主动把Gateway Message内容push给各Broker，而是各Broker主动通过心跳包形式向Router Partition内某个Replica注册，而后此Replica才会把消息转发到这个Broker上。</p>
+<p>重构后的 Router 架构参照上图，也采用分 Partition 分 Replica 设计，Partition 内部各 Replica 之间采用 non-leader 机制；各 Router Replica 不会主动把Gateway Message 内容 push 给各 Broker，而是各 Broker 主动通过心跳包形式向 Router Partition 内某个 Replica 注册，而后此 Replica 才会把消息转发到这个 Broker 上。</p>
 
-<p>类似于Broker，Router Partition也以2倍扩容方式进行Partition水平扩展，并通过一定机制保证扩容或者Partition内部各个实例停止运行或者新启动时，尽力保证数据的一致性。</p>
+<p>类似于 Broker，Router Partition 也以 2 倍扩容方式进行 Partition 水平扩展，并通过一定机制保证扩容或者 Partition 内部各个实例停止运行或者新启动时，尽力保证数据的一致性。</p>
 
-<p>Router Replica收到Gateway Message后，replica先把Gateway Message转发给Partition内各个peer replica，然后再转发给各个订阅者。Router转发消息的同时异步把消息数据写入Database。</p>
+<p>Router Replica 收到 Gateway Message 后，replica 先把 Gateway Message 转发给 Partition 内各个 peer replica，然后再转发给各个订阅者。Router 转发消息的同时异步把消息数据写入 Database。</p>
 
-<p>独立Router架构下，下面分别详述Gateway、Router和Broker三个相关模块的详细流程。</p>
+<p>独立 Router 架构下，下面分别详述 Gateway、Router 和 Broker 三个相关模块的详细流程。</p>
 
 <h4 id="toc_15">5.1 Gateway</h4>
 
@@ -406,52 +769,54 @@ kbd {
 <p>Gateway详细流程如下：</p>
 
 <ul>
-<li>1 从Registry路径/pubsub/router/partition(x)下获取每个Partition的各个replica；</li>
-<li>2 从Registry路径/pubsub/router/partition_num获取当前有效的Router Partition Number；</li>
-<li><p>3 启动一个线程关注Registry上的Router路径/pubsub/router，以实时获取以下信息：</p>
-
-<div><pre><code class="language-none">Router Partition Number；</code></pre></div>
-
-<p>​   新的Router Partition（此时发生了扩容）；
-​   Partition内新的replica（Partition内发生了replica扩容）；
-​   Parition内某replica挂掉的信息；</p></li>
-<li><p>4 定时向各个Partition replica发送心跳，异步等待Router返回的心跳响应包，以探测其活性，以保证不向超时的replica转发Gateway Message；</p></li>
-<li><p>4 启动一个线程定时读取Registry上的Router路径/pubsub/router下各个子节点的值，以定时轮询的策略观察Router Partition Number变动，以及各Partition的变动情况，作为实时策略的补充；同时定时检查心跳包超时的Router，从有效的BrokerList中删除；</p></li>
-<li><p>6 依据规则向某个Partition的replica转发Gateway Message；</p></li>
+<li>1 从 Registry 路径 <code>/pubsub/router/partition(x)</code> 下获取每个 Partition 的各个 replica；</li>
+<li>2 从 Registry 路径 <code>/pubsub/router/partition_num</code> 获取当前有效的 Router Partition Number；</li>
+<li>3 启动一个线程关注 Registry 上的 Router 路径 <code>/pubsub/router</code>，以实时获取以下信息：</li>
 </ul>
 
-<p>第六步的规则决定了Gateway Message的目的Partition和replica，规则内容有：</p>
+<div><pre><code class="language-none">    Router Partition Number；
+    新的Router Partition（此时发生了扩容）；
+    Partition内新的replica（Partition内发生了replica扩容）；
+    Parition内某replica挂掉的信息；</code></pre></div>
+
+<ul>
+<li>4 定时向各个 Partition replica 发送心跳，异步等待 Router 返回的心跳响应包，以探测其活性，以保证不向超时的 replica 转发 Gateway Message；</li>
+<li>4 启动一个线程定时读取 Registry 的 Router 路径 /pubsub/router 下各个子节点的值，以定时轮询的策略观察 Router Partition Number 变动，以及各 Partition 的变动情况，作为实时策略的补充；同时定时检查心跳包超时的 Router，从有效的 BrokerList 中删除；</li>
+<li>6 依据规则向某个 Partition 的 replica 转发 Gateway Message；</li>
+</ul>
+
+<p>第六步的规则决定了 Gateway Message 的目的 Partition 和 replica，规则内容有：</p>
 
 <blockquote>
-<p>如果某Router Partition ID满足condition(RoomID % RouterPartitionNumber == RouterPartitionID % RouterPartitionNumber)，则把消息转发到此Partition；</p>
+<p>如果某 Router Partition ID 满足 condition <code>RoomID % RouterPartitionNumber == RouterPartitionID % RouterPartitionNumber</code>，则把消息转发到此 Partition；</p>
 
 <blockquote>
 <blockquote>
-<p>这里之所以不采用直接hash方式(RouterPartitionID = RoomID % RouterPartitionNumber)获取Router Partition，是考虑到当Router进行2倍扩容的时候当所有新的Partition的所有Replica都启动完毕且数据一致时才会修改Registry路径/pubsub/router/partition<em>num的值，按照规则的计算公式才能保证新Partition的各个Replica在启动过程中就可以得到Gateway Message，也即此时每个Gateway Message会被发送到两个Router Partition。
-当Router扩容完毕，修改Registry路径/pubsub/router/partition</em>num的值后，此时新集群进入稳定期，每个Gateway Message只会被发送固定的一个Partition，condition(RoomID % RouterPartitionNumber == RouterPartitionID % RouterPartitionNumber)等效于condition(RouterPartitionID = RoomID % RouterPartitionNumber)。</p>
+<p>这里之所以不采用直接 hash 方式 <code>RouterPartitionID = RoomID % RouterPartitionNumber</code> 获取 Router Partition，是考虑到当 Router 进行 2 倍扩容的时候当所有新的 Partition 的所有 Replica 都启动完毕且数据一致时才会修改 Registry 路径 <code>/pubsub/router/partition_num</code> 的值，按照规则的计算公式才能保证新 Partition 的各个 Replica 在启动过程中就可以得到 Gateway Message，也即此时每个 Gateway Message 会被发送到两个 Router Partition。<br>
+当 Router 扩容完毕，修改 Registry 路径 <code>/pubsub/router/partition_num</code> 的值后，此时新集群进入稳定期，每个 Gateway Message 只会被发送固定的一个Partition，condition <code>RoomID % RouterPartitionNumber == RouterPartitionID % RouterPartitionNumber</code> 等效于 <code>RouterPartitionID = RoomID % RouterPartitionNumber</code>。</p>
 </blockquote>
 </blockquote>
 
-<p>如果Router Partition内某replia满足condition(replicaPartitionID = RoomID % RouterPartitionReplicaNumber)，则把消息转发到此replica。</p>
+<p>如果 Router Partition 内某 replia 满足 condition <code>replicaPartitionID = RoomID % ReplicaNumber</code>，则把消息转发到此replica。</p>
 
 <blockquote>
 <blockquote>
-<p>replica向Registry注册的时候得到的ID称之为replicaID，Router Parition内所有replica按照replicaID递增排序组成replica数组RouterPartitionReplicaArray，replicaPartitionID即为replica在数组中的下标。</p>
+<p>replica 向 Registry 注册的时候得到的 ID 称之为 replicaID，Router Parition 内所有 replica 按照 replicaID 递增排序组成 replica 数组 RouterPartitionReplicaArray，replicaPartitionID 即为 replica 在数组中的下标。</p>
 </blockquote>
 </blockquote>
 </blockquote>
 
-<h5 id="toc_16">5.1.1 Gateway Message数据一致性</h5>
+<h5 id="toc_16">5.1.1 Gateway Message 数据一致性</h5>
 
 <hr>
 
-<p>Gateway向Router发送的Router Message内容有两种：某user在当前Gateway上进入某Room 和 某user在当前Gateway上退出某Room，数据项分别是UIN（用户ID）、Room ID、Gateway Addr和User Action(Login or Logout。</p>
+<p>Gateway 向 Router 发送的 Router Message 内容有两种：某 user 在当前 Gateway 上进入某 Room 和某 user 在当前 Gateway 上退出某 Room，数据项分别是 UIN（用户ID）、Room ID、Gateway Addr和User Action(Login or Logout)。</p>
 
-<p>由于所有消息都是走UDP链路进行转发，则这些消息的顺序就有可能乱序。Gateway可以统一给其发出的所有消息分配一个全局递增的ID【下文称为GatewayMsgID，Gateway Message ID】以保证消息的唯一性和全局有序性。</p>
+<p>由于所有消息都是走 UDP 链路进行转发，则这些消息的顺序就有可能乱序。Gateway 可以统一给其发出的所有消息分配一个全局递增的 ID【下文称为 GatewayMsgID，Gateway Message ID】以保证消息的唯一性和全局有序性。</p>
 
-<p>Gateway向Registry注册临时有序节点时，Registry会给Gateway分配一个ID，Gateway可以用这个ID作为自身的Instance ID【假设这个ID上限是65535】。</p>
+<p>Gateway 向 Registry 注册临时有序节点时，Registry 会给 Gateway 分配一个 ID，Gateway 可以用这个 ID 作为自身的 Instance ID【假设这个ID上限是 65535】。</p>
 
-<p>GatewayMsgID字长是64bit，其格式如下：</p>
+<p>GatewayMsgID 字长是 64 bit，其格式如下：</p>
 
 <div><pre><code class="language-none">// 63 -------------------------- 48 47 -------------- 38 37 ------------ 0
 // |  16bit Gateway Instance ID    |   10bit Reserve    |    38bit自增码  |</code></pre></div>
@@ -460,74 +825,78 @@ kbd {
 
 <hr>
 
-<p>Router系统部署之前，先设置Registry路径/pubsub/router/partition_num的值为1。</p>
+<p>Router 系统部署之前，先设置 Registry 路径 <code>/pubsub/router/partition_num</code> 的值为1。</p>
 
-<p>Router详细流程如下：</p>
+<p>Router 详细流程如下：</p>
 
 <ul>
-<li>1 Router加载配置，获取自身所在Partition的ID（假设为3）；</li>
-<li>2 向Registry路径/pubsub/router/partition3注册，设置其状态为Init，注册中心返回的ID作为自身的ID(replicaID)；</li>
-<li>3 注册完毕会收到Gateway发来的Gateway Message以及Broker发来的心跳消息（HeartBeat Message），先缓存到消息队列MessageQueue；</li>
-<li>4 从Registry路径/pubsub/router/partition3下获取自身所在的Partition内的各个replica；</li>
-<li>5 从Registry路径/pubsub/router/partition_num获取当前有效的Router Partition Number；</li>
-<li><p>6 启动一个线程关注Registry路径/pubsub/router，以实时获取以下信息：</p>
-
-<div><pre><code class="language-none">Router Partition Number；</code></pre></div>
-
-<p>​   Partition内新的replica（Partition内发生了replica扩容）；
-​   Parition内某replica挂掉的信息；</p></li>
-<li><p>7 从Database加载数据；</p></li>
-<li><p>8 启动一个线程异步处理MessageQueue内的Gateway Message，把Gateway Message转发给同Partition内其他peer replica，然后依据规则【RoomID % BrokerPartitionNumber == BrokerReplicaPartitionID % BrokerPartitionNumber】转发给BrokerList内每个Broker；处理Broker发来的心跳包，把Broker的信息存入本地BrokerList，然后给Broker发送回包；</p></li>
-<li><p>9 修改Registry路径/pubsub/router/partition3下节点的状态为Running；</p></li>
-<li><p>10 启动一个线程定时读取Registry路径/pubsub/router下各个子路径的值，以定时轮询的策略观察Router各Partition的变动情况，作为实时策略的补充；检查超时的Broker，把其从BrokerList中剔除；</p></li>
-<li><p>11 当RouterPartitionNum倍增时，Router依据规则【RoomID % BrokerPartitionNumber == BrokerReplicaPartitionID % BrokerPartitionNumber】清洗自身路由信息缓存中数据；</p></li>
-<li><p>12 Router本地存储每个Gateway的最大GatewayMsgID，收到小于GatewayMsgID的Gateway Message可以丢弃不处理，否则就更新GatewayMsgID并根据上面逻辑进行处理。</p></li>
+<li>1 Router 加载配置，获取自身所在 Partition 的 ID（假设为3）；</li>
+<li>2 向 Registry 路径 <code>/pubsub/router/partition3</code> 注册，设置其状态为 Init，注册中心返回的 ID 作为自身的 ID(replicaID)；</li>
+<li>3 注册完毕会收到 Gateway 发来的 Gateway Message 以及 Broker 发来的心跳消息（HeartBeat Message），先缓存到消息队列 MessageQueue；</li>
+<li>4 从 Registry 路径 <code>/pubsub/router/partition3</code> 下获取自身所在的 Partition 内的各个 replica；</li>
+<li>5 从 Registry 路径 <code>/pubsub/router/partition_num</code> 获取当前有效的 Router Partition Number；</li>
+<li>6 启动一个线程关注 Registry 路径 <code>/pubsub/router</code>，以实时获取以下信息：</li>
 </ul>
 
-<p>之所以把Gateway Message和Heartbeat Message放在一个线程处理，是为了防止进程假死这种情况。</p>
+<div><pre><code class="language-none">    Router Partition Number；
+    Partition内新的replica（Partition内发生了replica扩容）；
+    Parition内某replica挂掉的信息；</code></pre></div>
 
-<p>Broker也采用了分Partition分Replica机制，所以向Broker转发Gateway Message时候路由规则，与Gateway向Router转发消息的路由规则相同。</p>
+<ul>
+<li>7 从 Database 加载数据；</li>
+<li>8 启动一个线程异步处理 MessageQueue 内的 Gateway Message，把 Gateway Message 转发给同 Partition 内其他 peer replica，然后依据规则【RoomID % BrokerPartitionNumber == BrokerReplicaPartitionID % BrokerPartitionNumber】转发给 BrokerList 内每个 Broker；处理 Broker 发来的心跳包，把 Broker 的信息存入本地 BrokerList，然后给 Broker 发送回包；</li>
+<li>9 修改 Registry 路径 <code>/pubsub/router/partition3</code> 下节点的状态为 Running；</li>
+<li>10 启动一个线程定时读取 Registry 路径 <code>/pubsub/router</code> 下各个子路径的值，以定时轮询的策略观察 Router 各 Partition 的变动情况，作为实时策略的补充；检查超时的 Broker，把其从 BrokerList 中剔除；</li>
+<li>11 当 RouterPartitionNum 倍增时，Router 依据规则【RoomID % BrokerPartitionNumber == BrokerReplicaPartitionID % BrokerPartitionNumber】清洗自身路由信息缓存中数据；</li>
+<li>12 Router 本地存储每个 Gateway 的最大 GatewayMsgID，收到小于 GatewayMsgID的Gateway Message  可以丢弃不处理，否则就更新 GatewayMsgID 并根据上面逻辑进行处理。</li>
+</ul>
 
-<p>另外启动一个工具，当水平扩展后新启动的Partition内所有Replica的状态都是Running的时候，修改Registry路径/pubsub/router/partition_num的值为所有Partition的数目。</p>
+<p>之所以把 Gateway Message 和 Heartbeat Message 放在一个线程处理，是为了防止进程假死这种情况。</p>
+
+<p>Broker 也采用了分 Partition 分 Replica 机制，所以向 Broker 转发 Gateway Message 时候路由规则，与 Gateway 向 Router 转发消息的路由规则相同。</p>
+
+<p>另外启动一个工具，当水平扩展后新启动的 Partition 内所有 Replica 的状态都是 Running 的时候，修改 Registry 路径 <code>/pubsub/router/partition_num</code> 的值为所有 Partition 的数目。</p>
 
 <h4 id="toc_18">5.3 Broker</h4>
 
 <hr>
 
-<p>Broker详细流程如下：</p>
+<p>Broker 详细流程如下：</p>
 
 <ul>
-<li>1 Broker加载配置，获取自身所在Partition的ID（假设为3）；</li>
-<li>2 向Registry路径/pubsub/broker/partition3注册，设置其状态为Init，注册中心返回的ID作为自身的ID(replicaID)；</li>
-<li>3 从Registry路径/pubsub/router/partition_num获取当前有效的Router Partition Number；</li>
-<li>4 从Registry路径/pubsub/router/partition(x)下获取每个Router Partition的各个replica；</li>
-<li><p>5 启动一个线程关注Registry路径/pubsub/router，以实时获取以下信息：</p>
-
-<div><pre><code class="language-none">Router Partition Number；</code></pre></div>
-
-<p>​   新的Router Partition（此时发生了扩容）；
-​   Partition内新的replica（Partition内发生了replica扩容）；
-​   Parition内某replica挂掉的信息；</p></li>
-<li><p>6 依据规则【RouterPartitionID % BrokerPartitionNum == BrokerPartitionID % BrokerPartitionNum，RouterReplicaID = BrokerReplicaID % BrokerPartitionNum】选定目标Router Partition下某个Router replica，向其发送心跳消息，包含BrokerPartitionNum、BrokerPartitionID、BrokerHostAddr和精确到秒级的Timestamp，并异步等待所有Router replica的回复，所有Router转发来的Gateway Message放入GatewayMessageQueue；</p></li>
-<li><p>7 依据规则【BrokerPartitionID == RoomID % BrokerParitionNum】从Database加载数据；</p></li>
-<li><p>8 依据规则【BrokerPartitionID % BrokerParitionNum == RoomID % BrokerParitionNum】异步处理GatewayMessageQueue内的Gateway Message，只留下合乎规则的消息的数据；</p></li>
-<li><p>9 修改Registry路径/pubsub/broker/partition3下自身节点的状态为Running；</p></li>
-<li><p>10 启动一个线程定时读取Registry路径/pubsub/router下各个子路径的值，以定时轮询的策略观察Router各Partition的变动情况，作为实时策略的补充；定时检查超时的Router，某Router超时后更换其所在的Partition内其他Router替换之，定时发送心跳包；</p></li>
-<li><p>11 当Registry路径/pubsub/broker/partition_num的值BrokerPartitionNum发生改变的时候，依据规则【PartitionID == RoomID % PartitionNum】清洗本地路由信息缓存中每条数据；</p></li>
-<li><p>12 接收Proxy发来的Room Message，依据RoomID从路由信息缓存中查找Room有成员登陆的所有Gateway，把消息转发给这些Gateway；</p></li>
-<li><p>13 Broker本地存储每个Gateway的最大GatewayMsgID，收到小于GatewayMsgID的Gateway Message可以丢弃不处理，否则更新GatewayMsgID并根据上面逻辑进行处理。</p></li>
+<li>1 Broker 加载配置，获取自身所在 Partition 的 ID（假设为3）；</li>
+<li>2 向 Registry 路径 <code>/pubsub/broker/partition3</code> 注册，设置其状态为 Init，注册中心返回的 ID 作为自身的 ID(replicaID)；</li>
+<li>3 从 Registry 路径 <code>/pubsub/router/partition_num</code> 获取当前有效的 Router Partition Number；</li>
+<li>4 从 Registry 路径 <code>/pubsub/router/partition(x)</code> 下获取每个 Router Partition 的各个replica；</li>
+<li>5 启动一个线程关注 Registry 路径 <code>/pubsub/router</code>，以实时获取以下信息：</li>
 </ul>
 
-<p>BrokerPartitionNumber可以小于或者等于或者大于RouterPartitionNumber，两个数应该均是2的幂，两个集群可以分别进行扩展，互不影响。譬如BrokerPartitionNumber=4而RouterPartitionNumber=2，则Broker Partition 3只需要向Router Partition 1的某个follower发送心跳消息即可；若BrokerPartitionNumber=4而RouterPartitionNumber=8，则Broker Partition 3需要向Router Partition 3的某个follower发送心跳消息的同时，还需要向Router Partition 7的某个follower发送心跳，以获取全量的Gateway Message。</p>
+<div><pre><code class="language-none">    Router Partition Number；
+    新的Router Partition（此时发生了扩容）；
+    Partition内新的replica（Partition内发生了replica扩容）；
+    Parition内某replica挂掉的信息；</code></pre></div>
 
-<p>Broker需要关注/pubsub/router/partition<em>num和/pubsub/broker/partition</em>num的值的变化，当router或者broker进行parition水平扩展的时候，Broker需要及时重新构建与Router之间的对应关系，及时变动发送心跳的Router Replica对象【RouterPartitionID = BrokerReplicaID % RouterPartitionNum，RouterPartitionID为Router Replica在PartitionRouterReplicaArray数组的下标】。</p>
+<ul>
+<li>6 依据规则【RouterPartitionID % BrokerPartitionNum == BrokerPartitionID % BrokerPartitionNum，RouterReplicaID = BrokerReplicaID % BrokerPartitionNum】选定目标 Router Partition 下某个 Router replica，向其发送心跳消息，包含 BrokerPartitionNum、BrokerPartitionID、BrokerHostAddr 和精确到秒级的 Timestamp ，并异步等待所有 Router replica 的回复，所有 Router 转发来的 Gateway Message 放入 GatewayMessageQueue；</li>
+<li>7 依据规则【BrokerPartitionID == RoomID % BrokerParitionNum】从 Database 加载数据；</li>
+<li>8 依据规则【BrokerPartitionID % BrokerParitionNum == RoomID % BrokerParitionNum】异步处理 GatewayMessageQueue 内的 Gateway Message，只留下合乎规则的消息的数据；</li>
+<li>9 修改 Registry 路径 <code>/pubsub/broker/partition3</code> 下自身节点的状态为 Running；</li>
+<li>10 启动一个线程定时读取 Registry 路径 <code>/pubsub/router</code> 下各个子路径的值，以定时轮询的策略观察 Router 各 Partition 的变动情况，作为实时策略的补充；定时检查超时的 Router，某 Router 超时后更换其所在的 Partition 内其他 Router 替换之，定时发送心跳包；</li>
+<li>11 当 Registry 路径 <code>/pubsub/broker/partition_num</code> 的值 BrokerPartitionNum 发生改变的时候，依据规则【PartitionID == RoomID % PartitionNum】清洗本地路由信息缓存中每条数据；</li>
+<li>12 接收 Proxy 发来的 Room Message，依据 RoomID 从路由信息缓存中查找 Room 有成员登陆的所有 Gateway，把消息转发给这些 Gateway；</li>
+<li>13 Broker 本地存储每个 Gateway 的最大 GatewayMsgID，收到小于 GatewayMsgID 的 Gateway Message 可以丢弃不处理，否则更新 GatewayMsgID 并根据上面逻辑进行处理。</li>
+</ul>
 
-<p>当Router Partition内replica死掉或者发送心跳包的replica对象死掉（无论是注册中心通知还是心跳包超时），broker要及时变动发送心跳的Router replica对象。</p>
+<p>BrokerPartitionNumber 可以小于或者等于或者大于 RouterPartitionNumber，两个数应该均是2的幂，两个集群可以分别进行扩展，互不影响。譬如BrokerPartitionNumber=4 而 RouterPartitionNumber=2，则 Broker Partition 3 只需要向 Router Partition 1 的某个 follower 发送心跳消息即可；若 BrokerPartitionNumber=4 而 RouterPartitionNumber=8，则 Broker Partition 3 需要向 Router Partition 3 的某个 follower 发送心跳消息的同时，还需要向 Router Partition 7 的某个 follower 发送心跳，以获取全量的 Gateway Message。</p>
 
-<p>另外，Gateway使用UDP通信方式向Router发送Gateway Message，如若这个Message丢失则此Gateway上该Room内所有成员一段时间内（当有新的成员在当前Gateway上加入Room
-时会产生新的Gateway Message）都无法再接收消息，为了保证消息的可靠性，可以使用这样一个约束解决问题：<font color=blue><strong>在此Gateway上登录的某Room内的人数少于3时，Gateway会把Gateway Message复制两份非连续（如以10ms为时间间隔）重复发送给某个Partition leader。</strong></font>因Gateway Message消息处理的幂等性，重复Gateway Message并不会导致Room Message发送错误，只在极少概率的情况下会导致Gateway收到消息的时候Room内已经没有成员在此Gateway登录，此时Gateway会把消息丢弃不作处理。</p>
+<p>Broker 需要关注 <code>/pubsub/router/partition_num</code> 和 <code>/pubsub/broker/partition_num</code> 的值的变化，当 router 或者 broker 进行 parition 水平扩展的时候，Broker 需要及时重新构建与 Router 之间的对应关系，及时变动发送心跳的 Router Replica 对象【RouterPartitionID = BrokerReplicaID % RouterPartitionNum，RouterPartitionID 为 Router Replica 在 PartitionRouterReplicaArray 数组的下标】。</p>
 
-<p>传递实时消息群聊消息系统的Broker向特定Gateway转发Room Message的时候，会带上Room内在此Gateway上登录的用户列表，Gateway根据这个用户列表下发消息时如果检测到此用户已经下线，在放弃向此用户转发消息的同时，还应该把此用户已经下线的消息发送给Router，当Router把这个消息转发给Broker后，Broker把此用户从用户列表中剔除。<font color=red><strong>通过这种负反馈机制保证用户状态更新的及时性</strong></font>。</p>
+<p>当 Router Partition 内 replica 死掉或者发送心跳包的 replica 对象死掉（无论是注册中心通知还是心跳包超时），broker 要及时变动发送心跳的 Router replica 对象。</p>
+
+<p>另外，Gateway 使用 UDP 通信方式向 Router 发送 Gateway Message，如若这个 Message 丢失则此 Gateway 上该 Room 内所有成员一段时间内（当有新的成员在当前 Gateway 上加入 Room<br>
+时会产生新的 Gateway Message）都无法再接收消息，为了保证消息的可靠性，可以使用这样一个约束解决问题：<font color=blue><strong>在此Gateway上登录的某 Room 内的人数少于 3 时，Gateway 会把 Gateway Message 复制两份非连续（如以10ms为时间间隔）重复发送给某个 Partition leader。</strong></font>因 Gateway Message 消息处理的幂等性，重复 Gateway Message 并不会导致 Room Message 发送错误，只在极少概率的情况下会导致 Gateway 收到消息的时候 Room 内已经没有成员在此 Gateway 登录，此时 Gateway 会把消息丢弃不作处理。</p>
+
+<p>传递实时消息群聊消息系统的 Broker 向特定 Gateway 转发 Room Message 的时候，会带上 Room 内在此 Gateway 上登录的用户列表，Gateway 根据这个用户列表下发消息时如果检测到此用户已经下线，在放弃向此用户转发消息的同时，还应该把此用户已经下线的消息发送给 Router，当 Router 把这个消息转发给 Broker 后，Broker 把此用户从用户列表中剔除。<font color=red><strong>通过这种负反馈机制保证用户状态更新的及时性</strong></font>。</p>
 
 <h3 id="toc_19">6 离线消息</h3>
 
@@ -537,19 +906,19 @@ kbd {
 
 <ul>
 <li>消息固化：保证用户上线时收到其离线期间的消息；</li>
-<li>消息有序：离线消息和在线消息都在一个消息系统传递，给每个消息分配一个ID以区分消息先后顺序，消息顺序越靠后则ID愈大。</li>
+<li>消息有序：离线消息和在线消息都在一个消息系统传递，给每个消息分配一个 ID 以区分消息先后顺序，消息顺序越靠后则 ID 愈大。</li>
 </ul>
 
 <p>离线消息的存储和传输，需要考虑用户的状态以及每条消息的发送状态，整个消息核心链路流程会有大的重构。新消息架构如下图：</p>
 
-<p><img src="../pic/pubsub_pixiu.png" alt=""></p>
+<p><img src="../pic/pubsub/pubsub_pixiu.png" alt=""></p>
 
 <p>系统名词解释：</p>
 
 <blockquote>
-<p>1 Pi : 消息ID存储模块，存储每个人未发送的消息ID有序递增集合；</p>
+<p>1 Pi : 消息ID存储模块，存储每个人未发送的消息 ID 有序递增集合；</p>
 
-<p>2 Xiu : 消息存储KV模块，存储每个人的消息，给每个消息分配ID，以ID为key，以消息内为value；</p>
+<p>2 Xiu : 消息存储KV模块，存储每个人的消息，给每个消息分配 ID，以 ID 为 key，以消息内为 value；</p>
 
 <p>3 Gateway Message(HB) : 用户登录登出消息，包括APP保活定时心跳（Hearbeat）消息；</p>
 </blockquote>
@@ -564,16 +933,16 @@ kbd {
 
 <hr>
 
-<p>Xiu模块功能名称是Message Storage，用户缓存和固化消息，并给消息分配ID。Xiu 集群采用分 Partition 分 Replica 机制，Partition 初始数目须是2的倍数，集群扩容时采用翻倍法。</p>
+<p>Xiu 模块功能名称是 Message Storage，用户缓存和固化消息，并给消息分配 ID。Xiu 集群采用分 Partition 分 Replica 机制，Partition 初始数目须是2的倍数，集群扩容时采用翻倍法。</p>
 
 <h5 id="toc_21">6.1.1 存储消息</h5>
 
 <hr>
 
-<p>存储消息请求的参数列表为{SnowflakeID，UIN, Message}，其流程如下：</p>
+<p>存储消息请求的参数列表为 {SnowflakeID，UIN, Message}，其流程如下：</p>
 
 <ul>
-<li>1 接收客户端发来的消息，获取消息接收人ID（UIN）和客户端给消息分配的 SnowflakeID；</li>
+<li>1 接收客户端发来的消息，获取消息接收人 ID（UIN）和客户端给消息分配的 SnowflakeID；</li>
 <li>2 检查 <code>UIN % Xiu_Partition_Num == Xiu_Partition_ID % Xiu_Partition_Num</code> 添加是否成立【即接收人的消息是否应当由当前Xiu负责】，不成立则返回错误并退出；</li>
 <li>3 检查 SnowflakeID 对应的消息是否已经被存储过，若已经存储过则返回其对应的消息ID然后退出；</li>
 <li><p>4 给消息分配一个 MsgID；</p>
@@ -603,24 +972,24 @@ kbd {
 
 <hr>
 
-<p>目前从简，暂定Xiu的副本只有一个。</p>
+<p>目前从简，暂定 Xiu 的副本只有一个。</p>
 
-<p>Xiu节点启动的时候根据自身配置文件中分配的 Xiu_Partition_ID 到Registry路径 /pubsub/xiu/partition_id 下进行注册一个临时有序节点，注册成功则Registry会返回Xiu的节点 ID。</p>
+<p>Xiu 节点启动的时候根据自身配置文件中分配的 Xiu_Partition_ID 到 Registry 路径 <code>/pubsub/xiu/partition_id</code> 下进行注册一个临时有序节点，注册成功则 Registry 会返回 Xiu 的节点 ID。</p>
 
-<p>Xiu节点获取 /pubsub/xiu/partition_id 下的所有节点的ID和地址信息，依据 <code>节点ID最小者为leader</code> 的原则，即可判定自己的角色。只有leader可接受读写数据请求。</p>
+<p>Xiu节点获取 <code>/pubsub/xiu/partition\_id</code> 下的所有节点的 ID 和地址信息，依据 <code>节点ID最小者为leader</code> 的原则，即可判定自己的角色。只有 leader 可接受读写数据请求。</p>
 
 <p>数据同步流程如下：</p>
 
 <ul>
-<li>1 follower定时向leader发送心跳信息，心跳信息包含本地最新消息的ID；</li>
-<li>2 leader启动一个数据同步线程处理follower的心跳信息，leader的数据同步线程从LRU list中查找 follower_latest_msg_id 之后的N条消息的ID，若获取到则读取消息并同步给follower，获取不到则回复其与leader之间消息差距太大；</li>
-<li>3 follower从leader获取到最新一批消息，则存储之；</li>
-<li>4 follower若获取leader的消息差距太大响应，则请求leader的agent把RocksDB的固化数据全量同步过来，整理完毕后再次启动与leader之间的数据同步流程。</li>
+<li>1 follower 定时向 leader 发送心跳信息，心跳信息包含本地最新消息的 ID；</li>
+<li>2 leader 启动一个数据同步线程处理 follower 的心跳信息，leader 的数据同步线程从 LRU list 中查找 follower_latest_msg_id 之后的N条消息的ID，若获取到则读取消息并同步给 follower，获取不到则回复其与 leader 之间消息差距太大；</li>
+<li>3 follower 从 leader 获取到最新一批消息，则存储之；</li>
+<li>4 follower 若获取 leader 的消息差距太大响应，则请求 leader 的 agent 把 RocksDB 的固化数据全量同步过来，整理完毕后再次启动与 leader 之间的数据同步流程。</li>
 </ul>
 
-<p>follower会关注Registry路径  /pubsub/xiu/partition_id 下所有所有节点的变化情况，如果leader挂掉则及时转换身份并接受客户端请求。如果follower 与 leader 之间的心跳超时，则follower删掉 leader 的 Registry 路径节点，及时进行身份转换处理客户端请求。</p>
+<p>follower 会关注 Registry 路径  /pubsub/xiu/partition_id 下所有所有节点的变化情况，如果 leader 挂掉则及时转换身份并接受客户端请求。如果 follower 与 leader 之间的心跳超时，则 follower 删掉 leader 的 Registry 路径节点，及时进行身份转换处理客户端请求。</p>
 
-<p>当leader重启或者follower转换为leader的时候，需要把 Partition_Msg_ID 进行一个大数值增值（譬如增加1000）以防止可能的消息ID乱序情况。</p>
+<p>当 leader 重启或者 follower 转换为 leader 的时候，需要把 Partition_Msg_ID 进行一个大数值增值（譬如增加1000）以防止可能的消息 ID 乱序情况。</p>
 
 <h5 id="toc_24">6.1.4 集群扩容</h5>
 
@@ -685,7 +1054,7 @@ kbd {
 <li>3 follower 从 leader 获取到最新一批 Log，先存储然后重放。</li>
 </ul>
 
-<p>follower 会关注Registry路径  /pubsub/pi/partition_id 下所有节点的变化情况，如果 leader 挂掉则及时转换身份并接受客户端请求。如果follower 与 leader 之间的心跳超时，则follower删掉 leader 的 Registry 路径节点，及时进行身份转换处理客户端请求。</p>
+<p>follower 会关注 Registry 路径  /pubsub/pi/partition_id 下所有节点的变化情况，如果 leader 挂掉则及时转换身份并接受客户端请求。如果follower 与 leader 之间的心跳超时，则follower删掉 leader 的 Registry 路径节点，及时进行身份转换处理客户端请求。</p>
 
 <h5 id="toc_29">6.2.4 集群扩容</h5>
 
@@ -779,7 +1148,7 @@ kbd {
 <li>5 Xiu 返回消息列表后，设置状态为 SendingMsg，并向 Gateway 转发消息。</li>
 </ul>
 
-<p>所谓 Ack 消息，就是 Broker 经 Gateway 把消息转发给 App 后，App 给Broker的消息回复，告知Broker其最近成功收到消息的 MsgID。
+<p>所谓 Ack 消息，就是 Broker 经 Gateway 把消息转发给 App 后，App 给Broker的消息回复，告知Broker其最近成功收到消息的 MsgID。<br>
 Ack 消息处理流程如下：</p>
 
 <ul>
@@ -794,7 +1163,110 @@ Ack 消息处理流程如下：</p>
 
 <p>总体上，PiXiu 转发消息流程采用拉取（pull）转发模型，以上面五种消息为驱动进行状态转换，并作出相应的动作行为。</p>
 
-<h3 id="toc_32">7 总结</h3>
+<h3 id="toc_32">7 单聊消息</h3>
+
+<hr>
+
+<p>前几章所述之系统架构都是基于群聊这一实时通信场景，这一群聊消息系统在公司内部稳定运行近一年半时间，期间经历了6个大版本的迭代演进，赢得了各个业务线同事的新人，承担了从群聊、聊天室到游戏信令传递等等各种场景的实时通信业务。</p>
+
+<p>2017 年 9 月份刚开始接手系统时，已有业务方提出把对单人下发的消息【以下称之为 Chat Message】也接入这套系统，即消息系统不仅是一个群聊消息下发通道，也应该是一个单聊消息下发通道，但是考虑到当时处于系统实现初期，个人基于系统小作的考量边直接拒绝了。随着这一年半其接入的业务范围的扩展，目下公司正考虑拆分 Gateway，这套系统需要被重构以处理单聊消息就是势然了。</p>
+
+<p>公司的 Gateway 大概是我见过的最复杂的接口系统，各种本应该放在逻辑层处理的子系统都被糅合进了接口层 Gateway 这一单个模块之内，除了公司几个创始人很少有人清楚其它内部逻辑，据说陆续有四个高薪招聘的高手在接手这套系统后三个月内跑路了。Gateway 内部与聊天场景有关的状态数据主要有两种：用户所在的群信息【以下简称 Router Data】以及用户自身的状态信息【包括在线状态以及客户端地址信息，以下简称 Relay Data】。</p>
+
+<p>Router Data 已经被群聊系统的 Router 模块替代掉，当下的 Gateway 已经不需要存储 Router Data。若扩展此系统使其能够处理单聊消息，能够存储用户的在线状态以及用户接入的 Gateway 信息，则 Gateway 就可以不用存储任何有关用户的状态数据了。</p>
+
+<h4 id="toc_33">7.1 实时消息系统架构</h4>
+
+<hr>
+
+<p>Relay Data 迥异于 Router Data：Relay Data 的 key 是 UIN，其数据传递依赖于 Relay Message；而 Router Data 的 key 是 GroupID，其数据传递依赖于 Gateway Message。此二者差异决定了这两种数据的处理不可能在一个单一的模块之内。</p>
+
+<p>新的实时通信系统添加了一个 Relay 模块用于处理 Relay Message 并存储 Relay Data。添加了单聊消息处理能力的实时消息系统架构如下：</p>
+
+<p><img src="../pic/pubsub/pubsub_chat.png" alt=""></p>
+
+<p>下面详述新架构下各个模块的功能和消息处理流程，至于系统注册、系统扩容以及注册通知等相关流程与以往处理机制雷同，下面不再详述。</p>
+
+<p>注意：新架构图中把原来的专门存储 Router Data 的 Database 模块改称为 Router DB，并添加了一个 Relay DB，以专门存储 Relay Data。</p>
+
+<h5 id="toc_34">7.2 Gateway</h5>
+
+<hr>
+
+<p>Gateway 不再存储 Router Data 和 Relay Data，几乎成了 APP 的透明代理，其功能如下：</p>
+
+<blockquote>
+<ul>
+<li>接收 APP 的连接请求，并把用户连接消息以 Relay Message 形式发送给 Relay；</li>
+<li>APP 与 Gateway 连接断开时以 Relay Message 形式发送给 Relay；</li>
+<li>把用户登录登出某 Room 的消息转发给 Router；</li>
+<li>接收 Relay 转发来的 Room Message 和 Chat Message，并下发给 APP。</li>
+</ul>
+</blockquote>
+
+<h5 id="toc_35">7.3 Relay</h5>
+
+<hr>
+
+<p>Relay 是一个新模块，但其组织方式类似于 Router，亦是分 Partition 分 Replica，处理 Relay Message。</p>
+
+<p>Relay 模块依据用户的 UIN 进行把不同用户的 Relay Data 放入不同的 Parition，同 Partition 内的 所有 Relay Replica 数据一致。 </p>
+
+<p>Relay 功能列表如下：</p>
+
+<blockquote>
+<ul>
+<li>接收由 Gateway 转发来的 Relay Message，存储为 Relay Data，并把 Relay Data 异步存入 Relay DB；</li>
+<li>起始时先从 Relay DB 获取其 Partiton 内所有用户的 Relay Data，以与 Partiton 内其他 Replica 保持数据一致性；</li>
+<li>接收由 Broker 转发来的 Room Message，依据 Relay Data 记录的用户所在的 Gateway 把消息复制转发给 Gateway；</li>
+<li>接收由 Proxy 转发来的 Chat Message，依据 Relay Data 记录的用户所在的 Gateway 把消息复制转发给 Gateway；</li>
+</ul>
+</blockquote>
+
+<p>前面提及所有处理 Room Message 系统都是一个写放大的系统，究其原因是一条 Room Message 需要被复制下发给 Room 内每个人，所以 Relay 处理 Room Message 时需要根据 Room Message 内的 Room UIN List 对消息进行复制后下发给每个 User APP 所连接的 Gateway。</p>
+
+<p>当然，如果用户不在线，Relay 会对 Room Message 和 Chat Message 都作丢弃处理，因为此系统只处理实时消息。 </p>
+
+<p>Relay 承担了群聊消息与单聊消息的下发。</p>
+
+<h5 id="toc_36">7.4 Broker</h5>
+
+<hr>
+
+<p>新架构下 Broker 模块不再直接把 Room Message 转发给 Gateway，而是转发给 Relay。有了 Relay，Broker 自身只需要存储每个 Group 的 UIN List 即可，大大减轻了自身的任务流程，Broker 可以把 Relay 视作 <code>pseudo-gateway</code>。</p>
+
+<p>Broker 功能列表如下：</p>
+
+<blockquote>
+<ul>
+<li>接收 Router 转发来的 Gateway Message，存储为 Router Data，并把 Router Data 异步存入 Router DB；</li>
+<li>起始时先从 Router DB 获取其 Partiton 内所有用户的 Router Data，以与 Partiton 内其他 Replica 保持数据一致性；</li>
+<li>接收由 Proxy 转发来的 Room Message，依据 Router Data 记录的 Group 内的 UIN List 把消息复制转发给各个 Relay；</li>
+</ul>
+</blockquote>
+
+<p>Broker 仅仅承担了群聊消息下发。</p>
+
+<h5 id="toc_37">7.4 Proxy</h5>
+
+<hr>
+
+<p>Proxy 接收 Client 发来的消息时，需要区分消息是 Room Message 还是 Chat Message，新架构下其功能列表如下：</p>
+
+<blockquote>
+<ul>
+<li>关注 Registry Broker Path，以实时获取正确的 Broker List；</li>
+<li>关注 Registry Relay Path，以实时获取正确的 Relya List；</li>
+<li>接收 Client 发来的 Room Message，依据 Group 把消息转发给 Broker；</li>
+<li>接收 Client 发来的 Chat Message，依据 UIN 把消息转发给 Relay；</li>
+</ul>
+</blockquote>
+
+<p>Proxy 对 Group Message 的处理仅仅是转发了事，并不需要复制，所以不存在写放大的问题。</p>
+
+<p>其实还可以把 Proxy 区分为 Group Message Proxy 和 Chat Message Proxy，以期收逻辑清晰职责明了之效。</p>
+
+<h3 id="toc_38">8 总结</h3>
 
 <hr>
 
@@ -807,36 +1279,58 @@ Ack 消息处理流程如下：</p>
 <li>4 各个模块之间没有考虑心跳方案，整个系统的稳定性依赖于Registry【2018/01/17解决之】；</li>
 <li>5 离线消息处理【2018/03/03解决之】；</li>
 <li>6 区分消息优先级；</li>
+<li>7 添加 Metaserver 模块，监控各 Broker 的 metrics数据；</li>
+<li>8 添加虚拟节点和物理节点之间的映射关系，把翻倍扩容方式升级为冷热负载均衡迁移式的动态扩缩容方式；</li>
 </ul>
 
 <p>此记。</p>
 
-<h2 id="toc_33">参考文档</h2>
+<h2 id="toc_39">参考文档</h2>
 
 <ul>
 <li>1 <a href="http://blog.csdn.net/bluishglc/article/details/7970268">一种支持自由规划无须数据迁移和修改路由代码的Replicaing扩容方案</a></li>
 </ul>
 
-<h2 id="toc_34">扒粪者-于雨氏</h2>
+<h2 id="toc_40">扒粪者-于雨氏</h2>
 
 <blockquote>
-<p>于雨氏，2017/12/31，初作此文于丰台金箱堂。</p>
-
-<p>于雨氏，2018/01/16，于海淀添加“系统稳定性”一节。</p>
-
-<p>于雨氏，2018/01/29，于海淀添加“消息可靠性”一节。</p>
-
-<p>于雨氏，2018/02/11，于海淀添加“Router”一节，并重新格式化全文。</p>
-
-<p>于雨氏，2018/03/05，于海淀添加“PiXiu”一节。</p>
-
-<p>于雨氏，2018/03/14，于海淀添加负反馈机制、根据Gateway Message ID保证Gateway Message数据一致性 和 Gateway用户退出消息产生机制 等三个细节。</p>
-
-<p>于雨氏，2018/08/05，于海淀添加 “pipeline” 一节。</p>
-
-<p>于雨氏，2018/08/28，于海淀添加 “大房间消息处理” 一节。</p>
+<ul>
+<li>于雨氏，2017/12/31，初作此文于丰台金箱堂。</li>
+<li>于雨氏，2018/01/16，于海淀添加“#3 系统稳定性”一节。</li>
+<li>于雨氏，2018/01/29，于海淀添加“#4 消息可靠性”一节。</li>
+<li>于雨氏，2018/02/11，于海淀添加 “#5 Router” 一章节，并重新格式化全文。</li>
+<li>于雨氏，2018/03/05，于海淀添加 “#6 离线消息” 一章节。</li>
+<li>于雨氏，2018/03/14，于海淀添加负反馈机制、根据Gateway Message ID保证Gateway Message数据一致性 和 Gateway用户退出消息产生机制 等三个细节。</li>
+<li>于雨氏，2018/08/05，于海淀添加 “#2.2.1 pipeline” 一节。</li>
+<li>于雨氏，2018/08/28，于海淀添加 “#2.2.2 大房间消息处理” 一节。</li>
+<li>于雨氏，2019/01/19，于丰台添加 “#7 单聊消息” 一章节。</li>
+</ul>
 </blockquote>
 
+
+
+<script type="text/javascript">
+var _self="undefined"!=typeof window?window:"undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?self:{},Prism=function(){var e=/\blang(?:uage)?-(\w+)\b/i,t=0,n=_self.Prism={util:{encode:function(e){return e instanceof a?new a(e.type,n.util.encode(e.content),e.alias):"Array"===n.util.type(e)?e.map(n.util.encode):e.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\u00a0/g," ")},type:function(e){return Object.prototype.toString.call(e).match(/\[object (\w+)\]/)[1]},objId:function(e){return e.__id||Object.defineProperty(e,"__id",{value:++t}),e.__id},clone:function(e){var t=n.util.type(e);switch(t){case"Object":var a={};for(var r in e)e.hasOwnProperty(r)&&(a[r]=n.util.clone(e[r]));return a;case"Array":return e.map&&e.map(function(e){return n.util.clone(e)})}return e}},languages:{extend:function(e,t){var a=n.util.clone(n.languages[e]);for(var r in t)a[r]=t[r];return a},insertBefore:function(e,t,a,r){r=r||n.languages;var l=r[e];if(2==arguments.length){a=arguments[1];for(var i in a)a.hasOwnProperty(i)&&(l[i]=a[i]);return l}var o={};for(var s in l)if(l.hasOwnProperty(s)){if(s==t)for(var i in a)a.hasOwnProperty(i)&&(o[i]=a[i]);o[s]=l[s]}return n.languages.DFS(n.languages,function(t,n){n===r[e]&&t!=e&&(this[t]=o)}),r[e]=o},DFS:function(e,t,a,r){r=r||{};for(var l in e)e.hasOwnProperty(l)&&(t.call(e,l,e[l],a||l),"Object"!==n.util.type(e[l])||r[n.util.objId(e[l])]?"Array"!==n.util.type(e[l])||r[n.util.objId(e[l])]||(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,l,r)):(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,null,r)))}},plugins:{},highlightAll:function(e,t){var a={callback:t,selector:'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'};n.hooks.run("before-highlightall",a);for(var r,l=a.elements||document.querySelectorAll(a.selector),i=0;r=l[i++];)n.highlightElement(r,e===!0,a.callback)},highlightElement:function(t,a,r){for(var l,i,o=t;o&&!e.test(o.className);)o=o.parentNode;o&&(l=(o.className.match(e)||[,""])[1],i=n.languages[l]),t.className=t.className.replace(e,"").replace(/\s+/g," ")+" language-"+l,o=t.parentNode,/pre/i.test(o.nodeName)&&(o.className=o.className.replace(e,"").replace(/\s+/g," ")+" language-"+l);var s=t.textContent,u={element:t,language:l,grammar:i,code:s};if(!s||!i)return n.hooks.run("complete",u),void 0;if(n.hooks.run("before-highlight",u),a&&_self.Worker){var c=new Worker(n.filename);c.onmessage=function(e){u.highlightedCode=e.data,n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(u.element),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},c.postMessage(JSON.stringify({language:u.language,code:u.code,immediateClose:!0}))}else u.highlightedCode=n.highlight(u.code,u.grammar,u.language),n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(t),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},highlight:function(e,t,r){var l=n.tokenize(e,t);return a.stringify(n.util.encode(l),r)},tokenize:function(e,t){var a=n.Token,r=[e],l=t.rest;if(l){for(var i in l)t[i]=l[i];delete t.rest}e:for(var i in t)if(t.hasOwnProperty(i)&&t[i]){var o=t[i];o="Array"===n.util.type(o)?o:[o];for(var s=0;s<o.length;++s){var u=o[s],c=u.inside,g=!!u.lookbehind,h=!!u.greedy,f=0,d=u.alias;u=u.pattern||u;for(var p=0;p<r.length;p++){var m=r[p];if(r.length>e.length)break e;if(!(m instanceof a)){u.lastIndex=0;var y=u.exec(m),v=1;if(!y&&h&&p!=r.length-1){var b=r[p+1].matchedStr||r[p+1],k=m+b;if(p<r.length-2&&(k+=r[p+2].matchedStr||r[p+2]),u.lastIndex=0,y=u.exec(k),!y)continue;var w=y.index+(g?y[1].length:0);if(w>=m.length)continue;var _=y.index+y[0].length,P=m.length+b.length;if(v=3,P>=_){if(r[p+1].greedy)continue;v=2,k=k.slice(0,P)}m=k}if(y){g&&(f=y[1].length);var w=y.index+f,y=y[0].slice(f),_=w+y.length,S=m.slice(0,w),O=m.slice(_),j=[p,v];S&&j.push(S);var A=new a(i,c?n.tokenize(y,c):y,d,y,h);j.push(A),O&&j.push(O),Array.prototype.splice.apply(r,j)}}}}}return r},hooks:{all:{},add:function(e,t){var a=n.hooks.all;a[e]=a[e]||[],a[e].push(t)},run:function(e,t){var a=n.hooks.all[e];if(a&&a.length)for(var r,l=0;r=a[l++];)r(t)}}},a=n.Token=function(e,t,n,a,r){this.type=e,this.content=t,this.alias=n,this.matchedStr=a||null,this.greedy=!!r};if(a.stringify=function(e,t,r){if("string"==typeof e)return e;if("Array"===n.util.type(e))return e.map(function(n){return a.stringify(n,t,e)}).join("");var l={type:e.type,content:a.stringify(e.content,t,r),tag:"span",classes:["token",e.type],attributes:{},language:t,parent:r};if("comment"==l.type&&(l.attributes.spellcheck="true"),e.alias){var i="Array"===n.util.type(e.alias)?e.alias:[e.alias];Array.prototype.push.apply(l.classes,i)}n.hooks.run("wrap",l);var o="";for(var s in l.attributes)o+=(o?" ":"")+s+'="'+(l.attributes[s]||"")+'"';return"<"+l.tag+' class="'+l.classes.join(" ")+'" '+o+">"+l.content+"</"+l.tag+">"},!_self.document)return _self.addEventListener?(_self.addEventListener("message",function(e){var t=JSON.parse(e.data),a=t.language,r=t.code,l=t.immediateClose;_self.postMessage(n.highlight(r,n.languages[a],a)),l&&_self.close()},!1),_self.Prism):_self.Prism;var r=document.currentScript||[].slice.call(document.getElementsByTagName("script")).pop();return r&&(n.filename=r.src,document.addEventListener&&!r.hasAttribute("data-manual")&&document.addEventListener("DOMContentLoaded",n.highlightAll)),_self.Prism}();"undefined"!=typeof module&&module.exports&&(module.exports=Prism),"undefined"!=typeof global&&(global.Prism=Prism);
+</script>
+
+<script type="text/x-mathjax-config">
+(function () {
+
+MathJax.Hub.Config({
+	'showProcessingMessages': false,
+	'messageStyle': 'none'
+});
+
+if (typeof MathJaxListener !== 'undefined') {
+	MathJax.Hub.Register.StartupHook('End', function () {
+		MathJaxListener.invokeCallbackForKey_('End');
+	});
+}
+
+})();
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 <!-- baidu statistic start -->
 <script>
