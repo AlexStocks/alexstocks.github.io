@@ -166,7 +166,7 @@ int Attr_API_Get(int attr,int *iValue);//获得属性ID为attr的值，如果不
 - 8 Dashboard 用于用于展示从某个维度加工后的监控数据，本系统采用 Grafana 作为展示 Panel。
 - 9 Alarm 顾名思义就是 Monitor 的告警系统，它依据 Judger 处理的告警判断结果，把告警内容以短信、邮件等形式推送给相关人员。
 
-Monitor 作为一个业务告警监控系统，其自身的运行 Metrics 亦须予以收集，以防止因为其自身故障引起误报警。Agent/Proxy/Judger 定时地把自身的 qps、监控数据量等参数设定在 MySQL monitor db 里，Console 可以查看到这些 metrics 数据。运维人员可以在 Console 中设定一些规则对 Monitor 进行监控，其定时地汇总出一个 Monitor 运行报表通过邮件方式通知相关人员。Consle 还需要监控 Registry 中各个 Schema 路径，当某个 Monitor 系统节点宕机时发出最高级别的告警。Console 相当于 Monitor 系统的监控者。
+Monitor 作为一个业务告警监控系统，其自身的运行 Metrics 亦须予以收集，以防止因为其自身故障引起误报警。Agent/Proxy/Judger 定时地把自身的 qps、监控数据量等参数设定在 MySQL monitor db 里，Console 可以查看到这些 metrics 数据。运维人员可以在 Console 中设定一些规则对 Monitor 进行监控，其定时地汇总出一个 Monitor 运行报表通过邮件方式通知相关人员。Console 还需要监控 Registry 中各个 Schema 路径，当某个 Monitor 系统节点宕机时发出最高级别的告警。Console 相当于 Monitor 系统的监控者。
 
 ### 3 详细实现
 
@@ -213,7 +213,7 @@ Console 系统并不追求并发性能，只是作为 Monitor 系统的控制中
 
 	> 所谓服务上线，其实为某个服务指定计算中心节点。
 	
-	> 从此处也可以看出，当前这套系统缺少一个计算自动调度子系统，整个系统的计算相关的服务治理是通过 Consle 此处的控制中心面板人工操作完成的。
+	> 从此处也可以看出，当前这套系统缺少一个计算自动调度子系统，整个系统的计算相关的服务治理是通过 Console 此处的控制中心面板人工操作完成的【即第四节工作展望1】。
 	
 - 8 添加告警规则
 
