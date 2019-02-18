@@ -658,10 +658,12 @@ int Attr_API_Get(int attr,int *iValue);//获得属性ID为attr的值，如果不
 <p><img src="../pic/monitor/console_user.png" alt=""></p>
 
 <ul>
-<li>2 添加告警规则</li>
+<li>2 用户权限控制</li>
 </ul>
 
-<p><img src="../pic/monitor/console_monitor_type.png" alt=""></p>
+<p><img src="../pic/monitor/console_role.png" alt=""></p>
+
+<div><pre><code class="language-none">&gt; 角色与数据库中的 “角色” 概念一样，不同角色可以查看的不同的服务。Console 给真实用户分配权限，为其绑定不同的 角色 即可。 </code></pre></div>
 
 <ul>
 <li>3 添加服务</li>
@@ -687,22 +689,32 @@ int Attr_API_Get(int attr,int *iValue);//获得属性ID为attr的值，如果不
 
 <p><img src="../pic/monitor/console_monitor_service_add.png" alt=""></p>
 
+<div><pre><code class="language-none">&gt; 此处的服务节点其实是计算中心节点(Judge)，此处用于指定一个新计算节点的监听地址、服务ID和其名称。</code></pre></div>
+
 <ul>
-<li>7 用户权限控制</li>
+<li>7 服务上线</li>
 </ul>
 
-<p><img src="../pic/monitor/console_role.png" alt=""></p>
+<p><img src="../pic/monitor/console_monitor_service_online.png" alt=""></p>
 
-<div><pre><code class="language-none">&gt; 角色与数据库中的 “角色” 概念一样，不同角色可以查看的不同的服务。Console 给真实用户分配权限，为其绑定不同的 角色 即可。 </code></pre></div>
+<div><pre><code class="language-none">&gt; 所谓服务上线，其实为某个服务指定计算中心节点。
+
+&gt; 从此处也可以看出，当前这套系统缺少一个计算自动调度子系统，整个系统的计算相关的服务治理是通过 Consle 此处的控制中心面板人工操作完成的。</code></pre></div>
 
 <ul>
-<li>8 告警启停</li>
+<li>8 添加告警规则</li>
+</ul>
+
+<p><img src="../pic/monitor/console_monitor_type.png" alt=""></p>
+
+<ul>
+<li>9 告警启停</li>
 </ul>
 
 <p><img src="../pic/monitor/console_monitor_online.png" alt=""></p>
 
 <ul>
-<li>9 告警结果查看</li>
+<li>10 告警结果查看</li>
 </ul>
 
 <p><img src="../pic/monitor/console_monitor_record_panel.png" alt=""></p>
@@ -874,7 +886,10 @@ int Attr_API_Get(int attr,int *iValue);//获得属性ID为attr的值，如果不
 <h2 id="toc_19">扒粪者-于雨氏</h2>
 
 <blockquote>
-<p>2018/11/17，于雨氏，于丰台，初作此文。</p>
+<ul>
+<li>2018/11/17，于雨氏，于丰台，初作此文。</li>
+<li>2019/02/18，于雨氏，于西二旗，补充 #3.1 Console# 中 “服务上线” 小节相关内容。</li>
+</ul>
 </blockquote>
 
 
@@ -931,8 +946,6 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
-
-
 
 </body>
 

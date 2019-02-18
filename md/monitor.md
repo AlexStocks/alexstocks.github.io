@@ -182,9 +182,12 @@ Console 系统并不追求并发性能，只是作为 Monitor 系统的控制中
 
 ![](../pic/monitor/console_user.png)
 
-- 2 添加告警规则
+- 2 用户权限控制
 
-![](../pic/monitor/console_monitor_type.png)
+![](../pic/monitor/console_role.png)
+
+	> 角色与数据库中的 “角色” 概念一样，不同角色可以查看的不同的服务。Console 给真实用户分配权限，为其绑定不同的 角色 即可。 
+
 
 - 3 添加服务
 
@@ -202,17 +205,25 @@ Console 系统并不追求并发性能，只是作为 Monitor 系统的控制中
 
 ![](../pic/monitor/console_monitor_service_add.png)
 
-- 7 用户权限控制
+	> 此处的服务节点其实是计算中心节点(Judge)，此处用于指定一个新计算节点的监听地址、服务ID和其名称。
 
-![](../pic/monitor/console_role.png)
+- 7 服务上线
 
-	> 角色与数据库中的 “角色” 概念一样，不同角色可以查看的不同的服务。Console 给真实用户分配权限，为其绑定不同的 角色 即可。 
+![](../pic/monitor/console_monitor_service_online.png)
 
-- 8 告警启停
+	> 所谓服务上线，其实为某个服务指定计算中心节点。
+	
+	> 从此处也可以看出，当前这套系统缺少一个计算自动调度子系统，整个系统的计算相关的服务治理是通过 Consle 此处的控制中心面板人工操作完成的。
+	
+- 8 添加告警规则
+
+![](../pic/monitor/console_monitor_type.png)
+
+- 9 告警启停
 
 ![](../pic/monitor/console_monitor_online.png)
 
-- 9 告警结果查看
+- 10 告警结果查看
 
 ![](../pic/monitor/console_monitor_record_panel.png)
 
@@ -365,4 +376,5 @@ Monitor 系统有待改进的工作如下：
 
 ## 扒粪者-于雨氏
 
-> 2018/11/17，于雨氏，于丰台，初作此文。
+>- 2018/11/17，于雨氏，于丰台，初作此文。
+>- 2019/02/18，于雨氏，于西二旗，补充 #3.1 Console# 中 “服务上线” 小节相关内容。
