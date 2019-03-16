@@ -123,6 +123,31 @@ int Attr_API_Get(int attr,int *iValue);//获得属性ID为attr的值，如果不
 
 考虑到某个 Attr 会在多个服务节点上部署，监控告警系统使用者常常需要知道所有节点上某个监控指标的总量，并基于总量对系统当前的服务能力进行分析，这种总量形式的监控指标的 Key 是 `Service + Attr + AlarmType + AlarmTime`，其 `Value = ∑(Service + Attr + AlarmType + AlarmTime + ServerIDi, i = 1, 2, …, n)`，n 为服务节点总数。
 
+##### 2.1.1 系统架构设计目标
+
+[参考系统5](http://bigbully.github.io/Dapper-translation/) 对监控追踪一类的运维系统提出了三个设计目标：
+>- 1 低消耗
+
+```
+	即运维系统须高度简洁，不能对业务系统地运行造成影响。
+```     
+>- 2 对应用透明【或称之为无侵入、无埋点】
+     
+```
+	业务开发人员在开发过程中无需关注运维系统。
+```            
+>- 3 可扩展
+
+结合上面对监控对象的建模，本系统无法做到 `对应用透明`，业务使用方须调用 API 对系统进行埋点监控。至于 `低消耗` 和 `可扩展`，则是对代码开发质量以及系统架构设计的要求，本系统还是能做到的。
+
+##### 2.1.2 计算子升级
+
+Monitor 系统不是万能的，不可能在设计之初把所有的监控类型都涉及到。
+
+AlarmType 的本质就是多种计算算子，随着应用系统的广泛使用，可能需要更多的 AlarmType，此时有两种解决方法。第一种解决方法就是升级系统，第二种方法则是基于现有的监控系统的基本 AlarmType 之上组合出更多的 AlarmType。
+
+譬如欲计算某服务整个处理流程的耗时（TimeSpan），则可以在发送请求（Client Send）时记录起始时间值 StartTimestamp，接收到响应（Client Receive）时记录结束时间值 EndTimestamp，则 `TimeSpan = EndTimestamp - StartTimestamp`，然后把 TimeSpan 作为一个 Value 进行上传。通过在业务使用时进行这种变通的计算方式尽量减少监控系统升级的可能性。
+
 #### 2.2 总体架构
 
 [参考文档1](https://baike.baidu.com/item/%E5%90%AC%E8%AF%8A%E5%99%A8) 中描述 `听诊器由听诊头、导音管、耳挂组成`，听诊器与医生构成了一套器人复合诊断系统。其实告警监控系统（下文称之为 Monitor）与这个复合体基本无差，其由数据采集节点(Client)、监控代理(Agent)、数据传输节点(Proxy)、计算中心(Judger)、存储节点(Database)、展示中心(Dashboard)、控制中心(Console)、告警中心(Alarm)和注册中心(Registry)等部分构成。
@@ -167,6 +192,7 @@ int Attr_API_Get(int attr,int *iValue);//获得属性ID为attr的值，如果不
 - 9 Alarm 顾名思义就是 Monitor 的告警系统，它依据 Judger 处理的告警判断结果，把告警内容以短信、邮件等形式推送给相关人员。
 
 Monitor 作为一个业务告警监控系统，其自身的运行 Metrics 亦须予以收集，以防止因为其自身故障引起误报警。Agent/Proxy/Judger 定时地把自身的 qps、监控数据量等参数设定在 MySQL monitor db 里，Console 可以查看到这些 metrics 数据。运维人员可以在 Console 中设定一些规则对 Monitor 进行监控，其定时地汇总出一个 Monitor 运行报表通过邮件方式通知相关人员。Console 还需要监控 Registry 中各个 Schema 路径，当某个 Monitor 系统节点宕机时发出最高级别的告警。Console 相当于 Monitor 系统的监控者。
+
 
 ### 3 详细实现
 
@@ -351,13 +377,14 @@ Grafana 的强大之处无需愚人庸言，下面分别展示其结合 Monitor 
 
 ![](../pic/monitor/grafana_ceph_cluster.png)
 
+
 ### 4 展望
 
 Monitor 系统完成上线后，服务端同事们仅仅使用了 Dashboard 而抛弃了 Alarm，有同事嫌弃设置参数太麻烦，需不断调整，而且即便收到告警也可能及时处理，因为会影响其休息，从一方面也说明了系统尚有许多有待改进之处。
 
 Monitor 系统有待改进的工作如下：
 
-- 1 在 Console 中加入调度模块，自动根据线上各个 Judger 的负载为每次上线的新服务指定 Judger；
+- 1 在 Console 中加入调度模块，自动根据线上各个 Judger 的负载为每次上线的新服务指定 Judger，或者改用 Spark & Flink 进行实时计算；
 - 2 在 Alarm 模块加入智能算法进行智能告警，去除毛刺，减少误报率；
 - 3 和日志收集系统集合，每次告警发送邮件时，把相关上下文日志一并抄送；
 - 4 改进 InfluxDB 群集，每次扩容把旧有的数据一并复制到新系统;
@@ -372,9 +399,11 @@ Monitor 系统有待改进的工作如下：
 - 2 [1.1 万亿交易量级下的秒级监控](http://www.cnblogs.com/hujiapeng/p/6235761.html)
 - 3 [从无到有：微信后台系统的演进之路](https://www.infoq.cn/article/the-road-of-the-growth-weixin-background)
 - 4 [微服务架构下的监控需要注意哪些方面](https://mp.weixin.qq.com/s/3Flnn4mkh-euF3mKzpnMsQ)
+- 5 [Dapper，大规模分布式系统的跟踪系统](http://bigbully.github.io/Dapper-translation/)
 
 
 ## 扒粪者-于雨氏
 
 >- 2018/11/17，于雨氏，于丰台，初作此文。
->- 2019/02/18，于雨氏，于西二旗，补充 #3.1 Console# 中 “服务上线” 小节相关内容。
+>- 2019/02/18，于雨氏，于西二旗，补充 #3.1 Console# 中 `服务上线` 小节相关内容。
+>- 2019/03/16，于雨氏，于黄龙，补充 `2.1.1 系统架构设计目标` 以及 `2.1.2 计算子升级` 相关内容。
