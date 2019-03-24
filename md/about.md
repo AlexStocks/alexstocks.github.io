@@ -2,12 +2,12 @@
 ---
 *written by Alex Stocks on 2016/02/05，版权所有，无授权不得转载*
 
-### about me ###
+### 0 about me ###
 ---
 - email     : alexstocks at foxmail.com
 - wechat    : alexanderstocks
 
-### 以往博客说明:###
+### 1 以往博客说明:###
 ---
 - 1 [csdn blog: menggucaoyuan](http://blog.csdn.net/menggucaoyuan/article/category/1269292)
 - 2 [oschina blog: menggucaoyuan](http://my.oschina.net/alexstocks/blog?fromerr=ueepi6wH) 
@@ -167,7 +167,7 @@
 
 	> [互联网新贵英雄谱](http://blog.csdn.net/menggucaoyuan/article/details/6873171)
 		
-### tools ###
+### 2 tools ###
 ---
 -	:
 	个人于闲暇时候喜欢学习一些新的语言并写一些小工具，下面按照语言分门别类之:
@@ -227,7 +227,7 @@
 	> 
 	> [一种基于Redis的多租户多粒度分布式内存文件系统](http://alexstocks.github.io/html/redis_cluster.html)
 
-### 跋 ###
+### 3 跋 ###
 ---
 
 如果说，开源是个好东西，那么懒惰就是程序员的第一美德。如果有满足需求的开源系统的不用，像我以前一样非要闭门造车再搞一个类似的玩意不可，貌似是一种罪过。个人也是经过北京众多好友一番劝告并自我思想斗争了两年后，接受了这一看法。
@@ -240,7 +240,6 @@
 
 ## 扒粪者-于雨氏 ##
 
-> 2016/02/05，于雨氏，于金箱堂。
->
-> 2016/02/10，于金箱堂，添加了disqus评论功能。
+>- 2016/02/05，于雨氏，于金箱堂。
+>- 2016/02/10，于金箱堂，添加了disqus评论功能。
 
