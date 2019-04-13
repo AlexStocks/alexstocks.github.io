@@ -27,7 +27,7 @@ Ardb 作者在[参考文档5](http://yinqiwen.github.io/)文中对 Pika 的评�
 - 1 通过 redis-cli 向 pika 发送 bgsave 命令，然后把 dump 出来的数据解析后发送给 Codis；
 - 2 再开发这样一个工具：根据 dump info 文件存储的 filenum & offset 信息解析 binlog，并把解析出来的写指令增量同步给 Codis。
 
-根据这个思路，借鉴[参考文档1](https://github.com/Qihoo360/pika/wiki/%E4%BD%BF%E7%94%A8binlog%E8%BF%81%E7%A7%BB%E6%95%B0%E6%8D%AE%E5%B7%A5%E5%85%B7)开始实现V1 版本的工具【模仿 redis-port，愚人命名为 pika-port】。但在开发到最后一步时遇到这个问题：pika 以 mmap 方式向磁盘写入 binlog，redis-port 只需要读 binlog，而一般存储系统的读速度最低 5 倍于写速递，当 redis-port 追上 pika 的最新 binlog 文件数据后， 很可能读到截断的脏数据！
+根据这个思路，借鉴[参考文档1](https://github.com/Qihoo360/pika/wiki/%E4%BD%BF%E7%94%A8binlog%E8%BF%81%E7%A7%BB%E6%95%B0%E6%8D%AE%E5%B7%A5%E5%85%B7)开始实现V1 版本的工具【模仿 redis-port，愚人命名为 pika-port】。但在开发到最后一步时遇到这个问题：pika 以 mmap 方式向磁盘写入 binlog，redis-port 只需要读 binlog，而一般存储系统的读速度最低 5 倍于写速度，当 redis-port 追上 pika 的最新 binlog 文件数据后， 很可能读到截断的脏数据！
 
 因当时刚开始读 pika 代码，遇到这个无法解决坎后便只能放弃这个方案了【后来把pika/src/pika_binlog_sender_thread.cc 详细读懂后已经找到了解决方法，但此时 pika-port V2版本已经开发完毕】。
 
@@ -49,7 +49,7 @@ V1 虽然半途而废，但是开发过程中遇到的两个问题比较有意�
 + 2 pika-port 收到 pika 发来的 wait ack 后，监听 +3000 端口，启动 rsync deamon 等待全量数据同步；
 + 3 pika-port 循环检测 dump info 文件是否存在，当检测到 info 文件存在时，意味着全量同步数据完成，此时阻塞所有流程并把收到的全量数据发送给 Codis；
 + 4 pika-port 根据 info 文件提供的 filenum 和 offset 再次向 pika 发送 trysync 指令，并根据 pika 回复的 ack 获取到 sid 作为此次连接的标识；
-+ 5 pika-port 监听 +2000 端口，启动心跳发送线程，首先向 pika 发送 `spci sid`指令，然后每个 1s 向 pika 发送 `ping`指令，并等待 pika 回复的 `pong` ack；
++ 5 pika-port 监听 +2000 端口，启动心跳发送线程，首先向 pika 发送 `spci sid`指令，然后每隔 1s 向 pika 发送 `ping`指令，并等待 pika 回复的 `pong` ack；
 + 6 pika-port 启动一个 Codis 连接线程池【本质是一个线程池，每个线程启动一个 Codis 连接】；
 + 6 pika 收到心跳后，向 pika-port 发送 `auth sid` 指令成功后，就循环解析 binlog 并把数据增量同步给 pika-port；
 + 7 pika-port 收到 pika 实时同步过来的单个 redis 写指令，过滤掉其中非法指令，再删除合法质量中结尾四个辅助信息，然后根据写指令中的 key 进行 hash 计算后交给线程池中某个线程，此线程将会以阻塞方式将此数据同步给 Codis 直至成功。
