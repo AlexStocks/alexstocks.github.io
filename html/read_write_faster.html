@@ -334,7 +334,7 @@ kbd {
 
 <p><em>written by Alex Stocks on 2019/05/05，版权所有，无授权不得转载</em></p>
 
-<p>4月初读到 PolarDB 开发团队的一篇文章<a href="https://mp.weixin.qq.com/s/GbjWN9-B11DkUFgCZba_rQ">《how to write file faster》</a>，受教颇多，现拾人牙慧成就本文，以示致敬！</p>
+<p>4月初读到 PolarDB 开发团队<a href="https://github.com/baotiao">陈宗志</a>写的一篇文章<a href="https://zhuanlan.zhihu.com/p/61212603">《write file faster》</a>，受教颇多，现拾人牙慧成就本文，以示致敬！</p>
 
 <h3 id="toc_1">1 快速写文件</h3>
 
@@ -382,7 +382,188 @@ kbd {
 
 <p>linux 系统创建文件时需要向文件系统申请文件资源，如欲实现文件 “快速写”，这个等待时间也是很可观的，所以类似于第一节的<code>写文件时用到的内存资源在写之前预先申请好</code> 优化手段，这种行为即是<code>写文件时用到的文件资源在写之前预先申请好</code>。</p>
 
-<h3 id="toc_6">2 快速读文件</h3>
+<h4 id="toc_6">1.5 Journal</h4>
+
+<p>上周跟<a href="https://github.com/loveyacper">Bert师傅</a>提醒道 ext4 文件系统的 Journal 特性可能会影响程序的测试结果，并给出了<a href="http://ilinuxkernel.com/?p=1467">参考文档3</a>作为参考。今日(20190511)周末得有余暇，借用<a href="https://github.com/yuyijq">余朝晖</a>的一台阿里云的虚机测试<a href="https://zhuanlan.zhihu.com/p/61212603">参考文档1</a>中给出的程序。</p>
+
+<p>linux ext3 在 ext2 之上引入了 Journal 日志功能，以保证文件系统的数据安全性【如掉电情况下进行数据恢复】，ext4 又在 ext3 之上又引入了 extent 和 数据checksum 机制。既然大师给出了提醒，就把这个环境因素也计入测试考量之内。</p>
+
+<h5 id="toc_7">1.5.1 虚拟文件系统</h5>
+
+<p>余大师的阿里云虚机环境信息如下：</p>
+
+<div><pre><code class="language-plain/txt">    Linux: CentOS Linux release 7.6.1810 (Core)
+    Gcc: 版本 4.8.5 20150623 (Red Hat 4.8.5-36) (GCC)
+    CPU: Intel(R) Xeon(R) Platinum 8163 CPU @ 2.50GHz, cache size 33792 KB, core 4
+    Memory: 32G
+    Disk: 1T</code></pre></div>
+
+<p>个人在其上建立了一个 ext4 虚拟文件系统，详细操作步骤如下：</p>
+
+<div><pre><code class="language-plain/txt">- 1 创建虚拟磁盘
+
+    dd if=/dev/zero of=./vdisk.img bs=4k count=524288
+
+- 2 格式化为 ext4 文件系统
+
+    mkfs.ext4 ./vdisk.img
+
+- 3 把虚拟文件系统挂载到目录 `/mnt/vfs`
+
+    mkdir -p /mnt/vfs &amp;&amp; mount -o loop ./vdisk.img /mnt/vfs
+
+- 4 查看挂载结果
+
+    df -T -h
+
+- 5 打开 Journal
+
+    tune2fs -O has_journal ./vdisk.img
+
+- 6 查看文件的 Journal 信息
+
+    dumpe2fs ./vdisk.img | grep &#39;Filesystem features&#39; | grep &#39;has_journal&#39;
+
+- 7 关闭 Journal
+
+    tune2fs -O ^has_journal ./vdisk.img
+
+- 8 卸载虚拟文件系统
+
+    umount /mnt/vfs </code></pre></div>
+
+<h5 id="toc_8">1.5.2 测试程序和测试结果</h5>
+
+<p><a href="https://zhuanlan.zhihu.com/p/61212603">参考文档1</a>给出了如下测试程序【版权归属<a href="https://github.com/baotiao">陈宗志</a>】：</p>
+
+<div><pre><code class="language-C++">#include &lt;stdio.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/time.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;random&gt;
+
+uint64_t NowMicros() {
+  struct timeval tv;
+  gettimeofday(&amp;tv, NULL);
+  return static_cast&lt;uint64_t&gt;(tv.tv_sec) * 1000000 + tv.tv_usec;
+}
+
+int main()
+{
+  uint64_t st, ed;
+  off_t file_size = 1 * 1024 * 1024 * 1024;
+  int fd = open(&quot;/mnt/vfs/tf&quot;, O_CREAT | O_RDWR, 0666);
+  st = NowMicros();
+  // 测试 switch 1
+  int ret = fallocate(fd, 0, 0, file_size);
+  // int ret = fallocate(fd, FALLOC_FL_ZERO_RANGE, 0, file_size);
+  if (ret != 0) {
+    printf(&quot;fallocate err %d\n&quot;, ret);
+  }
+  ed = NowMicros();
+  printf(&quot;fallocate time microsecond(us) %lld\n&quot;, ed - st);
+  lseek(fd, 0, SEEK_SET);
+  int dsize = 4096;
+  unsigned char *aligned_buf;
+  ret = posix_memalign((void **)&amp;aligned_buf, 4096, 4096 * 10);
+  for (int i = 0; i &lt; dsize; i++) {
+    aligned_buf[i] = (int)random() % 128;
+  }
+  st = NowMicros();
+  int num;
+  for (uint64_t i = 0; i &lt; file_size / dsize; i++) {
+    num = write(fd, aligned_buf, dsize);
+    // 测试 switch 2
+    // fdatasync(fd);
+    // fsync(fd);
+    if (num != dsize) {
+      printf(&quot;write error\n&quot;);
+      return -1;
+    }
+  }
+  //fdatasync(fd);
+  fsync(fd);
+  ed = NowMicros();
+  printf(&quot;first write time microsecond(us) %lld\n&quot;, ed - st);
+  sleep(10);
+  lseek(fd, 0, SEEK_SET);
+  st = NowMicros();
+  for (uint64_t i = 0; i &lt; file_size / dsize; i++) {
+    num = write(fd, aligned_buf, dsize);
+    // 测试 switch 2
+    // fdatasync(fd);
+    // fsync(fd);
+    if (num != dsize) {
+      printf(&quot;write error\n&quot;);
+      return -1;
+    }
+  }
+  //fdatasync(fd);
+  fsync(fd);
+  ed = NowMicros();
+  printf(&quot;second write time microsecond(us) %lld\n&quot;, ed - st);
+  return 0;
+}</code></pre></div>
+
+<p>上面程序给出了两个测试开关：</p>
+
+<ul>
+<li>1 测试开关1 用于测试是否使用 fallocate 的参数 FALLOC<em>FL</em>ZERO_RANGE；</li>
+<li>2 测试开关2 用于测试 使用fdatasync/使用fsync/不使用sync 三种情况；</li>
+</ul>
+
+<p>整体测试输出结果如下：</p>
+
+<table>
+<thead>
+<tr>
+<th style="text-align: left">switch</th>
+<th style="text-align: left">No Journal</th>
+<th style="text-align: left">Journal</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td style="text-align: left">fallocate(FALLOC_FL_ZERO_RANGE)  + fsync</td>
+<td style="text-align: left">fallocate time microsecond(us) 388<br/>first write time microsecond(us) 15 558 691<br/>second write time microsecond(us) 8 762 124</td>
+<td style="text-align: left">fallocate time microsecond(us) 389<br/>first write time microsecond(us) 15 629 009<br/>second write time microsecond(us) 8 684 948</td>
+</tr>
+<tr>
+<td style="text-align: left">fallocate(FALLOC_FL_ZERO_RANGE)  + fdatasync</td>
+<td style="text-align: left">fallocate time microsecond(us) 422<br/>first write time microsecond(us) 15 073 506<br/>second write time microsecond(us) 8 424 095<br/></td>
+<td style="text-align: left">fallocate time microsecond(us) 398<br/>first write time microsecond(us) 15 394 414<br/>second write time microsecond(us) 8 680 291<br/></td>
+</tr>
+<tr>
+<td style="text-align: left">fallocate(FALLOC_FL_ZERO_RANGE)  + no sync + no journal</td>
+<td style="text-align: left">fallocate time microsecond(us) 404<br/>first write time microsecond(us) 1 299 027<br/>second write time microsecond(us) 1 213 997<br/></td>
+<td style="text-align: left">fallocate time microsecond(us) 392<br/>first write time microsecond(us) 1 301 030<br/>second write time microsecond(us) 1 183 024<br/></td>
+</tr>
+<tr>
+<td style="text-align: left">fallocate(0)  + no sync + no journal</td>
+<td style="text-align: left">fallocate time microsecond(us) 518<br/>first write time microsecond(us) 1 445 625<br/>second write time microsecond(us) 1 196 275<br/></td>
+<td style="text-align: left">fallocate time microsecond(us) 371<br/>first write time microsecond(us) 1 304 442<br/>second write time microsecond(us) 1 183 718<br/></td>
+</tr>
+</tbody>
+</table>
+
+<p><font size=1><em>注：表格中数字经为个人格式化后结果，源程序结果无空格</em></font></p>
+
+<p>从测试过可得出如下结论：</p>
+
+<ul>
+<li>1 Journal 功能确实会导致同步写放大；</li>
+<li>2 fdatasync 效率高于 fsync；</li>
+<li>3 fallocate 的参数 FALLOC_FL_ZERO_RANGE 可加速数据同步；</li>
+<li>4 文件复用【或称为文件复写】可大幅度加快文件同步速度；</li>
+</ul>
+
+<p>在 SATA 盘场景下，Journal 功能确实有利于保证数据安全性，缺点就是导致写放大。在 SSD/Flash 盘上则建议关闭 Journal，因为写放大将加速硬件损耗，其缺点是无法保证数据安全性，即使使用了 fdatasync 接口，在极端情况下【如瞬时掉电】也无法保证数据安全性：因为 fdatasync 并不保证数据刷盘的顺序，可能后写的数据先被刷盘，导致形成文件空洞。</p>
+
+<p><a href="https://github.com/yuyijq">余大师</a>给出了一种相对安全且兼顾效率的优化手段：先调用 fdatasync 刷盘，在调用 fsync 对 metadata 进行更新。后面个人有机会再进行更深度的测试。</p>
+
+<h3 id="toc_9">2 快速读文件</h3>
 
 <p>优化文件读取速度的最基本手段即是<code>顺序读</code>，其原理在于 linux 系统读取文件数据时会提前对文件进行预读，减少读数据时的缺页中断。</p>
 
@@ -390,42 +571,22 @@ kbd {
 
 <p>具体实践中，readahead 可以配合 mmap 函数一起使用以加快数据读取速度。</p>
 
-<h2 id="toc_7">参考文档</h2>
+<h2 id="toc_10">参考文档</h2>
 
 <ul>
-<li>1 <a href="https://mp.weixin.qq.com/s/GbjWN9-B11DkUFgCZba_rQ">how to write file faster</a></li>
+<li>1 <a href="https://zhuanlan.zhihu.com/p/61212603">write file faster</a></li>
 <li>2 <a href="https://my.oschina.net/alexstocks/blog/299619">如何快速的把日志输出到磁盘上</a></li>
+<li>3 <a href="http://ilinuxkernel.com/?p=1467">Linux ext3/ext4文件系统中同步写放大问题</a></li>
 </ul>
 
-<h2 id="toc_8">扒粪者-于雨氏</h2>
+<h2 id="toc_11">扒粪者-于雨氏</h2>
 
 <blockquote>
-<p>2019/05/05，于雨氏，于 G44，初作此文。</p>
+<ul>
+<li>2019/05/05，于雨氏，于 G44，初作此文。</li>
+<li>2019/05/11，于雨氏，于 wfc 添加 #1.5 Journal# 一节。</li>
+</ul>
 </blockquote>
-
-
-<script type="text/javascript">
-var _self="undefined"!=typeof window?window:"undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?self:{},Prism=function(){var e=/\blang(?:uage)?-(\w+)\b/i,t=0,n=_self.Prism={util:{encode:function(e){return e instanceof a?new a(e.type,n.util.encode(e.content),e.alias):"Array"===n.util.type(e)?e.map(n.util.encode):e.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\u00a0/g," ")},type:function(e){return Object.prototype.toString.call(e).match(/\[object (\w+)\]/)[1]},objId:function(e){return e.__id||Object.defineProperty(e,"__id",{value:++t}),e.__id},clone:function(e){var t=n.util.type(e);switch(t){case"Object":var a={};for(var r in e)e.hasOwnProperty(r)&&(a[r]=n.util.clone(e[r]));return a;case"Array":return e.map&&e.map(function(e){return n.util.clone(e)})}return e}},languages:{extend:function(e,t){var a=n.util.clone(n.languages[e]);for(var r in t)a[r]=t[r];return a},insertBefore:function(e,t,a,r){r=r||n.languages;var l=r[e];if(2==arguments.length){a=arguments[1];for(var i in a)a.hasOwnProperty(i)&&(l[i]=a[i]);return l}var o={};for(var s in l)if(l.hasOwnProperty(s)){if(s==t)for(var i in a)a.hasOwnProperty(i)&&(o[i]=a[i]);o[s]=l[s]}return n.languages.DFS(n.languages,function(t,n){n===r[e]&&t!=e&&(this[t]=o)}),r[e]=o},DFS:function(e,t,a,r){r=r||{};for(var l in e)e.hasOwnProperty(l)&&(t.call(e,l,e[l],a||l),"Object"!==n.util.type(e[l])||r[n.util.objId(e[l])]?"Array"!==n.util.type(e[l])||r[n.util.objId(e[l])]||(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,l,r)):(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,null,r)))}},plugins:{},highlightAll:function(e,t){var a={callback:t,selector:'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'};n.hooks.run("before-highlightall",a);for(var r,l=a.elements||document.querySelectorAll(a.selector),i=0;r=l[i++];)n.highlightElement(r,e===!0,a.callback)},highlightElement:function(t,a,r){for(var l,i,o=t;o&&!e.test(o.className);)o=o.parentNode;o&&(l=(o.className.match(e)||[,""])[1],i=n.languages[l]),t.className=t.className.replace(e,"").replace(/\s+/g," ")+" language-"+l,o=t.parentNode,/pre/i.test(o.nodeName)&&(o.className=o.className.replace(e,"").replace(/\s+/g," ")+" language-"+l);var s=t.textContent,u={element:t,language:l,grammar:i,code:s};if(!s||!i)return n.hooks.run("complete",u),void 0;if(n.hooks.run("before-highlight",u),a&&_self.Worker){var c=new Worker(n.filename);c.onmessage=function(e){u.highlightedCode=e.data,n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(u.element),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},c.postMessage(JSON.stringify({language:u.language,code:u.code,immediateClose:!0}))}else u.highlightedCode=n.highlight(u.code,u.grammar,u.language),n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(t),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},highlight:function(e,t,r){var l=n.tokenize(e,t);return a.stringify(n.util.encode(l),r)},tokenize:function(e,t){var a=n.Token,r=[e],l=t.rest;if(l){for(var i in l)t[i]=l[i];delete t.rest}e:for(var i in t)if(t.hasOwnProperty(i)&&t[i]){var o=t[i];o="Array"===n.util.type(o)?o:[o];for(var s=0;s<o.length;++s){var u=o[s],c=u.inside,g=!!u.lookbehind,h=!!u.greedy,f=0,d=u.alias;u=u.pattern||u;for(var p=0;p<r.length;p++){var m=r[p];if(r.length>e.length)break e;if(!(m instanceof a)){u.lastIndex=0;var y=u.exec(m),v=1;if(!y&&h&&p!=r.length-1){var b=r[p+1].matchedStr||r[p+1],k=m+b;if(p<r.length-2&&(k+=r[p+2].matchedStr||r[p+2]),u.lastIndex=0,y=u.exec(k),!y)continue;var w=y.index+(g?y[1].length:0);if(w>=m.length)continue;var _=y.index+y[0].length,P=m.length+b.length;if(v=3,P>=_){if(r[p+1].greedy)continue;v=2,k=k.slice(0,P)}m=k}if(y){g&&(f=y[1].length);var w=y.index+f,y=y[0].slice(f),_=w+y.length,S=m.slice(0,w),O=m.slice(_),j=[p,v];S&&j.push(S);var A=new a(i,c?n.tokenize(y,c):y,d,y,h);j.push(A),O&&j.push(O),Array.prototype.splice.apply(r,j)}}}}}return r},hooks:{all:{},add:function(e,t){var a=n.hooks.all;a[e]=a[e]||[],a[e].push(t)},run:function(e,t){var a=n.hooks.all[e];if(a&&a.length)for(var r,l=0;r=a[l++];)r(t)}}},a=n.Token=function(e,t,n,a,r){this.type=e,this.content=t,this.alias=n,this.matchedStr=a||null,this.greedy=!!r};if(a.stringify=function(e,t,r){if("string"==typeof e)return e;if("Array"===n.util.type(e))return e.map(function(n){return a.stringify(n,t,e)}).join("");var l={type:e.type,content:a.stringify(e.content,t,r),tag:"span",classes:["token",e.type],attributes:{},language:t,parent:r};if("comment"==l.type&&(l.attributes.spellcheck="true"),e.alias){var i="Array"===n.util.type(e.alias)?e.alias:[e.alias];Array.prototype.push.apply(l.classes,i)}n.hooks.run("wrap",l);var o="";for(var s in l.attributes)o+=(o?" ":"")+s+'="'+(l.attributes[s]||"")+'"';return"<"+l.tag+' class="'+l.classes.join(" ")+'" '+o+">"+l.content+"</"+l.tag+">"},!_self.document)return _self.addEventListener?(_self.addEventListener("message",function(e){var t=JSON.parse(e.data),a=t.language,r=t.code,l=t.immediateClose;_self.postMessage(n.highlight(r,n.languages[a],a)),l&&_self.close()},!1),_self.Prism):_self.Prism;var r=document.currentScript||[].slice.call(document.getElementsByTagName("script")).pop();return r&&(n.filename=r.src,document.addEventListener&&!r.hasAttribute("data-manual")&&document.addEventListener("DOMContentLoaded",n.highlightAll)),_self.Prism}();"undefined"!=typeof module&&module.exports&&(module.exports=Prism),"undefined"!=typeof global&&(global.Prism=Prism);
-</script>
-
-<script type="text/x-mathjax-config">
-(function () {
-
-MathJax.Hub.Config({
-	'showProcessingMessages': false,
-	'messageStyle': 'none'
-});
-
-if (typeof MathJaxListener !== 'undefined') {
-	MathJax.Hub.Register.StartupHook('End', function () {
-		MathJaxListener.invokeCallbackForKey_('End');
-	});
-}
-
-})();
-</script>
-
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 
 <!-- baidu statistic start -->

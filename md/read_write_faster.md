@@ -2,7 +2,7 @@
 ---
 *written by Alex Stocks on 2019/05/05，版权所有，无授权不得转载*
 
-4月初读到 PolarDB 开发团队的一篇文章[《how to write file faster》](https://mp.weixin.qq.com/s/GbjWN9-B11DkUFgCZba_rQ)，受教颇多，现拾人牙慧成就本文，以示致敬！
+4月初读到 PolarDB 开发团队[陈宗志](https://github.com/baotiao)写的一篇文章[《write file faster》](https://zhuanlan.zhihu.com/p/61212603)，受教颇多，现拾人牙慧成就本文，以示致敬！
 
 ### 1 快速写文件
 
@@ -50,6 +50,162 @@ fallocate 保证系统预先为文件分配相应的逻辑磁盘空间，保证�
 
 linux 系统创建文件时需要向文件系统申请文件资源，如欲实现文件 “快速写”，这个等待时间也是很可观的，所以类似于第一节的`写文件时用到的内存资源在写之前预先申请好` 优化手段，这种行为即是`写文件时用到的文件资源在写之前预先申请好`。
 
+#### 1.5 Journal 
+
+上周跟[Bert师傅](https://github.com/loveyacper)提醒道 ext4 文件系统的 Journal 特性可能会影响程序的测试结果，并给出了[参考文档3](http://ilinuxkernel.com/?p=1467)作为参考。今日(20190511)周末得有余暇，借用[余朝晖](https://github.com/yuyijq)的一台阿里云的虚机测试[参考文档1](https://zhuanlan.zhihu.com/p/61212603)中给出的程序。
+
+linux ext3 在 ext2 之上引入了 Journal 日志功能，以保证文件系统的数据安全性【如掉电情况下进行数据恢复】，ext4 又在 ext3 之上又引入了 extent 和 数据checksum 机制。既然大师给出了提醒，就把这个环境因素也计入测试考量之内。
+
+##### 1.5.1 虚拟文件系统
+
+余大师的阿里云虚机环境信息如下：
+
+```plain/txt
+	Linux: CentOS Linux release 7.6.1810 (Core)
+	Gcc: 版本 4.8.5 20150623 (Red Hat 4.8.5-36) (GCC)
+	CPU: Intel(R) Xeon(R) Platinum 8163 CPU @ 2.50GHz, cache size 33792 KB, core 4
+	Memory: 32G
+	Disk: 1T
+```
+
+个人在其上建立了一个 ext4 虚拟文件系统，详细操作步骤如下：
+
+```plain/txt
+- 1 创建虚拟磁盘
+
+    dd if=/dev/zero of=./vdisk.img bs=4k count=524288
+    
+- 2 格式化为 ext4 文件系统
+
+    mkfs.ext4 ./vdisk.img
+    
+- 3 把虚拟文件系统挂载到目录 `/mnt/vfs` 
+
+    mkdir -p /mnt/vfs && mount -o loop ./vdisk.img /mnt/vfs
+    
+- 4 查看挂载结果   
+
+    df -T -h
+
+- 5 打开 Journal
+
+    tune2fs -O has_journal ./vdisk.img
+    
+- 6 查看文件的 Journal 信息
+
+    dumpe2fs ./vdisk.img | grep 'Filesystem features' | grep 'has_journal'
+    
+- 7 关闭 Journal
+
+    tune2fs -O ^has_journal ./vdisk.img
+
+- 8 卸载虚拟文件系统
+    
+    umount /mnt/vfs 
+```
+
+##### 1.5.2 测试程序和测试结果
+
+[参考文档1](https://zhuanlan.zhihu.com/p/61212603)给出了如下测试程序【版权归属[陈宗志](https://github.com/baotiao)】：
+
+```C++
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/time.h>
+#include <stdint.h>
+#include <random>
+
+uint64_t NowMicros() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return static_cast<uint64_t>(tv.tv_sec) * 1000000 + tv.tv_usec;
+}
+
+int main()
+{
+  uint64_t st, ed;
+  off_t file_size = 1 * 1024 * 1024 * 1024;
+  int fd = open("/mnt/vfs/tf", O_CREAT | O_RDWR, 0666);
+  st = NowMicros();
+  // 测试 switch 1
+  int ret = fallocate(fd, 0, 0, file_size);
+  // int ret = fallocate(fd, FALLOC_FL_ZERO_RANGE, 0, file_size);
+  if (ret != 0) {
+    printf("fallocate err %d\n", ret);
+  }
+  ed = NowMicros();
+  printf("fallocate time microsecond(us) %lld\n", ed - st);
+  lseek(fd, 0, SEEK_SET);
+  int dsize = 4096;
+  unsigned char *aligned_buf;
+  ret = posix_memalign((void **)&aligned_buf, 4096, 4096 * 10);
+  for (int i = 0; i < dsize; i++) {
+    aligned_buf[i] = (int)random() % 128;
+  }
+  st = NowMicros();
+  int num;
+  for (uint64_t i = 0; i < file_size / dsize; i++) {
+    num = write(fd, aligned_buf, dsize);
+    // 测试 switch 2
+    // fdatasync(fd);
+    // fsync(fd);
+    if (num != dsize) {
+      printf("write error\n");
+      return -1;
+    }
+  }
+  //fdatasync(fd);
+  fsync(fd);
+  ed = NowMicros();
+  printf("first write time microsecond(us) %lld\n", ed - st);
+  sleep(10);
+  lseek(fd, 0, SEEK_SET);
+  st = NowMicros();
+  for (uint64_t i = 0; i < file_size / dsize; i++) {
+    num = write(fd, aligned_buf, dsize);
+    // 测试 switch 2
+    // fdatasync(fd);
+    // fsync(fd);
+    if (num != dsize) {
+      printf("write error\n");
+      return -1;
+    }
+  }
+  //fdatasync(fd);
+  fsync(fd);
+  ed = NowMicros();
+  printf("second write time microsecond(us) %lld\n", ed - st);
+  return 0;
+}
+```
+
+上面程序给出了两个测试开关：
+
+- 1 测试开关1 用于测试是否使用 fallocate 的参数 FALLOC_FL_ZERO_RANGE；
+- 2 测试开关2 用于测试 使用fdatasync/使用fsync/不使用sync 三种情况；
+
+整体测试输出结果如下：
+
+| switch | No Journal | Journal |
+|:-------|:-----------|:--------|
+| fallocate(FALLOC\_FL\_ZERO\_RANGE)  + fsync | fallocate time microsecond(us) 388<br/>first write time microsecond(us) 15 558 691<br/>second write time microsecond(us) 8 762 124 | fallocate time microsecond(us) 389<br/>first write time microsecond(us) 15 629 009<br/>second write time microsecond(us) 8 684 948 |
+| fallocate(FALLOC\_FL\_ZERO\_RANGE)  + fdatasync | fallocate time microsecond(us) 422<br/>first write time microsecond(us) 15 073 506<br/>second write time microsecond(us) 8 424 095<br/> | fallocate time microsecond(us) 398<br/>first write time microsecond(us) 15 394 414<br/>second write time microsecond(us) 8 680 291<br/> |
+| fallocate(FALLOC\_FL\_ZERO\_RANGE)  + no sync + no journal | fallocate time microsecond(us) 404<br/>first write time microsecond(us) 1 299 027<br/>second write time microsecond(us) 1 213 997<br/> | fallocate time microsecond(us) 392<br/>first write time microsecond(us) 1 301 030<br/>second write time microsecond(us) 1 183 024<br/> |
+| fallocate(0)  + no sync + no journal | fallocate time microsecond(us) 518<br/>first write time microsecond(us) 1 445 625<br/>second write time microsecond(us) 1 196 275<br/> | fallocate time microsecond(us) 371<br/>first write time microsecond(us) 1 304 442<br/>second write time microsecond(us) 1 183 718<br/> |
+<font size=1>*注：表格中数字经为个人格式化后结果，源程序结果无空格*</font>
+
+从测试过可得出如下结论：
+
+- 1 Journal 功能确实会导致同步写放大；
+- 2 fdatasync 效率高于 fsync；
+- 3 fallocate 的参数 FALLOC\_FL\_ZERO\_RANGE 可加速数据同步；
+- 4 文件复用【或称为文件复写】可大幅度加快文件同步速度；
+
+在 SATA 盘场景下，Journal 功能确实有利于保证数据安全性，缺点就是导致写放大。在 SSD/Flash 盘上则建议关闭 Journal，因为写放大将加速硬件损耗，其缺点是无法保证数据安全性，即使使用了 fdatasync 接口，在极端情况下【如瞬时掉电】也无法保证数据安全性：因为 fdatasync 并不保证数据刷盘的顺序，可能后写的数据先被刷盘，导致形成文件空洞。
+
+[余大师](https://github.com/yuyijq)给出了一种相对安全且兼顾效率的优化手段：先调用 fdatasync 刷盘，在调用 fsync 对 metadata 进行更新。后面个人有机会再进行更深度的测试。
+
 ### 2 快速读文件 
 
 优化文件读取速度的最基本手段即是`顺序读`，其原理在于 linux 系统读取文件数据时会提前对文件进行预读，减少读数据时的缺页中断。
@@ -60,9 +216,11 @@ linux 系统有预读行为，但预读数据量则是用户所不知道的。li
 
 ## 参考文档
 
-- 1 [how to write file faster](https://mp.weixin.qq.com/s/GbjWN9-B11DkUFgCZba_rQ)
+- 1 [write file faster](https://zhuanlan.zhihu.com/p/61212603)
 - 2 [如何快速的把日志输出到磁盘上](https://my.oschina.net/alexstocks/blog/299619)
+- 3 [Linux ext3/ext4文件系统中同步写放大问题](http://ilinuxkernel.com/?p=1467)
 
 ## 扒粪者-于雨氏
 
-> 2019/05/05，于雨氏，于 G44，初作此文。
+>- 2019/05/05，于雨氏，于 G44，初作此文。
+>- 2019/05/11，于雨氏，于 wfc 添加 #1.5 Journal# 一节。
