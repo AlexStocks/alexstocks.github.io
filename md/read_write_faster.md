@@ -182,8 +182,8 @@ int main()
 
 上面程序给出了两个测试开关：
 
-- 1 测试开关1 用于测试是否使用 fallocate 的参数 FALLOC_FL_ZERO_RANGE；
-- 2 测试开关2 用于测试 使用fdatasync/使用fsync/不使用sync 三种情况；
+- 1 测试开关1 用于测试 fallocate 的参数 FALLOC\_FL\_ZERO\_RANGE；
+- 2 测试开关2 用于测试 使用fdatasync / 使用fsync / 不使用sync 三种情况；
 
 整体测试输出结果如下：
 
