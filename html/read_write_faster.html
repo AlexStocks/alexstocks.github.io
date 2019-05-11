@@ -384,7 +384,7 @@ kbd {
 
 <h4 id="toc_6">1.5 Journal</h4>
 
-<p>上周跟<a href="https://github.com/loveyacper">Bert师傅</a>提醒道 ext4 文件系统的 Journal 特性可能会影响程序的测试结果，并给出了<a href="http://ilinuxkernel.com/?p=1467">参考文档3</a>作为参考。今日(20190511)周末得有余暇，借用<a href="https://github.com/yuyijq">余朝晖</a>的一台阿里云的虚机测试<a href="https://zhuanlan.zhihu.com/p/61212603">参考文档1</a>中给出的程序。</p>
+<p>上周<a href="https://github.com/loveyacper">Bert师傅</a>提醒道 ext4 文件系统的 Journal 特性可能会影响程序的测试结果，并给出了<a href="http://ilinuxkernel.com/?p=1467">参考文档3</a>作为参考。今日(20190511)周末得有余暇，借用<a href="https://github.com/yuyijq">余朝晖</a>的一台阿里云的虚机测试<a href="https://zhuanlan.zhihu.com/p/61212603">参考文档1</a>中给出的程序。</p>
 
 <p>linux ext3 在 ext2 之上引入了 Journal 日志功能，以保证文件系统的数据安全性【如掉电情况下进行数据恢复】，ext4 又在 ext3 之上又引入了 extent 和 数据checksum 机制。既然大师给出了提醒，就把这个环境因素也计入测试考量之内。</p>
 
@@ -550,7 +550,7 @@ int main()
 
 <p><font size=1><em>注：表格中数字经为个人格式化后结果，源程序结果无空格</em></font></p>
 
-<p>从测试过可得出如下结论：</p>
+<p>在测试过程中，注意每次测试新 case 以前，若存在文件 <code>/mnt/vfs/tf</code>，则务必删除之，以免因为文件复用影响测试结果。从测试输出结果可得出如下结论：</p>
 
 <ul>
 <li>1 Journal 功能确实会导致同步写放大；</li>
@@ -618,6 +618,8 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
+
 
 </body>
 
