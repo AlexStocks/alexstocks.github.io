@@ -54,7 +54,7 @@ linux 系统创建文件时需要向文件系统申请文件资源，如欲实�
 
 上周[Bert师傅](https://github.com/loveyacper)提醒道 ext4 文件系统的 Journal 特性可能会影响程序的测试结果，并给出了[参考文档3](http://ilinuxkernel.com/?p=1467)作为参考。今日(20190511)周末得有余暇，借用[余朝晖](https://github.com/yuyijq)的一台阿里云的虚机测试[参考文档1](https://zhuanlan.zhihu.com/p/61212603)中给出的程序。
 
-linux ext3 在 ext2 之上引入了 Journal 日志功能，以保证文件系统的数据安全性【如掉电情况下进行数据恢复】，ext4 又在 ext3 之上又引入了 extent 和 数据checksum 机制。既然大师给出了提醒，就把这个环境因素也计入测试考量之内。
+linux ext3 在 ext2 之上引入了 Journal 日志功能，以保证文件系统的数据安全性【如掉电情况下进行数据恢复】，ext4 又在 ext3 之上又引入了 extent 和 数据checksum 以及 延迟物理页面空间分配机制【本文显然是通过绕过这种机制加快写文件速度】。既然大师给出了提醒，就把这个环境因素也计入测试考量之内。
 
 ##### 1.5.1 虚拟文件系统
 
