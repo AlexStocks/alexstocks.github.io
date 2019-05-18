@@ -33,7 +33,7 @@
 
 ![](../pic/基于 ID-Value 的监控告警体系.png)
 
-这套称之为 `基于 ID-Value 的监控告警体系` 的实现思路非常简单，客户端 SDK 仅提供了 2 个 API。经个人搜索，在淘宝的开源代码平台上搜出来的如下腾讯代码即为腾讯内部 API 接口的头文件：
+这套称之为 `基于 ID-Value 的监控告警体系` 的实现思路非常简单，客户端 SDK 仅提供了 2 个 API，其特点在于：**数据足够轻量 且 数据是客户端主动向监控中心 Push【迥异于 Prometheus 的服务端向客户端 Pull metrics指标】**。经个人搜索，在淘宝的开源代码平台上搜出来的如下腾讯代码即为腾讯内部 API 接口的头文件：
 
 ```C++
 // http://code.taobao.org/p/rockysmarthome/diff/2/trunk/smarthome/EHNetwork/svrlibindevelop/include/utility/attrapi.h
