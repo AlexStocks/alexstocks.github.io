@@ -46,10 +46,10 @@ fallocate 保证系统预先为文件分配相应的逻辑磁盘空间，保证�
 
 ##### 1.3.1 mmap
 
-linux glibc 有一个比较有名的 API mmap 能够实现用户态逻辑空间内存与磁盘物理空间的直接映射，亦可绕过内核态内存空间，实现 zero copy。但是与 fallocate 相比，其缺陷如下：
+linux glibc 有一个比较有名的 API mmap 能够实现内核态逻辑空间内存与磁盘物理空间的直接映射，亦可绕过内核态内存空间，实现 zero copy。但是与 fallocate 相比，其缺陷如下：
 
 - 1 mmap 仅仅建立了一种映射关系，当用户第一次写数据的时候，还是会产生内存缺页异常，导致 OS 陷入内核态进进行物理内存分配；
-- 2 mmap 无法设置内存和磁盘空间的页对其，导致其写效率无法控制；
+- 2 mmap 无法设置内存和磁盘空间的页对齐，导致其写效率无法控制；
 - 3 msync 时候会对相关内存页面加锁，写完后设置写保护，这个内存页面可能会被交换到虚拟磁盘空间，导致再次写的时候产生内存缺页异常，导致 OS 陷入内核态进行页面交换到内存；
 - 4 msync 的时候需要注意内存页和物理页面对齐。
 
@@ -200,10 +200,10 @@ int main()
 
 | switch | No Journal | Journal |
 |:-------|:-----------|:--------|
-| fallocate(FALLOC\_FL\_ZERO\_RANGE)  + fsync | fallocate time microsecond(us) 388<br/>first write time microsecond(us) 15 558 691<br/>second write time microsecond(us) 8 762 124 | fallocate time microsecond(us) 389<br/>first write time microsecond(us) 15 629 009<br/>second write time microsecond(us) 8 684 948 |
-| fallocate(FALLOC\_FL\_ZERO\_RANGE)  + fdatasync | fallocate time microsecond(us) 422<br/>first write time microsecond(us) 15 073 506<br/>second write time microsecond(us) 8 424 095<br/> | fallocate time microsecond(us) 398<br/>first write time microsecond(us) 15 394 414<br/>second write time microsecond(us) 8 680 291<br/> |
-| fallocate(FALLOC\_FL\_ZERO\_RANGE)  + no sync + no journal | fallocate time microsecond(us) 404<br/>first write time microsecond(us) 1 299 027<br/>second write time microsecond(us) 1 213 997<br/> | fallocate time microsecond(us) 392<br/>first write time microsecond(us) 1 301 030<br/>second write time microsecond(us) 1 183 024<br/> |
-| fallocate(0)  + no sync + no journal | fallocate time microsecond(us) 518<br/>first write time microsecond(us) 1 445 625<br/>second write time microsecond(us) 1 196 275<br/> | fallocate time microsecond(us) 371<br/>first write time microsecond(us) 1 304 442<br/>second write time microsecond(us) 1 183 718<br/> |
+| fallocate(FALLOC\_FL\_ZERO\_RANGE)  + fsync | fallocate time microsecond(us) 388<br/>first write time microsecond(us) 15,558,691<br/>second write time microsecond(us) 8,762,124 | fallocate time microsecond(us) 389<br/>first write time microsecond(us) 15,629,009<br/>second write time microsecond(us) 8,684,948 |
+| fallocate(FALLOC\_FL\_ZERO\_RANGE)  + fdatasync | fallocate time microsecond(us) 422<br/>first write time microsecond(us) 15,073,506<br/>second write time microsecond(us) 8,424,095<br/> | fallocate time microsecond(us) 398<br/>first write time microsecond(us) 15,394,414<br/>second write time microsecond(us) 8,680,291<br/> |
+| fallocate(FALLOC\_FL\_ZERO\_RANGE)  + no sync | fallocate time microsecond(us) 404<br/>first write time microsecond(us) 1,299,027<br/>second write time microsecond(us) 1,213,997<br/> | fallocate time microsecond(us) 392<br/>first write time microsecond(us) 1,301,030<br/>second write time microsecond(us) 1,183,024<br/> |
+| fallocate(0)  + no sync | fallocate time microsecond(us) 518<br/>first write time microsecond(us) 1,445,625<br/>second write time microsecond(us) 1,196,275<br/> | fallocate time microsecond(us) 371<br/>first write time microsecond(us) 1,304,442<br/>second write time microsecond(us) 1,183,718<br/> |
 <font size=1>*注：表格中数字经为个人格式化后结果，源程序结果无空格*</font>
 
 在测试过程中，注意每次测试新 case 以前，若存在文件 `/mnt/vfs/tf`，则务必删除之，以免因为文件复用影响测试结果。从测试输出结果可得出如下结论：
@@ -211,11 +211,12 @@ int main()
 - 1 Journal 功能确实会导致同步写放大；
 - 2 fdatasync 效率高于 fsync；
 - 3 fallocate 的参数 FALLOC\_FL\_ZERO\_RANGE 可加速数据同步；
-- 4 文件复用【或称为文件复写】可大幅度加快文件同步速度；
+
+测试程序的第二次循环比第一次循环写快速，其原因在于第一次循环时操作系统需要在逻辑空间【vfile空间】和物理磁盘空间之间建立映射关系，第二次写时就可以直接利用现有的映射关系直接进行写动作。
 
 在 SATA 盘场景下，Journal 功能确实有利于保证数据安全性，缺点就是导致写放大。在 SSD/Flash 盘上则建议关闭 Journal，因为写放大将加速硬件损耗，其缺点是无法保证数据安全性，即使使用了 fdatasync 接口，在极端情况下【如瞬时掉电】也无法保证数据安全性：因为 fdatasync 并不保证数据刷盘的顺序，可能后写的数据先被刷盘，导致形成文件空洞。
 
-[余大师](https://github.com/yuyijq)给出了一种相对安全且兼顾效率的优化手段：先调用 fdatasync 刷盘，在调用 fsync 对 metadata 进行更新。后面个人有机会再进行更深度的测试。
+[余大师](https://github.com/yuyijq)给出了一种相对安全且兼顾效率的优化手段：若干次调用 fdatasync 刷盘后，再调用 fsync 对 metadata 进行更新。后面个人有机会再进行更深度的测试。
 
 ### 2 快速读文件 
 
