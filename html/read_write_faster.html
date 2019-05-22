@@ -575,8 +575,6 @@ int main()
 
 <p>在 SATA 盘场景下，Journal 功能确实有利于保证数据安全性，缺点就是导致写放大。在 SSD/Flash 盘上则建议关闭 Journal，因为写放大将加速硬件损耗，其缺点是无法保证数据安全性，即使使用了 fdatasync 接口，在极端情况下【如瞬时掉电】也无法保证数据安全性：因为 fdatasync 并不保证数据刷盘的顺序，可能后写的数据先被刷盘，导致形成文件空洞。</p>
 
-<p><a href="https://github.com/yuyijq">余大师</a>给出了一种相对安全且兼顾效率的优化手段：若干次调用 fdatasync 刷盘后，再调用 fsync 对 metadata 进行更新。后面个人有机会再进行更深度的测试。</p>
-
 <h3 id="toc_10">2 快速读文件</h3>
 
 <p>优化文件读取速度的最基本手段即是<code>顺序读</code>，其原理在于 linux 系统读取文件数据时会提前对文件进行预读，减少读数据时的缺页中断。</p>
@@ -632,6 +630,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 
 
