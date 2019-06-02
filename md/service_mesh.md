@@ -126,6 +126,20 @@ Proxy 优点是对客户端屏蔽的服务端的复杂性。中间件服务系�
 
 4.1 节兜兜转转地讨论了各种形式的 "Client-Server" 以及其相关形态的负载均衡，其目的就是引出一个话题：Sidecar 这个组件是必不可少的吗？
 
+
+#### 4.2.1 无 Proxy 的意义
+
+当前很多互联网公司在进行微服务化转型中，而一些大型公司早已完成微服务化拆分，现在又在向 Service Mesh 升级中。如果中小型公司一直跟在大公司后面照猫画虎，便不免在技术路线上始终拉【跟】人【着】一【吃】步【土】。
+
+![](../pic/service_mesh/alignment-n-autonomy.png)
+
+
+就算是微服务转型，也不是谁都玩得起的，不仅牵涉到各个服务拆分，还设计到开发、测试、部署与服务迁移各个环节。上图【源自[参考文档3](https://paulhammant.com/2017/07/09/alignment-and-autonomy-and-quorums/)】详细描述了 Spotify 在进行微服务化改造过程中相关人员的组织问题，并得出结论：若要进行技术升级，必须在 dev leader 和 team members 之间达成 "alignment autonomy"。
+
+如果有种技术可以让这种公司技术一步完成从原【微】始【服】社【务】会【化】跨入社【网】会【格】主【结】义【构】，岂不美哉？
+
+#### 4.2.2 gRPC 
+
 Sidecar 在 "Client-Server" 服务通信形态中就是一个 Service-side 态的 Proxy。服务应用层无论以各种跨进程访问方式或者通过本机 tcp/uds 协议栈形式以 local 形式连接 Sidecar，但毕竟多了一个 “hop”，对整理系统的吞吐、延迟都有影响，且多了这么一个组件必然会增加硬件资源地消耗。
 
 在 Service Mesh 概念出来之前，服务通信主要以 RPC 形式完成，相关框架有谷歌的 gRPC、鹅厂的 Tars、猫厂的 Dubbo【内部有一个 HSF】等，其本质是以 SDK 形式嵌入服务应用的网络层实现整体系统的可靠通信。在 Service Mesh 概念出现后，这些组件当然还是会以各种形式进化下去，gRPC 的进化应该会最引人注目。
@@ -134,16 +148,18 @@ Sidecar 在 "Client-Server" 服务通信形态中就是一个 Service-side 态�
 
 上图详细地描述了 gRPC 的 野心：通过 Service Mesh 进化称为一整套跨语言的服务治理框架，其最终形态是：一个无 Sidecar 的 Service Mesh。
 
-gRPC 自身由于协议的向前先后兼容性，所以基于其上的应用能够做到升级过程中服务的兼容性不存在问题，则通过滚动升级可以做到升级过程中 “服务不中断”，所以没有 Sidecar 的 Service Mesh 形态随出乎意料但并不令人意外。
+采用 gRPC 技术栈便能回答上一小节[4.2.1]的问题。gRPC 自身由于协议的向前先后兼容性，基于其上的应用能够做到升级过程中服务的兼容性不存在问题，则通过滚动升级可以做到升级过程中 “服务不中断”，所以没有 Sidecar 的 Service Mesh 形态随出乎意料但并不令人意外。
 
 ![](../pic/service_mesh/grpc_proxyless_rpc_mesh.jpg)
 
 上图【源自[参考文档2](https://www.youtube.com/watch?v=fMq3IpPE3TU)】中，Spotify 公司把无 Sidecar 形态的 Mesh 称之为 “Proxyless RPC Mesh"。谷歌创造了 k8s，谷歌创造了 istio，谷歌也创造了 gRPC。谷歌未来的 "Service(RPC) Mesh" 框架具体会以何种形态面世，愚人无从预测，然其生态中应该少不了自家的 k8s 和 istio，但是没有 Sidecar。
 
+
 ## 参考文档
 
 - 1 [唯品会的Service Mesh三年进化史](https://mp.weixin.qq.com/s/7bwBCdDEVeYMhL242Xo6Cg)
 - 2 [The Story of Why We Migrate to gRPC and How We Go About It](https://www.youtube.com/watch?v=fMq3IpPE3TU)
+- 3 [Alignment and Autonomy and Quorums](https://paulhammant.com/2017/07/09/alignment-and-autonomy-and-quorums/)
 
 ## 扒粪者-于雨氏
 
