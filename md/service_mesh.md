@@ -72,7 +72,7 @@ Sidecar 作为网络层组件接管了其服务应用的流量后，服务应用
 
 #### 4.1.1 Server-side Load Balancing
 
-服务端形式的负载均衡是通过代理层实现的，对服务端而言，其是一个 "dumb client"。目前很多常见的系统都是通过这一形式实现负载均衡功能，如 Pulsar 系统的 Broker、Codis 中的 Proxy 以及某以前实现的一个[即时通信系统](alexstocks.github.io/html/pubsub.html)中的 Proxy/Relay/Router 等。
+服务端形式的负载均衡是通过代理层实现的，对服务端而言，其是一个 "dumb client"。目前很多常见的系统都是通过这一形式实现负载均衡功能，如 Pulsar 系统的 Broker、Codis 中的 Proxy 以及某以前实现的一个[即时通信系统](https://alexstocks.github.io/html/pubsub.html)中的 Proxy/Relay/Router 等。
 
 Proxy 优点是对客户端屏蔽的服务端的复杂性。中间件服务系统的客户端使用数据量是服务系统自身无法控制的，客户端伸缩性极强，而 Proxy 是服务端系统的一部分，其可伸缩性远不如客户端层频繁，如果系统内部需要进行数据负载均衡，则在 Proxy 层面对客户端的读写流量进行控制即可。
 
