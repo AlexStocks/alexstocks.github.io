@@ -62,7 +62,7 @@ Istio 官方给出了如下一个基于 Envoy 作为 Sidecar 的 "经典" Servid
 
 Sidecar 作为网络层组件接管了其服务应用的流量后，服务应用层以 local 方式连接 Sidecar，可以实现自身网络层处理与负载均衡、网络路由、网络分流、限流以及熔断等服务治理工作的解耦。服务治理中最重要的工作内容之一即 Load Balancing，就这方面的工作而言，Sidecar 其本质可认作是一种 Service-side 方式的 Proxy。
 
-#### 4.1 各种形式的服务治理
+#### <a name="4.1">4.1 各种形式的服务治理</a>
 
 就服务治理而言，其工作可以放在 Server 端，亦可放在 Client 端，或者独立成一个单独的控制平面组件。
 
@@ -122,7 +122,7 @@ Proxy 优点是对客户端屏蔽的服务端的复杂性。中间件服务系�
 
 上图【源自[参考文档2](https://www.youtube.com/watch?v=fMq3IpPE3TU)】给出了一个 Lookaside 形态的 "Client-Server" 架构图，望图即可明了其工作流程。
 
-### 4.2 Proxyless RPC Mesh
+### <a name="4.2">4.2 Proxyless RPC Mesh</a>
 
 4.1 节兜兜转转地讨论了各种形式的 "Client-Server" 以及其相关形态的负载均衡，其目的就是引出一个话题：Sidecar 这个组件是必不可少的吗？
 
@@ -164,4 +164,4 @@ Sidecar 在 "Client-Server" 服务通信形态中就是一个 Service-side 态�
 ## 扒粪者-于雨氏
 
 >- 2019/05/21，于雨氏，于 G4x，初作此文。
->- 2019/06/02，于雨氏，于 G3x，添加 4.1 节并补充 4.2 节。
+>- 2019/06/02，于雨氏，于 G3x，添加 <a href=#4.1>[4.1 各种形式的服务治理]</a> 并补充 <a href=#4.2>[4.2 Proxyless RPC Mesh]</a> 节。

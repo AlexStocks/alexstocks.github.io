@@ -323,146 +323,6 @@ kbd {
 }
 </style>
 
-<style type="text/css">
-/**
- * prism.js default theme for JavaScript, CSS and HTML
- * Based on dabblet (http://dabblet.com)
- * @author Lea Verou
- */
-
-code[class*="language-"],
-pre[class*="language-"] {
-	color: black;
-	background: none;
-	text-shadow: 0 1px white;
-	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-	text-align: left;
-	white-space: pre;
-	word-spacing: normal;
-	word-break: normal;
-	word-wrap: normal;
-	line-height: 1.5;
-
-	-moz-tab-size: 4;
-	-o-tab-size: 4;
-	tab-size: 4;
-
-	-webkit-hyphens: none;
-	-moz-hyphens: none;
-	-ms-hyphens: none;
-	hyphens: none;
-}
-
-pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
-code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
-	text-shadow: none;
-	background: #b3d4fc;
-}
-
-pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
-code[class*="language-"]::selection, code[class*="language-"] ::selection {
-	text-shadow: none;
-	background: #b3d4fc;
-}
-
-@media print {
-	code[class*="language-"],
-	pre[class*="language-"] {
-		text-shadow: none;
-	}
-}
-
-/* Code blocks */
-pre[class*="language-"] {
-	padding: 1em;
-	margin: .5em 0;
-	overflow: auto;
-}
-
-:not(pre) > code[class*="language-"],
-pre[class*="language-"] {
-	background: #f5f2f0;
-}
-
-/* Inline code */
-:not(pre) > code[class*="language-"] {
-	padding: .1em;
-	border-radius: .3em;
-	white-space: normal;
-}
-
-.token.comment,
-.token.prolog,
-.token.doctype,
-.token.cdata {
-	color: slategray;
-}
-
-.token.punctuation {
-	color: #999;
-}
-
-.namespace {
-	opacity: .7;
-}
-
-.token.property,
-.token.tag,
-.token.boolean,
-.token.number,
-.token.constant,
-.token.symbol,
-.token.deleted {
-	color: #905;
-}
-
-.token.selector,
-.token.attr-name,
-.token.string,
-.token.char,
-.token.builtin,
-.token.inserted {
-	color: #690;
-}
-
-.token.operator,
-.token.entity,
-.token.url,
-.language-css .token.string,
-.style .token.string {
-	color: #a67f59;
-	background: hsla(0, 0%, 100%, .5);
-}
-
-.token.atrule,
-.token.attr-value,
-.token.keyword {
-	color: #07a;
-}
-
-.token.function {
-	color: #DD4A68;
-}
-
-.token.regex,
-.token.important,
-.token.variable {
-	color: #e90;
-}
-
-.token.important,
-.token.bold {
-	font-weight: bold;
-}
-.token.italic {
-	font-style: italic;
-}
-
-.token.entity {
-	cursor: help;
-}
-</style>
-
 
 </head>
 
@@ -474,7 +334,26 @@ pre[class*="language-"] {
 
 <p><em>written by Alex Stocks on 2017/12/31，版权所有，无授权不得转载</em></p>
 
-<h3 id="toc_1">1 极简实现</h3>
+<h3 id="toc_1"><a name="0">0 实时消息系统与消息队列系统</a></h3>
+
+<hr>
+
+<p>实时消息【即时通信】系统，有群聊和单聊两种方式，其形态异于消息队列：</p>
+
+<ul>
+<li><p>1 大量的 group 信息变动</p>
+
+<p>群聊形式的即时通信系统在正常服务形态下，瞬时可能有大量用户登入登出，而消息队列系统 producer/consumer group 内成员变动相对静止。</p></li>
+<li><p>2 近似有序</p>
+
+<p>即时通信系统【特别是群聊】的消息并发量远远大于消息队列系统，本人经历过的最厉害的即时通信系统，每秒消息通信量可达百万级，而消息队列系统每秒处理十万量级的消息就很了不起了。大并发消息量决定了用户可以容忍其消息的顺序的稍微异常【某家消息系统的乱序问题一直存在】。</p>
+
+<p>即时通信系统并非做不到消息严格有序，而是基于系统成本【人力、系统】考量，为了从 99.9% 级别的近似有序做到百分百的严格有序，其成本估计可增加十倍【所谓有损服务】。</p></li>
+</ul>
+
+<p>二者之间的本质差异，决定了即时通信系统的技术体系迥异于消息队列系统。</p>
+
+<h3 id="toc_2">1 极简实现</h3>
 
 <hr>
 
@@ -521,7 +400,7 @@ pre[class*="language-"] {
 
 <p>这种“幸福我一人，辛苦千万家”的扩容应对方式，必然导致公司内部这套系统的使用者怨声载道，升级之路就是必然的了。</p>
 
-<h3 id="toc_2">2 可扩展</h3>
+<h3 id="toc_3">2 可扩展</h3>
 
 <hr>
 
@@ -545,7 +424,7 @@ pre[class*="language-"] {
 
 <p>分章节描述各个模块详细流程。</p>
 
-<h4 id="toc_3">2.1 Client</h4>
+<h4 id="toc_4">2.1 Client</h4>
 
 <hr>
 
@@ -561,7 +440,7 @@ pre[class*="language-"] {
 
 <p><strong>本系统使用 Zookeeper 作为 Registry，而 Zookeeper 的通知机制有名的不可靠且延迟高（15s），所以采用 Zookeeper 自身的 Watch 机制的同时使用定时查询策略作为补偿机制。定时策略的定时时间单位应该是分钟级，不能小于 Zookeeper 自身的通知延时时长，以防止 Zookeeper 系统的轻微抖动造成消息系统的服务波动。</strong></p>
 
-<h4 id="toc_4">2.2 Proxy</h4>
+<h4 id="toc_5">2.2 Proxy</h4>
 
 <hr>
 
@@ -594,7 +473,7 @@ pre[class*="language-"] {
 
 <p>Proxy 转发某个 Room 消息时候，只发送给处于 Running 状态的 Broker。为 Broker Partition 内所有 replica 依据Registry 给其分配的 replicaID 进行递增排序，组成一个 Broker Replica Array，规则中BrokerPartitionReplicaNum 为 Array 的 size，而 BrokerReplicaID 为 replica 在 Array 中的下标。</p>
 
-<h4 id="toc_5">2.2.1 Pipeline</h4>
+<h4 id="toc_6"><a name="2.2.1">2.2.1 Pipeline</a></h4>
 
 <hr>
 
@@ -610,7 +489,7 @@ pre[class*="language-"] {
 
 <p>经过以上流水线改造后，Proxy 的整体吞吐率可达 200 000 Msg/s。</p>
 
-<h4 id="toc_6">2.2.2 大房间消息处理</h4>
+<h4 id="toc_7"><a name="2.2.2">2.2.2 大房间消息处理</a></h4>
 
 <hr>
 
@@ -622,7 +501,7 @@ pre[class*="language-"] {
 
 <p>最终的解决方案是：使用类似于分区的方法，把这样的大 Room 映射为 64 个虚拟 Room【称之为 VRoom】。在 Room 号段分配业务线的配合下，给消息系统专门保留了一个号段，用于这种大 Room 的切分，在 Proxy 层依据一个 hash 方法 【 VRoomID = UserID % 64】 把每个 User 分配到相应的 VRoom，其他模块代码不用修改即完成了大 Room 消息的路由。 </p>
 
-<h4 id="toc_7">2.3 Broker</h4>
+<h4 id="toc_8">2.3 Broker</h4>
 
 <hr>
 
@@ -651,7 +530,7 @@ pre[class*="language-"] {
 
 <p>Broker 的扩容过程犹如细胞分裂，形成中的两个细胞有着完全相同的数据，分裂完成后【Registry路径 <code>/pubsub/broker/partition_num</code> 的值翻倍】则需要清洗垃圾信息。这种方法称为翻倍法。</p>
 
-<h4 id="toc_8">2.4 Router</h4>
+<h4 id="toc_9">2.4 Router</h4>
 
 <hr>
 
@@ -678,7 +557,7 @@ pre[class*="language-"] {
 <li>10 收取 Gateway 转发来的 Gateway Message，按照一定规则【BrokerPartitionID % BrokerPartitionNum = RoomID % BrokerPartitionNum】转发给<font color=blue>**某个 Broker Partition 下所有 Broker Replica **</font>，保证 Partition 下所有 replica 拥有同样的路由 RoomGatewayList 数据，再把 Message 内数据存入本地缓存，当检测到数据不重复的时候把数据异步写入 Database；</li>
 </ul>
 
-<h4 id="toc_9">2.5 Gateway</h4>
+<h4 id="toc_10">2.5 Gateway</h4>
 
 <hr>
 
@@ -695,13 +574,13 @@ pre[class*="language-"] {
 
 <p>Gateway 本地有一个基于共享内存的 LRU Cache，存储最近一段时间发送的消息的 MessageID。</p>
 
-<h3 id="toc_10">3 系统稳定性</h3>
+<h3 id="toc_11"><a name="3">3 系统稳定性</a></h3>
 
 <hr>
 
 <p>系统具有了可扩展性仅仅是系统可用的初步，整个系统要保证最低粒度的 SLA（0.99），就必须在两个维度对系统的可靠性就行感知：消息延迟和系统内部组件的高可用。</p>
 
-<h4 id="toc_11">3.1 消息延迟</h4>
+<h4 id="toc_12">3.1 消息延迟</h4>
 
 <hr>
 
@@ -711,7 +590,7 @@ pre[class*="language-"] {
 
 <p>通过所有消息的平均延迟可以评估系统的整体性能。同时，因为系统消息路由的哈希方式已知，当固定时间内伪 Gateway 没有收到消息时，就把消息当做发送失败，当某条链路失败一定次数后就可以产生告警了。</p>
 
-<h4 id="toc_12">3.2 高可用</h4>
+<h4 id="toc_13">3.2 高可用</h4>
 
 <hr>
 
@@ -723,7 +602,7 @@ pre[class*="language-"] {
 
 <p>同时依靠心跳包的延迟还可以判断 broker 的处理能力，基于此延迟值可在同一 Partition 内多 broker 端进行负载均衡。</p>
 
-<h3 id="toc_13">4 消息可靠性</h3>
+<h3 id="toc_14"><a name="4">4 消息可靠性</a></h3>
 
 <hr>
 
@@ -744,7 +623,7 @@ pre[class*="language-"] {
 
 <p>正常的消息在群聊消息系统中传输时，Proxy 会根据消息的 Room ID 传递给固定的 Broker，以保证消息的有序性。</p>
 
-<h3 id="toc_14">5 Router群集</h3>
+<h3 id="toc_15"><a name="5">5 Router群集</a></h3>
 
 <hr>
 
@@ -762,7 +641,7 @@ pre[class*="language-"] {
 
 <p>独立 Router 架构下，下面分别详述 Gateway、Router 和 Broker 三个相关模块的详细流程。</p>
 
-<h4 id="toc_15">5.1 Gateway</h4>
+<h4 id="toc_16">5.1 Gateway</h4>
 
 <hr>
 
@@ -792,7 +671,7 @@ pre[class*="language-"] {
 
 <blockquote>
 <blockquote>
-<p>这里之所以不采用直接 hash 方式 <code>RouterPartitionID = RoomID % RouterPartitionNumber</code> 获取 Router Partition，是考虑到当 Router 进行 2 倍扩容的时候当所有新的 Partition 的所有 Replica 都启动完毕且数据一致时才会修改 Registry 路径 <code>/pubsub/router/partition_num</code> 的值，按照规则的计算公式才能保证新 Partition 的各个 Replica 在启动过程中就可以得到 Gateway Message，也即此时每个 Gateway Message 会被发送到两个 Router Partition。<br>
+<p>这里之所以不采用直接 hash 方式 <code>RouterPartitionID = RoomID % RouterPartitionNumber</code> 获取 Router Partition，是考虑到当 Router 进行 2 倍扩容的时候当所有新的 Partition 的所有 Replica 都启动完毕且数据一致时才会修改 Registry 路径 <code>/pubsub/router/partition_num</code> 的值，按照规则的计算公式才能保证新 Partition 的各个 Replica 在启动过程中就可以得到 Gateway Message，也即此时每个 Gateway Message 会被发送到两个 Router Partition。
 当 Router 扩容完毕，修改 Registry 路径 <code>/pubsub/router/partition_num</code> 的值后，此时新集群进入稳定期，每个 Gateway Message 只会被发送固定的一个Partition，condition <code>RoomID % RouterPartitionNumber == RouterPartitionID % RouterPartitionNumber</code> 等效于 <code>RouterPartitionID = RoomID % RouterPartitionNumber</code>。</p>
 </blockquote>
 </blockquote>
@@ -806,7 +685,7 @@ pre[class*="language-"] {
 </blockquote>
 </blockquote>
 
-<h5 id="toc_16">5.1.1 Gateway Message 数据一致性</h5>
+<h5 id="toc_17">5.1.1 Gateway Message 数据一致性</h5>
 
 <hr>
 
@@ -821,7 +700,7 @@ pre[class*="language-"] {
 <div><pre><code class="language-none">// 63 -------------------------- 48 47 -------------- 38 37 ------------ 0
 // |  16bit Gateway Instance ID    |   10bit Reserve    |    38bit自增码  |</code></pre></div>
 
-<h4 id="toc_17">5.2 Router</h4>
+<h4 id="toc_18">5.2 Router</h4>
 
 <hr>
 
@@ -857,7 +736,7 @@ pre[class*="language-"] {
 
 <p>另外启动一个工具，当水平扩展后新启动的 Partition 内所有 Replica 的状态都是 Running 的时候，修改 Registry 路径 <code>/pubsub/router/partition_num</code> 的值为所有 Partition 的数目。</p>
 
-<h4 id="toc_18">5.3 Broker</h4>
+<h4 id="toc_19">5.3 Broker</h4>
 
 <hr>
 
@@ -893,12 +772,12 @@ pre[class*="language-"] {
 
 <p>当 Router Partition 内 replica 死掉或者发送心跳包的 replica 对象死掉（无论是注册中心通知还是心跳包超时），broker 要及时变动发送心跳的 Router replica 对象。</p>
 
-<p>另外，Gateway 使用 UDP 通信方式向 Router 发送 Gateway Message，如若这个 Message 丢失则此 Gateway 上该 Room 内所有成员一段时间内（当有新的成员在当前 Gateway 上加入 Room<br>
+<p>另外，Gateway 使用 UDP 通信方式向 Router 发送 Gateway Message，如若这个 Message 丢失则此 Gateway 上该 Room 内所有成员一段时间内（当有新的成员在当前 Gateway 上加入 Room
 时会产生新的 Gateway Message）都无法再接收消息，为了保证消息的可靠性，可以使用这样一个约束解决问题：<font color=blue><strong>在此Gateway上登录的某 Room 内的人数少于 3 时，Gateway 会把 Gateway Message 复制两份非连续（如以10ms为时间间隔）重复发送给某个 Partition leader。</strong></font>因 Gateway Message 消息处理的幂等性，重复 Gateway Message 并不会导致 Room Message 发送错误，只在极少概率的情况下会导致 Gateway 收到消息的时候 Room 内已经没有成员在此 Gateway 登录，此时 Gateway 会把消息丢弃不作处理。</p>
 
 <p>传递实时消息群聊消息系统的 Broker 向特定 Gateway 转发 Room Message 的时候，会带上 Room 内在此 Gateway 上登录的用户列表，Gateway 根据这个用户列表下发消息时如果检测到此用户已经下线，在放弃向此用户转发消息的同时，还应该把此用户已经下线的消息发送给 Router，当 Router 把这个消息转发给 Broker 后，Broker 把此用户从用户列表中剔除。<font color=red><strong>通过这种负反馈机制保证用户状态更新的及时性</strong></font>。</p>
 
-<h3 id="toc_19">6 离线消息</h3>
+<h3 id="toc_20"><a name="6">6 离线消息</a></h3>
 
 <hr>
 
@@ -929,13 +808,13 @@ pre[class*="language-"] {
 
 <p>下面先细述Pi和Xiu的接口，然后再详述发送和推送流程。</p>
 
-<h4 id="toc_20">6.1 Xiu</h4>
+<h4 id="toc_21">6.1 Xiu</h4>
 
 <hr>
 
 <p>Xiu 模块功能名称是 Message Storage，用户缓存和固化消息，并给消息分配 ID。Xiu 集群采用分 Partition 分 Replica 机制，Partition 初始数目须是2的倍数，集群扩容时采用翻倍法。</p>
 
-<h5 id="toc_21">6.1.1 存储消息</h5>
+<h5 id="toc_22">6.1.1 存储消息</h5>
 
 <hr>
 
@@ -955,7 +834,7 @@ pre[class*="language-"] {
 <li><p>7 把MsgID异步通知给消息固化线程，消息固化线程根据MsgID从Hashtable中读取消息并根据CRC32 hash值判断消息内容是否完整，完整则把消息存入本地RocksDB中；</p></li>
 </ul>
 
-<h5 id="toc_22">6.1.2 读取消息</h5>
+<h5 id="toc_23">6.1.2 读取消息</h5>
 
 <hr>
 
@@ -968,7 +847,7 @@ pre[class*="language-"] {
 <li>4 读取完毕则把所有获取的消息返回给客户端。</li>
 </ul>
 
-<h5 id="toc_23">6.1.3 主从数据同步</h5>
+<h5 id="toc_24">6.1.3 主从数据同步</h5>
 
 <hr>
 
@@ -991,7 +870,7 @@ pre[class*="language-"] {
 
 <p>当 leader 重启或者 follower 转换为 leader 的时候，需要把 Partition_Msg_ID 进行一个大数值增值（譬如增加1000）以防止可能的消息 ID 乱序情况。</p>
 
-<h5 id="toc_24">6.1.4 集群扩容</h5>
+<h5 id="toc_25">6.1.4 集群扩容</h5>
 
 <hr>
 
@@ -1005,13 +884,13 @@ pre[class*="language-"] {
 
 <p>之所以 Xiu 不用像 Broker 和 Router 那样启动的时候向老的 Partition 同步数据，是因为每个 Xiu 分配的 MsgID 中已经带有 Xiu 的 PartitionID 信息，即使集群扩容这个 ID 也不变，根据这个ID也可以定位到其所在的Partition，而不是借助 hash 方法。</p>
 
-<h4 id="toc_25">6.2 Pi</h4>
+<h4 id="toc_26">6.2 Pi</h4>
 
 <hr>
 
 <p>Pi 模块功能名称是 Message ID Storage，存储每个用户的 MsgID List。Xiu 集群也采用分 Partition 分 Replica 机制，Partition 初始数目须是2的倍数，集群扩容时采用翻倍法。</p>
 
-<h5 id="toc_26">6.2.1 存储消息ID</h5>
+<h5 id="toc_27">6.2.1 存储消息ID</h5>
 
 <hr>
 
@@ -1024,7 +903,7 @@ pre[class*="language-"] {
 
 <p>Pi有专门的日志记录线程，给每个日志操作分配一个 LogID，每个 Log 文件记录一定量的写操作，当文件 size 超过配置的上限后删除之。</p>
 
-<h5 id="toc_27">6.2.2 读取消息ID列表</h5>
+<h5 id="toc_28">6.2.2 读取消息ID列表</h5>
 
 <hr>
 
@@ -1036,7 +915,7 @@ pre[class*="language-"] {
 <li>3 如果 ExpireFlag 有效，则删除MsgIDList内所有在 [0, StartMsgID] 范围内的MsgID，把请求内容写入本地log。</li>
 </ul>
 
-<h5 id="toc_28">6.2.3 主从数据同步</h5>
+<h5 id="toc_29">6.2.3 主从数据同步</h5>
 
 <hr>
 
@@ -1056,7 +935,7 @@ pre[class*="language-"] {
 
 <p>follower 会关注 Registry 路径  /pubsub/pi/partition_id 下所有节点的变化情况，如果 leader 挂掉则及时转换身份并接受客户端请求。如果follower 与 leader 之间的心跳超时，则follower删掉 leader 的 Registry 路径节点，及时进行身份转换处理客户端请求。</p>
 
-<h5 id="toc_29">6.2.4 集群扩容</h5>
+<h5 id="toc_30">6.2.4 集群扩容</h5>
 
 <hr>
 
@@ -1079,7 +958,7 @@ pre[class*="language-"] {
 
 <p>另外启动一个工具，当水平扩展后所有新启动的 Partition 内所有 Replica 的状态都是 Running 的时候，修改Registry路径/pubsub/xiu/partition_num的值为扩容后 Partition 的数目。</p>
 
-<h4 id="toc_30">6.3 数据发送流程</h4>
+<h4 id="toc_31">6.3 数据发送流程</h4>
 
 <hr>
 
@@ -1093,7 +972,7 @@ pre[class*="language-"] {
 <li>5 如果 Proxy 收到 Xiu 返回的响应带有 MsgID，则给 Broker 发送一个 Notify，告知其某 UIN 的最新 MsgID。</li>
 </ul>
 
-<h4 id="toc_31">6.4 数据转发流程</h4>
+<h4 id="toc_32">6.4 数据转发流程</h4>
 
 <hr>
 
@@ -1148,7 +1027,7 @@ pre[class*="language-"] {
 <li>5 Xiu 返回消息列表后，设置状态为 SendingMsg，并向 Gateway 转发消息。</li>
 </ul>
 
-<p>所谓 Ack 消息，就是 Broker 经 Gateway 把消息转发给 App 后，App 给Broker的消息回复，告知Broker其最近成功收到消息的 MsgID。<br>
+<p>所谓 Ack 消息，就是 Broker 经 Gateway 把消息转发给 App 后，App 给Broker的消息回复，告知Broker其最近成功收到消息的 MsgID。
 Ack 消息处理流程如下：</p>
 
 <ul>
@@ -1163,7 +1042,7 @@ Ack 消息处理流程如下：</p>
 
 <p>总体上，PiXiu 转发消息流程采用拉取（pull）转发模型，以上面五种消息为驱动进行状态转换，并作出相应的动作行为。</p>
 
-<h3 id="toc_32">7 单聊消息</h3>
+<h3 id="toc_33"><a name="7">7 单聊消息</a></h3>
 
 <hr>
 
@@ -1175,7 +1054,7 @@ Ack 消息处理流程如下：</p>
 
 <p>Router Data 已经被群聊系统的 Router 模块替代掉，当下的 Gateway 已经不需要存储 Router Data。若扩展此系统使其能够处理单聊消息，能够存储用户的在线状态以及用户接入的 Gateway 信息，则 Gateway 就可以不用存储任何有关用户的状态数据了。</p>
 
-<h4 id="toc_33">7.1 实时消息系统架构</h4>
+<h4 id="toc_34">7.1 实时消息系统架构</h4>
 
 <hr>
 
@@ -1189,7 +1068,7 @@ Ack 消息处理流程如下：</p>
 
 <p>注意：新架构图中把原来的专门存储 Router Data 的 Database 模块改称为 Router DB，并添加了一个 Relay DB，以专门存储 Relay Data。</p>
 
-<h5 id="toc_34">7.2 Gateway</h5>
+<h5 id="toc_35">7.2 Gateway</h5>
 
 <hr>
 
@@ -1204,7 +1083,7 @@ Ack 消息处理流程如下：</p>
 </ul>
 </blockquote>
 
-<h5 id="toc_35">7.3 Relay</h5>
+<h5 id="toc_36">7.3 Relay</h5>
 
 <hr>
 
@@ -1229,7 +1108,7 @@ Ack 消息处理流程如下：</p>
 
 <p>Relay 承担了群聊消息与单聊消息的下发。</p>
 
-<h5 id="toc_36">7.4 Broker</h5>
+<h5 id="toc_37">7.4 Broker</h5>
 
 <hr>
 
@@ -1247,7 +1126,7 @@ Ack 消息处理流程如下：</p>
 
 <p>Broker 仅仅承担了群聊消息下发。</p>
 
-<h5 id="toc_37">7.4 Proxy</h5>
+<h5 id="toc_38">7.4 Proxy</h5>
 
 <hr>
 
@@ -1266,7 +1145,7 @@ Ack 消息处理流程如下：</p>
 
 <p>其实还可以把 Proxy 区分为 Group Message Proxy 和 Chat Message Proxy，以期收逻辑清晰职责明了之效。</p>
 
-<h3 id="toc_38">8 总结</h3>
+<h3 id="toc_39">8 总结</h3>
 
 <hr>
 
@@ -1285,52 +1164,29 @@ Ack 消息处理流程如下：</p>
 
 <p>此记。</p>
 
-<h2 id="toc_39">参考文档</h2>
+<h2 id="toc_40">参考文档</h2>
 
 <ul>
 <li>1 <a href="http://blog.csdn.net/bluishglc/article/details/7970268">一种支持自由规划无须数据迁移和修改路由代码的Replicaing扩容方案</a></li>
 </ul>
 
-<h2 id="toc_40">扒粪者-于雨氏</h2>
+<h2 id="toc_41">扒粪者-于雨氏</h2>
 
 <blockquote>
 <ul>
 <li>于雨氏，2017/12/31，初作此文于丰台金箱堂。</li>
-<li>于雨氏，2018/01/16，于海淀添加“#3 系统稳定性”一节。</li>
-<li>于雨氏，2018/01/29，于海淀添加“#4 消息可靠性”一节。</li>
-<li>于雨氏，2018/02/11，于海淀添加 “#5 Router群集” 一章节，并重新格式化全文。</li>
-<li>于雨氏，2018/03/05，于海淀添加 “#6 离线消息” 一章节。</li>
+<li>于雨氏，2018/01/16，于海淀添加 <a href="#3">[3 系统稳定性] 一节。</li>
+<li>于雨氏，2018/01/29，于海淀添加 <a href="#4">[4 消息可靠性]</a> 一节。</li>
+<li>于雨氏，2018/02/11，于海淀添加 <a href="#5">[5 Router群集]</a> 一章节，并重新格式化全文。</li>
+<li>于雨氏，2018/03/05，于海淀添加 <a href="#6">[6 离线消息]</a> 一章节。</li>
 <li>于雨氏，2018/03/14，于海淀添加负反馈机制、根据Gateway Message ID保证Gateway Message数据一致性 和 Gateway用户退出消息产生机制 等三个细节。</li>
-<li>于雨氏，2018/08/05，于海淀添加 “#2.2.1 pipeline” 一节。</li>
-<li>于雨氏，2018/08/28，于海淀添加 “#2.2.2 大房间消息处理” 一节。</li>
-<li>于雨氏，2019/01/19，于丰台添加 “#7 单聊消息” 一章节。</li>
+<li>于雨氏，2018/08/05，于海淀添加 <a href="#2.2.1">[2.2.1 pipeline]</a> 一节。</li>
+<li>于雨氏，2018/08/28，于海淀添加 <a href="#2.2.2">[2.2.2 大房间消息处理]</a> 一节。</li>
+<li>于雨氏，2019/01/19，于丰台添加 <a href="#7">[7 单聊消息]</a> 一章节。</li>
+<li>于雨氏，2019/06/08，于丰台添加 <a href="#0">[0 实时消息系统与消息队列系统]</a> 一章节。</li>
 </ul>
 </blockquote>
 
-
-
-<script type="text/javascript">
-var _self="undefined"!=typeof window?window:"undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?self:{},Prism=function(){var e=/\blang(?:uage)?-(\w+)\b/i,t=0,n=_self.Prism={util:{encode:function(e){return e instanceof a?new a(e.type,n.util.encode(e.content),e.alias):"Array"===n.util.type(e)?e.map(n.util.encode):e.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\u00a0/g," ")},type:function(e){return Object.prototype.toString.call(e).match(/\[object (\w+)\]/)[1]},objId:function(e){return e.__id||Object.defineProperty(e,"__id",{value:++t}),e.__id},clone:function(e){var t=n.util.type(e);switch(t){case"Object":var a={};for(var r in e)e.hasOwnProperty(r)&&(a[r]=n.util.clone(e[r]));return a;case"Array":return e.map&&e.map(function(e){return n.util.clone(e)})}return e}},languages:{extend:function(e,t){var a=n.util.clone(n.languages[e]);for(var r in t)a[r]=t[r];return a},insertBefore:function(e,t,a,r){r=r||n.languages;var l=r[e];if(2==arguments.length){a=arguments[1];for(var i in a)a.hasOwnProperty(i)&&(l[i]=a[i]);return l}var o={};for(var s in l)if(l.hasOwnProperty(s)){if(s==t)for(var i in a)a.hasOwnProperty(i)&&(o[i]=a[i]);o[s]=l[s]}return n.languages.DFS(n.languages,function(t,n){n===r[e]&&t!=e&&(this[t]=o)}),r[e]=o},DFS:function(e,t,a,r){r=r||{};for(var l in e)e.hasOwnProperty(l)&&(t.call(e,l,e[l],a||l),"Object"!==n.util.type(e[l])||r[n.util.objId(e[l])]?"Array"!==n.util.type(e[l])||r[n.util.objId(e[l])]||(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,l,r)):(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,null,r)))}},plugins:{},highlightAll:function(e,t){var a={callback:t,selector:'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'};n.hooks.run("before-highlightall",a);for(var r,l=a.elements||document.querySelectorAll(a.selector),i=0;r=l[i++];)n.highlightElement(r,e===!0,a.callback)},highlightElement:function(t,a,r){for(var l,i,o=t;o&&!e.test(o.className);)o=o.parentNode;o&&(l=(o.className.match(e)||[,""])[1],i=n.languages[l]),t.className=t.className.replace(e,"").replace(/\s+/g," ")+" language-"+l,o=t.parentNode,/pre/i.test(o.nodeName)&&(o.className=o.className.replace(e,"").replace(/\s+/g," ")+" language-"+l);var s=t.textContent,u={element:t,language:l,grammar:i,code:s};if(!s||!i)return n.hooks.run("complete",u),void 0;if(n.hooks.run("before-highlight",u),a&&_self.Worker){var c=new Worker(n.filename);c.onmessage=function(e){u.highlightedCode=e.data,n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(u.element),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},c.postMessage(JSON.stringify({language:u.language,code:u.code,immediateClose:!0}))}else u.highlightedCode=n.highlight(u.code,u.grammar,u.language),n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(t),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},highlight:function(e,t,r){var l=n.tokenize(e,t);return a.stringify(n.util.encode(l),r)},tokenize:function(e,t){var a=n.Token,r=[e],l=t.rest;if(l){for(var i in l)t[i]=l[i];delete t.rest}e:for(var i in t)if(t.hasOwnProperty(i)&&t[i]){var o=t[i];o="Array"===n.util.type(o)?o:[o];for(var s=0;s<o.length;++s){var u=o[s],c=u.inside,g=!!u.lookbehind,h=!!u.greedy,f=0,d=u.alias;u=u.pattern||u;for(var p=0;p<r.length;p++){var m=r[p];if(r.length>e.length)break e;if(!(m instanceof a)){u.lastIndex=0;var y=u.exec(m),v=1;if(!y&&h&&p!=r.length-1){var b=r[p+1].matchedStr||r[p+1],k=m+b;if(p<r.length-2&&(k+=r[p+2].matchedStr||r[p+2]),u.lastIndex=0,y=u.exec(k),!y)continue;var w=y.index+(g?y[1].length:0);if(w>=m.length)continue;var _=y.index+y[0].length,P=m.length+b.length;if(v=3,P>=_){if(r[p+1].greedy)continue;v=2,k=k.slice(0,P)}m=k}if(y){g&&(f=y[1].length);var w=y.index+f,y=y[0].slice(f),_=w+y.length,S=m.slice(0,w),O=m.slice(_),j=[p,v];S&&j.push(S);var A=new a(i,c?n.tokenize(y,c):y,d,y,h);j.push(A),O&&j.push(O),Array.prototype.splice.apply(r,j)}}}}}return r},hooks:{all:{},add:function(e,t){var a=n.hooks.all;a[e]=a[e]||[],a[e].push(t)},run:function(e,t){var a=n.hooks.all[e];if(a&&a.length)for(var r,l=0;r=a[l++];)r(t)}}},a=n.Token=function(e,t,n,a,r){this.type=e,this.content=t,this.alias=n,this.matchedStr=a||null,this.greedy=!!r};if(a.stringify=function(e,t,r){if("string"==typeof e)return e;if("Array"===n.util.type(e))return e.map(function(n){return a.stringify(n,t,e)}).join("");var l={type:e.type,content:a.stringify(e.content,t,r),tag:"span",classes:["token",e.type],attributes:{},language:t,parent:r};if("comment"==l.type&&(l.attributes.spellcheck="true"),e.alias){var i="Array"===n.util.type(e.alias)?e.alias:[e.alias];Array.prototype.push.apply(l.classes,i)}n.hooks.run("wrap",l);var o="";for(var s in l.attributes)o+=(o?" ":"")+s+'="'+(l.attributes[s]||"")+'"';return"<"+l.tag+' class="'+l.classes.join(" ")+'" '+o+">"+l.content+"</"+l.tag+">"},!_self.document)return _self.addEventListener?(_self.addEventListener("message",function(e){var t=JSON.parse(e.data),a=t.language,r=t.code,l=t.immediateClose;_self.postMessage(n.highlight(r,n.languages[a],a)),l&&_self.close()},!1),_self.Prism):_self.Prism;var r=document.currentScript||[].slice.call(document.getElementsByTagName("script")).pop();return r&&(n.filename=r.src,document.addEventListener&&!r.hasAttribute("data-manual")&&document.addEventListener("DOMContentLoaded",n.highlightAll)),_self.Prism}();"undefined"!=typeof module&&module.exports&&(module.exports=Prism),"undefined"!=typeof global&&(global.Prism=Prism);
-</script>
-
-<script type="text/x-mathjax-config">
-(function () {
-
-MathJax.Hub.Config({
-	'showProcessingMessages': false,
-	'messageStyle': 'none'
-});
-
-if (typeof MathJaxListener !== 'undefined') {
-	MathJax.Hub.Register.StartupHook('End', function () {
-		MathJaxListener.invokeCallbackForKey_('End');
-	});
-}
-
-})();
-</script>
-
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 <!-- baidu statistic start -->
 <script>
@@ -1361,6 +1217,8 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
+
 
 
 </body>

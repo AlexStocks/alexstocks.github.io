@@ -350,7 +350,7 @@ kbd {
 
 <p>用俗话总结这种优化手段就是：写文件时用到的内存资源在写之前预先申请好，不要在输出内容时有等待时间；log 内容输出至磁盘时把内存与磁盘对齐，且以 append 的方式进行顺序输出。</p>
 
-<p>本节所用到的技巧其实仅仅在于如何高效使用内存，并未更进一步地述及如何加快操作磁盘文件写流程【根本原因在于当时水平太渣^_^】。</p>
+<p>本节所用到的技巧其实仅仅在于如何高效使用内存，并未更进一步地述及如何加快操作磁盘文件写流程【根本原因在于当时水平太渣<sup>_<sup>】。</sup></sup></p>
 
 <h4 id="toc_3">1.2 fdatasync</h4>
 
@@ -372,7 +372,7 @@ kbd {
 
 <p>fallocate 保证系统预先为文件分配相应的逻辑磁盘空间，保证写数据时不会产生 “磁盘空间不足” 这个错误，但是并未分配相应的物理磁盘空间，所以调用 fallocate 仅产生 <code>预先为 log 文件提前标识了相应 size 的空间（extents）</code>的效果，在写磁盘文件的过程中还是会产生系统中断：linux 系统在中断过程中为其分配物理磁盘空间。有中断便有等待时间，等待时间过后才能继续 “快速写”。</p>
 
-<p>诚如<a href="https://mp.weixin.qq.com/s/GbjWN9-B11DkUFgCZba_rQ">《how to write file faster》</a>所述 <code>FALLOC_FL_ZERO_RANGE mode 是在内核3.15 版本才引入</code>，3.15 版本的 linux 系统给 fallocate api 的 mode 参数添加了一个 <code>ALLOC_FL_ZERO_RANGE</code> 选项，其作用是对相应 size 的逻辑磁盘空间进行 <code>filling zero</code> 操作，其效果是 linux 提前为磁盘文件分配相应的磁盘空间，这段磁盘空间对磁盘读操作不可见，所以有文章称这段空间为 &quot;hole&quot;[文件空洞]。文件空洞的一个好处是避免在写文件时因 linux 尚未为逻辑空间分配对应的物理磁盘空间导致的中断等待，另一个好处是固定文件 metadata 的 file size，避免写过程中因为需要更新这个参数而产生的双写行为。</p>
+<p>诚如<a href="https://mp.weixin.qq.com/s/GbjWN9-B11DkUFgCZba_rQ">《how to write file faster》</a>所述 <code>FALLOC_FL_ZERO_RANGE mode 是在内核3.15 版本才引入</code>，3.15 版本的 linux 系统给 fallocate api 的 mode 参数添加了一个 <code>ALLOC_FL_ZERO_RANGE</code> 选项，其作用是对相应 size 的逻辑磁盘空间进行 <code>filling zero</code> 操作，其效果是 linux 提前为磁盘文件分配相应的磁盘空间，这段磁盘空间对磁盘读操作不可见，所以有文章称这段空间为 <q>hole</q>[文件空洞]。文件空洞的一个好处是避免在写文件时因 linux 尚未为逻辑空间分配对应的物理磁盘空间导致的中断等待，另一个好处是固定文件 metadata 的 file size，避免写过程中因为需要更新这个参数而产生的双写行为。</p>
 
 <p>这种 <code>filling zero</code> 操作颇类似于对 linux bzero api 的效果：为一段逻辑内存空间提前分配对应的物理内存空间，避免在写内存时产生中断。</p>
 
@@ -395,7 +395,7 @@ kbd {
 
 <p>linux 系统创建文件时需要向文件系统申请文件资源，如欲实现文件 “快速写”，这个等待时间也是很可观的，所以类似于第一节的<code>写文件时用到的内存资源在写之前预先申请好</code> 优化手段，这种行为即是<code>写文件时用到的文件资源在写之前预先申请好</code>。</p>
 
-<h4 id="toc_7">1.5 Journal</h4>
+<h4 id="toc_7"><a name="1.5">1.5 Journal</a></h4>
 
 <p>上周<a href="https://github.com/loveyacper">Bert师傅</a>提醒道 ext4 文件系统的 Journal 特性可能会影响程序的测试结果，并给出了<a href="http://ilinuxkernel.com/?p=1467">参考文档3</a>作为参考。今日(20190511)周末得有余暇，借用<a href="https://github.com/yuyijq">余朝晖</a>的一台阿里云的虚机测试<a href="https://zhuanlan.zhihu.com/p/61212603">参考文档1</a>中给出的程序。</p>
 
@@ -596,10 +596,9 @@ int main()
 <blockquote>
 <ul>
 <li>2019/05/05，于雨氏，于 G44，初作此文。</li>
-<li>2019/05/11，于雨氏，于 wfc 添加 #1.5 Journal# 一节。</li>
+<li>2019/05/11，于雨氏，于 wfc 添加 <a href="#1.5">[1.5 Journal]</a>  一节。</li>
 </ul>
 </blockquote>
-
 
 <!-- baidu statistic start -->
 <script>
@@ -630,6 +629,8 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
+
 
 
 
