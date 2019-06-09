@@ -168,6 +168,8 @@ Gr Pool 成员有任务队列【其数目为 M】和 Gr 数组【其数目为 N�
 
 [dubbogo/getty][1] 只关注 N 值固定大小的 gr pool，且不考虑收到包后的处理顺序。譬如，[dubbogo/getty][1] 服务端收到了客户端发来的 A 和 B 两个网络包，不考虑处理顺序的 gr pool 模型可能造成客户端先收到 B 包的 response，后才收到 A 包的 response。
 
+如果客户端的每次请求都是独立的，没有前后顺序关系，则带有 gr pool 特性的 [dubbogo/getty][1] 不考虑顺序关系是没有问题的。如果上层用户关注 A 和 B 请求处理的前后顺序，则可以把 A 和 B 两个请求合并为一个请求，或者把 gr pool 特性关闭。 
+
 ### <a name="4.1">4.1 固定大小 Gr Pool</a>
 
 按照 M 与 N 的比例，固定大小 Gr Pool 又区分为 1:1、1:N、M:N【N > 1】三类。
