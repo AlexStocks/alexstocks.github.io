@@ -170,9 +170,9 @@ Gr Pool 成员有任务队列【其数目为 M】和 Gr 数组【其数目为 N�
 
 ### <a name="4.1">4.1 固定大小 Gr Pool</a>
 
-按照 M 与 N 的比例，固定大小 Gr Pool 又区分为 1:1、M:1、M:N【N > 1】三类。
+按照 M 与 N 的比例，固定大小 Gr Pool 又区分为 1:1、1:N、M:N【N > 1】三类。
 
-M:1 类型的 Gr Pool 最易实现，个人 2017 年在项目 [kafka-connect-elasticsearch][6] 中实现过此类型的 [Gr Pool][7]：作为消费者从 kafka 读取数据然后放入消息队列，然后各个 worker gr 从此队列中取出任务进行消费处理。
+1:N 类型的 Gr Pool 最易实现，个人 2017 年在项目 [kafka-connect-elasticsearch][6] 中实现过此类型的 [Gr Pool][7]：作为消费者从 kafka 读取数据然后放入消息队列，然后各个 worker gr 从此队列中取出任务进行消费处理。
 
 向 [dubbogo/getty][1] 中添加 gr pool 时也曾实现过这个版本的 [gr pool][8]。这种模型的 gr pool 整个 pool 只创建一个 chan， 所有 gr 去读取这一个 chan，其缺点是：队列读写模型是 一写多读，因为 go channel 的低效率【整体使用一个 mutex lock】造成竞争激烈，当然其网络包处理顺序更无从保证。
 
