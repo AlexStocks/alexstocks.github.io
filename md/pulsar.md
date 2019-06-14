@@ -23,8 +23,8 @@ Pulsar 是由 Yahoo 于 2016 年开源并捐赠给 Apache 基金会的一款消�
 | Ledger(Segment)/Fragment | Fragment/Segment |
 | Bookie  | Broker  |
 | Broker | Client SDK |
-| Ensemble Size | Replica Number |
-| Write Quorum Size (Qw) | metadata.broker.list |
+| Ensemble Size | metadata.broker.list |
+| Write Quorum Size (Qw) | Replica Number |
 | Ack Quorum Size (Qa) | request.required.acks |
 
 Pulsar 和 Kafka 都是以 Topic 描述一个基本的数据集合，Topic 数据又分为若干 Partition，即对数据进行逻辑上的 sharding 后存储为若干子集合。但 Kafka 以 partition 作为物理存储单位，每个 partition 必须作为一个整体（一个目录）存储在某一个 broker 上。 而 Pulsar 的每个 partition 是以 segment（对应到 Bookkeeper 的 Ledger） 作为物理存储的单位，所以 Pulsar 中的一个逻辑上有序的 partition 数据集合在物理上会均匀分散到多个 bookie 节点中。
