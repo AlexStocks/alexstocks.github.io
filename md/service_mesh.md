@@ -10,7 +10,7 @@
 
 ### 1 k8s 缺陷
 
-以前个人有愚见，Service Mesh 概念其实不过是新瓶装老酒。大概 2012 年时，愚人在 “南方某厂” 干活时，曾见过一个称之为 nlb 的系统，其核心组件 proxy 工作职责有：
+以前个人有愚见，Service Mesh 概念其实不过是新瓶装老酒。大概 2012 年时，愚人在 “南方某厂” 干活时，曾见过一个称之为 nlb 的客户端代理系统，其核心组件 proxy 工作职责有：
 
 - 1 从配置中心拉取配置；
 - 2 为 client 到 zookeeper 进行服务发现；
@@ -20,7 +20,7 @@
 
 后来这套系统被移植到其云系统之上时，被改名为 F5。当看到后来的 Service Mesh 概念时，便有种孩子出生六年了还是个 nobody，到六岁上小学时才被匆匆命名之觉。
 
-当然以上为个人愚见，按照正史记载：2017 年 Service Mesh 概念之所以出现且存在是为了减轻网络中心控制节点的压力。
+当然以上为个人愚见，按照正史记载：2016 年 9 月 Service Mesh 概念之所以出现且存在是为了减轻网络中心控制节点的压力。
 
 以 2015 年出现的 k8s 的为例，其每个 Worker Node 需要同 Master Node 之间通信以上报容器状态并接收控制信息，Master Node 便成为整个系统的单点。有了单点，上帝需要对其拆分，于是便有了 Istio。愚人以为 Istio 其实也不过是从十年发展历史的 envoy 某些概念的拆分组合后形成的。
 
@@ -72,9 +72,9 @@ Sidecar 作为网络层组件接管了其服务应用的流量后，服务应用
 
 #### 4.1.1 Server-side Load Balancing
 
-服务端形式的负载均衡是通过代理层实现的，对服务端而言，其是一个 "dumb client"。目前很多常见的系统都是通过这一形式实现负载均衡功能，如 Pulsar 系统的 Broker、Codis 中的 Proxy 以及某以前实现的一个[即时通信系统](https://alexstocks.github.io/html/pubsub.html)中的 Proxy/Relay/Router 等。
+服务端形式的负载均衡是通过服务端代理层实现的，对服务端而言，其是一个 "dumb client"。目前很多常见的系统都是通过这一形式实现负载均衡功能，如 Pulsar 系统的 Broker、Codis 中的 Proxy 以及某以前实现的一个[即时通信系统](https://alexstocks.github.io/html/pubsub.html)中的 Proxy/Relay/Router 等。
 
-Proxy 优点是对客户端屏蔽的服务端的复杂性。中间件服务系统的客户端使用数据量是服务系统自身无法控制的，客户端伸缩性极强，而 Proxy 是服务端系统的一部分，其可伸缩性远不如客户端层频繁，如果系统内部需要进行数据负载均衡，则在 Proxy 层面对客户端的读写流量进行控制即可。
+Server-side Proxy 优点是对客户端屏蔽的服务端的复杂性。中间件服务系统的客户端使用数据量是服务系统自身无法控制的，客户端伸缩性极强，而 Proxy 是服务端系统的一部分，其可伸缩性远不如客户端层频繁，如果系统内部需要进行数据负载均衡，则在 Proxy 层面对客户端的读写流量进行控制即可。
 
 其缺点也很明显：在 client 和 server 之间多了两次 "extra hop"，一个经验值是：一个好的 Proxy 会使得 client-server 之间的网络吞吐量仅降低到原来的八成。
 
@@ -133,14 +133,13 @@ Proxy 优点是对客户端屏蔽的服务端的复杂性。中间件服务系�
 
 ![](../pic/service_mesh/alignment-n-autonomy.png)
 
-
 就算是微服务转型，也不是谁都玩得起的，不仅牵涉到各个服务拆分，还设计到开发、测试、部署与服务迁移各个环节。上图【源自[参考文档3](https://paulhammant.com/2017/07/09/alignment-and-autonomy-and-quorums/)】详细描述了 Spotify 在进行微服务化改造过程中相关人员的组织问题，并得出结论：若要进行技术升级，必须在 dev leader 和 team members 之间达成 "alignment autonomy"。
 
 如果有种技术可以让这种公司技术一步完成从原【微】始【服】社【务】会【化】跨入社【网】会【格】主【结】义【构】，岂不美哉？
 
 #### 4.2.2 gRPC 
 
-Sidecar 在 "Client-Server" 服务通信形态中就是一个 Service-side 态的 Proxy。服务应用层无论以各种跨进程访问方式或者通过本机 tcp/uds 协议栈形式以 local 形式连接 Sidecar，但毕竟多了一个 “hop”，对整理系统的吞吐、延迟都有影响，且多了这么一个组件必然会增加硬件资源地消耗。
+Sidecar 在 "Client-Server" 服务通信形态中就是一个 <u>**Client-side**</u> 态的 Proxy(Local Proxy)：每个 Client 都有一个伴生的 sidecar，其作用类似于 <u>**“反向代理”**</u>，实现 client 端网络层任务解耦。服务应用层无论以各种跨进程访问方式或者通过本机 tcp/uds 协议栈形式以 local 形式连接 Sidecar，但毕竟多了一个 “hop”，对整理系统的吞吐、延迟都有影响，且多了这么一个组件必然会增加硬件资源地消耗。
 
 在 Service Mesh 概念出来之前，服务通信主要以 RPC 形式完成，相关框架有谷歌的 gRPC、鹅厂的 Tars、猫厂的 Dubbo【内部有一个 HSF】等，其本质是以 SDK 形式嵌入服务应用的网络层实现整体系统的可靠通信。在 Service Mesh 概念出现后，这些组件当然还是会以各种形式进化下去，gRPC 的进化应该会最引人注目。
 
