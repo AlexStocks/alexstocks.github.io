@@ -1,0 +1,10 @@
+@startuml
+title: start EventLoop
+
+connection.startRWLoop -> utils.GoWithRecover:
+utils.GoWithRecover -> connection.startReadLoop: 异步化启动阻塞读事件处理
+connection.startReadLoop -> connection.doRead: 
+connection.doRead -> connection.onRead:
+connection.onRead -> FilterManager.OnRead: 读事件处理
+
+@enduml

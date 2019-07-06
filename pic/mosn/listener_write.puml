@@ -1,0 +1,9 @@
+@startuml
+title: start EventLoop
+
+connection.startRWLoop -> utils.GoWithRecover:
+utils.GoWithRecover -> connection.startWriteLoop: 异步化启动写事件处理
+connection.startWriteLoop -> connection.doWrite: 阻塞写
+
+
+@enduml

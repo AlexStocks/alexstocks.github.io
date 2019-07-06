@@ -266,7 +266,11 @@ pkg/network 目录则定义了网络连接、监听与读写处理流程。
 
 ![](../pic/mosn/listener_listen.png)
 
+![](../pic/mosn/new_filter_manager.png)
 
+![](../pic/mosn/listener_read.png)
+
+![](../pic/mosn/listener_write.png)
 
 ## 参考文档
 
