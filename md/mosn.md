@@ -133,7 +133,7 @@ SOFAMosn 的 Stream 概念非常类似网络编程的 multiplexing 概念：通�
 
 Proxy 则是 SOFAMosn 角色的体现，在 upStream 和 downStream 之间进行路由选择，在 SOFAMosn 中其还管理连接池、service 集群。
 
-### 3.1 网络线程模型
+### <a name="3.1">3.1 网络线程模型</a>
 
 我们先看看 ，可以看到每个链接的 IO 协程是成对出现的，读协程负责读取，事件机制及 Codec 逻辑，数据上升到 steam 层，具体的 stream 事件由独立的常驻 worker 协程池负责处理。在 0.2.0 版本中我们将会进行多核优化，读协程将不再负责 codec 逻辑，将转发由 codec worker pool 来进行。从发展方向上看，我们会借鉴 SEDA 的思路，将转发流程中每一阶段的处理抽象为一个 stage，通过 task queue，worker 协程池，controller 的机制来对每一个阶段进行处理。从技术实现上看，Golang 实现 SEDA 机制的组件也更简单。
 
@@ -254,6 +254,8 @@ SOFAMosn 的 servers 相关对象【server 和 listener】主要定义在 pkg/se
 
 pkg/network 目录则定义了网络连接、监听与读写处理流程。
 
+listener 启动流程如下：
+
 * 1 构建 server.activeListener 对象
 
 ![](../pic/mosn/build_listener.png)
@@ -264,13 +266,44 @@ pkg/network 目录则定义了网络连接、监听与读写处理流程。
 
 * 3 处理监听事件 server.activeListener.OnAccpet，创建 network/connection.go:connection 对象，调用 connection:Start() 启动 EventLoop
 
+### 4.4 网络读写事件处理
+
+<a name="#3.1">3.1 网络线程模型</a> 节中述到 SOFAMosn 提供了两种网络线程模型，本节只给出其第一种网络线程模型【下文简称 orow】下的读写事件处理流程。
+
+* 1 启动监听事件
+
 ![](../pic/mosn/listener_listen.png)
+
+* 2 接收连接后的 FilterManager 对象初始化
 
 ![](../pic/mosn/new_filter_manager.png)
 
+* 3 orow 模型下的 transport 层的读流程
+
 ![](../pic/mosn/listener_read.png)
 
+* 4 orow 模型下的 transport 层的写流程
+
 ![](../pic/mosn/listener_write.png)
+
+关于写，SOFAMosn 对写采用了合并写优化。[蚂蚁金服 Service Mesh 落地实践与挑战][4] 一文写道，
+通过 golang 的 writev 我们把多笔请求合并成一次写，降低 sys.call 的调用，提升整体的性能与吞吐，同时在使用 writev 的过程中，有发现 golang 对 writev 的实现有 bug，会导致部分内存无法回收，我们给 golang 提交 PR 修复此问题，已被接受：https://github.com/golang/go/pull/32138。
+
+这个 bug 是同事元总【原 tengine 总负责人】发现并解决掉的，但是最新的 Go 语言尚未发版【Go 1.13】，实际处理方法则是把多次写的内容先在内存中合并，然后再调用一次写 sys.call 发送，相关代码如下：
+
+```Go
+	// connection.startRWLoop()
+	for i := 0; i < 10; i++ {
+		select {
+		case buf, ok := <-c.writeBufferChan:
+			if !ok {
+				return
+			}
+			c.appendBuffer(buf)
+		default:
+		}
+	}
+```
 
 ## 参考文档
 
