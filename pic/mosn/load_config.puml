@@ -1,10 +1,17 @@
 @startuml
 title: SOFAMosn Load Config work flow
 
-control.go:cmdStart -> starter.go:Start():mosn start -c mosn_config.json
-starter.go:Start() -> starter.go:NewMosn(): 创建 Mosn 对象
+main.cmdStart -> mosn.Start:mosn start -c mosn_config.json
+mosn.Start -> mosn.NewMosn: 创建 Mosn 对象
 
-starter.go:NewMosn() -> config.ParseServiceRegistry(): 分析 services 配置
-starter.go:NewMosn() -> config.ParseClusterConfig(): 分析 ClusterManager 配置
+... 创建 Mosn 对象时加载配置文件 ...
+
+mosn.NewMosn -> config.ParseServiceRegistry: 分析 services 配置
+
+== 存储分析结果 ==
+
+config.ParseServiceRegistry -> OnServiceRegistryInfoParsed:
+OnServiceRegistryInfoParsed -> OnAppInfoParsed:
+OnAppInfoParsed -> common.SetAppInfo:
 
 @enduml

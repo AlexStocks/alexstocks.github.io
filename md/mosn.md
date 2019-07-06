@@ -162,7 +162,7 @@ SOFAMosn 默认情况下适用第一种网络模型。
 
 SOFAMosn 整体代码可读性不友好，估计其初始作者并没有很长时间的 Go 使用经验。
 
-本节主要分析其配置解析、网络启动与网络时间处理流程，不涉及其运行流程。
+本节主要分析其配置解析、网络启动与网络事件处理流程，不涉及其运行流程。
 
 ### 4.1 Main 入口
 
@@ -210,8 +210,12 @@ type Mosn struct {
 	adminServer    admin.Server
 }
 ```
+
+Mosn 总体启动过程如下：
+
+![](../pic/mosn/mosn_start.png)
  
-### 4.2 读取配置文件
+### 4.2 读取并分析配置文件
 
 前面 <a name="#2.1">2.1 SOFAMosn 配置</a> 一节中给出了 SOFAMosn 的标准配置文件，其对应的代码在 [config/config.go](https://github.com/sofastack/sofa-mosn/blob/master/pkg/config/config.go)，主要结构体定义如下：
 
@@ -236,26 +240,29 @@ type MOSNConfig struct {
 }
 ```
 
-@startuml
-title: SOFAMosn Load Config work flow
+配置整体解析流程如下：
 
-control.go:cmdStart -> starter.go:Start():mosn start -c mosn_config.json
-starter.go:Start() -> starter.go:NewMosn(): 创建 Mosn 对象
+![](../pic/mosn/load_config.png)
 
-... 创建 Mosn 对象时加载配置文件 ...
+### 4.3 listener 启动流程
 
-starter.go:NewMosn() -> config.ParseServiceRegistry(): 分析 services 配置
-starter.go:NewMosn() -> config.ParseClusterConfig(): 分析 ClusterManager 配置
+SOFAMosn 的 servers 相关对象【server 和 listener】主要定义在 pkg/server 目录下，其主要文件内容如下：
 
-== 存储分析结果 ==
+* [types.go](https://github.com/sofastack/sofa-mosn/blob/master/pkg/server/types.go) 定义了一个 Server 接口
+* [server.go](https://github.com/sofastack/sofa-mosn/blob/master/pkg/server/types.go) 定义了接口 Server 的实现 sever struct
+* [handler.go](https://github.com/sofastack/sofa-mosn/blob/master/pkg/server/types.go) 则定义了对 listener 各种事件的处理
 
-config.ParseServiceRegistry() -> OnServiceRegistryInfoParsed()
-OnServiceRegistryInfoParsed() -> OnAppInfoParsed()
-OnAppInfoParsed() -> common.SetAppInfo()
 
-@enduml
 
- 
+1 构建 server.activeListener 对象
+	mosn/starter.go:NewMosn():Start() -> mosn/starter.go:NewMosn() -> server/server.go:server.AddListener -> server/handler.go:connHandler.AddOrUpdateListener -> server/handler.go:newActiveListener
+	
+2 所有的 listener 对象构建完毕后，listener:Start() 开始监听各自的端口
+mosn/starter.go:Mosn.Start() -> server/server.go:server.Start() -> server/handler.go:connHandler.StartListeners -> server/handler.go:activeListener.GoStart() -> [utils.GoWithRecover -> network/listener.go:listener.Start()] -> network/listener.go:listener.listen() + network/listener.go:listener.accept()
+utils.GoWithRecover 函数是异步化启动 listener.Start()。
+
+3 处理监 
+
 ## 参考文档
 
 - 1 [Service Mesh数据平面SOFAMosn深层揭秘](https://www.servicemesher.com/blog/sofa-mosn-deep-dive/)

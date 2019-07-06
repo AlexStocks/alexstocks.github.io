@@ -1,0 +1,21 @@
+@startuml
+title: SOFAMosn Start work flow
+
+app.Run -> main.cmdStart: 根据 "mosn start” 执行 cmdStart
+main.cmdStart -> cmdStart.Action:
+cmdStart.Action -> mosn.Start:
+
+== 启动指令解析完毕，创建 Mosn 对象 ==
+
+mosn.Start -> mosn.NewMosn: 创建 Mosn 对象
+mosn.NewMosn -> config.ParseXXXRegistry: 加载并分析配置文件
+
+... 分析并存储servers/clusterManagement配置信息，创建 server 对象  ...
+
+mosn.Start -> mosn.Mosn.Start: Mosn 启动
+
+== Mosn 对象内部资源构建完毕，启动其各个 server ==
+
+mosn.Mosn.Start -> server.server.Start: 启动其各个 listener
+
+@enduml
