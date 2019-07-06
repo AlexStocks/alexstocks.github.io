@@ -172,7 +172,7 @@ Gr Pool 成员有任务队列【其数目为 M】和 Gr 数组【其数目为 N�
 
 ### <a name="4.1">4.1 固定大小 Gr Pool</a>
 
-按照 M 与 N 的比例，固定大小 Gr Pool 又区分为 1:1、1:N、M:N【N > 1】三类。
+按照 M 与 N 的比例，固定大小 Gr Pool 又区分为 1:1、1:N、M:N 三类。
 
 1:N 类型的 Gr Pool 最易实现，个人 2017 年在项目 [kafka-connect-elasticsearch][6] 中实现过此类型的 [Gr Pool][7]：作为消费者从 kafka 读取数据然后放入消息队列，然后各个 worker gr 从此队列中取出任务进行消费处理。
 
@@ -185,7 +185,6 @@ Gr Pool 成员有任务队列【其数目为 M】和 Gr 数组【其数目为 N�
 [wenwei86][12] 给出了更进一步的 1:1 模型的改进方案：每个 gr 一个 chan，如果 gr 发现自己的 chan 没有请求，就去找别的 chan，发送方也尽量发往消费快的协程。这个方案类似于 go runtime 内部的 MPG 调度算法，但是对我个人来说算法和实现均太复杂，故而没有采用。
 
 [dubbogo/getty][1] 目前采用了 M:N 模型版本的 [gr pool][11]，每个 task queue 被 N/M 个 gr 消费，这种模型的优点是兼顾处理效率和锁压力平衡，可以做到总体层面的任务处理均衡。此版本下 Task 派发采用 RoundRobin 方式。
-
 
 ## 总结
 ---
