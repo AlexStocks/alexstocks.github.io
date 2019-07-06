@@ -8,7 +8,9 @@
 
 话说缘分天注定。半载过后，愚人工作内容便是参与此项目开发，便需要对此项目的具体机理深入了解，以免踩坑。
 
-## 1 Service Mesh 
+## 1 SOFAMosn
+
+SOFAMosn 是蚂蚁金服 Service Mesh 整体实践中最基础的组件。
 
 参考文档 [蚂蚁金服 Service Mesh 落地实践与挑战][2] 文中述及了蚂蚁金服当前的 Service Mesh 进展情况，不同于开源的 Istio 体系，蚂蚁金服内部版 Service Mesh 落地优先考虑数据面的实现与落地，控制面在逐步建设中，整体的架构上看，我们使用数据面直接和内部的各种中间件服务端对接，来完成 RPC、消息等能力的下沉，给业务应用减负。SOFAMosn 便是数据平面落地的产物。
 
@@ -23,11 +25,70 @@ SOFAMosn 在 Service Mesh 充当 sidecar 角色，可以粗浅地理解为 Go �
 * 相互之间通过 TCP/HTTP 进行 transport 通信
 * 通过 MQ 进行 pub/sub；
 
+### 1.1 SOFAMosn 配置
+
+愚人刚开始学习 SOFAMosn 相关概念的时候，是通过其配置文件，并类比于 Envoy 入门的。
+
+SOFAMosn 的配置文件大体内容如下：
+
+```text/json
+{
+  "servers": [
+    {
+      "mosn_server_name": "mosn_server_1",
+      "listeners": [
+        {
+          "name": "ingress_sofa","address": "0.0.0.0:12220", "type": "ingress",
+          "filter_chains": [
+            {
+              "match": "",
+              "tls_context": {"status": true, "server_name": "hello.com", "verify_client": true,
+              },
+              "filters": [
+                {
+                  "type": "proxy",
+                  "config": {
+                    "downstream_protocol": "SofaRpc","name": "proxy_config","upstream_protocol": "SofaRpc","router_config_name": "test_router"
+                  }
+                }
+              ]
+            }
+          ],
+        }
+      ]
+    }
+  ],
+  "cluster_manager": {
+    "clusters": [
+      {
+        "name": "test_cpp", "lb_type": "LB_ROUNDROBIN",
+        "health_check": {
+          "protocol": "SofaRpc", "timeout": "90s",
+        },
+        "hosts": [
+          {
+            "address": "11.166.22.163:12200", "hostname": "downstream_machine1", "weight": 1,
+          }
+        ],
+      }
+    ]
+  }
+}
+```
+
+上面内容原子开源版本 SOFAMosn 的配置文件 [mosn_config.json][6]，经愚人裁剪和合并，以利于阅读。
+
+#### 1.1 SOFAMosn Servers
+
+
+
 ## 2 四层架构
 
 SOFAMosn 本质是一个 Local(Client-Side) Proxy，downstream 通过它把请求路由到 upstream，
 
 ![](../pic/mosn/mosn_4_layers.jpg)
+
+![](../pic/mosn/getty_3_layer.jpg)
 
 ## 参考文档
 
@@ -40,6 +101,7 @@ SOFAMosn 本质是一个 Local(Client-Side) Proxy，downstream 通过它把请�
 [3]:(https://www.servicemesher.com/blog/sofa-mosn-deep-dive/)
 [4]:(https://blog.csdn.net/sofastack/article/details/93558620)
 [5]:(http://alexstocks.github.io/html/service_mesh.html)
+[6]:(https://github.com/sofastack/sofa-mosn/blob/master/configs/mosn_config.json)
 
 ## 扒粪者-于雨氏
 
