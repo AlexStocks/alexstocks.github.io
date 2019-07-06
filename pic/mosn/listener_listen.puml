@@ -1,0 +1,13 @@
+@startuml
+title: start EventLoop
+
+server.activeListener.OnAccept -> server.newActiveRawConn:
+server.activeListener.OnAccept -> server.ContinueFilterChain: 创建 filter chain
+server.ContinueFilterChain -> server.activeListener.newConnection: 创建 connection
+server.activeListener.newConnection -> sever.activeListener.OnNewConnection: 调用 activeListener 的处理新连接事件接口
+sever.activeListener.OnNewConnection -> sever.newActiveConnection: 处理新连接事件
+sever.activeListener.OnNewConnection -> network.connection.Start: 连接启动
+network.connection.Start -> network.startRWLoop: 处理读写时间
+network.connection.Start -> network.attachEventLoop: 保存 EventLoop
+
+@enduml

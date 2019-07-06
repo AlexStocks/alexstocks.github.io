@@ -1,0 +1,10 @@
+@startuml
+title: build activeListener
+
+ 
+mosn.NewMosn -> server.NewServer: 构建 server 对象
+mosn.NewMosn -> server.AddListener: 构建 listener 对象，并放入其对应的 server 对象中
+server.AddListener -> server.AddOrUpdateListener:
+server.AddOrUpdateListener -> server.newActiveListener: 构建实际的 listener 对象 activeListener
+
+@enduml

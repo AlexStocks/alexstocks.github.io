@@ -1,0 +1,10 @@
+@startuml
+title: 创建 FilterManager
+
+activeListener.OnAccept -> activeRawCon.ContinueFilterChain: 
+activeRawCon.ContinueFilterChain -> activeListener.newConnection: 创建 connection
+activeListener.newConnection -> activeListener.OnNewConnection: 调用 activeListener 的处理新连接事件接口
+activeListener.OnNewConnection -> NetworkFilterChainFactory.CreateFilterChain: 创建 FilterChain
+activeListener.OnNewConnection -> filterManager.InitializeReadFilters: 初始化读 filter
+
+@enduml

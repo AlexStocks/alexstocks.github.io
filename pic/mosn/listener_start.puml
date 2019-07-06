@@ -1,0 +1,11 @@
+@startuml
+title: listener start work flow
+
+mosn.Mosn.Start -> server.server.Start: 启动 server
+server.server.Start -> server.connHandler.StartListeners: 启动listener
+server.connHandler.StartListeners -> server.activeListener.GoStart: 异步化启动 activeListener
+server.activeListener.GoStart -> network.listener.Start: 启动 activeListener
+network.listener.Start -> network.listener.listen: 监听网络端口
+network.listener.Start -> network.listener.accept: 接收 downSteam 连接
+
+@enduml

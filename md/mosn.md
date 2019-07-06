@@ -252,16 +252,21 @@ SOFAMosn 的 servers 相关对象【server 和 listener】主要定义在 pkg/se
 * [server.go](https://github.com/sofastack/sofa-mosn/blob/master/pkg/server/types.go) 定义了接口 Server 的实现 sever struct
 * [handler.go](https://github.com/sofastack/sofa-mosn/blob/master/pkg/server/types.go) 则定义了对 listener 各种事件的处理
 
+pkg/network 目录则定义了网络连接、监听与读写处理流程。
+
+* 1 构建 server.activeListener 对象
+
+![](../pic/mosn/build_listener.png)
+ 
+* 2 所有的 listener 对象构建完毕后，listener:Start() 开始监听各自的端口
+
+![](../pic/mosn/listener_start.png)
+
+* 3 处理监听事件 server.activeListener.OnAccpet，创建 network/connection.go:connection 对象，调用 connection:Start() 启动 EventLoop
+
+![](../pic/mosn/listener_listen.png)
 
 
-1 构建 server.activeListener 对象
-	mosn/starter.go:NewMosn():Start() -> mosn/starter.go:NewMosn() -> server/server.go:server.AddListener -> server/handler.go:connHandler.AddOrUpdateListener -> server/handler.go:newActiveListener
-	
-2 所有的 listener 对象构建完毕后，listener:Start() 开始监听各自的端口
-mosn/starter.go:Mosn.Start() -> server/server.go:server.Start() -> server/handler.go:connHandler.StartListeners -> server/handler.go:activeListener.GoStart() -> [utils.GoWithRecover -> network/listener.go:listener.Start()] -> network/listener.go:listener.listen() + network/listener.go:listener.accept()
-utils.GoWithRecover 函数是异步化启动 listener.Start()。
-
-3 处理监 
 
 ## 参考文档
 
