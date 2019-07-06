@@ -1,0 +1,10 @@
+@startuml
+title: SOFAMosn Load Config work flow
+
+control.go:cmdStart -> starter.go:Start():mosn start -c mosn_config.json
+starter.go:Start() -> starter.go:NewMosn(): 创建 Mosn 对象
+
+starter.go:NewMosn() -> config.ParseServiceRegistry(): 分析 services 配置
+starter.go:NewMosn() -> config.ParseClusterConfig(): 分析 ClusterManager 配置
+
+@enduml
