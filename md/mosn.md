@@ -31,7 +31,7 @@ SOFAMosn 在 Service Mesh 充当 sidecar 角色，可以粗浅地理解为 Go �
 
 ![](../pic/mosn/envoy_arch.jpg)
 
-上图是 Service Mesh 布道师 宋金超(Jimmy Song) 绘制的 Envoy 架构图，用宋老师的一句话总结图中流程即为，host A 经过 Envoy 访问 host B 的过程，每个 host 上都可能运行多个 service，Envoy 中也可能有多个 Listener，每个 Listener 中可能会有多个 filter 组成了 chain。
+上图是 Service Mesh 布道师 宋进超(Jimmy Song) 绘制的 Envoy 架构图，用宋老师的一句话总结图中流程即为，host A 经过 Envoy 访问 host B 的过程，每个 host 上都可能运行多个 service，Envoy 中也可能有多个 Listener，每个 Listener 中可能会有多个 filter 组成了 chain。
 
 ### <a name="2.1">2.1 SOFAMosn 配置</a>
 
@@ -135,8 +135,6 @@ Proxy 则是 SOFAMosn 角色的体现，在 upStream 和 downStream 之间进行
 
 ### <a name="3.1">3.1 网络线程模型</a>
 
-我们先看看 ，可以看到每个链接的 IO 协程是成对出现的，读协程负责读取，事件机制及 Codec 逻辑，数据上升到 steam 层，具体的 stream 事件由独立的常驻 worker 协程池负责处理。在 0.2.0 版本中我们将会进行多核优化，读协程将不再负责 codec 逻辑，将转发由 codec worker pool 来进行。从发展方向上看，我们会借鉴 SEDA 的思路，将转发流程中每一阶段的处理抽象为一个 stage，通过 task queue，worker 协程池，controller 的机制来对每一个阶段进行处理。从技术实现上看，Golang 实现 SEDA 机制的组件也更简单。
-
 SOFAMosn 网络层采用了两种网络模型，分别针对不同的使用场景。
 
 ![](../pic/mosn/mosn_io_thread1.png)
@@ -190,7 +188,7 @@ SOFAMosn 使用了第三方库封装了一个 APP 代表整体程序，并能够
 
 Stop 命令和 Reload 命令的 Action 函数为空，不知道这样的封装意义何在，涉嫌过度封装。实际使用命令仅仅 Start 而已。
  
-整体 cmd/mosn/main 目录下有用的代码仅如下一行代码：
+整体 cmd/mosn/main 目录下有用的代码仅如下一行：
 
 ```Go
     mosn.Start(conf, serviceCluster, serviceNode)
