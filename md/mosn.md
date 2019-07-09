@@ -31,7 +31,7 @@ SOFAMosn 在 Service Mesh 充当 sidecar 角色，可以粗浅地理解为 Go �
 
 ![](../pic/mosn/envoy_arch.jpg)
 
-上图是 Service Mesh 布道师 宋进超(Jimmy Song) 绘制的 Envoy 架构图，用宋老师的一句话总结图中流程即为，host A 经过 Envoy 访问 host B 的过程，每个 host 上都可能运行多个 service，Envoy 中也可能有多个 Listener，每个 Listener 中可能会有多个 filter 组成了 chain。
+上图是 Service Mesh 布道师 宋净超(Jimmy Song) 绘制的 Envoy 架构图，用宋老师的一句话总结图中流程即为，host A 经过 Envoy 访问 host B 的过程，每个 host 上都可能运行多个 service，Envoy 中也可能有多个 Listener，每个 Listener 中可能会有多个 filter 组成了 chain。
 
 ### <a name="2.1">2.1 SOFAMosn 配置</a>
 
