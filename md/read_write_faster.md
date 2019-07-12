@@ -1,16 +1,16 @@
-## 快速读写文件
+# 快速读写文件
 ---
 *written by Alex Stocks on 2019/05/05，版权所有，无授权不得转载*
 
 4月初读到 PolarDB 开发团队[陈宗志](https://github.com/baotiao)写的一篇文章[《write file faster》](https://zhuanlan.zhihu.com/p/61212603)，受教颇多，现拾人牙慧成就本文，以示致敬！
 
-### 1 快速写文件
+## 1 快速写文件
 
 对文件的操作一般区分为读写两种动作。如果文件存储系统特指为 SATA 磁盘文件系统，文件写操作大致可以认为是一种 append 操作，文件读操作则有顺序和随机两种。
 
 个人在2014年时对 7200转 的 SATA 磁盘文件的读写操作有两个经验数据：优化后的写速度可达 150MB/s，顺序读可达 800 MB/s。一般情况下，随机读速度高于写速度，对文件写速度的优化难于对其读速度的优化。本章主要描述对磁盘文件写流程的优化。
 
-#### 1.1 内存对齐与双缓冲
+### 1.1 内存对齐与双缓冲
 
 大概五年前吾人写有 [《如何快速的把日志输出到磁盘上》](https://my.oschina.net/alexstocks/blog/299619)一文，其中 `write faster` 的关键之处在于：合并写输出，待输出内容为 4096 Bytes 时再调用系统 API 以 append 方式输出至磁盘。正如此文所述，这种方法其实借鉴自 muduo 的 log 系统。
 
@@ -20,7 +20,7 @@ muduo 的 log 系统还给出了进一步的优化：预先申请两个 buffer�
 
 本节所用到的技巧其实仅仅在于如何高效使用内存，并未更进一步地述及如何加快操作磁盘文件写流程【根本原因在于当时水平太渣^_^】。
 
-#### 1.2 fdatasync
+### 1.2 fdatasync
 
 linux 系统会在内核内存空间为磁盘文件其分配一个内核缓冲区，有人称其为 “内核态内存区”。既然存在文件的 “内核态” 缓冲区，自然应该有一个 “用户态” 缓冲区。
 
@@ -34,7 +34,7 @@ linux 系统每个文件都有一个 inode 区和 data 区，分别保存文件�
 
 fdatasync 的意义即为把 fsync 对文件的磁盘区域的两次写减少为一次写。
 
-#### 1.3 fallocate
+### 1.3 fallocate
 
 上节述及 fdatasync 时，提到 `预先为 log 文件提前分配了固定大小的空间`，linux 的 fallocate api 即可实现这一动作。
 
@@ -44,7 +44,7 @@ fallocate 保证系统预先为文件分配相应的逻辑磁盘空间，保证�
 
 这种 `filling zero` 操作颇类似于对 linux bzero api 的效果：为一段逻辑内存空间提前分配对应的物理内存空间，避免在写内存时产生中断。
 
-##### 1.3.1 mmap
+#### 1.3.1 mmap
 
 linux glibc 有一个比较有名的 API mmap 能够实现内核态逻辑空间内存与磁盘物理空间的直接映射，亦可绕过内核态内存空间，实现 zero copy。但是与 fallocate 相比，其缺陷如下：
 
@@ -55,19 +55,19 @@ linux glibc 有一个比较有名的 API mmap 能够实现内核态逻辑空间�
 
 总之，与 fallocate + posix_memalign 比起来， mmap 无法做到内存使用的精细控制，所以不推荐使用。
 
-#### 1.4 文件复用
+### 1.4 文件复用
 
 [《how to write file faster》](https://mp.weixin.qq.com/s/GbjWN9-B11DkUFgCZba_rQ) 一文还提到另一个优化`通过后台线程提前创建文件并且filling zero 从而达到高效的写入`。
 
 linux 系统创建文件时需要向文件系统申请文件资源，如欲实现文件 “快速写”，这个等待时间也是很可观的，所以类似于第一节的`写文件时用到的内存资源在写之前预先申请好` 优化手段，这种行为即是`写文件时用到的文件资源在写之前预先申请好`。
 
-#### <a name="1.5">1.5 Journal</a> 
+### <a name="1.5">1.5 Journal</a> 
 
 上周[Bert师傅](https://github.com/loveyacper)提醒道 ext4 文件系统的 Journal 特性可能会影响程序的测试结果，并给出了[参考文档3](http://ilinuxkernel.com/?p=1467)作为参考。今日(20190511)周末得有余暇，借用[余朝晖](https://github.com/yuyijq)的一台阿里云的虚机测试[参考文档1](https://zhuanlan.zhihu.com/p/61212603)中给出的程序。
 
 linux ext3 在 ext2 之上引入了 Journal 日志功能，以保证文件系统的数据安全性【如掉电情况下进行数据恢复】，ext4 又在 ext3 之上又引入了 extent 和 数据checksum 以及 延迟物理页面空间分配机制【本文显然是通过绕过这种机制加快写文件速度】。既然大师给出了提醒，就把这个环境因素也计入测试考量之内。
 
-##### 1.5.1 虚拟文件系统
+#### 1.5.1 虚拟文件系统
 
 余大师的阿里云虚机环境信息如下：
 
@@ -115,7 +115,7 @@ linux ext3 在 ext2 之上引入了 Journal 日志功能，以保证文件系统
     umount /mnt/vfs 
 ```
 
-##### 1.5.2 测试程序和测试结果
+#### 1.5.2 测试程序和测试结果
 
 [参考文档1](https://zhuanlan.zhihu.com/p/61212603)给出了如下测试程序【版权归属[陈宗志](https://github.com/baotiao)】：
 
@@ -216,7 +216,7 @@ int main()
 
 在 SATA 盘场景下，Journal 功能确实有利于保证数据安全性，缺点就是导致写放大。在 SSD/Flash 盘上则建议关闭 Journal，因为写放大将加速硬件损耗，其缺点是无法保证数据安全性，即使使用了 fdatasync 接口，在极端情况下【如瞬时掉电】也无法保证数据安全性：因为 fdatasync 并不保证数据刷盘的顺序，可能后写的数据先被刷盘，导致形成文件空洞【道听途说，自己没有确认】。
 
-### 2 快速读文件 
+## 2 快速读文件 
 
 优化文件读取速度的最基本手段即是`顺序读`，其原理在于 linux 系统读取文件数据时会提前对文件进行预读，减少读数据时的缺页中断。
 
@@ -224,11 +224,18 @@ linux 系统有预读行为，但预读数据量则是用户所不知道的。li
 
 具体实践中，readahead 可以配合 mmap 函数一起使用以加快数据读取速度。
 
+### 2.1 合并小文件
+
+[单机百亿文件的极致索引（设计篇）][4]写道，Haystack 为了提升IO性能, 降低文件系统Inode的读写开销, 将小文件合并成一个大文件存储, 并在内存中存储所有文件的元信息（meta）, 这样直接将每个文件读取的2次IO（inode+data）转变成一次内存操作和一次IO操作。
+
 ## 参考文档
+
+[4]:https://blog.csdn.net/BaishanCloud/article/details/83028522
 
 - 1 [write file faster](https://zhuanlan.zhihu.com/p/61212603)
 - 2 [如何快速的把日志输出到磁盘上](https://my.oschina.net/alexstocks/blog/299619)
 - 3 [Linux ext3/ext4文件系统中同步写放大问题](http://ilinuxkernel.com/?p=1467)
+- 4 [单机百亿文件的极致索引（设计篇）](https://blog.csdn.net/BaishanCloud/article/details/83028522)
 
 ## 扒粪者-于雨氏
 
