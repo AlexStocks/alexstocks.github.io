@@ -578,6 +578,8 @@ type MOSNConfig struct {
 
 <p><img src="../pic/mosn/load_config.png" alt=""></p>
 
+<p>NewMosn 函数中启动了一个 <code>config.DumpConfigHandler</code> 的 goroutine，定时把程序对配置的变更内容更新入配置文件中。</p>
+
 <h3 id="toc_11">4.3 listener 启动流程</h3>
 
 <p>SOFAMosn 的 servers 相关对象【server 和 listener】主要定义在 pkg/server 目录下，其主要文件内容如下：</p>
@@ -700,6 +702,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 
 

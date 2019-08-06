@@ -242,6 +242,8 @@ type MOSNConfig struct {
 
 ![](../pic/mosn/load_config.png)
 
+NewMosn 函数中启动了一个 `config.DumpConfigHandler` 的 goroutine，定时把程序对配置的变更内容更新入配置文件中。
+
 ### 4.3 listener 启动流程
 
 SOFAMosn 的 servers 相关对象【server 和 listener】主要定义在 pkg/server 目录下，其主要文件内容如下：
