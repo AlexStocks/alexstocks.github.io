@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>relegion_doubt</title>
+
+
+<style type="text/css">
+body {
+  font-family: Helvetica, arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: white;
+  padding: 30px; }
+
+body > *:first-child {
+  margin-top: 0 !important; }
+body > *:last-child {
+  margin-bottom: 0 !important; }
+
+a {
+  color: #4183C4; }
+a.absent {
+  color: #cc0000; }
+a.anchor {
+  display: block;
+  padding-left: 30px;
+  margin-left: -30px;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0; }
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+  cursor: text;
+  position: relative; }
+
+h1:hover a.anchor, h2:hover a.anchor, h3:hover a.anchor, h4:hover a.anchor, h5:hover a.anchor, h6:hover a.anchor {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA09pVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoMTMuMCAyMDEyMDMwNS5tLjQxNSAyMDEyLzAzLzA1OjIxOjAwOjAwKSAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OUM2NjlDQjI4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OUM2NjlDQjM4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5QzY2OUNCMDg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5QzY2OUNCMTg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PsQhXeAAAABfSURBVHjaYvz//z8DJYCRUgMYQAbAMBQIAvEqkBQWXI6sHqwHiwG70TTBxGaiWwjCTGgOUgJiF1J8wMRAIUA34B4Q76HUBelAfJYSA0CuMIEaRP8wGIkGMA54bgQIMACAmkXJi0hKJQAAAABJRU5ErkJggg==) no-repeat 10px center;
+  text-decoration: none; }
+
+h1 tt, h1 code {
+  font-size: inherit; }
+
+h2 tt, h2 code {
+  font-size: inherit; }
+
+h3 tt, h3 code {
+  font-size: inherit; }
+
+h4 tt, h4 code {
+  font-size: inherit; }
+
+h5 tt, h5 code {
+  font-size: inherit; }
+
+h6 tt, h6 code {
+  font-size: inherit; }
+
+h1 {
+  font-size: 28px;
+  color: black; }
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #cccccc;
+  color: black; }
+
+h3 {
+  font-size: 18px; }
+
+h4 {
+  font-size: 16px; }
+
+h5 {
+  font-size: 14px; }
+
+h6 {
+  color: #777777;
+  font-size: 14px; }
+
+p, blockquote, ul, ol, dl, li, table, pre {
+  margin: 15px 0; }
+
+hr {
+  background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAECAYAAACtBE5DAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OENDRjNBN0E2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OENDRjNBN0I2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo4Q0NGM0E3ODY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo4Q0NGM0E3OTY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqqezsUAAAAfSURBVHjaYmRABcYwBiM2QSA4y4hNEKYDQxAEAAIMAHNGAzhkPOlYAAAAAElFTkSuQmCC) repeat-x 0 0;
+  border: 0 none;
+  color: #cccccc;
+  height: 4px;
+  padding: 0;
+}
+
+body > h2:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+body > h1:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+  body > h1:first-child + h2 {
+    margin-top: 0;
+    padding-top: 0; }
+body > h3:first-child, body > h4:first-child, body > h5:first-child, body > h6:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0; }
+
+h1 p, h2 p, h3 p, h4 p, h5 p, h6 p {
+  margin-top: 0; }
+
+li p.first {
+  display: inline-block; }
+li {
+  margin: 0; }
+ul, ol {
+  padding-left: 30px; }
+
+ul :first-child, ol :first-child {
+  margin-top: 0; }
+
+dl {
+  padding: 0; }
+  dl dt {
+    font-size: 14px;
+    font-weight: bold;
+    font-style: italic;
+    padding: 0;
+    margin: 15px 0 5px; }
+    dl dt:first-child {
+      padding: 0; }
+    dl dt > :first-child {
+      margin-top: 0; }
+    dl dt > :last-child {
+      margin-bottom: 0; }
+  dl dd {
+    margin: 0 0 15px;
+    padding: 0 15px; }
+    dl dd > :first-child {
+      margin-top: 0; }
+    dl dd > :last-child {
+      margin-bottom: 0; }
+
+blockquote {
+  border-left: 4px solid #dddddd;
+  padding: 0 15px;
+  color: #777777; }
+  blockquote > :first-child {
+    margin-top: 0; }
+  blockquote > :last-child {
+    margin-bottom: 0; }
+
+table {
+  padding: 0;border-collapse: collapse; }
+  table tr {
+    border-top: 1px solid #cccccc;
+    background-color: white;
+    margin: 0;
+    padding: 0; }
+    table tr:nth-child(2n) {
+      background-color: #f8f8f8; }
+    table tr th {
+      font-weight: bold;
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr td {
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr th :first-child, table tr td :first-child {
+      margin-top: 0; }
+    table tr th :last-child, table tr td :last-child {
+      margin-bottom: 0; }
+
+img {
+  max-width: 100%; }
+
+span.frame {
+  display: block;
+  overflow: hidden; }
+  span.frame > span {
+    border: 1px solid #dddddd;
+    display: block;
+    float: left;
+    overflow: hidden;
+    margin: 13px 0 0;
+    padding: 7px;
+    width: auto; }
+  span.frame span img {
+    display: block;
+    float: left; }
+  span.frame span span {
+    clear: both;
+    color: #333333;
+    display: block;
+    padding: 5px 0 0; }
+span.align-center {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-center > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: center; }
+  span.align-center span img {
+    margin: 0 auto;
+    text-align: center; }
+span.align-right {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px 0 0;
+    text-align: right; }
+  span.align-right span img {
+    margin: 0;
+    text-align: right; }
+span.float-left {
+  display: block;
+  margin-right: 13px;
+  overflow: hidden;
+  float: left; }
+  span.float-left span {
+    margin: 13px 0 0; }
+span.float-right {
+  display: block;
+  margin-left: 13px;
+  overflow: hidden;
+  float: right; }
+  span.float-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: right; }
+
+code, tt {
+  margin: 0 2px;
+  padding: 0 5px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px; }
+
+pre code {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent; }
+
+.highlight pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+  pre code, pre tt {
+    background-color: transparent;
+    border: none; }
+
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
+}
+
+kbd {
+  display: inline-block;
+  padding: 3px 5px;
+  font-size: 11px;
+  line-height: 10px;
+  color: #555;
+  vertical-align: middle;
+  background-color: #fcfcfc;
+  border: solid 1px #ccc;
+  border-bottom-color: #bbb;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 #bbb
+}
+
+* {
+	-webkit-print-color-adjust: exact;
+}
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:0 auto;
+    }
+}
+@media print {
+	table, pre {
+		page-break-inside: avoid;
+	}
+	pre {
+		word-wrap: break-word;
+	}
+}
+</style>
+
+
+</head>
+
+<body>
+
+<h1 id="toc_0">信仰与存在</h1>
+
+<hr>
+
+<p><em>written by Alex Stocks on 2019/11/10，版权所有，无授权不得转载</em></p>
+
+<h2 id="toc_1">0 意识生物体</h2>
+
+<hr>
+
+<p>每个能意识到自我存在的人，其实是一个若干感觉接口的生物体，通过这些接口每天都在接收很多信息，也在输出很多信息。</p>
+
+<p>无论民族、宗教或某种流行文化现象，自身是一种信息体系，更是一个编排系统，编排其体系中的每个生物体。这个信息体产生于具有怀疑精神的、可对有效信息进行深度加工的人类先知，而后扩散，扩散范围俞广则力量俞强大。其生命力长久者则会成为宗教、民族意识以及国家认同，短暂则如流行文化，流星般的易逝。</p>
+
+<p>某个生物体可从属于多个信仰体系。在某个信仰体系中的先知，在另一个信仰体系中可能就是白丁。在第三次科技革命之前，囿于落后的信息传播手段，意识生物体大多处于信息饥渴状态，有大量时间进行信息深加工。而网络发达的今下，意识生物体则大多处于信息过载状态。</p>
+
+<p>没有深度加工能力的生物体为白丁为崇拜者；信息处理能力不强者，其承担这些信息的载体&ndash;生物体可能会被损坏，沦为抑郁症、焦虑症等心理疾病患者；处理加工能力强健者则易称为食物链顶端的肉食者。所谓劳心者治人劳力者治于人。</p>
+
+<h2 id="toc_2">1 信仰的原点</h2>
+
+<hr>
+
+<p>任何一个信仰体系，都有一个赖以存在的前提或假设，可称之为原点，不容被质疑。整个体系基于此点开始推演拓展形成平面，最终构建一个立体的体系， 这个原点一旦被怀疑则开始进入其生命衰亡阶段，一旦被推翻就意味着这个体系的崩塌。怀疑的开始便是革命。</p>
+
+<h3 id="toc_3">1.1 欧几里得、牛顿和爱因斯坦</h3>
+
+<p>数学的原点，即是欧式几何的五大公理，我们熟知的有 <code>两点之间直线最短</code>、<code>三角形内角之和为 180 度</code>等，构建了整个古典数学信仰体系。</p>
+
+<p>牛顿的机械力学原点为万有引力，假设万物之间存在引力，当物体独自存在没有外力时则存在惯性。</p>
+
+<p>1851 年有德意志人黎曼，从质疑 <code>三角形内角之和为 180 度</code> 这条公理开始，推演出不存在平行线，欧式几何便开始礼崩乐坏了。</p>
+
+<p>其继承人爱因斯坦则开始声称万有引力不存在，其本质不过是物体的质量使得其时空产生了扭曲，扭曲的结果即为引力，但宣称 <code>宇宙能量传播的上限为恒定不变的光速</code>，然后构建了一套广义相对论的物理体系。</p>
+
+<h3 id="toc_4">1.2 宗教</h3>
+
+<p>宗教与人来社会同时缘起，同时演化。宗教的原点便是世界的源头在于第一神圣力量的存在。</p>
+
+<p>原始宗教便是图腾崇拜，信仰各种动物或者几何符号的力量，其对如今文明的影响便是各种旗帜，如国旗国徽等。当人类的抽象能力提升后，人类便开始崇拜超现实的力量。</p>
+
+<p>几大世界宗教的存在，是社会演进的结果。脱胎于犹太教的基督教，其革命性的地方在于，基督不仅保佑犹太人，还保佑所有信仰他的人。伊斯兰相对于基督教的革命性便在于所有人在真主面前一律平等，无论种族、民族、国家。当代基督新教则直接宣传人人生而平等。</p>
+
+<p>宗教如真理般，刚开始掌握在少数人手里，其存在和扩散的条件，要么是在一个宽容的社会环境里，如佛陀和科学宗教体系；或者是借助于武力与财富，如默罕默德与阿拉伯帝国，如基督与罗马帝国。其初始最容易获取的对象是流氓无产者和信仰破产/信仰空虚者。</p>
+
+<p>学校是一种学习某种思想和认知体系的场所，有宗教学校，有科学学校。宗教学校教人以宗教，称为宗教的信徒。科学学校教人以所谓的科学体系，称为这个体系认知的信徒。</p>
+
+<h2 id="toc_5">2 怀疑</h2>
+
+<p>从一个原点构建的信仰体系若与生物体的意识契合，其便占有此生物体。</p>
+
+<p>若信仰体系内的某些生物体的意识 与 体系的信息体系存在差异，则体系会被侵蚀，当此差异逐渐扩大，则这套体系占有的现有世界会被颠覆，体系内的旧势力被消灭，其利益被侵夺。</p>
+
+<p>若旧信仰既得利益者能走出其信仰舒适区，经过一番痛苦的洗炼，则会信仰体系会产生进化，进而被继承下去，否则便会崩溃。</p>
+
+<h2 id="toc_6">3 个人</h2>
+
+<p>人需要进行思想生产。不管这种精神生成是复制别人的思想然后欣然接受，抑或是深度加工构建一套新的独立体系，能进行生产者便不会有太多迷茫，对人生便有了自信和豁达，对工作和生活便能力争上游。</p>
+
+<p>在自己认知的舒适区进行生产是一种低成本的生产，大部分过程不过是复制以往的自己或者他者的实验过程，得出同样的过程；突破自己思想舒适区的实验过程，大概率情况下也是重复别人的思想过程，其结果是得到一种区别于个体以往认知的新认知，小概率情况下产生一种内在不自洽或者内在自洽但与任何现实世界不自洽的认知，使自己陷入疯魔；极小概率情况下产生一种自成体系的可解释现实世界的某种局部范围客观存在的或者是极大客观存在的不为他人所知的新认知，这人要么成为异端，要么成为时下的圣人，或者成为未来的圣人，如孔子，如王莽。</p>
+
+<p>生在人世间，多是碌碌凡人。</p>
+
+<h2 id="toc_7">4 信息不对称</h2>
+
+<p>真理从先知处产生，先知便拥有了对凡人的优势。宗教上的先知可能需要付出生命的代价以推动其认知的传播，财富信息的先知就有可能称为老流氓。</p>
+
+<p>投资人掌握了别人不知道的信息以致富，或者是试错获取，或者是垄断手段【如 80年代的跨国倒爷以及红顶子官倒们】获取。如在GFW保护下的我们，在网络做的一切，老大哥都知道，这便使得精英们道路以目不敢在网络世界有所言语，而底层白氓们以为自己在虚拟世界，边猖狂的以为自己可以进行黄赌毒行为。</p>
+
+<p>封闭的世界使人感到安全，免除恐惧。windows 的权限控制松散，其系统便如各种规则混乱不堪的第三世界国家，使用者便是在丛林法则中生成的人，强者控制自己的计算机，弱者使得自己的计算机沦为各种木马的肉鸡。unix/linux 的权限控制使得其世界便如法律规则清晰的文明世界，使用者和潜在破坏者在规则约束下均会感到各种不便，时间久之使用者熟悉后便会获得安全感。虚拟世界如虚机或者容器中的人便会在无知的支配下狂妄起来。</p>
+
+<h2 id="toc_8">参考文档</h2>
+
+<hr>
+
+<h2 id="toc_9">扒粪者-于雨氏</h2>
+
+<blockquote>
+<ul>
+<li>2019/11/10，于雨氏，于 G3x 途中。</li>
+</ul>
+</blockquote>
+
+
+<!-- baidu statistic start -->
+<script>
+var _hmt = _hmt || [];
+(function() {
+	  var hm = document.createElement("script");
+	    hm.src = "https://hm.baidu.com/hm.js?170a8df8802fbc47c7acc272d270979c";
+		  var s = document.getElementsByTagName("script")[0];
+		    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+<!-- baidu statistic end -->
+
+<!-- Gitalk start -->
+<link rel="stylesheet" href="https://unpkg.com/gitalk@latest/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk@latest/dist/gitalk.min.js"></script>
+<div id="gitalk-container"></div>
+<script type="text/javascript">
+var gitalk = new Gitalk({
+	clientID: '6211d8b94a8106bed6b0',
+	clientSecret: 'bf77ca26c237eabbd45169e01bf03a5e96a1b26f',
+	repo: 'alexstocks.github.io',
+	owner: 'AlexStocks',
+	admin: ['AlexStocks'],
+	id: window.location.pathname,
+	distractionFreeMode: true
+});
+gitalk.render('gitalk-container');
+</script>
+<!-- Gitalk end -->
+
+</body>
+
+</html>
