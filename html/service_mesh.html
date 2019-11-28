@@ -362,7 +362,9 @@ kbd {
 
 <h3 id="toc_2">2 “经典” 框架</h3>
 
-<p>Istio 要求每个容器有自己的代理（Sidecar），所有 Sidecar 直接进行数据通信【数据平面】而后组成一个服务网格（Service Mesh），从 Istio 接收配置信息且进行服务发现并进行状态上报【控制平面】。</p>
+<p>Istio 要求每个容器有自己的代理（Sidecar），所有 Sidecar 直接进行数据通信【数据平面】而后组成一个服务网格（Service Mesh），从 Istio 接收配置信息且进行服务发现并进行状态上报【控制平面】。如下图，<a href="https://servicemesh.io/">参考文献4</a> 给出了一副 service mesh 定义图。</p>
+
+<p><img src="../pic/service_mesh/diag1.svg" alt=""></p>
 
 <p>Sidecar 接管容器应用的所有网络流，负责流量管理（服务发现、服务治理、流量控制）、安全管理、健康检查和监控上报。某容器出现故障便会被系统网络隔离，而后会被新容器替换之，并不影响整体网络健康度。整体网络弹性可伸缩，且流量会被精细调度，系统整体不存在单点。</p>
 
@@ -376,9 +378,33 @@ kbd {
 
 <p>愚人初学 k8s 已经被其各种名词吓倒，再加上 istio 的各种 “新概念”，心中只有跪拜的想法。虽如是，二者的功能都是搭建一个健康的 “数据管道”，其本质必脱离不了 “流量管控”。</p>
 
-<h3 id="toc_3">3 Service Mesh 升级流程</h3>
+<h3 id="toc_3">3 Service Mesh</h3>
 
-<p>应用无论是否运行在 Service Mesh 系统之中，都有需要升级之时，即使 Service Mesh 系统自身也面临升级问题。Service Mesh 系统升级，核心便是众多 Sidecar 的升级，最高要求就是做到 Sidecar 升级时，其服务的应用系统无感【高大上说法是 “在飞驰的火车（鹅厂用词）/飞机（猫厂用词）上换引擎”】。</p>
+<p>经典框架中描述了 Service Mesh 由 控制平面 和 数据平面 构成。<a href="https://servicemesh.io/">参考文献4</a> 给出了 service mesh 的三大优点：</p>
+
+<ul>
+<li>1 Reliability，通过重试、超时、引流和分流实现服务可靠性保证；</li>
+<li>2 Observability，通过收集成功率、延迟、每个服务的 qps 延时或者单次请求延时保证服务的可观察性；</li>
+<li>3 Security，通过使用 TLS 和访问权限控制等手段保证服务的安全性；</li>
+</ul>
+
+<p>在 <a href="https://servicemesh.io/">参考文献4</a> 文中，service owner 和 platform owner 可以通过 service mesh 减少大量的沟通成本。这也许是 service mesh 最大的优点了。</p>
+
+<p><img src="../pic/service_mesh/service_mesh_features.png" alt=""></p>
+
+<p>基本上只靠 service mesh 不可能完全保证服务的可靠性、可观察性与安全性，需要这三个层面通力合作保证。</p>
+
+<h4 id="toc_4">3.1 控制平面</h4>
+
+<p>如下，<a href="https://servicemesh.io/">参考文献4</a> 给出了一副 Service Mesh 控制面板的架构定义图。</p>
+
+<p><img src="../pic/service_mesh/control-plane.png" alt=""></p>
+
+<p>从上面内容可见，控制平面主要完成服务发现、服务注册、安全认证和通过监控指标收集使得系统可观察。</p>
+
+<h4 id="toc_5">3.2 数据平面</h4>
+
+<p>应用无论是否运行在 Service Mesh 系统之中，都有需要升级之时，即使 Service Mesh 数据平面系统自身也面临升级问题。Service Mesh 系统升级，核心便是众多 Sidecar 的升级，最高要求就是做到 Sidecar 升级时，其服务的应用系统无感【高大上说法是 “在飞驰的火车（鹅厂用词）/飞机（猫厂用词）上换引擎”】。</p>
 
 <p>个人曾见到这样的说法：基于 Istio 的 Service Mesh 系统的 Sidecar 如果能做到热升级，其升级便能做到 “丝滑般柔顺”。但个人在基于某 sidecar 进行定制开发时，从一起干活的同事的开发经历中见到的真实情况是：为了做到对应用系统无感，sidecar 热升级【如蝉蜕变】花费 30s，给其定义了若干状态，然后形成一个巨复杂的状态机等待业务方去填充业务逻辑，且整个过程某些子服务的网络流还是会暂停的！</p>
 
@@ -392,11 +418,19 @@ kbd {
 
 <p>其核心在于其 “Remote Proxy Cluster”，解决手法简单漂亮，整个升级过程中没有 “热升级” 处理流程中需要旧版本 Sidecar 容器和新版本 Sidecar 容器共存而引起的额外资源占用问题。</p>
 
-<h3 id="toc_4">4 RPC 与 Service Mesh</h3>
+<h3 id="toc_6">4 RPC 与 Service Mesh</h3>
 
 <p>Sidecar 作为网络层组件接管了其服务应用的流量后，服务应用层以 local 方式连接 Sidecar，可以实现自身网络层处理与负载均衡、网络路由、网络分流、限流以及熔断等服务治理工作的解耦。服务治理中最重要的工作内容之一即 Load Balancing，就这方面的工作而言，Sidecar 其本质可认作是一种 Service-side 方式的 Proxy。</p>
 
-<h4 id="toc_5"><a name="4.1">4.1 各种形式的服务治理</a></h4>
+<p><a href="https://servicemesh.io/">参考文献4</a> 要求 sidecar 满足下面三个条件：</p>
+
+<ul>
+<li>fast，网络流量转发速度快；</li>
+<li>small &amp; light，不能耗费业务机器太多 CPU/MEMORY 资源；</li>
+<li>通过软件系统实现 sidecar 升级，不能依赖手工方式升级。 </li>
+</ul>
+
+<h4 id="toc_7"><a name="4.1">4.1 各种形式的服务治理</a></h4>
 
 <p>就服务治理而言，其工作可以放在 Server 端，亦可放在 Client 端，或者独立成一个单独的控制平面组件。</p>
 
@@ -404,7 +438,7 @@ kbd {
 
 <p>上图【源自<a href="https://www.youtube.com/watch?v=fMq3IpPE3TU">参考文档2</a>】对三种形态的负载均衡处理方式进行了对比。</p>
 
-<h4 id="toc_6">4.1.1 Server-side Load Balancing</h4>
+<h4 id="toc_8">4.1.1 Server-side Load Balancing</h4>
 
 <p>服务端形式的负载均衡是通过服务端代理层实现的，对服务端而言，其是一个 <q>dumb client</q>。目前很多常见的系统都是通过这一形式实现负载均衡功能，如 Pulsar 系统的 Broker、Codis 中的 Proxy 以及某以前实现的一个<a href="https://alexstocks.github.io/html/pubsub.html">即时通信系统</a>中的 Proxy/Relay/Router 等。</p>
 
@@ -412,7 +446,7 @@ kbd {
 
 <p>其缺点也很明显：在 client 和 server 之间多了两次 <q>extra hop</q>，一个经验值是：一个好的 Proxy 会使得 client-server 之间的网络吞吐量仅降低到原来的八成。</p>
 
-<h4 id="toc_7">4.1.2 Client-side Load Balancing</h4>
+<h4 id="toc_9">4.1.2 Client-side Load Balancing</h4>
 
 <p>与 Service-side 形式的 Load Balancer，二者优缺点正好相反。Client-side 形式的 Load Balancer 等服务治理功能放在 Client SDK 中，最终造就一个 “胖客户端”。</p>
 
@@ -447,7 +481,7 @@ kbd {
 
 <p>某而后打算再加入数据迁移功能，实现一套 Client-side 形式的数据平缓迁移系统，然缓存系统无需考虑数据一致性（明显是给自己水平不足找借口<sup>_<sup>），迁移后把老数据标识为无效即可。系统完成后，就躺在了我的</sup></sup> github repo 里，不再进一步改进，然小伙伴而后以这套系统成功面试入职美团，也算得其所了。</p>
 
-<h4 id="toc_8">4.1.3 Lookaside Load Balancing</h4>
+<h4 id="toc_10">4.1.3 Lookaside Load Balancing</h4>
 
 <p>本节【4.1】开始引用的图片中描述了一个 lookaside 形式 LB 组件。把 LB 等服务治理功能单独为一个中心组件，既能保证 “thin client&quot;，又能保证低延时。</p>
 
@@ -457,11 +491,11 @@ kbd {
 
 <p>上图【源自<a href="https://www.youtube.com/watch?v=fMq3IpPE3TU">参考文档2</a>】给出了一个 Lookaside 形态的 <q>Client-Server</q> 架构图，望图即可明了其工作流程。</p>
 
-<h3 id="toc_9"><a name="4.2">4.2 Proxyless RPC Mesh</a></h3>
+<h3 id="toc_11"><a name="4.2">4.2 Proxyless RPC Mesh</a></h3>
 
 <p>4.1 节兜兜转转地讨论了各种形式的 <q>Client-Server</q> 以及其相关形态的负载均衡，其目的就是引出一个话题：Sidecar 这个组件是必不可少的吗？</p>
 
-<h4 id="toc_10">4.2.1 无 Proxy 的意义</h4>
+<h4 id="toc_12">4.2.1 无 Proxy 的意义</h4>
 
 <p>当前很多互联网公司在进行微服务化转型中，而一些大型公司早已完成微服务化拆分，现在又在向 Service Mesh 升级中。如果中小型公司一直跟在大公司后面照猫画虎，便不免在技术路线上始终拉【跟】人【着】一【吃】步【土】。</p>
 
@@ -471,7 +505,7 @@ kbd {
 
 <p>如果有种技术可以让这种公司技术一步完成从原【微】始【服】社【务】会【化】跨入社【网】会【格】主【结】义【构】，岂不美哉？</p>
 
-<h4 id="toc_11">4.2.2 gRPC</h4>
+<h4 id="toc_13">4.2.2 gRPC</h4>
 
 <p>Sidecar 在 <q>Client-Server</q> 服务通信形态中就是一个 <u><strong>Client-side</strong></u> 态的 Proxy(Local Proxy)：每个 Client 都有一个伴生的 sidecar，其作用类似于 <u><strong>“反向代理”</strong></u>，实现 client 端网络层任务解耦。服务应用层无论以各种跨进程访问方式或者通过本机 tcp/uds 协议栈形式以 local 形式连接 Sidecar，但毕竟多了一个 “hop”，对整理系统的吞吐、延迟都有影响，且多了这么一个组件必然会增加硬件资源地消耗。</p>
 
@@ -487,15 +521,16 @@ kbd {
 
 <p>上图【源自<a href="https://www.youtube.com/watch?v=fMq3IpPE3TU">参考文档2</a>】中，Spotify 公司把无 Sidecar 形态的 Mesh 称之为 “Proxyless RPC Mesh<q>。谷歌创造了 k8s，谷歌创造了 istio，谷歌也创造了 gRPC。谷歌未来的</q>Service(RPC) Mesh&quot; 框架具体会以何种形态面世，愚人无从预测，然其生态中应该少不了自家的 k8s 和 istio，但是没有 Sidecar。</p>
 
-<h2 id="toc_12">参考文档</h2>
+<h2 id="toc_14">参考文档</h2>
 
 <ul>
 <li>1 <a href="https://mp.weixin.qq.com/s/7bwBCdDEVeYMhL242Xo6Cg">唯品会的Service Mesh三年进化史</a></li>
 <li>2 <a href="https://www.youtube.com/watch?v=fMq3IpPE3TU">The Story of Why We Migrate to gRPC and How We Go About It</a></li>
 <li>3 <a href="https://paulhammant.com/2017/07/09/alignment-and-autonomy-and-quorums/">Alignment and Autonomy and Quorums</a></li>
+<li>4 <a href="https://servicemesh.io/">The Service Mesh: What Every Software Engineer Needs to Know about the World&rsquo;s Most Over-Hyped Technology</a></li>
 </ul>
 
-<h2 id="toc_13">扒粪者-于雨氏</h2>
+<h2 id="toc_15">扒粪者-于雨氏</h2>
 
 <blockquote>
 <ul>
@@ -503,37 +538,6 @@ kbd {
 <li>2019/06/02，于雨氏，于 G3x，添加 <a href=#4.1>[4.1 各种形式的服务治理]</a> 并补充 <a href=#4.2>[4.2 Proxyless RPC Mesh]</a> 节。</li>
 </ul>
 </blockquote>
-
-
-<!-- baidu statistic start -->
-<script>
-var _hmt = _hmt || [];
-(function() {
-	  var hm = document.createElement("script");
-	    hm.src = "https://hm.baidu.com/hm.js?170a8df8802fbc47c7acc272d270979c";
-		  var s = document.getElementsByTagName("script")[0];
-		    s.parentNode.insertBefore(hm, s);
-})();
-</script>
-<!-- baidu statistic end -->
-
-<!-- Gitalk start -->
-<link rel="stylesheet" href="https://unpkg.com/gitalk@latest/dist/gitalk.css">
-<script src="https://unpkg.com/gitalk@latest/dist/gitalk.min.js"></script>
-<div id="gitalk-container"></div>
-<script type="text/javascript">
-var gitalk = new Gitalk({
-	clientID: '6211d8b94a8106bed6b0',
-	clientSecret: 'bf77ca26c237eabbd45169e01bf03a5e96a1b26f',
-	repo: 'alexstocks.github.io',
-	owner: 'AlexStocks',
-	admin: ['AlexStocks'],
-	id: window.location.pathname,
-	distractionFreeMode: true
-});
-gitalk.render('gitalk-container');
-</script>
-<!-- Gitalk end -->
 
 
 

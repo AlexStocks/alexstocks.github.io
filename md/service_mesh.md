@@ -28,7 +28,9 @@
 
 ### 2 “经典” 框架
 
-Istio 要求每个容器有自己的代理（Sidecar），所有 Sidecar 直接进行数据通信【数据平面】而后组成一个服务网格（Service Mesh），从 Istio 接收配置信息且进行服务发现并进行状态上报【控制平面】。
+Istio 要求每个容器有自己的代理（Sidecar），所有 Sidecar 直接进行数据通信【数据平面】而后组成一个服务网格（Service Mesh），从 Istio 接收配置信息且进行服务发现并进行状态上报【控制平面】。如下图，[参考文献4](https://servicemesh.io/) 给出了一副 service mesh 定义图。
+
+![](../pic/service_mesh/diag1.svg)
 
 Sidecar 接管容器应用的所有网络流，负责流量管理（服务发现、服务治理、流量控制）、安全管理、健康检查和监控上报。某容器出现故障便会被系统网络隔离，而后会被新容器替换之，并不影响整体网络健康度。整体网络弹性可伸缩，且流量会被精细调度，系统整体不存在单点。
 
@@ -42,9 +44,31 @@ Istio 官方给出了如下一个基于 Envoy 作为 Sidecar 的 "经典" Servid
 
 愚人初学 k8s 已经被其各种名词吓倒，再加上 istio 的各种 “新概念”，心中只有跪拜的想法。虽如是，二者的功能都是搭建一个健康的 “数据管道”，其本质必脱离不了 “流量管控”。
 
-### 3 Service Mesh 升级流程
+### 3 Service Mesh 
 
-应用无论是否运行在 Service Mesh 系统之中，都有需要升级之时，即使 Service Mesh 系统自身也面临升级问题。Service Mesh 系统升级，核心便是众多 Sidecar 的升级，最高要求就是做到 Sidecar 升级时，其服务的应用系统无感【高大上说法是 “在飞驰的火车（鹅厂用词）/飞机（猫厂用词）上换引擎”】。
+经典框架中描述了 Service Mesh 由 控制平面 和 数据平面 构成。[参考文献4](https://servicemesh.io/) 给出了 service mesh 的三大优点：
+
+- 1 Reliability，通过重试、超时、引流和分流实现服务可靠性保证；
+- 2 Observability，通过收集成功率、延迟、每个服务的 qps 延时或者单次请求延时保证服务的可观察性；
+- 3 Security，通过使用 TLS 和访问权限控制等手段保证服务的安全性；
+
+在 [参考文献4](https://servicemesh.io/) 文中，service owner 和 platform owner 可以通过 service mesh 减少大量的沟通成本。这也许是 service mesh 最大的优点了。
+
+![](../pic/service_mesh/service_mesh_features.png)
+
+基本上只靠 service mesh 不可能完全保证服务的可靠性、可观察性与安全性，需要这三个层面通力合作保证。
+
+#### 3.1 控制平面
+
+如下，[参考文献4](https://servicemesh.io/) 给出了一副 Service Mesh 控制面板的架构定义图。
+
+![](../pic/service_mesh/control-plane.png)
+
+从上面内容可见，控制平面主要完成服务发现、服务注册、安全认证和通过监控指标收集使得系统可观察。
+
+#### 3.2 数据平面
+
+应用无论是否运行在 Service Mesh 系统之中，都有需要升级之时，即使 Service Mesh 数据平面系统自身也面临升级问题。Service Mesh 系统升级，核心便是众多 Sidecar 的升级，最高要求就是做到 Sidecar 升级时，其服务的应用系统无感【高大上说法是 “在飞驰的火车（鹅厂用词）/飞机（猫厂用词）上换引擎”】。
 
 个人曾见到这样的说法：基于 Istio 的 Service Mesh 系统的 Sidecar 如果能做到热升级，其升级便能做到 “丝滑般柔顺”。但个人在基于某 sidecar 进行定制开发时，从一起干活的同事的开发经历中见到的真实情况是：为了做到对应用系统无感，sidecar 热升级【如蝉蜕变】花费 30s，给其定义了若干状态，然后形成一个巨复杂的状态机等待业务方去填充业务逻辑，且整个过程某些子服务的网络流还是会暂停的！
 
@@ -61,6 +85,12 @@ Istio 官方给出了如下一个基于 Envoy 作为 Sidecar 的 "经典" Servid
 ### 4 RPC 与 Service Mesh
 
 Sidecar 作为网络层组件接管了其服务应用的流量后，服务应用层以 local 方式连接 Sidecar，可以实现自身网络层处理与负载均衡、网络路由、网络分流、限流以及熔断等服务治理工作的解耦。服务治理中最重要的工作内容之一即 Load Balancing，就这方面的工作而言，Sidecar 其本质可认作是一种 Service-side 方式的 Proxy。
+
+[参考文献4](https://servicemesh.io/) 要求 sidecar 满足下面三个条件：
+
+- fast，网络流量转发速度快；
+- small & light，不能耗费业务机器太多 CPU/MEMORY 资源；
+- 通过软件系统实现 sidecar 升级，不能依赖手工方式升级。 
 
 #### <a name="4.1">4.1 各种形式的服务治理</a>
 
@@ -159,6 +189,7 @@ Sidecar 在 "Client-Server" 服务通信形态中就是一个 <u>**Client-side**
 - 1 [唯品会的Service Mesh三年进化史](https://mp.weixin.qq.com/s/7bwBCdDEVeYMhL242Xo6Cg)
 - 2 [The Story of Why We Migrate to gRPC and How We Go About It](https://www.youtube.com/watch?v=fMq3IpPE3TU)
 - 3 [Alignment and Autonomy and Quorums](https://paulhammant.com/2017/07/09/alignment-and-autonomy-and-quorums/)
+- 4 [The Service Mesh: What Every Software Engineer Needs to Know about the World's Most Over-Hyped Technology](https://servicemesh.io/)
 
 ## 扒粪者-于雨氏
 
