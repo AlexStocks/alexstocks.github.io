@@ -6,19 +6,19 @@
 ### 0 说明 ###
 ---
 
-近日在单机上部署了一个etcd静态集群和基于这个静态集群的动态集群，并进行了相关测试，本文是部署以及测试过程的遇到的相关问题的流水账，权做记忆，以备后来参考。
+近日在单机上部署了一个 etcd 静态集群和基于这个静态集群的动态集群，并进行了相关测试，本文是部署以及测试过程的遇到的相关问题的流水账，权做记忆，以备后来参考。
 
-为分布式集群提供一致性服务的组件，先有google内部的Chubby，后有hadoop生态的zookeeper。基于Java的zookeeper保证CP，但是廉颇老矣，以往曾有同事曾经测试过在三千左右的客户端的频繁读写情况下zookeeper会频繁死掉。和zookeeper等同类产品相比，coreos开发的同样保证CP的etcd与其功能几乎雷同，但是zookeeper的设计和实现都很繁琐，而采用了gRPC作为底层通信框架的etcd几乎有所有直流语言的客户端支持。zookeeper的通信协议是自定制的Jute RPC协议，而etcd使用的gRPC可以接收通过HTTP发来的JSON请求，通过curl工具就可以对etcd进行测试。容器时代的王者kubuernets依赖它可实现上万个容器的管理。
+为分布式集群提供一致性服务的组件，先有 google 内部的 Chubby，后有 hadoop 生态的 zookeeper。基于 Java 的 zookeeper 保证 CP，但是廉颇老矣，以往曾有同事曾经测试过在三千左右的客户端的频繁读写情况下 zookeeper 会频繁死掉。和 zookeeper 等同类产品相比，coreos 开发的同样保证 CP 的 etcd 与其功能几乎雷同，但是 zookeeper 的设计和实现都很繁琐，而采用了 gRPC 作为底层通信框架的 etcd 几乎有所有主流语言的客户端支持。zookeeper 的通信协议是自定制的 Jute RPC 协议，而 etcd 使用的 gRPC 可以接收通过 HTTP 发来的 JSON 请求，通过 curl 工具就可以对etcd 进行测试。容器时代的王者 kubuernets 依赖它可实现上万个容器的管理。
 
-etcd提供了leader选举、分布式时钟、分布式锁、持续监控（watch）和集群内各个成员的liveness监控等功能。zookeer虽然也实现了类似的功能，但是不方便易用，还需借助Netflix提供的Apache Curator库。
+etcd 提供了 leader 选举、分布式时钟、分布式锁、持续监控（watch）和集群内各个成员的 liveness 监控等功能。zookeer虽然也实现了类似的功能，但是不方便易用，还需借助 Netflix 提供的 Apache Curator 库。
 
-etcd目前主要有v2和v3两个版本，但v3比v2在API层做了大幅度的优化，且etcd2客户端经过解析优化后与etcd3的消息处理性能仍然有2倍的差距，而v2的JSON外部协议和集群内部协议在v3中同样支持，所以本文以v3为主。个人使用etcd的体会：etcd与其说是一个提供一致性服务的分布式系统，不如说是一个分布式kv数据库。
+etcd 目前主要有 v2 和 v3 两个版本，但 v3 比 v2 在 API 层做了大幅度的优化，且 v2 客户端经过解析优化后与 v3 的消息处理性能仍然有 2 倍的差距，而 v2 的 JSON 外部协议和集群内部协议在 v3 中同样支持，所以本文以 v3 为主。个人使用 etcd 的体会：etcd 与其说是一个提供一致性服务的分布式系统，不如说是一个分布式 kv 数据库。
 
-[参考文档21](https://github.com/coreos/etcd/blob/master/Documentation/learning/why.md)提到etcd名字的由来：unix系统的目录/etc是存储配置文件的地方，后来再加上一个代表distributed systems的”d”就组成了etcd。所以说etcd可以被认识是一个分布式kv配置项数据库。
+[参考文档21](https://github.com/coreos/etcd/blob/master/Documentation/learning/why.md)提到etcd名字的由来：unix 系统的目录 /etc 是存储配置文件的地方，后来再加上一个代表distributed systems 的 ”d” 就组成了 etcd。所以说 etcd 可以被认识是一个分布式 kv 配置项数据库。
 
-[参考文档23](https://github.com/coreos/etcd/blob/master/Documentation/learning/data_model.md)提到etcd是一个存储 **更新频率不高** 的kv存储库并能提供查询服务，其数据只有一个层级，数据模型采用MVCC，每个key创建时其实version是1，每次更新操作增一。实际etcd底层的boltdb采用B+树形式存储kv的MVCC数据，每次修改的数据只存储增量版本，所以创建snapshot的成本也是挺高的。kv中的key是一个三元组(major, sub, type)，Major存储了key的revision，Sub则存储了同样revision下的差异，type则是一个后缀，用于指明一些特殊value的类型，如果当前value中有tombstone则type为t。B+树的key按照词典顺序进行排序。etcd在内存中对key的revision也是以B+树组织起来形成一个索引，value指针指向磁盘中相应地增量值，这种组织形式便于进行iteration。
+[参考文档23](https://github.com/coreos/etcd/blob/master/Documentation/learning/data_model.md)提到 etcd 是一个存储 **更新频率不高** 的 kv 存储库并能提供查询服务，其数据只有一个层级，数据模型采用 MVCC，每个 key 创建时其实 version 是 1，每次更新操作增一。实际 etcd 底层的 boltdb 采用 B+ 树形式存储 kv 的 MVCC 数据，每次修改的数据只存储增量版本，所以创建snapshot 的成本也是挺高的。kv 中的 key 是一个三元组 (major, sub, type)，Major 存储了 key 的 revision，Sub 则存储了同样 revision 下的差异，type 则是一个后缀，用于指明一些特殊value 的类型，如果当前 value 中有 tombstone 则 type 为 t。B+ 树的 key 按照词典顺序进行排序。etcd 在内存中对 key 的 revision 也是以 B+ 树组织起来形成一个索引，value 指针指向磁盘中相应地增量值，这种组织形式便于进行 iteration。
 
-etcd还提供了一个客户端工具[etcdctl](https://github.com/coreos/etcd/blob/master/etcdctl/README.md)，关于其详细用法见参考文档22。
+etcd 还提供了一个客户端工具 [etcdctl](https://github.com/coreos/etcd/blob/master/etcdctl/README.md)，关于其详细用法见参考文档22。
 
 ### 1 静态集群 ###
 ---
@@ -46,9 +46,9 @@ etcd单节点启动命令如下：
 
 各个参数的详细意义见参考文档17，下面列出一些主要参数的含义如下：
 
-- 1 name是node的名称，用于在集群中标识当前节点，etcd单节点允许迁移，迁移后名称不变即可被其他节点识别；
-- 2 etcd底层使用的kv数据库coreos/bbolt是类似于Rocksdb的一个LSM数据库实现，与Rocksdb一样数据有wal和data两种，建议两种数据分别存储到不同的存储系统上，以保证数据安全和系统性能；
-- 3 etcd底层使用的coreos/bbolt类似于rocksdb会定期做compaction以清除过期数据，上面的auto-compaction-retention指定的时间单位是小时，当然也可以借助工具etcdctl强行进行compaction，使用方法详见参考文档9#History compaction#一节；
+- 1 name 是 node 的名称，用于在集群中标识当前节点，etcd 单节点允许迁移，迁移后名称不变即可被其他节点识别；
+- 2 etcd 底层使用的 kv 数据库 coreos/bbolt 是类似于 Rocksdb 的一个 LSM 数据库实现，与Rocksdb 一样数据有 wal 和 data 两种，建议两种数据分别存储到不同的存储系统上，以保证数据安全和系统性能；
+- 3 etcd 底层使用的 coreos/bbolt 类似于 rocksdb 会定期做 compaction 以清除过期数据，上面的  auto-compaction-retention 指定的时间单位是小时，当然也可以借助工具 etcdctl 强行进行 compaction，使用方法详见参考文档9#History compaction#一节；
 - 4 参考文档9#Space quota#一节建议给etcd限定磁盘使用量，以防止etcd无限度的使用磁盘导致磁盘爆满后再去做compaction导致系统响应速度下降进而导致系统不稳定，当etcd使用的磁盘额度到达限定额度的时候会发出cluster级别的alarm使集群进入maintenance模式，只接收读和删除请求，当进行compaction和defragmenting(碎片化整理)完毕留出足够空间的时候才会回到正常工作状态；
 - 5 max-request-bytes可以限制key的最大长度，此处限制长度为15KiB；
 - 5 initial-cluster-token用于标识集群的名称，initial-cluster则给出了静态cluster的各个成员的名称以及地址；
@@ -265,11 +265,11 @@ v3 与 v2 的主要对比，[参考文档28](http://dockone.io/article/801) 罗�
 
 + mini transaction支持原子性比较多个键值并且操作多个键值。之前的CompareAndSwap实际上一个针对单个key的mini transaction。一个简单的例子是 Tx(compare: A=1 && B=2, success: C = 3, D = 3, fail: C = 0, D = 0)。当etcd收到这条transcation请求，etcd会原子性的判断A和B当前的值和期待的值。如果判断成功，C和D的值会被设置为3。
 
-+ etcd 2保存了一个仅保存了1000个历史更改，如果watch过慢就无法得到之前的变更。etcd 3为了支持多纪录，采用了历史记录为主索引的存储结构。etcd3可以存储上十万个纪录，进行快速查询并且支持根据用户的要求进行compaction。
++ etcd 2对一个key仅保存了1000个历史更改，如果watch过慢就无法得到之前的变更。etcd 3为了支持多纪录，采用了历史记录为主索引的存储结构。etcd3可以存储上十万个纪录，进行快速查询并且支持根据用户的要求进行compaction。
 
 + etcd 2和其它类似开源一致性系统一样最多只能存储数十万级别的key。主要原因是一致性系统都采用了基于log的复制，log不能无限增长，所以在某一时刻系统需要做一个完整的snapshot并且将snapshot存储到磁盘。在存储snapshot之后才能将之前的log丢弃。每次存储完整的snapshot是非常没有效率的，但是对于一致性系统来说设计增量snapshot以及传输同步大量数据都是非常繁琐的。etcd 3通过对raft和存储系统的重构，能够很好的支持增量snapshot和传输相对较大的snapshot。目前etcd 3可以存储百万到千万级别的key。
 
-+ 另外一个问题是支持大规模watch。我们主要工作是减小每个watch带来的资源消耗。首先我们利用了HTTP/2的multiple stream per tcp connection，这样同一个client的不同watch可以share同一个tcp connection。另一方面我们对于同一个用户的不同watch只使用一个go routine来serve，这样再一次减轻了server的资源消耗。【v2 每个watch都会占用一个tcp资源和一个go routine资源，大概要消耗30-40kb。】
++ 另外一个问题是支持大规模watch。我们主要工作是减小每个watch带来的资源消耗。首先我们利用了HTTP/2的multiple stream per tcp connection，这样同一个client的不同watch可以share同一个tcp connection。另一方面我们对于同一个用户的不同watch只使用一个goroutine来serve，这样再一次减轻了server的资源消耗。【v2 每个watch都会占用一个tcp资源和一个go routine资源，大概要消耗30-40kb。
 
 + 我们在性能方面也做了很多相关的优化。etcd 3目前的性能远强于etcd 2，我们相信etcd 3的性能在不进行特殊优化的情况下就可以足够应付绝大部分的使用场景。在一个由3台8核节点组成的的云服务器上，<font color=red>**etcd 3可以做到每秒数万次的写操作和十万次读操作**</font>。
 
