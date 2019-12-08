@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>k8s</title>
+
+
+<style type="text/css">
+body {
+  font-family: Helvetica, arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: white;
+  padding: 30px; }
+
+body > *:first-child {
+  margin-top: 0 !important; }
+body > *:last-child {
+  margin-bottom: 0 !important; }
+
+a {
+  color: #4183C4; }
+a.absent {
+  color: #cc0000; }
+a.anchor {
+  display: block;
+  padding-left: 30px;
+  margin-left: -30px;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0; }
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+  cursor: text;
+  position: relative; }
+
+h1:hover a.anchor, h2:hover a.anchor, h3:hover a.anchor, h4:hover a.anchor, h5:hover a.anchor, h6:hover a.anchor {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA09pVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoMTMuMCAyMDEyMDMwNS5tLjQxNSAyMDEyLzAzLzA1OjIxOjAwOjAwKSAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OUM2NjlDQjI4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OUM2NjlDQjM4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5QzY2OUNCMDg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5QzY2OUNCMTg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PsQhXeAAAABfSURBVHjaYvz//z8DJYCRUgMYQAbAMBQIAvEqkBQWXI6sHqwHiwG70TTBxGaiWwjCTGgOUgJiF1J8wMRAIUA34B4Q76HUBelAfJYSA0CuMIEaRP8wGIkGMA54bgQIMACAmkXJi0hKJQAAAABJRU5ErkJggg==) no-repeat 10px center;
+  text-decoration: none; }
+
+h1 tt, h1 code {
+  font-size: inherit; }
+
+h2 tt, h2 code {
+  font-size: inherit; }
+
+h3 tt, h3 code {
+  font-size: inherit; }
+
+h4 tt, h4 code {
+  font-size: inherit; }
+
+h5 tt, h5 code {
+  font-size: inherit; }
+
+h6 tt, h6 code {
+  font-size: inherit; }
+
+h1 {
+  font-size: 28px;
+  color: black; }
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #cccccc;
+  color: black; }
+
+h3 {
+  font-size: 18px; }
+
+h4 {
+  font-size: 16px; }
+
+h5 {
+  font-size: 14px; }
+
+h6 {
+  color: #777777;
+  font-size: 14px; }
+
+p, blockquote, ul, ol, dl, li, table, pre {
+  margin: 15px 0; }
+
+hr {
+  background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAECAYAAACtBE5DAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OENDRjNBN0E2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OENDRjNBN0I2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo4Q0NGM0E3ODY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo4Q0NGM0E3OTY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqqezsUAAAAfSURBVHjaYmRABcYwBiM2QSA4y4hNEKYDQxAEAAIMAHNGAzhkPOlYAAAAAElFTkSuQmCC) repeat-x 0 0;
+  border: 0 none;
+  color: #cccccc;
+  height: 4px;
+  padding: 0;
+}
+
+body > h2:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+body > h1:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+  body > h1:first-child + h2 {
+    margin-top: 0;
+    padding-top: 0; }
+body > h3:first-child, body > h4:first-child, body > h5:first-child, body > h6:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0; }
+
+h1 p, h2 p, h3 p, h4 p, h5 p, h6 p {
+  margin-top: 0; }
+
+li p.first {
+  display: inline-block; }
+li {
+  margin: 0; }
+ul, ol {
+  padding-left: 30px; }
+
+ul :first-child, ol :first-child {
+  margin-top: 0; }
+
+dl {
+  padding: 0; }
+  dl dt {
+    font-size: 14px;
+    font-weight: bold;
+    font-style: italic;
+    padding: 0;
+    margin: 15px 0 5px; }
+    dl dt:first-child {
+      padding: 0; }
+    dl dt > :first-child {
+      margin-top: 0; }
+    dl dt > :last-child {
+      margin-bottom: 0; }
+  dl dd {
+    margin: 0 0 15px;
+    padding: 0 15px; }
+    dl dd > :first-child {
+      margin-top: 0; }
+    dl dd > :last-child {
+      margin-bottom: 0; }
+
+blockquote {
+  border-left: 4px solid #dddddd;
+  padding: 0 15px;
+  color: #777777; }
+  blockquote > :first-child {
+    margin-top: 0; }
+  blockquote > :last-child {
+    margin-bottom: 0; }
+
+table {
+  padding: 0;border-collapse: collapse; }
+  table tr {
+    border-top: 1px solid #cccccc;
+    background-color: white;
+    margin: 0;
+    padding: 0; }
+    table tr:nth-child(2n) {
+      background-color: #f8f8f8; }
+    table tr th {
+      font-weight: bold;
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr td {
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr th :first-child, table tr td :first-child {
+      margin-top: 0; }
+    table tr th :last-child, table tr td :last-child {
+      margin-bottom: 0; }
+
+img {
+  max-width: 100%; }
+
+span.frame {
+  display: block;
+  overflow: hidden; }
+  span.frame > span {
+    border: 1px solid #dddddd;
+    display: block;
+    float: left;
+    overflow: hidden;
+    margin: 13px 0 0;
+    padding: 7px;
+    width: auto; }
+  span.frame span img {
+    display: block;
+    float: left; }
+  span.frame span span {
+    clear: both;
+    color: #333333;
+    display: block;
+    padding: 5px 0 0; }
+span.align-center {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-center > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: center; }
+  span.align-center span img {
+    margin: 0 auto;
+    text-align: center; }
+span.align-right {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px 0 0;
+    text-align: right; }
+  span.align-right span img {
+    margin: 0;
+    text-align: right; }
+span.float-left {
+  display: block;
+  margin-right: 13px;
+  overflow: hidden;
+  float: left; }
+  span.float-left span {
+    margin: 13px 0 0; }
+span.float-right {
+  display: block;
+  margin-left: 13px;
+  overflow: hidden;
+  float: right; }
+  span.float-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: right; }
+
+code, tt {
+  margin: 0 2px;
+  padding: 0 5px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px; }
+
+pre code {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent; }
+
+.highlight pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+  pre code, pre tt {
+    background-color: transparent;
+    border: none; }
+
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
+}
+
+kbd {
+  display: inline-block;
+  padding: 3px 5px;
+  font-size: 11px;
+  line-height: 10px;
+  color: #555;
+  vertical-align: middle;
+  background-color: #fcfcfc;
+  border: solid 1px #ccc;
+  border-bottom-color: #bbb;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 #bbb
+}
+
+* {
+	-webkit-print-color-adjust: exact;
+}
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:0 auto;
+    }
+}
+@media print {
+	table, pre {
+		page-break-inside: avoid;
+	}
+	pre {
+		word-wrap: break-word;
+	}
+}
+</style>
+
+
+</head>
+
+<body>
+
+<h1 id="toc_0">kubernetes 实操</h1>
+
+<hr>
+
+<p><em>written by Alex Stocks on 2019/12/08，版权所有，无授权不得转载</em></p>
+
+<h2 id="toc_1">1 安装</h2>
+
+<hr>
+
+<p>kubernetes【下面简称 k8s】进化到如今已有近五年时间，足够成熟。今年一直逼着自己抽出旅途时间学习了一些 k8s 的概念，在认知上已经接受声明式编程，然书上得来终觉浅，还是得操练一番才算入门，因此决定在本人的 15吋 MabBook Pro 机器上先把 k8s 系统搭建起来。</p>
+
+<p>源于本人信奉的 “慢就是快” 的尿性，不打算采用 kubeadmin 以及 minikube 等一众一键安装工具，自己采用其各个零件组装一番的形式安装以加深对系统的理解。</p>
+
+<h2 id="toc_2">1.1 系统</h2>
+
+<p>本地15吋 MabBook Pro 机器主要配置如下：</p>
+
+<ul>
+<li>CPU: Core i7</li>
+<li>Mem: 16 GB DDR4</li>
+<li>SSD: 256GB</li>
+</ul>
+
+<p>在此系统之上，基于 vagrant + VirtualBox 安装了 3 台 Centos7 机器，统一规格如下：</p>
+
+<ul>
+<li>cpus: 2</li>
+<li>memory: 1280 MiB</li>
+<li>disksize: 8GB</li>
+<li>os: Linux 3.10.0</li>
+</ul>
+
+<p>现在的 Docker 都要求 CentOS 系统的内核版本不能低于 3.10，否则安装过程会遇到很多麻烦问题。</p>
+
+<p>三台虚机网络配置如下：</p>
+
+<ul>
+<li>k0: 172.27.137.10</li>
+<li>k1: 172.27.137.11</li>
+<li>k2: 172.27.137.12</li>
+</ul>
+
+<p>计划以 k0 作为 k8s Master，在其上部署单节点 master 相关组件，k1 和 k2 作为 k8s worker。底层 worker 采用 docker，网络层采用 flannel。部署拓扑图如下。</p>
+
+<p><img src="../pic/k8s/k8s_topo.png" alt=""></p>
+
+<p>整体系统参考了智超同学的 <a href="http://blog.sina.com.cn/s/blog_48c95a190102wqpq.html">CentOS 6.5安装部署Kubernetes 1.4过程记录</a> 一文，安装 k8s v1.4 系统。</p>
+
+<h2 id="toc_3">1.2 docker</h2>
+
+<p>在 3 台机器之上通过 yum 方式安装 docker，操作步骤如下：</p>
+
+<ul>
+<li>1 通过命令 <code>sudo yum install -y docker</code> 在三台机器上安装 docker；</li>
+<li>2 通过命令 <code>sudo systemctl  start docker.service</code> 启动 docker daemon 进程；</li>
+<li>3 通过命令 <code>sudo systemctl  enable docker.service</code> 加入开机启动；</li>
+<li>4 通过命令 <code>ps aux | grep docker</code>  检验 docker 进程是否启用；</li>
+<li>5 通过命令 <code>docker ps</code>  检验 docker daemon 是否正常工作。</li>
+</ul>
+
+<h2 id="toc_4">1.3 etcd</h2>
+
+<p>在部署 k8s 之前，需要先准备基础网络环境。本次部署使用 flannel 和 etcd 对整个集群的网络进行配置。k8s 使用了 etcd v2 作为其 kv 数据库，本次部署采用单节点集群方式，只在 k0 上部署 etcd v2。</p>
+
+<p>etcd v2 直接采用 coreos 公司的二进制发行版，通过命令 <code>wget https://github.com/coreos/etcd/releases/download/v2.3.8/etcd-v2.3.8-linux-amd64.tar.gz</code> 下载即可。</p>
+
+<p>部署过程如下：</p>
+
+<ul>
+<li><p>1 以 <code>/home/vagrant/test/k8s/docker</code> 作为 work 目录，创建 bin/sbin/data/wal/logs 等子目录；</p>
+
+<ul>
+<li>bin 存放脚本；</li>
+<li>sbin 存放 etcd 二进制文件；</li>
+<li>data 存放 etcd raft 状态机数据；</li>
+<li>wal 存放 etcd raft log；</li>
+<li>logs 存放 etcd 运行日志。</li>
+</ul></li>
+<li><p>2 把 etcd/etcdctl 二进制文件放入 sbin 中；</p></li>
+<li><p>3 准备 etcd 启动脚本 bin/start.sh【内容如下】，并通过命令 <code>sh bin/start.sh</code> 方式启动 etcd；</p>
+
+<div><pre><code class="language-Bash">#!/usr/bin/env bash
+
+ip=172.27.137.10
+nohup ./sbin/etcd --name infra0 --initial-advertise-peer-urls http://${ip}:2380,http://${ip}:7001 --listen-peer-urls http://${ip}:2380,http://${ip}:7001 --listen-client-urls http://${ip}:2379,http://${ip}:4001 --advertise-client-urls http://${ip}:2379,http://${ip}:4001 --initial-cluster-token etcd-cluster --initial-cluster infra0=http://${ip}:2380,infra0=http://${ip}:7001 --data-dir /home/vagrant/test/k8s/etcd/data/ --wal-dir /home/vagrant/test/k8s/etcd/wal/ --initial-cluster-state new  &gt;&gt; ./logs/etcd.log 2&gt;&amp;1 &amp;</code></pre></div></li>
+</ul>
+
+<ul>
+<li><p>4 启动成功之后，把 flannel 对网络段的划分写入 etcd 之中，脚本命令如下：</p>
+
+<div><pre><code class="language-Bash">#!/usr/bin/env bash
+
+ip=172.27.137.10
+sbin/etcdctl --endpoints=http://${ip}:2379,http://${ip}:4001 mk /coreos.com/network/config &#39;{&quot;Network&quot;:&quot;172.17.0.0/16&quot;, &quot;SubnetMin&quot;: &quot;172.17.1.0&quot;, &quot;SubnetMax&quot;: &quot;172.17.254.0&quot;}&#39;</code></pre></div></li>
+</ul>
+
+<h2 id="toc_5">1.4 flannel</h2>
+
+<p>flannel 系 CoreOS 公司出品的一个 k8s 网络管理工具，整体通信机制建立在 UDP 之上，在测试环境可以很轻松地部署起来。本次部署也直接采用 coreos 公司的二进制发行版，通过命令 <code>wget https://github.com/coreos/flannel/releases/download/v0.6.2/flannel-v0.6.2-linux-amd64.tar.gz</code> 下载即可。</p>
+
+<p>部署过程如下：
+/home/vagrant/test/k8s/flannel</p>
+
+<ul>
+<li><p>1 以 <code>/home/vagrant/test/k8s/flannel</code> 作为 work 目录，创建 bin/sbin/logs 等子目录；</p>
+
+<ul>
+<li>bin 存放脚本；</li>
+<li>sbin 存放 etcd 二进制文件；</li>
+<li>logs 存放 flannel 运行日志。</li>
+</ul></li>
+<li><p>2 把 flanneld 二进制文件放入 sbin 中；</p></li>
+<li><p>3 修改 Linux 内核参数，在文件 /etc/sysctl.conf 中添加如下内容，开启网卡的 iptables 功能；</p>
+
+<div><pre><code class="language-text"> net.bridge.bridge-nf-call-ip6tables = 1
+ net.bridge.bridge-nf-call-iptables = 1
+ net.bridge.bridge-nf-call-arptables = 1</code></pre></div></li>
+</ul>
+
+<ul>
+<li><p>4 通过命令 <code>sysctl -p</code> 使得上面配置生效；</p></li>
+<li><p>5 准备 flannel 虚拟网络启动脚本 bin/start.sh【内容如下】，并通过命令 <code>sh bin/start.sh</code> 方式启动 flannel0 虚拟网络；</p>
+
+<div><pre><code class="language-Bash">ip=172.27.137.10
+nohup sudo sbin/flanneld -etcd-endpoints=http://${ip}:2379,http://${ip}:4001 &gt;&gt; logs/flanneld.log 2&gt;&amp;1 &amp;</code></pre></div></li>
+</ul>
+
+<p>flannel 部署完毕之后，可通过 <code>ifconfig</code> 命令启动一个 flannel0 网卡，但可以观察到 docker0 虚机网卡的 ip 和 flannel0 虚拟网卡的 ip 并不在同一个网络段。docker 容器需要借助 docker0 --&gt; flannel0 通道与其他 node 上的 容器进行通信，所以两个网卡必须处于同一个网络子网段。</p>
+
+<p>重新配置 k0 的 docker0 的 ip 过程如下：</p>
+
+<ul>
+<li>1 获取 flannel 的二进制文件包中的一个脚本 mk-docker-opts.sh；</li>
+<li>2 执行命令 <code>mk-docker-opts.sh -c</code> 生成文件  <code>/run/docker_opts.env</code>；</li>
+<li><p>3 把配置参数文件 <code>/run/docker_opts.env</code> 的内容放入 docekr0 网卡的配置参数文件 <code>/etc/sysconfig/docker</code> 中的参数 <code>OPTIONS</code> 中，内容如下：</p>
+
+<div><pre><code class="language-Bash">OPTIONS=&#39;--selinux-enabled --log-driver=journald --signature-verification=false --bip=172.17.79.1/24 --ip-masq=true --mtu=1472&#39;
+if [ -z &quot;${DOCKER_CERT_PATH}&quot; ]; then
+    DOCKER_CERT_PATH=/etc/docker
+fi</code></pre></div></li>
+</ul>
+
+<ul>
+<li>4 通过命令 <code>systemctl  restart docker.service</code> 重启 docker，即可看到两个网卡已经处于同一子网段；</li>
+<li>5 在 k1 和 k2 执行同样的配置过程。</li>
+</ul>
+
+<h2 id="toc_6">1.5 k8s master</h2>
+
+<p>底层网络环境准备完后，就可以在 k0 上部署 k8s master 相关组件 apiserver/scheduler/controller-manager 了。</p>
+
+<p>k8s 相关组件采用基于源码编译方式获取，编译过程如下；</p>
+
+<ul>
+<li><p>1 在 CentOS 上安装 go 1.7.6；</p>
+
+<ul>
+<li>注1：k8s 1.4 开发时候对应的 go 版本是 v1.7，所以使用这个版本的 go 在 linux 上进行编译。具体相关问题详见 k8s 项目的两个 issue <a href="https://github.com/kubernetes/kubernetes/issues/38380">38380</a> 和 <a href="https://github.com/kubernetes/kubernetes/issues/14549">14549</a>。</li>
+<li>注2：k8s 1.4 的 kubelet 由于使用了 cgo，所以编译系统环境使用 linux。</li>
+</ul></li>
+<li><p>2 从 <code>https://github.com/kubernetes/kubernetes/archive/v1.4.9.tar.gz</code> 下载 go 源码；</p></li>
+<li><p>3 从源码编译出二进制 kube-controller-manager、kube-dns、kube-apiserver、kubectl、kubelet、kube-proxy、kube-scheduler。</p></li>
+</ul>
+
+<h3 id="toc_7">1.5.1 启动 k8s master</h3>
+
+<p>编译出各个组件的二进制文件后，开始在 k0 上部署 k8s master 组件 kube-controller-manager、kube-dns、kube-apiserver、kube-scheduler。</p>
+
+<p>部署过程如下：</p>
+
+<ul>
+<li><p>1 以 <code>/home/vagrant/test/k8s/master</code> 作为 work 目录，创建 bin/sbin/logs 等子目录；</p>
+
+<ul>
+<li>bin 存放脚本；</li>
+<li>sbin 存放 master 各组件二进制文件；</li>
+<li>logs 存放各组件的运行日志。</li>
+</ul></li>
+<li><p>2 把 kube-apiserver/kube-controller-manager/kube-scheduler 二进制文件放入 sbin 中；</p></li>
+<li><p>3 准备 apiserver 启动脚本 bin/apiserver.sh【内容如下】，并通过命令 <code>sh bin/apiserver.sh</code> 方式启动 apiserver；</p>
+
+<div><pre><code class="language-Bash">#!/usr/bin/env bash
+ip=172.27.137.10
+nohup sudo ./sbin/kube-apiserver --admission-control=NamespaceLifecycle,NamespaceAutoProvision,LimitRanger,ResourceQuota --insecure-bind-address=0.0.0.0 --insecure-port=8080 --allow-privileged=true --etcd-servers=http://${ip}:2379,http://${ip}:4001 --service-cluster-ip-range=10.0.0.0/24  &gt;&gt; logs/apiserver.log 2&gt;&amp;1 &amp;</code></pre></div></li>
+</ul>
+
+<ul>
+<li><p>4 准备 dns 启动脚本 bin/dns.sh【内容如下】，并通过命令 <code>sh bin/dns.sh</code> 方式启动 dns；</p>
+
+<div><pre><code class="language-Bash">#!/usr/bin/env bash
+ip=172.27.137.10
+nohup sudo ./sbin/kube-dns --kube-master-url=http://${ip}:8080 &gt;&gt; logs/dns.log 2&gt;&amp;1 &amp;</code></pre></div></li>
+</ul>
+
+<ul>
+<li><p>5 准备 scheduler 启动脚本 bin/scheduler.sh【内容如下】，并通过命令 <code>sh bin/scheduler.sh</code> 方式启动 scheduler；</p>
+
+<div><pre><code class="language-Bash">#!/usr/bin/env bash
+ip=172.27.137.10
+nohup sudo ./sbin/kube-scheduler --master=http://${ip}:8080 &gt;&gt; logs/scheduler.log 2&gt;&amp;1 &amp;</code></pre></div></li>
+</ul>
+
+<ul>
+<li><p>6 准备 kube-controller-manager 启动脚本 bin/ctl.sh【内容如下】，并通过命令 <code>sh bin/ctl.sh</code> 方式启动 kube-controller-manager；</p>
+
+<div><pre><code class="language-Bash">#!/usr/bin/env bash
+ip=172.27.137.10
+nohup sudo ./sbin/kube-controller-manager --master=http://${ip}:8080 &gt;&gt; logs/ctl.log 2&gt;&amp;1 &amp;</code></pre></div></li>
+</ul>
+
+<ul>
+<li><p>7 通过指令 <code>kubectl get componentstatuses</code> 检查 master 工作状态，若其成功启动，则命令提示结果如下：</p>
+
+<div><pre><code class="language-Bash">NAME                 STATUS    MESSAGE              ERROR
+controller-manager   Healthy   ok
+scheduler            Healthy   ok
+etcd-1               Healthy   {&quot;health&quot;: &quot;true&quot;}
+etcd-0               Healthy   {&quot;health&quot;: &quot;true&quot;}</code></pre></div></li>
+</ul>
+
+<h2 id="toc_8">1.6 k8s worker</h2>
+
+<p>在 k1 和 k2 上启动 k8s worker 节点 kubelet 和 kube-proxy。</p>
+
+<p>部署过程如下：</p>
+
+<ul>
+<li><p>1 以 <code>/home/vagrant/test/k8s/worker</code> 作为 work 目录，创建 bin/sbin/logs 等子目录；</p>
+
+<ul>
+<li>bin 存放脚本；</li>
+<li>sbin 存放 worker 组件二进制文件；</li>
+<li>logs 存放各组件的运行日志。</li>
+</ul></li>
+<li><p>2 把 kubelet/kube-proxy 二进制文件放入 sbin 中；</p></li>
+<li><p>3 准备 kubelet 启动脚本 bin/kubelet.sh【内容如下】，并通过命令 <code>sh bin/kubelet.sh</code> 方式启动 kubelet；</p>
+
+<div><pre><code class="language-Bash">#!/usr/bin/env bash
+ip=172.27.137.10
+local=172.27.137.11
+nohup sudo ./sbin/kubelet --address=0.0.0.0 --port=10250 --hostname-override=${local} --api-servers=${ip}:8080 --allow-privileged=true --cadvisor-port=4194 --cluster_dns=${ip} --cluster_domain=cluster.local --healthz-bind-address=0.0.0.0 --healthz-port=10248 &gt;&gt; logs/kubelet.log 2&gt;&amp;1 &amp;</code></pre></div></li>
+</ul>
+
+<ul>
+<li><p>4 准备 kube-proxy 启动脚本 bin/proxy.sh【内容如下】，并通过命令 <code>sh bin/proxy.sh</code> 方式启动 kube-proxy；</p>
+
+<div><pre><code class="language-Bash">#!/usr/bin/env bash
+ip=172.27.137.10
+nohup sudo ./sbin/kube-proxy --master=${ip}:8080 --proxy-mode=iptables &gt;&gt; logs/proxy.log 2&gt;&amp;1 &amp;</code></pre></div></li>
+</ul>
+
+<ul>
+<li><p>5 在 master 上通过指令 <code>kubectl get nodes</code> 检查两个 worker 工作状态，若其成功启动，则命令提示结果如下：</p>
+
+<div><pre><code class="language-Bash">NAME            STATUS     AGE
+172.27.137.11   Ready      13h
+172.27.137.12   Ready      12h</code></pre></div></li>
+</ul>
+
+<h2 id="toc_9">参考文档</h2>
+
+<ul>
+<li>1 <a href="http://blog.sina.com.cn/s/blog_48c95a190102wqpq.html">CentOS 6.5安装部署Kubernetes 1.4过程记录</a></li>
+</ul>
+
+<h2 id="toc_10">扒粪者-于雨氏</h2>
+
+<ul>
+<li>2019/12/08，于雨氏，于帝都丰台。</li>
+</ul>
+
+
+<!-- baidu statistic start -->
+<script>
+var _hmt = _hmt || [];
+(function() {
+	  var hm = document.createElement("script");
+	    hm.src = "https://hm.baidu.com/hm.js?170a8df8802fbc47c7acc272d270979c";
+		  var s = document.getElementsByTagName("script")[0];
+		    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+<!-- baidu statistic end -->
+
+<!-- Gitalk start -->
+<link rel="stylesheet" href="https://unpkg.com/gitalk@latest/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk@latest/dist/gitalk.min.js"></script>
+<div id="gitalk-container"></div>
+<script type="text/javascript">
+var gitalk = new Gitalk({
+	clientID: '6211d8b94a8106bed6b0',
+	clientSecret: 'bf77ca26c237eabbd45169e01bf03a5e96a1b26f',
+	repo: 'alexstocks.github.io',
+	owner: 'AlexStocks',
+	admin: ['AlexStocks'],
+	id: window.location.pathname,
+	distractionFreeMode: true
+});
+gitalk.render('gitalk-container');
+</script>
+<!-- Gitalk end -->
+
+
+
+
+</body>
+
+</html>
