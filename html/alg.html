@@ -323,152 +323,12 @@ kbd {
 }
 </style>
 
-<style type="text/css">
-/**
- * prism.js default theme for JavaScript, CSS and HTML
- * Based on dabblet (http://dabblet.com)
- * @author Lea Verou
- */
-
-code[class*="language-"],
-pre[class*="language-"] {
-	color: black;
-	background: none;
-	text-shadow: 0 1px white;
-	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-	text-align: left;
-	white-space: pre;
-	word-spacing: normal;
-	word-break: normal;
-	word-wrap: normal;
-	line-height: 1.5;
-
-	-moz-tab-size: 4;
-	-o-tab-size: 4;
-	tab-size: 4;
-
-	-webkit-hyphens: none;
-	-moz-hyphens: none;
-	-ms-hyphens: none;
-	hyphens: none;
-}
-
-pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
-code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
-	text-shadow: none;
-	background: #b3d4fc;
-}
-
-pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
-code[class*="language-"]::selection, code[class*="language-"] ::selection {
-	text-shadow: none;
-	background: #b3d4fc;
-}
-
-@media print {
-	code[class*="language-"],
-	pre[class*="language-"] {
-		text-shadow: none;
-	}
-}
-
-/* Code blocks */
-pre[class*="language-"] {
-	padding: 1em;
-	margin: .5em 0;
-	overflow: auto;
-}
-
-:not(pre) > code[class*="language-"],
-pre[class*="language-"] {
-	background: #f5f2f0;
-}
-
-/* Inline code */
-:not(pre) > code[class*="language-"] {
-	padding: .1em;
-	border-radius: .3em;
-	white-space: normal;
-}
-
-.token.comment,
-.token.prolog,
-.token.doctype,
-.token.cdata {
-	color: slategray;
-}
-
-.token.punctuation {
-	color: #999;
-}
-
-.namespace {
-	opacity: .7;
-}
-
-.token.property,
-.token.tag,
-.token.boolean,
-.token.number,
-.token.constant,
-.token.symbol,
-.token.deleted {
-	color: #905;
-}
-
-.token.selector,
-.token.attr-name,
-.token.string,
-.token.char,
-.token.builtin,
-.token.inserted {
-	color: #690;
-}
-
-.token.operator,
-.token.entity,
-.token.url,
-.language-css .token.string,
-.style .token.string {
-	color: #a67f59;
-	background: hsla(0, 0%, 100%, .5);
-}
-
-.token.atrule,
-.token.attr-value,
-.token.keyword {
-	color: #07a;
-}
-
-.token.function {
-	color: #DD4A68;
-}
-
-.token.regex,
-.token.important,
-.token.variable {
-	color: #e90;
-}
-
-.token.important,
-.token.bold {
-	font-weight: bold;
-}
-.token.italic {
-	font-style: italic;
-}
-
-.token.entity {
-	cursor: help;
-}
-</style>
-
 
 </head>
 
 <body>
 
-<h2 id="toc_0">一些著名的算法定理</h2>
+<h1 id="toc_0">一些著名的算法定理</h1>
 
 <hr>
 
@@ -476,7 +336,7 @@ pre[class*="language-"] {
 
 <p>分布式领域有一些非常著名的定理和算法，构筑了当下一些著名分布式系统的基石。下面分别罗列之，以求集腋成裘之效。</p>
 
-<h3 id="toc_1">0 Grosch 定律</h3>
+<h2 id="toc_1"><a name="0">0 Grosch 定律</a></h2>
 
 <hr>
 
@@ -490,7 +350,7 @@ pre[class*="language-"] {
 
 <p>分布式系统的另一个好处就是系统稳定性的提升。两台计算机互联并不是 <code>1 + 1 &gt; 2</code>，不能带来两倍的计算机性能的提升，甚至是 1.5 倍的性能提升都很难，但是却能提高系统的可靠性：即使其中一台计算机出现故障，整体系统还是具备可用性，虽然牺牲了系统的性能。</p>
 
-<h3 id="toc_2">1 CAP</h3>
+<h2 id="toc_2">1 CAP</h2>
 
 <hr>
 
@@ -514,7 +374,7 @@ pre[class*="language-"] {
 
 <p>以上内容大部分摘自 <a href="http://mp.weixin.qq.com/s/nyrEtiswAxXUW0YGf_szQg">参考文档2</a>。下面分别描述一些著名系统的 CAP 取舍。</p>
 
-<h4 id="toc_3">1.1 zookeeper</h4>
+<h3 id="toc_3">1.1 zookeeper</h3>
 
 <hr>
 
@@ -522,13 +382,13 @@ pre[class*="language-"] {
 
 <p>以上内容摘自 <a href="https://www.cnblogs.com/jieqing/p/8394001.html">参考文档3</a>。 </p>
 
-<h4 id="toc_4">1.2 MongoDB</h4>
+<h3 id="toc_4">1.2 MongoDB</h3>
 
 <hr>
 
 <p>mongodb 的读写一致性由 WriteConcern 和 ReadConcern 两个参数保证,两者组合可以得到不同的一致性等级。指定 writeConcern:majority 可以保证写入数据不丢失，不会因选举新主节点而被回滚掉。readConcern:majority + writeConcern:majority 可以保证强一致性的读,readConcern:local + writeConcern:majority 可以保证最终一致性的读。mongodb 对configServer全部指定writeConcern:majority 的写入方式，因此元数据可以保证不丢失。对 configServer 的读指定了 ReadPreference:PrimaryOnly 的方式，在 CAP 中舍弃了A与P得到了元数据的强一致性读。</p>
 
-<h3 id="toc_5">2 FLP</h3>
+<h2 id="toc_5">2 FLP</h2>
 
 <hr>
 
@@ -538,7 +398,7 @@ pre[class*="language-"] {
 
 <p>FLP的前提是分布式和异步模型。在分布式系统中，异步模型都适用于 CAP 和 FLP。在工作任务重的部分考虑异步模型，在工作任务轻的部分譬如 metaserver 就可以考虑同步模型，一些一致性算法譬如 Paxos  和 Raft 本质都是运作在同步模型之上的，此时就可以认为一致性是可以达成的。</p>
 
-<h4 id="toc_6">FLP 与 共识问题</h4>
+<h3 id="toc_6">FLP 与 共识问题</h3>
 
 <p>共识问题，就是让网络上的分布式处理者最后都对同一个结果值达成共识。共识问题给出一个处理者的集合，其中每一个处理者都有一个初始值：</p>
 
@@ -552,7 +412,7 @@ pre[class*="language-"] {
 
 <p><a href="http://mp.weixin.qq.com/s/nyrEtiswAxXUW0YGf_szQg">参考文档2</a> 对 FLP 与共识问题之间的关系进行了探讨。其描述如下：<code>FLP 不可能性则讨论了异步模型下的情况，主要结论有两条: 在异步模型下不存在一个完全正确的共识算法。不仅上述较“强”形式的共识算法不可能实现，FLP 还证明了比它弱一些的、只需要有一些无错误的进程做决定就足够的共识算法也是不可能实现的; 在异步模型下存在一个部分正确的共识算法，前提是所有无错误的进程都总能做出一个决定，此外没有进程会在它的执行过程中死亡，并且初始情况下超过半数进程都是存活状态。</code></p>
 
-<h3 id="toc_7">3 广播算法</h3>
+<h2 id="toc_7"><a name="3">3 广播算法</a></h2>
 
 <hr>
 
@@ -566,7 +426,17 @@ pre[class*="language-"] {
 
 <p>这个方法足够简单有效，Redis Sentinel 就是使用了这个方法，但是其缺点依然避免不了部分广播包传播过程有广播路径重合。还有更简单的算法：生成树广播。其核心内容是：<code>先选出一个中心节点，然后其他节点向这个中心节点发送加入树报文，加入树报文经过的路径，都会被嫁接到生成树上</code>。</p>
 
-<h2 id="toc_8">参考文档</h2>
+<h2 id="toc_8"><a name="4">4 <a href="https://en.wikipedia.org/wiki/Law_of_conservation_of_complexity" title="Law of conservation of complexity">复杂性守恒定律</a></a></h2>
+
+<hr>
+
+<p>据维基百科上讲，复杂性守恒定律源自人机交互设计计算机科学：在人机交互应用开发时，相关复杂性要么被应用处理掉，要么被用户处理掉，无法被消灭。</p>
+
+<p>软件系统的复杂性就像打地鼠，从一个洞口打下去，它会在另一个洞口迅速再次冒出来。或者说，就像在毯子下的蛇， 当你一个摊子的某个地方踩下去，它会从另一个地方鼓起来。</p>
+
+<p>复杂性最好在软件系统内被处理掉，否则就会传导到其相关的级联的下一级系统。譬如从存储系统级联到逻辑系统，或者级联到接口系统，或者级联到用户 APP，最终直至用户。</p>
+
+<h2 id="toc_9">参考文档</h2>
 
 <blockquote>
 <ul>
@@ -575,43 +445,21 @@ pre[class*="language-"] {
 <li>3 <a href="https://www.cnblogs.com/jieqing/p/8394001.html">ZooKeeper、Eureka对比</a> </li>
 <li>4 <a href="https://www.cnblogs.com/kubidemanong/p/10133097.html">广播路由算法 ：我是如何优雅着把悄悄话带给其他人的</a></li>
 <li>5 <a href="https://mp.weixin.qq.com/s/DXmQb9t29VKUQYGUzL68iQ">分布式系统的本质其实就是这两个问题</a></li>
+<li>6 <a href="https://github.com/nusr/hacker-laws-zh#%e5%a4%8d%e6%9d%82%e6%80%a7%e5%ae%88%e6%81%92%e5%ae%9a%e5%be%8b-the-law-of-conservation-of-complexity-or-teslers-law">对开发人员有用的定律、理论、原则和模式</a></li>
 </ul>
 </blockquote>
 
-<h2 id="toc_9">扒粪者-于雨氏</h2>
+<h2 id="toc_10">扒粪者-于雨氏</h2>
 
 <blockquote>
 <ul>
 <li>2018/10/08，于雨氏，于丰台。</li>
-<li>2018/12/18，于雨氏，于西二旗完成 #3 广播算法#。</li>
-<li>2018/12/24，于雨氏，于西二旗完成 #0 Grosch 定律#。</li>
+<li>2018/12/18，于雨氏，于西二旗完成 <a href="#3">广播算法</a>。</li>
+<li>2018/12/24，于雨氏，于西二旗完成 <a href="#0">Grosch 定律</a>。</li>
+<li>2020/01/12，于雨氏，于丰台完成 <a href="#4">复杂性守恒定律</a>。</li>
 </ul>
 </blockquote>
 
-
-
-<script type="text/javascript">
-var _self="undefined"!=typeof window?window:"undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?self:{},Prism=function(){var e=/\blang(?:uage)?-(\w+)\b/i,t=0,n=_self.Prism={util:{encode:function(e){return e instanceof a?new a(e.type,n.util.encode(e.content),e.alias):"Array"===n.util.type(e)?e.map(n.util.encode):e.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\u00a0/g," ")},type:function(e){return Object.prototype.toString.call(e).match(/\[object (\w+)\]/)[1]},objId:function(e){return e.__id||Object.defineProperty(e,"__id",{value:++t}),e.__id},clone:function(e){var t=n.util.type(e);switch(t){case"Object":var a={};for(var r in e)e.hasOwnProperty(r)&&(a[r]=n.util.clone(e[r]));return a;case"Array":return e.map&&e.map(function(e){return n.util.clone(e)})}return e}},languages:{extend:function(e,t){var a=n.util.clone(n.languages[e]);for(var r in t)a[r]=t[r];return a},insertBefore:function(e,t,a,r){r=r||n.languages;var l=r[e];if(2==arguments.length){a=arguments[1];for(var i in a)a.hasOwnProperty(i)&&(l[i]=a[i]);return l}var o={};for(var s in l)if(l.hasOwnProperty(s)){if(s==t)for(var i in a)a.hasOwnProperty(i)&&(o[i]=a[i]);o[s]=l[s]}return n.languages.DFS(n.languages,function(t,n){n===r[e]&&t!=e&&(this[t]=o)}),r[e]=o},DFS:function(e,t,a,r){r=r||{};for(var l in e)e.hasOwnProperty(l)&&(t.call(e,l,e[l],a||l),"Object"!==n.util.type(e[l])||r[n.util.objId(e[l])]?"Array"!==n.util.type(e[l])||r[n.util.objId(e[l])]||(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,l,r)):(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,null,r)))}},plugins:{},highlightAll:function(e,t){var a={callback:t,selector:'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'};n.hooks.run("before-highlightall",a);for(var r,l=a.elements||document.querySelectorAll(a.selector),i=0;r=l[i++];)n.highlightElement(r,e===!0,a.callback)},highlightElement:function(t,a,r){for(var l,i,o=t;o&&!e.test(o.className);)o=o.parentNode;o&&(l=(o.className.match(e)||[,""])[1],i=n.languages[l]),t.className=t.className.replace(e,"").replace(/\s+/g," ")+" language-"+l,o=t.parentNode,/pre/i.test(o.nodeName)&&(o.className=o.className.replace(e,"").replace(/\s+/g," ")+" language-"+l);var s=t.textContent,u={element:t,language:l,grammar:i,code:s};if(!s||!i)return n.hooks.run("complete",u),void 0;if(n.hooks.run("before-highlight",u),a&&_self.Worker){var c=new Worker(n.filename);c.onmessage=function(e){u.highlightedCode=e.data,n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(u.element),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},c.postMessage(JSON.stringify({language:u.language,code:u.code,immediateClose:!0}))}else u.highlightedCode=n.highlight(u.code,u.grammar,u.language),n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(t),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},highlight:function(e,t,r){var l=n.tokenize(e,t);return a.stringify(n.util.encode(l),r)},tokenize:function(e,t){var a=n.Token,r=[e],l=t.rest;if(l){for(var i in l)t[i]=l[i];delete t.rest}e:for(var i in t)if(t.hasOwnProperty(i)&&t[i]){var o=t[i];o="Array"===n.util.type(o)?o:[o];for(var s=0;s<o.length;++s){var u=o[s],c=u.inside,g=!!u.lookbehind,h=!!u.greedy,f=0,d=u.alias;u=u.pattern||u;for(var p=0;p<r.length;p++){var m=r[p];if(r.length>e.length)break e;if(!(m instanceof a)){u.lastIndex=0;var y=u.exec(m),v=1;if(!y&&h&&p!=r.length-1){var b=r[p+1].matchedStr||r[p+1],k=m+b;if(p<r.length-2&&(k+=r[p+2].matchedStr||r[p+2]),u.lastIndex=0,y=u.exec(k),!y)continue;var w=y.index+(g?y[1].length:0);if(w>=m.length)continue;var _=y.index+y[0].length,P=m.length+b.length;if(v=3,P>=_){if(r[p+1].greedy)continue;v=2,k=k.slice(0,P)}m=k}if(y){g&&(f=y[1].length);var w=y.index+f,y=y[0].slice(f),_=w+y.length,S=m.slice(0,w),O=m.slice(_),j=[p,v];S&&j.push(S);var A=new a(i,c?n.tokenize(y,c):y,d,y,h);j.push(A),O&&j.push(O),Array.prototype.splice.apply(r,j)}}}}}return r},hooks:{all:{},add:function(e,t){var a=n.hooks.all;a[e]=a[e]||[],a[e].push(t)},run:function(e,t){var a=n.hooks.all[e];if(a&&a.length)for(var r,l=0;r=a[l++];)r(t)}}},a=n.Token=function(e,t,n,a,r){this.type=e,this.content=t,this.alias=n,this.matchedStr=a||null,this.greedy=!!r};if(a.stringify=function(e,t,r){if("string"==typeof e)return e;if("Array"===n.util.type(e))return e.map(function(n){return a.stringify(n,t,e)}).join("");var l={type:e.type,content:a.stringify(e.content,t,r),tag:"span",classes:["token",e.type],attributes:{},language:t,parent:r};if("comment"==l.type&&(l.attributes.spellcheck="true"),e.alias){var i="Array"===n.util.type(e.alias)?e.alias:[e.alias];Array.prototype.push.apply(l.classes,i)}n.hooks.run("wrap",l);var o="";for(var s in l.attributes)o+=(o?" ":"")+s+'="'+(l.attributes[s]||"")+'"';return"<"+l.tag+' class="'+l.classes.join(" ")+'" '+o+">"+l.content+"</"+l.tag+">"},!_self.document)return _self.addEventListener?(_self.addEventListener("message",function(e){var t=JSON.parse(e.data),a=t.language,r=t.code,l=t.immediateClose;_self.postMessage(n.highlight(r,n.languages[a],a)),l&&_self.close()},!1),_self.Prism):_self.Prism;var r=document.currentScript||[].slice.call(document.getElementsByTagName("script")).pop();return r&&(n.filename=r.src,document.addEventListener&&!r.hasAttribute("data-manual")&&document.addEventListener("DOMContentLoaded",n.highlightAll)),_self.Prism}();"undefined"!=typeof module&&module.exports&&(module.exports=Prism),"undefined"!=typeof global&&(global.Prism=Prism);
-</script>
-
-<script type="text/x-mathjax-config">
-(function () {
-
-MathJax.Hub.Config({
-	'showProcessingMessages': false,
-	'messageStyle': 'none'
-});
-
-if (typeof MathJaxListener !== 'undefined') {
-	MathJax.Hub.Register.StartupHook('End', function () {
-		MathJaxListener.invokeCallbackForKey_('End');
-	});
-}
-
-})();
-</script>
-
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 <!-- baidu statistic start -->
 <script>
