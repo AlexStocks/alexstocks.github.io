@@ -73,15 +73,19 @@ etcd v2 直接采用 coreos 公司的二进制发行版，通过命令 `wget htt
 	
 	ip=172.27.137.10
 	nohup ./sbin/etcd --name infra0 --initial-advertise-peer-urls http://${ip}:2380,http://${ip}:7001 --listen-peer-urls http://${ip}:2380,http://${ip}:7001 --listen-client-urls http://${ip}:2379,http://${ip}:4001 --advertise-client-urls http://${ip}:2379,http://${ip}:4001 --initial-cluster-token etcd-cluster --initial-cluster infra0=http://${ip}:2380,infra0=http://${ip}:7001 --data-dir /home/vagrant/test/k8s/etcd/data/ --wal-dir /home/vagrant/test/k8s/etcd/wal/ --initial-cluster-state new  >> ./logs/etcd.log 2>&1 &
-
+	```
+	
 - 4 启动成功之后，把 flannel 对网络段的划分写入 etcd 之中，脚本命令如下：
 
 	```Bash
 	#!/usr/bin/env bash
 	
 	ip=172.27.137.10
-	sbin/etcdctl --endpoints=http://${ip}:2379,http://${ip}:4001 mk /coreos.com/network/config '{"Network":"172.17.0.0/16", "SubnetMin": "172.17.1.0", "SubnetMax": "172.17.254.0"}'
-
+	sbin/etcdctl --endpoints=http://${ip}:2379,http://${ip}:4001 mk /coreos.com/network/config '{"Network":"172.17.0.0/16", "SubnetMin": "172.17.1.0", "SubnetMax": "172.17.254.0", "Backend": {"Type": "vxlan"}}'
+	```
+	
+	这里的 backend 选用 vxlan，没有使用默认的 UDP，效率最高的是 host-gw。
+	
 ## 1.4 flannel
 
 flannel 系 CoreOS 公司出品的一个 k8s 网络管理工具，整体通信机制建立在 UDP 之上，在测试环境可以很轻松地部署起来。本次部署也直接采用 coreos 公司的二进制发行版，通过命令 `wget https://github.com/coreos/flannel/releases/download/v0.6.2/flannel-v0.6.2-linux-amd64.tar.gz` 下载即可。
@@ -127,6 +131,8 @@ flannel 部署完毕之后，可通过 `ifconfig` 命令启动一个 flannel0 �
 
 - 4 通过命令 `systemctl  restart docker.service` 重启 docker，即可看到两个网卡已经处于同一子网段；
 - 5 在 k1 和 k2 执行同样的配置过程。
+
+  配置成功后，在各个容器内互相发送 ping 指令验证网络是否互通，如果没有 ping 成功，则表明主机防火墙开了，手工关闭一下即可。
 
 ## 1.5 k8s master
 

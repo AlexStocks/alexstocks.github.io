@@ -414,15 +414,14 @@ kbd {
 
 ip=172.27.137.10
 nohup ./sbin/etcd --name infra0 --initial-advertise-peer-urls http://${ip}:2380,http://${ip}:7001 --listen-peer-urls http://${ip}:2380,http://${ip}:7001 --listen-client-urls http://${ip}:2379,http://${ip}:4001 --advertise-client-urls http://${ip}:2379,http://${ip}:4001 --initial-cluster-token etcd-cluster --initial-cluster infra0=http://${ip}:2380,infra0=http://${ip}:7001 --data-dir /home/vagrant/test/k8s/etcd/data/ --wal-dir /home/vagrant/test/k8s/etcd/wal/ --initial-cluster-state new  &gt;&gt; ./logs/etcd.log 2&gt;&amp;1 &amp;</code></pre></div></li>
-</ul>
-
-<ul>
 <li><p>4 启动成功之后，把 flannel 对网络段的划分写入 etcd 之中，脚本命令如下：</p>
 
 <div><pre><code class="language-Bash">#!/usr/bin/env bash
 
 ip=172.27.137.10
-sbin/etcdctl --endpoints=http://${ip}:2379,http://${ip}:4001 mk /coreos.com/network/config &#39;{&quot;Network&quot;:&quot;172.17.0.0/16&quot;, &quot;SubnetMin&quot;: &quot;172.17.1.0&quot;, &quot;SubnetMax&quot;: &quot;172.17.254.0&quot;}&#39;</code></pre></div></li>
+sbin/etcdctl --endpoints=http://${ip}:2379,http://${ip}:4001 mk /coreos.com/network/config &#39;{&quot;Network&quot;:&quot;172.17.0.0/16&quot;, &quot;SubnetMin&quot;: &quot;172.17.1.0&quot;, &quot;SubnetMax&quot;: &quot;172.17.254.0&quot;, &quot;Backend&quot;: {&quot;Type&quot;: &quot;vxlan&quot;}}&#39;</code></pre></div>
+
+<p>这里的 backend 选用 vxlan，没有使用默认的 UDP，效率最高的是 host-gw。</p></li>
 </ul>
 
 <h2 id="toc_5">1.4 flannel</h2>
@@ -473,7 +472,9 @@ fi</code></pre></div></li>
 
 <ul>
 <li>4 通过命令 <code>systemctl  restart docker.service</code> 重启 docker，即可看到两个网卡已经处于同一子网段；</li>
-<li>5 在 k1 和 k2 执行同样的配置过程。</li>
+<li><p>5 在 k1 和 k2 执行同样的配置过程。</p>
+
+<p>配置成功后，在各个容器内互相发送 ping 指令验证网络是否互通，如果没有 ping 成功，则表明主机防火墙开了，手工关闭一下即可。</p></li>
 </ul>
 
 <h2 id="toc_6">1.5 k8s master</h2>
@@ -630,7 +631,6 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
-
 
 
 
