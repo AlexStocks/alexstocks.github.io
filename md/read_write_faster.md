@@ -237,6 +237,11 @@ linux 系统有预读行为，但预读数据量则是用户所不知道的。li
 - 3 [Linux ext3/ext4文件系统中同步写放大问题](http://ilinuxkernel.com/?p=1467)
 - 4 [单机百亿文件的极致索引（设计篇）](https://blog.csdn.net/BaishanCloud/article/details/83028522)
 
+## Payment
+
+<center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
+
+
 ## 扒粪者-于雨氏
 
 >- 2019/05/05，于雨氏，于 G44，初作此文。

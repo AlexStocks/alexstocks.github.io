@@ -70,14 +70,17 @@
 
 辉煌若香港，其核心由 20 万左右的金融精英与顶端的大财阀构建，剩余 700 万不过碌碌打工仔。20 万左右的金融精英，也就是压力重压下的夹心层，可能酷爱声色犬马。某人尝言，剧毒品如吗啡可以缓解人的疼痛感，可以给临死病人使用，同样道理，软毒品可以使人放松压力，应该可以开放给压力大的人使用。这就点明了这些精英和金融系统一起构成了财阀们的金融工具而已。
 
-
-
 待续......
 
 ## 参考文档
 ---
 
 [1]:https://mp.weixin.qq.com/s/UIB0zVQDjANMBmeQbYBPYQ
+
+## Payment
+
+<center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
+
 
 ## 扒粪者-于雨氏 ##
 

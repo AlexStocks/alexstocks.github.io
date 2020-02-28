@@ -191,6 +191,11 @@ Sidecar 在 "Client-Server" 服务通信形态中就是一个 <u>**Client-side**
 - 3 [Alignment and Autonomy and Quorums](https://paulhammant.com/2017/07/09/alignment-and-autonomy-and-quorums/)
 - 4 [The Service Mesh: What Every Software Engineer Needs to Know about the World's Most Over-Hyped Technology](https://servicemesh.io/)
 
+## Payment
+
+<center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
+
+
 ## 扒粪者-于雨氏
 
 >- 2019/05/21，于雨氏，于 G4x，初作此文。

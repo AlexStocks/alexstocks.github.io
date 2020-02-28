@@ -9,82 +9,301 @@
 
 
 <style type="text/css">
-*{margin:0;padding:0;}
 body {
-	font:13.34px helvetica,arial,freesans,clean,sans-serif;
-	color:black;
-	line-height:1.4em;
-	background-color: #F8F8F8;
-	padding: 0.7em;
+  font-family: Helvetica, arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: white;
+  padding: 30px; }
+
+body > *:first-child {
+  margin-top: 0 !important; }
+body > *:last-child {
+  margin-bottom: 0 !important; }
+
+a {
+  color: #4183C4; }
+a.absent {
+  color: #cc0000; }
+a.anchor {
+  display: block;
+  padding-left: 30px;
+  margin-left: -30px;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0; }
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+  cursor: text;
+  position: relative; }
+
+h1:hover a.anchor, h2:hover a.anchor, h3:hover a.anchor, h4:hover a.anchor, h5:hover a.anchor, h6:hover a.anchor {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA09pVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoMTMuMCAyMDEyMDMwNS5tLjQxNSAyMDEyLzAzLzA1OjIxOjAwOjAwKSAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OUM2NjlDQjI4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OUM2NjlDQjM4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5QzY2OUNCMDg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5QzY2OUNCMTg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PsQhXeAAAABfSURBVHjaYvz//z8DJYCRUgMYQAbAMBQIAvEqkBQWXI6sHqwHiwG70TTBxGaiWwjCTGgOUgJiF1J8wMRAIUA34B4Q76HUBelAfJYSA0CuMIEaRP8wGIkGMA54bgQIMACAmkXJi0hKJQAAAABJRU5ErkJggg==) no-repeat 10px center;
+  text-decoration: none; }
+
+h1 tt, h1 code {
+  font-size: inherit; }
+
+h2 tt, h2 code {
+  font-size: inherit; }
+
+h3 tt, h3 code {
+  font-size: inherit; }
+
+h4 tt, h4 code {
+  font-size: inherit; }
+
+h5 tt, h5 code {
+  font-size: inherit; }
+
+h6 tt, h6 code {
+  font-size: inherit; }
+
+h1 {
+  font-size: 28px;
+  color: black; }
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #cccccc;
+  color: black; }
+
+h3 {
+  font-size: 18px; }
+
+h4 {
+  font-size: 16px; }
+
+h5 {
+  font-size: 14px; }
+
+h6 {
+  color: #777777;
+  font-size: 14px; }
+
+p, blockquote, ul, ol, dl, li, table, pre {
+  margin: 15px 0; }
+
+hr {
+  background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAECAYAAACtBE5DAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OENDRjNBN0E2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OENDRjNBN0I2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo4Q0NGM0E3ODY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo4Q0NGM0E3OTY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqqezsUAAAAfSURBVHjaYmRABcYwBiM2QSA4y4hNEKYDQxAEAAIMAHNGAzhkPOlYAAAAAElFTkSuQmCC) repeat-x 0 0;
+  border: 0 none;
+  color: #cccccc;
+  height: 4px;
+  padding: 0;
 }
-p {
-	margin:1em 0;
-	line-height:1.5em;
-}
+
+body > h2:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+body > h1:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+  body > h1:first-child + h2 {
+    margin-top: 0;
+    padding-top: 0; }
+body > h3:first-child, body > h4:first-child, body > h5:first-child, body > h6:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0; }
+
+h1 p, h2 p, h3 p, h4 p, h5 p, h6 p {
+  margin-top: 0; }
+
+li p.first {
+  display: inline-block; }
+li {
+  margin: 0; }
+ul, ol {
+  padding-left: 30px; }
+
+ul :first-child, ol :first-child {
+  margin-top: 0; }
+
+dl {
+  padding: 0; }
+  dl dt {
+    font-size: 14px;
+    font-weight: bold;
+    font-style: italic;
+    padding: 0;
+    margin: 15px 0 5px; }
+    dl dt:first-child {
+      padding: 0; }
+    dl dt > :first-child {
+      margin-top: 0; }
+    dl dt > :last-child {
+      margin-bottom: 0; }
+  dl dd {
+    margin: 0 0 15px;
+    padding: 0 15px; }
+    dl dd > :first-child {
+      margin-top: 0; }
+    dl dd > :last-child {
+      margin-bottom: 0; }
+
+blockquote {
+  border-left: 4px solid #dddddd;
+  padding: 0 15px;
+  color: #777777; }
+  blockquote > :first-child {
+    margin-top: 0; }
+  blockquote > :last-child {
+    margin-bottom: 0; }
+
 table {
-	font-size:inherit;
-	font:100%;
-	margin:1em;
-}
-table th{border-bottom:1px solid #bbb;padding:.2em 1em;}
-table td{border-bottom:1px solid #ddd;padding:.2em 1em;}
-input[type=text],input[type=password],input[type=image],textarea{font:99% helvetica,arial,freesans,sans-serif;}
-select,option{padding:0 .25em;}
-optgroup{margin-top:.5em;}
-pre,code{font:12px Monaco,"Courier New","DejaVu Sans Mono","Bitstream Vera Sans Mono",monospace;}
-pre {
-	margin:1em 0;
-	font-size:12px;
-	background-color:#eee;
-	border:1px solid #ddd;
-	padding:5px;
-	line-height:1.5em;
-	color:#444;
-	overflow:auto;
-	-webkit-box-shadow:rgba(0,0,0,0.07) 0 1px 2px inset;
-	-webkit-border-radius:3px;
-	-moz-border-radius:3px;border-radius:3px;
-}
+  padding: 0;border-collapse: collapse; }
+  table tr {
+    border-top: 1px solid #cccccc;
+    background-color: white;
+    margin: 0;
+    padding: 0; }
+    table tr:nth-child(2n) {
+      background-color: #f8f8f8; }
+    table tr th {
+      font-weight: bold;
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr td {
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr th :first-child, table tr td :first-child {
+      margin-top: 0; }
+    table tr th :last-child, table tr td :last-child {
+      margin-bottom: 0; }
+
+img {
+  max-width: 100%; }
+
+span.frame {
+  display: block;
+  overflow: hidden; }
+  span.frame > span {
+    border: 1px solid #dddddd;
+    display: block;
+    float: left;
+    overflow: hidden;
+    margin: 13px 0 0;
+    padding: 7px;
+    width: auto; }
+  span.frame span img {
+    display: block;
+    float: left; }
+  span.frame span span {
+    clear: both;
+    color: #333333;
+    display: block;
+    padding: 5px 0 0; }
+span.align-center {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-center > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: center; }
+  span.align-center span img {
+    margin: 0 auto;
+    text-align: center; }
+span.align-right {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px 0 0;
+    text-align: right; }
+  span.align-right span img {
+    margin: 0;
+    text-align: right; }
+span.float-left {
+  display: block;
+  margin-right: 13px;
+  overflow: hidden;
+  float: left; }
+  span.float-left span {
+    margin: 13px 0 0; }
+span.float-right {
+  display: block;
+  margin-left: 13px;
+  overflow: hidden;
+  float: right; }
+  span.float-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: right; }
+
+code, tt {
+  margin: 0 2px;
+  padding: 0 5px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px; }
+
 pre code {
-	padding:0;
-	font-size:12px;
-	background-color:#eee;
-	border:none;
-}
-code {
-	font-size:12px;
-	background-color:#f8f8ff;
-	color:#444;
-	padding:0 .2em;
-	border:1px solid #dedede;
-}
-img{border:0;max-width:100%;}
-abbr{border-bottom:none;}
-a{color:#4183c4;text-decoration:none;}
-a:hover{text-decoration:underline;}
-a code,a:link code,a:visited code{color:#4183c4;}
-h2,h3{margin:1em 0;}
-h1,h2,h3,h4,h5,h6{border:0;}
-h1{font-size:170%;border-top:4px solid #aaa;padding-top:.5em;margin-top:1.5em;}
-h1:first-child{margin-top:0;padding-top:.25em;border-top:none;}
-h2{font-size:150%;margin-top:1.5em;border-top:4px solid #e0e0e0;padding-top:.5em;}
-h3{margin-top:1em;}
-hr{border:1px solid #ddd;}
-ul{margin:1em 0 1em 2em;}
-ol{margin:1em 0 1em 2em;}
-ul li,ol li{margin-top:.5em;margin-bottom:.5em;}
-ul ul,ul ol,ol ol,ol ul{margin-top:0;margin-bottom:0;}
-blockquote{margin:1em 0;border-left:5px solid #ddd;padding-left:.6em;color:#555;}
-dt{font-weight:bold;margin-left:1em;}
-dd{margin-left:2em;margin-bottom:1em;}
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent; }
+
+.highlight pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+  pre code, pre tt {
+    background-color: transparent;
+    border: none; }
+
 sup {
     font-size: 0.83em;
     vertical-align: super;
     line-height: 0;
 }
+
 kbd {
-  display: inline-block;padding: 3px 5px;font-size: 11px;line-height: 10px;color: #555;vertical-align: middle;background-color: #fcfcfc;border: solid 1px #ccc;border-bottom-color: #bbb;border-radius: 3px;box-shadow: inset 0 -1px 0 #bbb;
+  display: inline-block;
+  padding: 3px 5px;
+  font-size: 11px;
+  line-height: 10px;
+  color: #555;
+  vertical-align: middle;
+  background-color: #fcfcfc;
+  border: solid 1px #ccc;
+  border-bottom-color: #bbb;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 #bbb
 }
+
 * {
 	-webkit-print-color-adjust: exact;
 }
@@ -101,6 +320,146 @@ kbd {
 	pre {
 		word-wrap: break-word;
 	}
+}
+</style>
+
+<style type="text/css">
+/**
+ * prism.js default theme for JavaScript, CSS and HTML
+ * Based on dabblet (http://dabblet.com)
+ * @author Lea Verou
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: black;
+	background: none;
+	text-shadow: 0 1px white;
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
+code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
+	text-shadow: none;
+	background: #b3d4fc;
+}
+
+pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
+code[class*="language-"]::selection, code[class*="language-"] ::selection {
+	text-shadow: none;
+	background: #b3d4fc;
+}
+
+@media print {
+	code[class*="language-"],
+	pre[class*="language-"] {
+		text-shadow: none;
+	}
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: #f5f2f0;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: slategray;
+}
+
+.token.punctuation {
+	color: #999;
+}
+
+.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #905;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #690;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+	color: #a67f59;
+	background: hsla(0, 0%, 100%, .5);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+	color: #07a;
+}
+
+.token.function {
+	color: #DD4A68;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+	color: #e90;
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
 }
 </style>
 
@@ -166,8 +525,8 @@ kbd {
 
 <h3 id="toc_2">1.1 初始化server相关参数</h3>
 
-<p><font color=purple>
-初始化server.runid，并给replication相关参数赋值。
+<p><font color=purple><br>
+初始化server.runid，并给replication相关参数赋值。<br>
 </font></p>
 
 <p><font color=blue></p>
@@ -314,8 +673,8 @@ void initServerConfig(void) {
 
 <h4 id="toc_4">1.2.1 读取配置文件</h4>
 
-<p><font color=purple>
-如果进程启动的时候已经被赋予了redis的options，则使用这些options，不再读conf文件。
+<p><font color=purple><br>
+如果进程启动的时候已经被赋予了redis的options，则使用这些options，不再读conf文件。<br>
 </font></p>
 
 <p><font color=green></p>
@@ -355,8 +714,8 @@ void initServerConfig(void) {
 
 <h4 id="toc_5">1.2.2 对字符流@config逐行拆分</h4>
 
-<p><font color=purple>
-这个函数中比较重要的就是如果redis的role是slave，则获取master的host和port，并把state设置为REDIS<em>REPL</em>CONNECT
+<p><font color=purple><br>
+这个函数中比较重要的就是如果redis的role是slave，则获取master的host和port，并把state设置为REDIS<u>REPL</u>CONNECT<br>
 </font></p>
 
 <p><font color=green></p>
@@ -763,7 +1122,7 @@ void acceptTcpHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
 
 <p><font color=purple></p>
 
-<p>overcommit<em>memory文件指定了内核针对内存分配的策略，overcommit</em>memory值可以是0、1、2。</p>
+<p>overcommit<u>memory文件指定了内核针对内存分配的策略，overcommit</u>memory值可以是0、1、2。</p>
 
 <ul>
 <li>0， 表示内核将检查是否有足够的可用内存供应用进程使用；如果有足够的可用内存，内存申请允许；否则，内存申请失败，并把错误返回给应用进程。</li>
@@ -799,7 +1158,7 @@ void acceptTcpHandler(aeEventLoop *el, int fd, void *privdata, int mask) {
 
 <p><em>内核线程khugepaged周期性自动扫描内存，自动将地址连续可以合并的4KB的普通Page并成2MB的Huge Page。</em></p>
 
-<p><em>Redhat系统，通过内核参数/sys/kernel/mm/redhat<em>transparent</em>hugepage/enabled打开.</em></p>
+<p><em>Redhat系统，通过内核参数/sys/kernel/mm/redhat<u>transparent</u>hugepage/enabled打开.</em></p>
 
 <p><em>其他Linux系统，通过内核参数/sys/kernel/mm/transparent_hugepage/enabled打开.</em></p>
 
@@ -1138,13 +1497,13 @@ fmterr: /* Format error. */
 
 <p><font color=purple></p>
 
-<p>rdb文件中有这两个字段：repl-id和repl-offset，对应redis代码中master<em>replid和master</em>repl_offset<a href="https://redis.io/topics/replication">replication</a>一文中说明这两个字段唯一的标记了redis master的一组dataset。</p>
+<p>rdb文件中有这两个字段：repl-id和repl-offset，对应redis代码中master<u>replid和master</u>repl_offset<a href="https://redis.io/topics/replication">replication</a>一文中说明这两个字段唯一的标记了redis master的一组dataset。</p>
 
 <p>如果rdb文件不存在，则redis启动的时候初始offset为0；存在，则id和offset继承自rdb文件中的这两个字段值。</p>
 
 <p></font></p>
 
-<p>rdb的文件格式如下：
+<p>rdb的文件格式如下：<br>
 <img src="../pic/redis_rdb.jpg" alt=""></p>
 
 <p><font color=green></p>
@@ -1280,7 +1639,7 @@ eoferr: /* unexpected end of file is handled here with a fatal exit */
 
 <p><em>正常运行的实例[master or slave]，收到slaveof命令后更换master，启动slave模式。</em></p>
 
-<p><em>先断绝与已有的master以及slaves之间的连接，并放弃收到的或者将要发出的增量同步数据，然后初始化相关配置，设置状态为REDIS<em>REPL</em>CONNECT。</em>
+<p><em>先断绝与已有的master以及slaves之间的连接，并放弃收到的或者将要发出的增量同步数据，然后初始化相关配置，设置状态为REDIS<u>REPL</u>CONNECT。</em><br>
 </font></p>
 
 <p><font color=green></p>
@@ -1334,7 +1693,7 @@ void replicationSetMaster(char *ip, int port) {
 
 <p>redis的timer响应函数ServerCron每秒调用一次replication的周期函数replicationCron。这个函数检查到slave还没有成功连接master时，先进行连接动作。</p>
 
-<p>连接动作由connectWithMaster完成。连接过程中会发出psync命令，尔后把状态更改为REDIS<em>REPL</em>CONNECTING。
+<p>连接动作由connectWithMaster完成。连接过程中会发出psync命令，尔后把状态更改为REDIS<u>REPL</u>CONNECTING。<br>
 </font></p>
 
 <p><font color=green></p>
@@ -1388,7 +1747,7 @@ int connectWithMaster(void) {
 
 <p><font color=purple></p>
 
-<p>如果处于REDIS<em>REPL</em>CONNECTING or REDIS<em>REPL</em>RECEIVE<em>PONG的状态，而且距离上次接收数据时间已经超时，则断开与master之间的连接，把状态置为REDIS</em>REPL_CONNECT。</p>
+<p>如果处于REDIS<u>REPL</u>CONNECTING or REDIS<u>REPL</u>RECEIVE<u>PONG的状态，而且距离上次接收数据时间已经超时，则断开与master之间的连接，把状态置为REDIS</u>REPL_CONNECT。</p>
 
 <p></font></p>
 
@@ -1423,11 +1782,11 @@ void undoConnectWithMaster(void) {
 
 <p><font color=purple></p>
 
-<p><em>正常的connect异步流程是：先connect，而后判断fd是否可写，最后再判断连接是否有误。而上面的连接过程中，connect成功后就直接发出了PSYNC命令，所以收到其reply函数syncWithMaster就意味着server.sync<em>transfer</em>s确实可写。</em></p>
+<p><em>正常的connect异步流程是：先connect，而后判断fd是否可写，最后再判断连接是否有误。而上面的连接过程中，connect成功后就直接发出了PSYNC命令，所以收到其reply函数syncWithMaster就意味着server.sync<u>transfer</u>s确实可写。</em></p>
 
 <p><em>syncWithMaster函数起始逻辑就是判断fd是否有error，这个是继续连接流程的第三步，如果没有error就可以确认连接可读可写而且没有error，此时就可以删除对可写事件的关注。</em></p>
 
-<p><em>确定没有错误后再发出PING命令，状态更改为REDIS<em>REPL</em>RECEIVE_PONG。</em></p>
+<p><em>确定没有错误后再发出PING命令，状态更改为REDIS<u>REPL</u>RECEIVE_PONG。</em></p>
 
 <p></font></p>
 
@@ -1959,7 +2318,7 @@ int slaveTryPartialResynchronization(int fd) {
 <li>2 读取数据；</li>
 <li>3 write &amp; sync至磁盘；</li>
 <li>4 读取完毕，修改tmp file为正式文件名称，清空内存中的数据，把数据load到内存;</li>
-<li>5 依据repl<em>transfer</em>s创建一个client：server.master，并修改状态为CONNECTED；</li>
+<li>5 依据repl<u>transfer</u>s创建一个client：server.master，并修改状态为CONNECTED；</li>
 <li>6 启动aof模式。</li>
 </ul>
 
@@ -2276,7 +2635,7 @@ error:
 
 <p><font color=purple></p>
 
-<p>server.master代表slave与master之间的连接句柄，当这个连接超时后连接会被关闭，但是句柄这个连接所用到的内存资源会被赋值给server.cached<em>master。待需要重新与master建立连接的时候，server.master只需要从server.cached</em>master处获取到这个句柄就可以了。</p>
+<p>server.master代表slave与master之间的连接句柄，当这个连接超时后连接会被关闭，但是句柄这个连接所用到的内存资源会被赋值给server.cached<u>master。待需要重新与master建立连接的时候，server.master只需要从server.cached</u>master处获取到这个句柄就可以了。</p>
 
 <p>通过二者实现了slave与master之间连接句柄的循环利用。cached_master可以认为是一个“迷你型”的资源回收池。</p>
 
@@ -2614,10 +2973,10 @@ void disconnectSlaves(void) {
 <li>3 验证用户是否合法；</li>
 <li>4 如果server的内存已经满溢，则要进行数据淘汰；</li>
 <li>5 如果master在序列化数据的时候出错，就不要再处理写请求；</li>
-<li>6 如果处于正常态的slave的数目少于用于要求的&quot;min-slaves-to-write&quot;，拒绝写请求；</li>
+<li>6 如果处于正常态的slave的数目少于用于要求的<q>min-slaves-to-write</q>，拒绝写请求；</li>
 <li>7 如果是slave而且是readonly类型，拒绝写请求；</li>
 <li>8 Pub/Sub模式下只处理这种类型的命令[ping &amp; subscribe &amp; unsubscribe &amp; psubscribe &amp; punsubscribe]；</li>
-<li>9 如果是slave且与master的连接有问题而且&quot;slave-serve-stale-data&quot;是no，则只处理INFO和SLAVEOF命令；</li>
+<li>9 如果是slave且与master的连接有问题而且<q>slave-serve-stale-data</q>是no，则只处理INFO和SLAVEOF命令；</li>
 <li>10 如果server正在加载数据而命令是加载数据其间不能处理的，则拒绝处理；</li>
 <li>11 如果处理script脚本已经超时，则只能处理auth、replconf和shutdown之类的命令；</li>
 <li>12 执行命令，如果是事务命令则排队执行，否则条用call函数处理命令;</li>
@@ -3013,15 +3372,15 @@ void replicationFeedSlaves(list *slaves, int dictid, robj **argv, int argc) {
 <p>backlog buffer[server.repl_backlog]可以认为是一种ring buffer，几个重要的成员意义如下：</p>
 
 <ul>
-<li>server.repl<em>backlog</em>size    backlogf的总size；</li>
-<li>server.repl<em>backlog</em>idx     write index；</li>
-<li>server.repl<em>backlog</em>off     read index；</li>
-<li>server.repl<em>backlog</em>histlen buffer中有效数据的size；</li>
-<li>server.master<em>repl</em>offset   master的backlog总共收到的数据的size；</li>
-<li>server.repl<em>backlog</em>off     master已经发送出去的数据的size；</li>
+<li>server.repl<u>backlog</u>size    backlogf的总size；</li>
+<li>server.repl<u>backlog</u>idx     write index；</li>
+<li>server.repl<u>backlog</u>off     read index；</li>
+<li>server.repl<u>backlog</u>histlen buffer中有效数据的size；</li>
+<li>server.master<u>repl</u>offset   master的backlog总共收到的数据的size；</li>
+<li>server.repl<u>backlog</u>off     master已经发送出去的数据的size；</li>
 </ul>
 
-<p>用户发送info replication命令给master的时候，可以看到master<em>repl</em>offset和repl<em>backlog</em>off。repl<em>backlog</em>off的值也只有收到新的写请求的时候才会被更新。</p>
+<p>用户发送info replication命令给master的时候，可以看到master<u>repl</u>offset和repl<u>backlog</u>off。repl<u>backlog</u>off的值也只有收到新的写请求的时候才会被更新。</p>
 
 <p></font></p>
 
@@ -3195,7 +3554,7 @@ void pingCommand(redisClient *c) {
 
 <p><font color=purple></p>
 
-<p>slave处于REDIS<em>REPL</em>ONLINE状态，说明slave已经收到了rdb文件，可以增量地接受master的数据。</p>
+<p>slave处于REDIS<u>REPL</u>ONLINE状态，说明slave已经收到了rdb文件，可以增量地接受master的数据。</p>
 
 <p></font></p>
 
@@ -3308,7 +3667,7 @@ void replicationSendAck(void) {
 
 <p><font color=purple></p>
 
-<p>注意replicationRequestAckFromSlaves()函数前面有一段注释，说明了wait的原理,道出了同步数据复制的精髓：
+<p>注意replicationRequestAckFromSlaves()函数前面有一段注释，说明了wait的原理,道出了同步数据复制的精髓：<br>
 Redis同步数据复制的流程概括几点就是：</p>
 
 <ul>
@@ -3317,7 +3676,7 @@ Redis同步数据复制的流程概括几点就是：</p>
 <li>slave则会实时的把自己处理的数据的offset向master进行汇报。</li>
 </ul>
 
-<p>redis新添加了一个命令wait，其格式为：WAIT <num_replicas> <milliseconds_timeout>。
+<p>redis新添加了一个命令wait，其格式为：WAIT <num_replicas> <milliseconds_timeout>。<br>
 这个命令要么收到至少@num_replicas个slave返回replication offset后回复实际实际回复的slave的数目，要么在超时后会返回。</p>
 
 <p>Wait命令的原理就是：</p>
@@ -3338,7 +3697,7 @@ Redis同步数据复制的流程概括几点就是：</p>
 
 <ul>
 <li>1 收到命令时，直接计算合乎c-&gt;woff要求的slave数目，如果合乎要求就返回</li>
-<li>2 把{timeout, offset, numreplicas}三个参数放入c的bpop中，并把c放入server.clients<em>waiting</em>acks等待集合中，并置状态为REDIS<em>BLOCKED</em>WAIT；</li>
+<li>2 把{timeout, offset, numreplicas}三个参数放入c的bpop中，并把c放入server.clients<u>waiting</u>acks等待集合中，并置状态为REDIS<u>BLOCKED</u>WAIT；</li>
 <li>3 向master的所有slave发出REPCONF GETACK命令，以获取slave的offset。</li>
 </ul>
 
@@ -3454,14 +3813,14 @@ void replicationRequestAckFromSlaves(void) {
 
 <p><font color=purple></p>
 
-<p>master向slave发出REPLCONF GETACK命令后，slave会向master回复结果，详细结果请参加/** 3.4.2 master的GETACK与slave的SEND ACK **/一节。
+<p>master向slave发出REPLCONF GETACK命令后，slave会向master回复结果，详细结果请参加/** 3.4.2 master的GETACK与slave的SEND ACK **/一节。<br>
 master发出命令后的流程是：</p>
 
 <ul>
-<li>1 在beforeSleep()中循环地调用processClientsWaitingReplicas()检查处于REDIS<em>BLOCKED</em>WAIT状态的client；</li>
-<li>2 如果已经有足够数目的满足条件的slaves，processClientsWaitingReplicas()-&gt;unblockClient()-&gt;unblockClient()把client从等待队列server.clients<em>waiting</em>acks中删除掉放于处于非阻塞状态的client集合server.unblocked<em>clients，并且把client置于REDIS</em>UNBLOCKED状态，processClientsWaitingReplicas()把numreplicas放入client的reply buffer中;</li>
+<li>1 在beforeSleep()中循环地调用processClientsWaitingReplicas()检查处于REDIS<u>BLOCKED</u>WAIT状态的client；</li>
+<li>2 如果已经有足够数目的满足条件的slaves，processClientsWaitingReplicas()-&gt;unblockClient()-&gt;unblockClient()把client从等待队列server.clients<u>waiting</u>acks中删除掉放于处于非阻塞状态的client集合server.unblocked<u>clients，并且把client置于REDIS</u>UNBLOCKED状态，processClientsWaitingReplicas()把numreplicas放入client的reply buffer中;</li>
 <li>3 在beforeSleep()中循环地调用processUnblockedClients()检查server.unblocked_clients集合中的client，当client中有待发送出去的数据时候，就调用processInputBuffer()函数把数据发送出去；</li>
-<li>4 serverCron()-&gt;clientsCron()-&gt;clientsCronHandleTimeout()-&gt;replyToBlockedClientTimedOut()循环检查server.clients中处于REDIS<em>BLOCKED</em>WAIT状态的client，给client回复当前的返回ack的client的数目，最后调用serverCron()-&gt;clientsCron()-&gt;clientsCronHandleTimeout()-&gt;unblockClient()删除掉放于处于非阻塞状态的client集合server.unblocked<em>clients，并且把client置于REDIS</em>UNBLOCKED状态。</li>
+<li>4 serverCron()-&gt;clientsCron()-&gt;clientsCronHandleTimeout()-&gt;replyToBlockedClientTimedOut()循环检查server.clients中处于REDIS<u>BLOCKED</u>WAIT状态的client，给client回复当前的返回ack的client的数目，最后调用serverCron()-&gt;clientsCron()-&gt;clientsCronHandleTimeout()-&gt;unblockClient()删除掉放于处于非阻塞状态的client集合server.unblocked<u>clients，并且把client置于REDIS</u>UNBLOCKED状态。</li>
 </ul>
 
 <p></font></p>
@@ -3851,20 +4210,20 @@ void copyClientOutputBuffer(redisClient *dst, redisClient *src) {
 
 <p><font color=purple></p>
 
-<p>处理客户端的PSYNC命令，如果能够进行增量同步则调用函数addReplyReplicationBacklog进行数据增量同步，否则若请求参数处于下列情形之一：
-1) 请求的runid与master的runid不符合；
-2) backlog还没有被创建出来；
-3) 增量请求的offset不合法，即offset不在(server.repl<em>backlog</em>off，server.repl<em>backlog</em>histlen)内；
+<p>处理客户端的PSYNC命令，如果能够进行增量同步则调用函数addReplyReplicationBacklog进行数据增量同步，否则若请求参数处于下列情形之一：<br>
+1) 请求的runid与master的runid不符合；<br>
+2) backlog还没有被创建出来；<br>
+3) 增量请求的offset不合法，即offset不在(server.repl<u>backlog</u>off，server.repl<u>backlog</u>histlen)内；<br>
 则不处理客户端的请求。</p>
 
-<p>增量同步的详细流程：
-1) 设置client的flag为slave，设置state为REDIS<em>REPL</em>ONLINE，放在server.slaves集合中；
-2) 给slave发送通知“+CONTINUE\r\n&quot;，以告知其master答应增量同步，slave对回复的解析参见/** 2.4.2 增量同步尝试 **/函数slaveTryPartialResynchronization；
+<p>增量同步的详细流程：<br>
+1) 设置client的flag为slave，设置state为REDIS<u>REPL</u>ONLINE，放在server.slaves集合中；<br>
+2) 给slave发送通知“+CONTINUE\r\n&quot;，以告知其master答应增量同步，slave对回复的解析参见/** 2.4.2 增量同步尝试 **/函数slaveTryPartialResynchronization；<br>
 3) 从backlog中读取数据，发送给slave；</p>
 
-<p>全量同步准备流程:
-1) 发送&quot;+FULLRESYNC master<em>run</em>id offset\r\n&quot;给slave;
-2) 如果backlog为空，则offset赋值为1，在syncCommand末尾处会进行创建backlog的工作；
+<p>全量同步准备流程:<br>
+1) 发送<q>+FULLRESYNC master<u>run</u>id offset\r\n</q>给slave;<br>
+2) 如果backlog为空，则offset赋值为1，在syncCommand末尾处会进行创建backlog的工作；<br>
 3) syncCommand会在函数末尾把@c添加到server.slaves集合中。</p>
 
 <p></font></p>
@@ -4047,7 +4406,7 @@ long long addReplyReplicationBacklog(redisClient *c, long long offset) {
 <li>2 关闭与slave之间的超时的连接；</li>
 <li>3 没有slave，则释放backlog；</li>
 <li>4 如果没有slave且AOF被禁止，则释放Replication Script Cache；</li>
-<li>5 如果master没有起用磁盘存储，有客户端处于WAIT<em>BGSAVE</em>START，并且等待时间超过了repl-diskless-sync-delay，则把内存数据发送给slave；</li>
+<li>5 如果master没有起用磁盘存储，有客户端处于WAIT<u>BGSAVE</u>START，并且等待时间超过了repl-diskless-sync-delay，则把内存数据发送给slave；</li>
 <li>6 更新有效的slave数目。</li>
 </ul>
 
@@ -4402,7 +4761,7 @@ int rdbSaveToSlavesSockets(void) {
 
 <p><font color=purple></p>
 
-<p>根据master与处于REDIS<em>REPL</em>WAIT<em>BGSAVE</em>START状态的slave之间的连接的集合，创建rio的I/O channel。注意下面的写数据的函数rioFdsetWrite，它每次写数据都是向所有的slave发送数据。</p>
+<p>根据master与处于REDIS<u>REPL</u>WAIT<u>BGSAVE</u>START状态的slave之间的连接的集合，创建rio的I/O channel。注意下面的写数据的函数rioFdsetWrite，它每次写数据都是向所有的slave发送数据。</p>
 
 <p></font></p>
 
@@ -4827,7 +5186,7 @@ void rioInitWithFile(rio *r, FILE *fp) {
 
 <p><font color=purple></p>
 
-<p>一下文字摘抄自：http://redisdoc.com/topic/replication.html#n</p>
+<p>一下文字摘抄自：<a href="http://redisdoc.com/topic/replication.html#n">http://redisdoc.com/topic/replication.html#n</a></p>
 
 <p>从Redis 2.8开始，为了保证数据的安全性，可以通过配置，让主服务器只在有至少N个当前已连接从服务器的情况下，才执行写命令。</p>
 
@@ -5311,12 +5670,12 @@ void sendBulkToSlave(aeEventLoop *el, int fd, void *privdata, int mask) {
 
 <h3 id="toc_71">4.2 replication过程中slave与master的函数流程图</h3>
 
-<p><img src="../pic/redis_replication.png" alt="">
+<p><img src="../pic/redis_replication.png" alt=""><br>
 <em>图片源自参考文档3</em></p>
 
 <h3 id="toc_72">4.3 replication过程中slave与master的状态变化图</h3>
 
-<p><img src="../pic/redis_replication_interactive.png" alt="">
+<p><img src="../pic/redis_replication_interactive.png" alt=""><br>
 <em>图片源自参考文档3</em></p>
 
 <h2 id="toc_73">参考文档：</h2>
@@ -5328,37 +5687,41 @@ void sendBulkToSlave(aeEventLoop *el, int fd, void *privdata, int mask) {
 <li>4 <a href="https://mp.weixin.qq.com/s?__biz=MzIzNjUxMzk2NQ==&amp;mid=2247483989&amp;idx=1&amp;sn=c1aac5b3eca9cb3f9e177d88ba189719&amp;chksm=e8d7fd97dfa074815a7e6e1ce873d798bd4180820ee11f81b6dc332df6bda1810e6e6327179c&amp;scene=0&amp;pass_ticket=wSunpEuiPF7%2FQbYg%2B2nrTevzjVtfHc4OYisRYX7QMLfz9p09DAO1Z3mRej1zI5W8#rd">深入浅出 Redis client/server交互流程</a></li>
 </ul>
 
-<h2 id="toc_74">于雨氏</h2>
+<h2 id="toc_74">Payment</h2>
+
+<p><center> <img src="../pic/pay/wepay.jpg" alt="阿弥托福，于雨谢过" title="阿弥托福，于雨谢过"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img src="../pic/pay/alipay.jpg" alt="无量天尊，于雨奉献" title="无量天尊，于雨奉献"> </center></p>
+
+<h2 id="toc_75">于雨氏</h2>
 
 <ul>
 <li>2015/07/19，于金箱堂，于雨氏在redis code基础上扒粪后有此新作。</li>
-<li>2017/08/21，于得实堂，添加repl<em>id &amp; repl</em>offset相关分析文字。</li>
+<li>2017/08/21，于得实堂，添加repl<u>id &amp; repl</u>offset相关分析文字。</li>
 </ul>
 
-<!--
-<div id="disqus_thread"></div>
-<script type="text/javascript">
-// disqus comment js block, added on 2016/02/10
-// https://segmentfault.com/a/1190000002807674
-var disqus_shortname = 'alexstocks'; // Required - Replace example with your forum shortname
-var disqus_identifier = window.location.pathname; //'a unique identifier for each page where Disqus is present';
-var disqus_title = document.title; // 'a unique title for each page where Disqus is present';
-var disqus_url = document.URL; // window.location.origin + window.location.pathname; // 'a unique URL for each page where Disqus is present';
-var disqus_config = function () {
-this.page.url = window.location.href; // Replace PAGE_URL with your page's canonical URL variable
-this.page.identifier = window.location.pathname; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
-};
 
-(function() {
-var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js'; dsq.setAttribute('data-timestamp', +new Date());
-(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+
+<script type="text/javascript">
+var _self="undefined"!=typeof window?window:"undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?self:{},Prism=function(){var e=/\blang(?:uage)?-(\w+)\b/i,t=0,n=_self.Prism={util:{encode:function(e){return e instanceof a?new a(e.type,n.util.encode(e.content),e.alias):"Array"===n.util.type(e)?e.map(n.util.encode):e.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\u00a0/g," ")},type:function(e){return Object.prototype.toString.call(e).match(/\[object (\w+)\]/)[1]},objId:function(e){return e.__id||Object.defineProperty(e,"__id",{value:++t}),e.__id},clone:function(e){var t=n.util.type(e);switch(t){case"Object":var a={};for(var r in e)e.hasOwnProperty(r)&&(a[r]=n.util.clone(e[r]));return a;case"Array":return e.map&&e.map(function(e){return n.util.clone(e)})}return e}},languages:{extend:function(e,t){var a=n.util.clone(n.languages[e]);for(var r in t)a[r]=t[r];return a},insertBefore:function(e,t,a,r){r=r||n.languages;var l=r[e];if(2==arguments.length){a=arguments[1];for(var i in a)a.hasOwnProperty(i)&&(l[i]=a[i]);return l}var o={};for(var s in l)if(l.hasOwnProperty(s)){if(s==t)for(var i in a)a.hasOwnProperty(i)&&(o[i]=a[i]);o[s]=l[s]}return n.languages.DFS(n.languages,function(t,n){n===r[e]&&t!=e&&(this[t]=o)}),r[e]=o},DFS:function(e,t,a,r){r=r||{};for(var l in e)e.hasOwnProperty(l)&&(t.call(e,l,e[l],a||l),"Object"!==n.util.type(e[l])||r[n.util.objId(e[l])]?"Array"!==n.util.type(e[l])||r[n.util.objId(e[l])]||(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,l,r)):(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,null,r)))}},plugins:{},highlightAll:function(e,t){var a={callback:t,selector:'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'};n.hooks.run("before-highlightall",a);for(var r,l=a.elements||document.querySelectorAll(a.selector),i=0;r=l[i++];)n.highlightElement(r,e===!0,a.callback)},highlightElement:function(t,a,r){for(var l,i,o=t;o&&!e.test(o.className);)o=o.parentNode;o&&(l=(o.className.match(e)||[,""])[1],i=n.languages[l]),t.className=t.className.replace(e,"").replace(/\s+/g," ")+" language-"+l,o=t.parentNode,/pre/i.test(o.nodeName)&&(o.className=o.className.replace(e,"").replace(/\s+/g," ")+" language-"+l);var s=t.textContent,u={element:t,language:l,grammar:i,code:s};if(!s||!i)return n.hooks.run("complete",u),void 0;if(n.hooks.run("before-highlight",u),a&&_self.Worker){var c=new Worker(n.filename);c.onmessage=function(e){u.highlightedCode=e.data,n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(u.element),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},c.postMessage(JSON.stringify({language:u.language,code:u.code,immediateClose:!0}))}else u.highlightedCode=n.highlight(u.code,u.grammar,u.language),n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(t),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},highlight:function(e,t,r){var l=n.tokenize(e,t);return a.stringify(n.util.encode(l),r)},tokenize:function(e,t){var a=n.Token,r=[e],l=t.rest;if(l){for(var i in l)t[i]=l[i];delete t.rest}e:for(var i in t)if(t.hasOwnProperty(i)&&t[i]){var o=t[i];o="Array"===n.util.type(o)?o:[o];for(var s=0;s<o.length;++s){var u=o[s],c=u.inside,g=!!u.lookbehind,h=!!u.greedy,f=0,d=u.alias;u=u.pattern||u;for(var p=0;p<r.length;p++){var m=r[p];if(r.length>e.length)break e;if(!(m instanceof a)){u.lastIndex=0;var y=u.exec(m),v=1;if(!y&&h&&p!=r.length-1){var b=r[p+1].matchedStr||r[p+1],k=m+b;if(p<r.length-2&&(k+=r[p+2].matchedStr||r[p+2]),u.lastIndex=0,y=u.exec(k),!y)continue;var w=y.index+(g?y[1].length:0);if(w>=m.length)continue;var _=y.index+y[0].length,P=m.length+b.length;if(v=3,P>=_){if(r[p+1].greedy)continue;v=2,k=k.slice(0,P)}m=k}if(y){g&&(f=y[1].length);var w=y.index+f,y=y[0].slice(f),_=w+y.length,S=m.slice(0,w),O=m.slice(_),j=[p,v];S&&j.push(S);var A=new a(i,c?n.tokenize(y,c):y,d,y,h);j.push(A),O&&j.push(O),Array.prototype.splice.apply(r,j)}}}}}return r},hooks:{all:{},add:function(e,t){var a=n.hooks.all;a[e]=a[e]||[],a[e].push(t)},run:function(e,t){var a=n.hooks.all[e];if(a&&a.length)for(var r,l=0;r=a[l++];)r(t)}}},a=n.Token=function(e,t,n,a,r){this.type=e,this.content=t,this.alias=n,this.matchedStr=a||null,this.greedy=!!r};if(a.stringify=function(e,t,r){if("string"==typeof e)return e;if("Array"===n.util.type(e))return e.map(function(n){return a.stringify(n,t,e)}).join("");var l={type:e.type,content:a.stringify(e.content,t,r),tag:"span",classes:["token",e.type],attributes:{},language:t,parent:r};if("comment"==l.type&&(l.attributes.spellcheck="true"),e.alias){var i="Array"===n.util.type(e.alias)?e.alias:[e.alias];Array.prototype.push.apply(l.classes,i)}n.hooks.run("wrap",l);var o="";for(var s in l.attributes)o+=(o?" ":"")+s+'="'+(l.attributes[s]||"")+'"';return"<"+l.tag+' class="'+l.classes.join(" ")+'" '+o+">"+l.content+"</"+l.tag+">"},!_self.document)return _self.addEventListener?(_self.addEventListener("message",function(e){var t=JSON.parse(e.data),a=t.language,r=t.code,l=t.immediateClose;_self.postMessage(n.highlight(r,n.languages[a],a)),l&&_self.close()},!1),_self.Prism):_self.Prism;var r=document.currentScript||[].slice.call(document.getElementsByTagName("script")).pop();return r&&(n.filename=r.src,document.addEventListener&&!r.hasAttribute("data-manual")&&document.addEventListener("DOMContentLoaded",n.highlightAll)),_self.Prism}();"undefined"!=typeof module&&module.exports&&(module.exports=Prism),"undefined"!=typeof global&&(global.Prism=Prism);
+</script>
+
+<script type="text/x-mathjax-config">
+(function () {
+
+MathJax.Hub.Config({
+	'showProcessingMessages': false,
+	'messageStyle': 'none'
+});
+
+if (typeof MathJaxListener !== 'undefined') {
+	MathJax.Hub.Register.StartupHook('End', function () {
+		MathJaxListener.invokeCallbackForKey_('End');
+	});
+}
+
 })();
 </script>
-<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
-<script id="dsq-count-scr" src='//' + disqus_shortname + '.disqus.com/count.js' async></script>
--->
 
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 <!-- baidu statistic start -->
 <script>
 var _hmt = _hmt || [];
@@ -5388,6 +5751,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 </body>
 

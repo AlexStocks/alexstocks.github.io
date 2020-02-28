@@ -5,7 +5,7 @@
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>k8s</title>
+<title>distributed_system</title>
 
 
 <style type="text/css">
@@ -468,291 +468,52 @@ pre[class*="language-"] {
 
 <body>
 
-<h1 id="toc_0">kubernetes 实操</h1>
+<h2 id="toc_0">分布式系统中三个小技巧</h2>
 
 <hr>
 
-<p><em>written by Alex Stocks on 2019/12/08，版权所有，无授权不得转载</em></p>
+<p><em>written by Alex Stocks on 2016/03/07，版权所有，无授权不得转载</em></p>
 
-<h2 id="toc_1">1 安装</h2>
+<h3 id="toc_1">1 综述</h3>
 
 <hr>
 
-<p>kubernetes【下面简称 k8s】进化到如今已有近五年时间，足够成熟。今年一直逼着自己抽出旅途时间学习了一些 k8s 的概念，在认知上已经接受声明式编程，然书上得来终觉浅，还是得操练一番才算入门，因此决定在本人的 15吋 MabBook Pro 机器上先把 k8s 系统搭建起来。</p>
+<p>开发一个系统，大处着眼，小处入手，做分布式开发必须受限于目前硬件的资源的能力的限制。</p>
 
-<p>源于本人信奉的 “慢就是快” 的尿性，不打算采用 kubeadmin 以及 minikube 等一众一键安装工具，自己采用其各个零件组装一番的形式安装以加深对系统的理解。</p>
+<p>一些常见的系统参数如下表：</p>
 
-<h2 id="toc_2">1.1 系统</h2>
+<div><pre><code class="language-none">        L1-数据缓存     L2-缓存       L3-缓存       内存      磁盘          SSD
+缓存大小    32KB            256KB       8MB         十几GB    几TB     几百GB
+访问时间    2ns             5ns         14-18ns     24-93ns 13.0ms  30-300us
+吞吐量 6500MB/s        3300MB/s    2200MB/s    800MB/s     60MB/s  250MB/s</code></pre></div>
 
-<p>本地15吋 MabBook Pro 机器主要配置如下：</p>
+<h2 id="toc_2">参考文档</h2>
 
 <ul>
-<li>CPU: Core i7</li>
-<li>Mem: 16 GB DDR4</li>
-<li>SSD: 256GB</li>
+<li>1 <a href="http://blog.qiniu.com/archives/4791">携程异步消息系统实践</a></li>
+<li>2 <a href="http://blog.csdn.net/mindfloating/article/details/50166169">京东咚咚架构演进</a></li>
+<li>3 <a href="http://tech.it168.com/a2012/0810/1383/000001383838.shtml">从腾讯微博的成长分析架构的三个阶段</a></li>
+<li>4 <a href="http://datafans.net/?p=1163">几个大型网站的Feeds(Timeline)设计简单对比</a></li>
+<li>5 <a href="http://wenku.baidu.com/link?url=YU5duz8qnl-qavXoPY1MfRI-9MIYJNqI0ZRfZqvR08DpBGIZBNnlG2W-DUyIJZVU2YaRw9m-YxRMgaXntbqdiLhMXLCppU7ZmBM_quP8S9u">腾讯微博架构设计</a></li>
+<li>6 <a href="http://wenku.baidu.com/view/caa2161859eef8c75fbfb3c0.html">腾讯IM架构 1亿在线背后的技术挑战</a></li>
+<li>7 <a href="http://news.pedaily.cn/201503/20150301379053.shtml">微信技术总监周颢：一亿用户背后架构秘密</a></li>
+<li>8 <a href="http://www.uml.net.cn/video/lecture/2-20120427-101.asp">视频：微信技术总监周颢：一亿用户背后架构秘密</a></li>
 </ul>
 
-<p>在此系统之上，基于 vagrant + VirtualBox 安装了 3 台 Centos7 机器，统一规格如下：</p>
+<h2 id="toc_3">扒粪者-于雨氏</h2>
 
-<ul>
-<li>cpus: 2</li>
-<li>memory: 1280 MiB</li>
-<li>disksize: 8GB</li>
-<li>os: Linux 3.10.0</li>
-</ul>
+<blockquote>
+<p>于雨氏，2016/03/07，初作此文于金箱堂。</p>
 
-<p>现在的 Docker 都要求 CentOS 系统的内核版本不能低于 3.10，否则安装过程会遇到很多麻烦问题。</p>
+<p>于雨氏，2016/03/08，于金箱修改msg cache部分相关字句。</p>
 
-<p>三台虚机网络配置如下：</p>
-
-<ul>
-<li>k0: 172.27.137.10</li>
-<li>k1: 172.27.137.11</li>
-<li>k2: 172.27.137.12</li>
-</ul>
-
-<p>计划以 k0 作为 k8s Master，在其上部署单节点 master 相关组件，k1 和 k2 作为 k8s worker。底层 worker 采用 docker，网络层采用 flannel。部署拓扑图如下。</p>
-
-<p><img src="../pic/k8s/k8s_topo.png" alt=""></p>
-
-<p>整体系统参考了智超同学的 <a href="http://blog.sina.com.cn/s/blog_48c95a190102wqpq.html">CentOS 6.5安装部署Kubernetes 1.4过程记录</a> 一文，安装 k8s v1.4 系统。</p>
-
-<h2 id="toc_3">1.2 docker</h2>
-
-<p>在 3 台机器之上通过 yum 方式安装 docker，操作步骤如下：</p>
-
-<ul>
-<li>1 通过命令 <code>sudo yum install -y docker</code> 在三台机器上安装 docker；</li>
-<li>2 通过命令 <code>sudo systemctl  start docker.service</code> 启动 docker daemon 进程；</li>
-<li>3 通过命令 <code>sudo systemctl  enable docker.service</code> 加入开机启动；</li>
-<li>4 通过命令 <code>ps aux | grep docker</code>  检验 docker 进程是否启用；</li>
-<li>5 通过命令 <code>docker ps</code>  检验 docker daemon 是否正常工作。</li>
-</ul>
-
-<h2 id="toc_4">1.3 etcd</h2>
-
-<p>在部署 k8s 之前，需要先准备基础网络环境。本次部署使用 flannel 和 etcd 对整个集群的网络进行配置。k8s 使用了 etcd v2 作为其 kv 数据库，本次部署采用单节点集群方式，只在 k0 上部署 etcd v2。</p>
-
-<p>etcd v2 直接采用 coreos 公司的二进制发行版，通过命令 <code>wget https://github.com/coreos/etcd/releases/download/v2.3.8/etcd-v2.3.8-linux-amd64.tar.gz</code> 下载即可。</p>
-
-<p>部署过程如下：</p>
-
-<ul>
-<li><p>1 以 <code>/home/vagrant/test/k8s/docker</code> 作为 work 目录，创建 bin/sbin/data/wal/logs 等子目录；</p>
-
-<ul>
-<li>bin 存放脚本；</li>
-<li>sbin 存放 etcd 二进制文件；</li>
-<li>data 存放 etcd raft 状态机数据；</li>
-<li>wal 存放 etcd raft log；</li>
-<li>logs 存放 etcd 运行日志。</li>
-</ul></li>
-<li><p>2 把 etcd/etcdctl 二进制文件放入 sbin 中；</p></li>
-<li><p>3 准备 etcd 启动脚本 bin/start.sh【内容如下】，并通过命令 <code>sh bin/start.sh</code> 方式启动 etcd；</p>
-
-<div><pre><code class="language-Bash">#!/usr/bin/env bash
-
-ip=172.27.137.10
-nohup ./sbin/etcd --name infra0 --initial-advertise-peer-urls http://${ip}:2380,http://${ip}:7001 --listen-peer-urls http://${ip}:2380,http://${ip}:7001 --listen-client-urls http://${ip}:2379,http://${ip}:4001 --advertise-client-urls http://${ip}:2379,http://${ip}:4001 --initial-cluster-token etcd-cluster --initial-cluster infra0=http://${ip}:2380,infra0=http://${ip}:7001 --data-dir /home/vagrant/test/k8s/etcd/data/ --wal-dir /home/vagrant/test/k8s/etcd/wal/ --initial-cluster-state new  &gt;&gt; ./logs/etcd.log 2&gt;&amp;1 &amp;</code></pre></div></li>
-<li><p>4 启动成功之后，把 flannel 对网络段的划分写入 etcd 之中，脚本命令如下：</p>
-
-<div><pre><code class="language-Bash">#!/usr/bin/env bash
-
-ip=172.27.137.10
-sbin/etcdctl --endpoints=http://${ip}:2379,http://${ip}:4001 mk /coreos.com/network/config &#39;{&quot;Network&quot;:&quot;172.17.0.0/16&quot;, &quot;SubnetMin&quot;: &quot;172.17.1.0&quot;, &quot;SubnetMax&quot;: &quot;172.17.254.0&quot;, &quot;Backend&quot;: {&quot;Type&quot;: &quot;vxlan&quot;}}&#39;</code></pre></div>
-
-<p>这里的 backend 选用 vxlan，没有使用默认的 UDP，效率最高的是 host-gw。</p></li>
-</ul>
-
-<h2 id="toc_5">1.4 flannel</h2>
-
-<p>flannel 系 CoreOS 公司出品的一个 k8s 网络管理工具，整体通信机制建立在 UDP 之上，在测试环境可以很轻松地部署起来。本次部署也直接采用 coreos 公司的二进制发行版，通过命令 <code>wget https://github.com/coreos/flannel/releases/download/v0.6.2/flannel-v0.6.2-linux-amd64.tar.gz</code> 下载即可。</p>
-
-<p>部署过程如下：<br>
-/home/vagrant/test/k8s/flannel</p>
-
-<ul>
-<li><p>1 以 <code>/home/vagrant/test/k8s/flannel</code> 作为 work 目录，创建 bin/sbin/logs 等子目录；</p>
-
-<ul>
-<li>bin 存放脚本；</li>
-<li>sbin 存放 etcd 二进制文件；</li>
-<li>logs 存放 flannel 运行日志。</li>
-</ul></li>
-<li><p>2 把 flanneld 二进制文件放入 sbin 中；</p></li>
-<li><p>3 修改 Linux 内核参数，在文件 /etc/sysctl.conf 中添加如下内容，开启网卡的 iptables 功能；</p>
-
-<div><pre><code class="language-text"> net.bridge.bridge-nf-call-ip6tables = 1
- net.bridge.bridge-nf-call-iptables = 1
- net.bridge.bridge-nf-call-arptables = 1</code></pre></div></li>
-</ul>
-
-<ul>
-<li><p>4 通过命令 <code>sysctl -p</code> 使得上面配置生效；</p></li>
-<li><p>5 准备 flannel 虚拟网络启动脚本 bin/start.sh【内容如下】，并通过命令 <code>sh bin/start.sh</code> 方式启动 flannel0 虚拟网络；</p>
-
-<div><pre><code class="language-Bash">ip=172.27.137.10
-nohup sudo sbin/flanneld -etcd-endpoints=http://${ip}:2379,http://${ip}:4001 &gt;&gt; logs/flanneld.log 2&gt;&amp;1 &amp;</code></pre></div></li>
-</ul>
-
-<p>flannel 部署完毕之后，可通过 <code>ifconfig</code> 命令启动一个 flannel0 网卡，但可以观察到 docker0 虚机网卡的 ip 和 flannel0 虚拟网卡的 ip 并不在同一个网络段。docker 容器需要借助 docker0 --&gt; flannel0 通道与其他 node 上的 容器进行通信，所以两个网卡必须处于同一个网络子网段。</p>
-
-<p>重新配置 k0 的 docker0 的 ip 过程如下：</p>
-
-<ul>
-<li>1 获取 flannel 的二进制文件包中的一个脚本 mk-docker-opts.sh；</li>
-<li>2 执行命令 <code>mk-docker-opts.sh -c</code> 生成文件  <code>/run/docker_opts.env</code>；</li>
-<li><p>3 把配置参数文件 <code>/run/docker_opts.env</code> 的内容放入 docekr0 网卡的配置参数文件 <code>/etc/sysconfig/docker</code> 中的参数 <code>OPTIONS</code> 中，内容如下：</p>
-
-<div><pre><code class="language-Bash">OPTIONS=&#39;--selinux-enabled --log-driver=journald --signature-verification=false --bip=172.17.79.1/24 --ip-masq=true --mtu=1472&#39;
-if [ -z &quot;${DOCKER_CERT_PATH}&quot; ]; then
-    DOCKER_CERT_PATH=/etc/docker
-fi</code></pre></div></li>
-</ul>
-
-<ul>
-<li>4 通过命令 <code>systemctl  restart docker.service</code> 重启 docker，即可看到两个网卡已经处于同一子网段；</li>
-<li><p>5 在 k1 和 k2 执行同样的配置过程。</p>
-
-<p>配置成功后，在各个容器内互相发送 ping 指令验证网络是否互通，如果没有 ping 成功，则表明主机防火墙开了，手工关闭一下即可。</p></li>
-</ul>
-
-<h2 id="toc_6">1.5 k8s master</h2>
-
-<p>底层网络环境准备完后，就可以在 k0 上部署 k8s master 相关组件 apiserver/scheduler/controller-manager 了。</p>
-
-<p>k8s 相关组件采用基于源码编译方式获取，编译过程如下；</p>
-
-<ul>
-<li><p>1 在 CentOS 上安装 go 1.7.6；</p>
-
-<ul>
-<li>注1：k8s 1.4 开发时候对应的 go 版本是 v1.7，所以使用这个版本的 go 在 linux 上进行编译。具体相关问题详见 k8s 项目的两个 issue <a href="https://github.com/kubernetes/kubernetes/issues/38380">38380</a> 和 <a href="https://github.com/kubernetes/kubernetes/issues/14549">14549</a>。</li>
-<li>注2：k8s 1.4 的 kubelet 由于使用了 cgo，所以编译系统环境使用 linux。</li>
-</ul></li>
-<li><p>2 从 <code>https://github.com/kubernetes/kubernetes/archive/v1.4.9.tar.gz</code> 下载 go 源码；</p></li>
-<li><p>3 从源码编译出二进制 kube-controller-manager、kube-dns、kube-apiserver、kubectl、kubelet、kube-proxy、kube-scheduler。</p></li>
-</ul>
-
-<h3 id="toc_7">1.5.1 启动 k8s master</h3>
-
-<p>编译出各个组件的二进制文件后，开始在 k0 上部署 k8s master 组件 kube-controller-manager、kube-dns、kube-apiserver、kube-scheduler。</p>
-
-<p>部署过程如下：</p>
-
-<ul>
-<li><p>1 以 <code>/home/vagrant/test/k8s/master</code> 作为 work 目录，创建 bin/sbin/logs 等子目录；</p>
-
-<ul>
-<li>bin 存放脚本；</li>
-<li>sbin 存放 master 各组件二进制文件；</li>
-<li>logs 存放各组件的运行日志。</li>
-</ul></li>
-<li><p>2 把 kube-apiserver/kube-controller-manager/kube-scheduler 二进制文件放入 sbin 中；</p></li>
-<li><p>3 准备 apiserver 启动脚本 bin/apiserver.sh【内容如下】，并通过命令 <code>sh bin/apiserver.sh</code> 方式启动 apiserver；</p>
-
-<div><pre><code class="language-Bash">#!/usr/bin/env bash
-ip=172.27.137.10
-nohup sudo ./sbin/kube-apiserver --admission-control=NamespaceLifecycle,NamespaceAutoProvision,LimitRanger,ResourceQuota --insecure-bind-address=0.0.0.0 --insecure-port=8080 --allow-privileged=true --etcd-servers=http://${ip}:2379,http://${ip}:4001 --service-cluster-ip-range=10.0.0.0/24  &gt;&gt; logs/apiserver.log 2&gt;&amp;1 &amp;</code></pre></div></li>
-</ul>
-
-<ul>
-<li><p>4 准备 dns 启动脚本 bin/dns.sh【内容如下】，并通过命令 <code>sh bin/dns.sh</code> 方式启动 dns；</p>
-
-<div><pre><code class="language-Bash">#!/usr/bin/env bash
-ip=172.27.137.10
-nohup sudo ./sbin/kube-dns --kube-master-url=http://${ip}:8080 &gt;&gt; logs/dns.log 2&gt;&amp;1 &amp;</code></pre></div></li>
-</ul>
-
-<ul>
-<li><p>5 准备 scheduler 启动脚本 bin/scheduler.sh【内容如下】，并通过命令 <code>sh bin/scheduler.sh</code> 方式启动 scheduler；</p>
-
-<div><pre><code class="language-Bash">#!/usr/bin/env bash
-ip=172.27.137.10
-nohup sudo ./sbin/kube-scheduler --master=http://${ip}:8080 &gt;&gt; logs/scheduler.log 2&gt;&amp;1 &amp;</code></pre></div></li>
-</ul>
-
-<ul>
-<li><p>6 准备 kube-controller-manager 启动脚本 bin/ctl.sh【内容如下】，并通过命令 <code>sh bin/ctl.sh</code> 方式启动 kube-controller-manager；</p>
-
-<div><pre><code class="language-Bash">#!/usr/bin/env bash
-ip=172.27.137.10
-nohup sudo ./sbin/kube-controller-manager --master=http://${ip}:8080 &gt;&gt; logs/ctl.log 2&gt;&amp;1 &amp;</code></pre></div></li>
-</ul>
-
-<ul>
-<li><p>7 通过指令 <code>kubectl get componentstatuses</code> 检查 master 工作状态，若其成功启动，则命令提示结果如下：</p>
-
-<div><pre><code class="language-Bash">NAME                 STATUS    MESSAGE              ERROR
-controller-manager   Healthy   ok
-scheduler            Healthy   ok
-etcd-1               Healthy   {&quot;health&quot;: &quot;true&quot;}
-etcd-0               Healthy   {&quot;health&quot;: &quot;true&quot;}</code></pre></div></li>
-</ul>
-
-<h2 id="toc_8">1.6 k8s worker</h2>
-
-<p>在 k1 和 k2 上启动 k8s worker 节点 kubelet 和 kube-proxy。</p>
-
-<p>部署过程如下：</p>
-
-<ul>
-<li><p>1 以 <code>/home/vagrant/test/k8s/worker</code> 作为 work 目录，创建 bin/sbin/logs 等子目录；</p>
-
-<ul>
-<li>bin 存放脚本；</li>
-<li>sbin 存放 worker 组件二进制文件；</li>
-<li>logs 存放各组件的运行日志。</li>
-</ul></li>
-<li><p>2 把 kubelet/kube-proxy 二进制文件放入 sbin 中；</p></li>
-<li><p>3 准备 kubelet 启动脚本 bin/kubelet.sh【内容如下】，并通过命令 <code>sh bin/kubelet.sh</code> 方式启动 kubelet；</p>
-
-<div><pre><code class="language-Bash">#!/usr/bin/env bash
-ip=172.27.137.10
-local=172.27.137.11
-nohup sudo ./sbin/kubelet --address=0.0.0.0 --port=10250 --hostname-override=${local} --api-servers=${ip}:8080 --allow-privileged=true --cadvisor-port=4194 --cluster_dns=${ip} --cluster_domain=cluster.local --healthz-bind-address=0.0.0.0 --healthz-port=10248 &gt;&gt; logs/kubelet.log 2&gt;&amp;1 &amp;</code></pre></div></li>
-</ul>
-
-<ul>
-<li><p>4 准备 kube-proxy 启动脚本 bin/proxy.sh【内容如下】，并通过命令 <code>sh bin/proxy.sh</code> 方式启动 kube-proxy；</p>
-
-<div><pre><code class="language-Bash">#!/usr/bin/env bash
-ip=172.27.137.10
-nohup sudo ./sbin/kube-proxy --master=${ip}:8080 --proxy-mode=iptables &gt;&gt; logs/proxy.log 2&gt;&amp;1 &amp;</code></pre></div></li>
-</ul>
-
-<ul>
-<li><p>5 在 master 上通过指令 <code>kubectl get nodes</code> 检查两个 worker 工作状态，若其成功启动，则命令提示结果如下：</p>
-
-<div><pre><code class="language-Bash">NAME            STATUS     AGE
-172.27.137.11   Ready      13h
-172.27.137.12   Ready      12h</code></pre></div></li>
-</ul>
-
-<h2 id="toc_9">参考文档</h2>
-
-<ul>
-<li>1 <a href="http://blog.sina.com.cn/s/blog_48c95a190102wqpq.html">CentOS 6.5安装部署Kubernetes 1.4过程记录</a></li>
-</ul>
-
-<h2 id="toc_10">Payment</h2>
-
-<p><center> <img src="../pic/pay/wepay.jpg" alt="阿弥托福，于雨谢过" title="阿弥托福，于雨谢过"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img src="../pic/pay/alipay.jpg" alt="无量天尊，于雨奉献" title="无量天尊，于雨奉献"> </center></p>
-
-<h2 id="toc_11">扒粪者-于雨氏</h2>
-
-<ul>
-<li>2019/12/08，于雨氏，于帝都丰台。</li>
-</ul>
+<p>于雨氏，2016/03/09，于金箱堂修改全文，并着重第五章心跳逻辑的部分流程。</p>
+</blockquote>
 
 
 
 <script type="text/javascript">
 var _self="undefined"!=typeof window?window:"undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?self:{},Prism=function(){var e=/\blang(?:uage)?-(\w+)\b/i,t=0,n=_self.Prism={util:{encode:function(e){return e instanceof a?new a(e.type,n.util.encode(e.content),e.alias):"Array"===n.util.type(e)?e.map(n.util.encode):e.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\u00a0/g," ")},type:function(e){return Object.prototype.toString.call(e).match(/\[object (\w+)\]/)[1]},objId:function(e){return e.__id||Object.defineProperty(e,"__id",{value:++t}),e.__id},clone:function(e){var t=n.util.type(e);switch(t){case"Object":var a={};for(var r in e)e.hasOwnProperty(r)&&(a[r]=n.util.clone(e[r]));return a;case"Array":return e.map&&e.map(function(e){return n.util.clone(e)})}return e}},languages:{extend:function(e,t){var a=n.util.clone(n.languages[e]);for(var r in t)a[r]=t[r];return a},insertBefore:function(e,t,a,r){r=r||n.languages;var l=r[e];if(2==arguments.length){a=arguments[1];for(var i in a)a.hasOwnProperty(i)&&(l[i]=a[i]);return l}var o={};for(var s in l)if(l.hasOwnProperty(s)){if(s==t)for(var i in a)a.hasOwnProperty(i)&&(o[i]=a[i]);o[s]=l[s]}return n.languages.DFS(n.languages,function(t,n){n===r[e]&&t!=e&&(this[t]=o)}),r[e]=o},DFS:function(e,t,a,r){r=r||{};for(var l in e)e.hasOwnProperty(l)&&(t.call(e,l,e[l],a||l),"Object"!==n.util.type(e[l])||r[n.util.objId(e[l])]?"Array"!==n.util.type(e[l])||r[n.util.objId(e[l])]||(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,l,r)):(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,null,r)))}},plugins:{},highlightAll:function(e,t){var a={callback:t,selector:'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'};n.hooks.run("before-highlightall",a);for(var r,l=a.elements||document.querySelectorAll(a.selector),i=0;r=l[i++];)n.highlightElement(r,e===!0,a.callback)},highlightElement:function(t,a,r){for(var l,i,o=t;o&&!e.test(o.className);)o=o.parentNode;o&&(l=(o.className.match(e)||[,""])[1],i=n.languages[l]),t.className=t.className.replace(e,"").replace(/\s+/g," ")+" language-"+l,o=t.parentNode,/pre/i.test(o.nodeName)&&(o.className=o.className.replace(e,"").replace(/\s+/g," ")+" language-"+l);var s=t.textContent,u={element:t,language:l,grammar:i,code:s};if(!s||!i)return n.hooks.run("complete",u),void 0;if(n.hooks.run("before-highlight",u),a&&_self.Worker){var c=new Worker(n.filename);c.onmessage=function(e){u.highlightedCode=e.data,n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(u.element),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},c.postMessage(JSON.stringify({language:u.language,code:u.code,immediateClose:!0}))}else u.highlightedCode=n.highlight(u.code,u.grammar,u.language),n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(t),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},highlight:function(e,t,r){var l=n.tokenize(e,t);return a.stringify(n.util.encode(l),r)},tokenize:function(e,t){var a=n.Token,r=[e],l=t.rest;if(l){for(var i in l)t[i]=l[i];delete t.rest}e:for(var i in t)if(t.hasOwnProperty(i)&&t[i]){var o=t[i];o="Array"===n.util.type(o)?o:[o];for(var s=0;s<o.length;++s){var u=o[s],c=u.inside,g=!!u.lookbehind,h=!!u.greedy,f=0,d=u.alias;u=u.pattern||u;for(var p=0;p<r.length;p++){var m=r[p];if(r.length>e.length)break e;if(!(m instanceof a)){u.lastIndex=0;var y=u.exec(m),v=1;if(!y&&h&&p!=r.length-1){var b=r[p+1].matchedStr||r[p+1],k=m+b;if(p<r.length-2&&(k+=r[p+2].matchedStr||r[p+2]),u.lastIndex=0,y=u.exec(k),!y)continue;var w=y.index+(g?y[1].length:0);if(w>=m.length)continue;var _=y.index+y[0].length,P=m.length+b.length;if(v=3,P>=_){if(r[p+1].greedy)continue;v=2,k=k.slice(0,P)}m=k}if(y){g&&(f=y[1].length);var w=y.index+f,y=y[0].slice(f),_=w+y.length,S=m.slice(0,w),O=m.slice(_),j=[p,v];S&&j.push(S);var A=new a(i,c?n.tokenize(y,c):y,d,y,h);j.push(A),O&&j.push(O),Array.prototype.splice.apply(r,j)}}}}}return r},hooks:{all:{},add:function(e,t){var a=n.hooks.all;a[e]=a[e]||[],a[e].push(t)},run:function(e,t){var a=n.hooks.all[e];if(a&&a.length)for(var r,l=0;r=a[l++];)r(t)}}},a=n.Token=function(e,t,n,a,r){this.type=e,this.content=t,this.alias=n,this.matchedStr=a||null,this.greedy=!!r};if(a.stringify=function(e,t,r){if("string"==typeof e)return e;if("Array"===n.util.type(e))return e.map(function(n){return a.stringify(n,t,e)}).join("");var l={type:e.type,content:a.stringify(e.content,t,r),tag:"span",classes:["token",e.type],attributes:{},language:t,parent:r};if("comment"==l.type&&(l.attributes.spellcheck="true"),e.alias){var i="Array"===n.util.type(e.alias)?e.alias:[e.alias];Array.prototype.push.apply(l.classes,i)}n.hooks.run("wrap",l);var o="";for(var s in l.attributes)o+=(o?" ":"")+s+'="'+(l.attributes[s]||"")+'"';return"<"+l.tag+' class="'+l.classes.join(" ")+'" '+o+">"+l.content+"</"+l.tag+">"},!_self.document)return _self.addEventListener?(_self.addEventListener("message",function(e){var t=JSON.parse(e.data),a=t.language,r=t.code,l=t.immediateClose;_self.postMessage(n.highlight(r,n.languages[a],a)),l&&_self.close()},!1),_self.Prism):_self.Prism;var r=document.currentScript||[].slice.call(document.getElementsByTagName("script")).pop();return r&&(n.filename=r.src,document.addEventListener&&!r.hasAttribute("data-manual")&&document.addEventListener("DOMContentLoaded",n.highlightAll)),_self.Prism}();"undefined"!=typeof module&&module.exports&&(module.exports=Prism),"undefined"!=typeof global&&(global.Prism=Prism);
-</script>
-
-<script type="text/javascript">
-!function(e){var t={variable:[{pattern:/\$?\(\([\w\W]+?\)\)/,inside:{variable:[{pattern:/(^\$\(\([\w\W]+)\)\)/,lookbehind:!0},/^\$\(\(/],number:/\b-?(?:0x[\dA-Fa-f]+|\d*\.?\d+(?:[Ee]-?\d+)?)\b/,operator:/--?|-=|\+\+?|\+=|!=?|~|\*\*?|\*=|\/=?|%=?|<<=?|>>=?|<=?|>=?|==?|&&?|&=|\^=?|\|\|?|\|=|\?|:/,punctuation:/\(\(?|\)\)?|,|;/}},{pattern:/\$\([^)]+\)|`[^`]+`/,inside:{variable:/^\$\(|^`|\)$|`$/}},/\$(?:[a-z0-9_#\?\*!@]+|\{[^}]+\})/i]};e.languages.bash={shebang:{pattern:/^#!\s*\/bin\/bash|^#!\s*\/bin\/sh/,alias:"important"},comment:{pattern:/(^|[^"{\\])#.*/,lookbehind:!0},string:[{pattern:/((?:^|[^<])<<\s*)(?:"|')?(\w+?)(?:"|')?\s*\r?\n(?:[\s\S])*?\r?\n\2/g,lookbehind:!0,inside:t},{pattern:/(["'])(?:\\\\|\\?[^\\])*?\1/g,inside:t}],variable:t.variable,"function":{pattern:/(^|\s|;|\||&)(?:alias|apropos|apt-get|aptitude|aspell|awk|basename|bash|bc|bg|builtin|bzip2|cal|cat|cd|cfdisk|chgrp|chmod|chown|chroot|chkconfig|cksum|clear|cmp|comm|command|cp|cron|crontab|csplit|cut|date|dc|dd|ddrescue|df|diff|diff3|dig|dir|dircolors|dirname|dirs|dmesg|du|egrep|eject|enable|env|ethtool|eval|exec|expand|expect|export|expr|fdformat|fdisk|fg|fgrep|file|find|fmt|fold|format|free|fsck|ftp|fuser|gawk|getopts|git|grep|groupadd|groupdel|groupmod|groups|gzip|hash|head|help|hg|history|hostname|htop|iconv|id|ifconfig|ifdown|ifup|import|install|jobs|join|kill|killall|less|link|ln|locate|logname|logout|look|lpc|lpr|lprint|lprintd|lprintq|lprm|ls|lsof|make|man|mkdir|mkfifo|mkisofs|mknod|more|most|mount|mtools|mtr|mv|mmv|nano|netstat|nice|nl|nohup|notify-send|nslookup|open|op|passwd|paste|pathchk|ping|pkill|popd|pr|printcap|printenv|printf|ps|pushd|pv|pwd|quota|quotacheck|quotactl|ram|rar|rcp|read|readarray|readonly|reboot|rename|renice|remsync|rev|rm|rmdir|rsync|screen|scp|sdiff|sed|seq|service|sftp|shift|shopt|shutdown|sleep|slocate|sort|source|split|ssh|stat|strace|su|sudo|sum|suspend|sync|tail|tar|tee|test|time|timeout|times|touch|top|traceroute|trap|tr|tsort|tty|type|ulimit|umask|umount|unalias|uname|unexpand|uniq|units|unrar|unshar|uptime|useradd|userdel|usermod|users|uuencode|uudecode|v|vdir|vi|vmstat|wait|watch|wc|wget|whereis|which|who|whoami|write|xargs|xdg-open|yes|zip)(?=$|\s|;|\||&)/,lookbehind:!0},keyword:{pattern:/(^|\s|;|\||&)(?:let|:|\.|if|then|else|elif|fi|for|break|continue|while|in|case|function|select|do|done|until|echo|exit|return|set|declare)(?=$|\s|;|\||&)/,lookbehind:!0},"boolean":{pattern:/(^|\s|;|\||&)(?:true|false)(?=$|\s|;|\||&)/,lookbehind:!0},operator:/&&?|\|\|?|==?|!=?|<<<?|>>|<=?|>=?|=~/,punctuation:/\$?\(\(?|\)\)?|\.\.|[{}[\];]/};var a=t.variable[1].inside;a["function"]=e.languages.bash["function"],a.keyword=e.languages.bash.keyword,a.boolean=e.languages.bash.boolean,a.operator=e.languages.bash.operator,a.punctuation=e.languages.bash.punctuation}(Prism);
 </script>
 
 <script type="text/x-mathjax-config">
@@ -773,6 +534,7 @@ if (typeof MathJaxListener !== 'undefined') {
 </script>
 
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
 <!-- baidu statistic start -->
 <script>
 var _hmt = _hmt || [];
@@ -802,7 +564,6 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
-
 
 </body>
 

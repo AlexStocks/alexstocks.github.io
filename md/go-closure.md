@@ -237,5 +237,10 @@ golang官方的《Errors are values》(参考文档5)一文中给出了如下一
 - 4 [golang中context包解读](http://ju.outofmemory.cn/entry/273349)
 - 5 [Errors are values](https://blog.golang.org/errors-are-values)
 
+## Payment
+
+<center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
+
+
 ## 扒粪者-于雨氏 ##
 > 于雨氏，2016/09/24，初作此文于东沪。

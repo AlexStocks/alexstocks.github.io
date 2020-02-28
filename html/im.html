@@ -323,6 +323,146 @@ kbd {
 }
 </style>
 
+<style type="text/css">
+/**
+ * prism.js default theme for JavaScript, CSS and HTML
+ * Based on dabblet (http://dabblet.com)
+ * @author Lea Verou
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: black;
+	background: none;
+	text-shadow: 0 1px white;
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
+code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
+	text-shadow: none;
+	background: #b3d4fc;
+}
+
+pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
+code[class*="language-"]::selection, code[class*="language-"] ::selection {
+	text-shadow: none;
+	background: #b3d4fc;
+}
+
+@media print {
+	code[class*="language-"],
+	pre[class*="language-"] {
+		text-shadow: none;
+	}
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: #f5f2f0;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: slategray;
+}
+
+.token.punctuation {
+	color: #999;
+}
+
+.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #905;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #690;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+	color: #a67f59;
+	background: hsla(0, 0%, 100%, .5);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+	color: #07a;
+}
+
+.token.function {
+	color: #DD4A68;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+	color: #e90;
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+</style>
+
 
 </head>
 
@@ -370,7 +510,7 @@ kbd {
 <li>B 消息发送者能够成功发送消息给后端，且得到后端地确认；</li>
 <li>C 接收端能够不重不漏地接收Server端转发来的没有超过<strong>消息生命周期</strong>和<strong>系统承载能力</strong>的消息；</li>
 <li>D 整个系统只考虑文本短消息[即限制其长度]；</li>
-<li>E 每条消息都有生命周期，如一天，且有长度限制如1440B【尽量不要超过一个frame的size】，只考虑在线消息的处理，无论是超时的消息还是超出系统承载能力的消息[如键盘狂人或者键盘狂机器人发出的消息]都被认为是&quot;垃圾消息&quot;;</li>
+<li>E 每条消息都有生命周期，如一天，且有长度限制如1440B【尽量不要超过一个frame的size】，只考虑在线消息的处理，无论是超时的消息还是超出系统承载能力的消息[如键盘狂人或者键盘狂机器人发出的消息]都被认为是<q>垃圾消息</q>;</li>
 <li>F 为简单起见，不给消息很多类型，如个人对个人消息，群消息，讨论组消息等，都认为是一种群[下文用channel替代之，也有人用Room这个词]消息类型；</li>
 <li>G 为简单起见，这个群的建立与销毁流程本文不述及，也即消息流程开始的时候各个消息群都已经组建完毕，且流程中没有成员的增减；</li>
 <li>H 账户申请、用户鉴权和天朝独有的黄反词检查等IM安全层等暂不考虑；</li>
@@ -419,7 +559,7 @@ kbd {
 
 <p>17 TCP: 另一种消息发送和接收协议，在环境或者采用html5开发的系统多采用这种协议；</p>
 
-<p>18 UDP: 另一种消息发送和接收协议，某个不保证提供稳定消息传输服务的厂家采用的协议，也许也是用户最多使用的协议，它的优点是无论是无线还是有线环境下都非常快，又由于http/Websocket的基础都是tcp协议，UDP协议在环境拥塞情况下由于不提供拥塞控制等退让算法，反而会去争用网络通道，所以在网络复杂的特别是发生网络风暴的情况下它会显得更快^ _ ^ &amp; ^ _ ^【呵呵哒】；</p>
+<p>18 UDP: 另一种消息发送和接收协议，某个不保证提供稳定消息传输服务的厂家采用的协议，也许也是用户最多使用的协议，它的优点是无论是无线还是有线环境下都非常快，又由于http/Websocket的基础都是tcp协议，UDP协议在环境拥塞情况下由于不提供拥塞控制等退让算法，反而会去争用网络通道，所以在网络复杂的特别是发生网络风暴的情况下它会显得更快^ _ ^ &amp; ^ _ <sup>【呵呵哒】；</sup></p>
 
 <p>19 RPC: 一种远程过程调用协议，提供分布式环境下的函数调用能力；</p>
 
@@ -451,7 +591,7 @@ kbd {
 <ul>
 <li>A client以阻塞方式发出msg req，req = {producer uin, channel name, msg device id, msg time, msg content}；</li>
 <li>B broker收到消息后，以uin为hash或者通过其他hash方式把消息转发给某个msg chat server；</li>
-<li>C msg chat server收到消息后以key = Hash{producer uin【发送者id】 + msg device id【设备id】+ msg time【消息发送时间，精确到秒】}到本地消息缓存中查询消息是否已经存在，如果存在则终止消息流程，给broker返回&quot;duplicate msg&quot;这个msg ack，否则继续；</li>
+<li>C msg chat server收到消息后以key = Hash{producer uin【发送者id】 + msg device id【设备id】+ msg time【消息发送时间，精确到秒】}到本地消息缓存中查询消息是否已经存在，如果存在则终止消息流程，给broker返回<q>duplicate msg</q>这个msg ack，否则继续；</li>
 <li>D msg chat server到Counter模块以channel name为key查询其最新的msg id，把msg id自增一后作为这条消息的id；</li>
 <li>E msg chat server把分配好id的消息插入本地msg cache和msg DB[mysql/mongoDB]中；</li>
 <li>F msg chat server给broker返回msg ack, ack = {producer uin, channel name, msg device id, msg time, msg id}；</li>
@@ -466,7 +606,7 @@ kbd {
 
 <p>那么还有一个问题，如果用户修改了手机的本地时间怎么办？那就换做另一个参数：本地手机时钟累计运行时长，手机出厂后其运行累计时长只会一直增加不会减小。]</p>
 
-<p>这个流程牵涉到一个比较重要的模块：Counter，这个模块其实都可以用Redis充当，怎么做你自己想^ _ ^。这个模块自身的实现就是一个分布式的计数器，直接使用Redis也没什么问题，但是最好的方法是采用消息id批发器的方式，msg chat server到Counter每次批发一批id回来,然后分配给每个msg，当使用完毕的时候再接着去Counter申请一批回来，以减轻Counter的压力，具体的设计请参考专利《即时消息的处理方法和装置》[参考文档9]。</p>
+<p>这个流程牵涉到一个比较重要的模块：Counter，这个模块其实都可以用Redis充当，怎么做你自己想^ _ <sup>。这个模块自身的实现就是一个分布式的计数器，直接使用Redis也没什么问题，但是最好的方法是采用消息id批发器的方式，msg</sup> chat server到Counter每次批发一批id回来,然后分配给每个msg，当使用完毕的时候再接着去Counter申请一批回来，以减轻Counter的压力，具体的设计请参考专利《即时消息的处理方法和装置》[参考文档9]。</p>
 
 <p>上面还有一个概念未叙述到：发送端的消息邮箱{有人称为消息盒子，或者某大厂称之为客户端消息db}，它存储了所有本地发送出去的消息，其中没有服务端分配的msg id的消息都被认为是发送失败的消息，待用户主动尝试发送或者网络环境重新稳定后可以有客户端尝试重新发送流程。</p>
 
@@ -528,7 +668,7 @@ kbd {
 <li>G 流程结束。</li>
 </ul>
 
-<p>消息的投递是不是显得轻松多了，至于&quot;被认为在线&quot;客户端有没有收到msg，msg chat server压根就不管！</p>
+<p>消息的投递是不是显得轻松多了，至于<q>被认为在线</q>客户端有没有收到msg，msg chat server压根就不管！</p>
 
 <p>这个流程牵涉到另一个比较重要的模块：router，它其实也可以用Redis充当，利用Redis的bitmap记录所有用户的状态，0标示离线，1表示在线，然后再利用hashtable存储每个用户登录的broker的id和最新登录时间。</p>
 
@@ -561,7 +701,7 @@ kbd {
 <li>D heartbeat server到Counter服务器循环查询每个channel的最新消息id，如果客户端上报的id与这个id不等，就发送一条msg通知msg chat server，msg = {uin， channel name， client newest msg id of channel}；</li>
 <li>E msg chat server收到这条消息后，重新启动消息下发逻辑，到msg queue中取出所有的大于{client newest msg id of channel}的id列表；</li>
 <li>F msg chat server依据list中的id到消息存储服务器中依次取出每个msg[取不到也就表示这个消息因为超时而被消息存储服务器删除了]；</li>
-<li>G msg chat server把这些消息作为&quot;未读消息&quot;下发给客户端；</li>
+<li>G msg chat server把这些消息作为<q>未读消息</q>下发给客户端；</li>
 <li>H heartbeat server根据Router存储的客户端的最近三次的登录时间，调整session的心跳时间间隔，作为心跳回包的一部分参数值给客户端下发heartbeat ack包，其他数据包括其所在的每个channel的最新消息的msg id；</li>
 <li>I heartbeat server定时地到Router中检查所有客户端的最新登录时间，如果超过其session有效时间，就把其state置为“离线”，并删除其登录服务id等数据；</li>
 <li>J 客户端收到heartbeat ack包后，修改下次心跳时间，并依据每个channel的最新的msg id与本地消息邮箱中对应的channel的最新消息id做对比，如果id不等，客户端可以启动拉取消息流程或者等待server端把这些消息下发过来。</li>
@@ -577,11 +717,11 @@ kbd {
 
 <p>至于step J叙述到的client是否启用消息拉取逻辑，取决于你的服务类型。具体场景分别对待，本文不会再设计消息的pull流程。</p>
 
-<p>其实结合第4章节以及本章节，用流行的术语来说，消息的下发就是微信所谓的&quot;是参考Activesyec，SYNC协议&quot;[参考文档7]流程，江湖人称推拉相结合的过程。这个过程可以借用参考文档2中给出的一副流程图做参考：</p>
+<p>其实结合第4章节以及本章节，用流行的术语来说，消息的下发就是微信所谓的<q>是参考Activesyec，SYNC协议</q>[参考文档7]流程，江湖人称推拉相结合的过程。这个过程可以借用参考文档2中给出的一副流程图做参考：</p>
 
 <p><img src="../pic/im_jd_push_pull.png" alt=""></p>
 
-<p>注意上图与本文一些名词的用法不同，它的所谓的“离线消息”，咱本文中被称为&quot;未读消息&quot;。</p>
+<p>注意上图与本文一些名词的用法不同，它的所谓的“离线消息”，咱本文中被称为<q>未读消息</q>。</p>
 
 <p>随着本章节的结束，IM的主要流程就描述完毕，更详细的流程请参考文档3、4和5。</p>
 
@@ -601,7 +741,7 @@ kbd {
 
 <p>由于本文只是描述文本型短消息服务的相关流程，如果还要考虑图片、声音和视频流服务，这些消息就会被称为富媒体消息。最基本的富媒体消息应该有一个文本消息与之对应，文本消息中包含了这些富媒体文件的url地址或者其他方式定义的地址。消费者拉倒这样类型的消息，就可以根据消息地址去拉取富媒体文件。</p>
 
-<p>至于富媒体文件怎么存储，个人建议可以借助目前成熟的第三方服务平台，如借助七牛的云图片服务[我举个栗子而已，没收任何费用，无做广告的嫌疑^ _ ^]存储服务存储图片，借助腾讯云的视频服务能力处理语音和视频消息。</p>
+<p>至于富媒体文件怎么存储，个人建议可以借助目前成熟的第三方服务平台，如借助七牛的云图片服务[我举个栗子而已，没收任何费用，无做广告的嫌疑^ _ <sup>]存储服务存储图片，借助腾讯云的视频服务能力处理语音和视频消息。</sup></p>
 
 <p>富媒体消息拉取和上传都要经过你的Relay接口，这个服务接口因为逻辑与正常的文本消息差别很大，所以建议独立做一个接口叫做Relay模块，以与broker作区分，也为以后更换第三方服务厂商打好基础。</p>
 
@@ -615,7 +755,7 @@ kbd {
 <li>E 待所有分片都收集好，rich server就可以再次把数据拼装好放入mongodb或者其他什么db中。</li>
 </ul>
 
-<p>整个逻辑就完成了，是不是也很easy的^ _ ^。</p>
+<p>整个逻辑就完成了，是不是也很easy的^ _ <sup>。</sup></p>
 
 <h3 id="toc_13">8 总结</h3>
 
@@ -660,7 +800,11 @@ kbd {
 <li>10 <a href="http://www.jianshu.com/p/8500882ab38c">分布式系统的时间</a></li>
 </ul>
 
-<h2 id="toc_16">扒粪者-于雨氏</h2>
+<h2 id="toc_16">Payment</h2>
+
+<p><center> <img src="../pic/pay/wepay.jpg" alt="阿弥托福，于雨谢过" title="阿弥托福，于雨谢过"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img src="../pic/pay/alipay.jpg" alt="无量天尊，于雨奉献" title="无量天尊，于雨奉献"> </center></p>
+
+<h2 id="toc_17">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>于雨氏，2016/03/07，初作此文于金箱堂。</p>
@@ -676,29 +820,30 @@ kbd {
 <p>于雨氏，2017/02/07，于致真大厦依据参考文档10，再次修改第3.2节关于Counter的设计。</p>
 </blockquote>
 
-<!--
-<div id="disqus_thread"></div>
+
+
 <script type="text/javascript">
-// disqus comment js block, added on 2016/02/10
-// https://segmentfault.com/a/1190000002807674
-var disqus_shortname = 'alexstocks'; // Required - Replace example with your forum shortname
-var disqus_identifier = window.location.pathname; //'a unique identifier for each page where Disqus is present';
-var disqus_title = document.title; // 'a unique title for each page where Disqus is present';
-var disqus_url = document.URL; // window.location.origin + window.location.pathname; // 'a unique URL for each page where Disqus is present';
-var disqus_config = function () {
-this.page.url = window.location.href; // Replace PAGE_URL with your page's canonical URL variable
-this.page.identifier = window.location.pathname; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
-};
-(function() {
-var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js'; dsq.setAttribute('data-timestamp', +new Date());
-(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+var _self="undefined"!=typeof window?window:"undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?self:{},Prism=function(){var e=/\blang(?:uage)?-(\w+)\b/i,t=0,n=_self.Prism={util:{encode:function(e){return e instanceof a?new a(e.type,n.util.encode(e.content),e.alias):"Array"===n.util.type(e)?e.map(n.util.encode):e.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\u00a0/g," ")},type:function(e){return Object.prototype.toString.call(e).match(/\[object (\w+)\]/)[1]},objId:function(e){return e.__id||Object.defineProperty(e,"__id",{value:++t}),e.__id},clone:function(e){var t=n.util.type(e);switch(t){case"Object":var a={};for(var r in e)e.hasOwnProperty(r)&&(a[r]=n.util.clone(e[r]));return a;case"Array":return e.map&&e.map(function(e){return n.util.clone(e)})}return e}},languages:{extend:function(e,t){var a=n.util.clone(n.languages[e]);for(var r in t)a[r]=t[r];return a},insertBefore:function(e,t,a,r){r=r||n.languages;var l=r[e];if(2==arguments.length){a=arguments[1];for(var i in a)a.hasOwnProperty(i)&&(l[i]=a[i]);return l}var o={};for(var s in l)if(l.hasOwnProperty(s)){if(s==t)for(var i in a)a.hasOwnProperty(i)&&(o[i]=a[i]);o[s]=l[s]}return n.languages.DFS(n.languages,function(t,n){n===r[e]&&t!=e&&(this[t]=o)}),r[e]=o},DFS:function(e,t,a,r){r=r||{};for(var l in e)e.hasOwnProperty(l)&&(t.call(e,l,e[l],a||l),"Object"!==n.util.type(e[l])||r[n.util.objId(e[l])]?"Array"!==n.util.type(e[l])||r[n.util.objId(e[l])]||(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,l,r)):(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,null,r)))}},plugins:{},highlightAll:function(e,t){var a={callback:t,selector:'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'};n.hooks.run("before-highlightall",a);for(var r,l=a.elements||document.querySelectorAll(a.selector),i=0;r=l[i++];)n.highlightElement(r,e===!0,a.callback)},highlightElement:function(t,a,r){for(var l,i,o=t;o&&!e.test(o.className);)o=o.parentNode;o&&(l=(o.className.match(e)||[,""])[1],i=n.languages[l]),t.className=t.className.replace(e,"").replace(/\s+/g," ")+" language-"+l,o=t.parentNode,/pre/i.test(o.nodeName)&&(o.className=o.className.replace(e,"").replace(/\s+/g," ")+" language-"+l);var s=t.textContent,u={element:t,language:l,grammar:i,code:s};if(!s||!i)return n.hooks.run("complete",u),void 0;if(n.hooks.run("before-highlight",u),a&&_self.Worker){var c=new Worker(n.filename);c.onmessage=function(e){u.highlightedCode=e.data,n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(u.element),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},c.postMessage(JSON.stringify({language:u.language,code:u.code,immediateClose:!0}))}else u.highlightedCode=n.highlight(u.code,u.grammar,u.language),n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(t),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},highlight:function(e,t,r){var l=n.tokenize(e,t);return a.stringify(n.util.encode(l),r)},tokenize:function(e,t){var a=n.Token,r=[e],l=t.rest;if(l){for(var i in l)t[i]=l[i];delete t.rest}e:for(var i in t)if(t.hasOwnProperty(i)&&t[i]){var o=t[i];o="Array"===n.util.type(o)?o:[o];for(var s=0;s<o.length;++s){var u=o[s],c=u.inside,g=!!u.lookbehind,h=!!u.greedy,f=0,d=u.alias;u=u.pattern||u;for(var p=0;p<r.length;p++){var m=r[p];if(r.length>e.length)break e;if(!(m instanceof a)){u.lastIndex=0;var y=u.exec(m),v=1;if(!y&&h&&p!=r.length-1){var b=r[p+1].matchedStr||r[p+1],k=m+b;if(p<r.length-2&&(k+=r[p+2].matchedStr||r[p+2]),u.lastIndex=0,y=u.exec(k),!y)continue;var w=y.index+(g?y[1].length:0);if(w>=m.length)continue;var _=y.index+y[0].length,P=m.length+b.length;if(v=3,P>=_){if(r[p+1].greedy)continue;v=2,k=k.slice(0,P)}m=k}if(y){g&&(f=y[1].length);var w=y.index+f,y=y[0].slice(f),_=w+y.length,S=m.slice(0,w),O=m.slice(_),j=[p,v];S&&j.push(S);var A=new a(i,c?n.tokenize(y,c):y,d,y,h);j.push(A),O&&j.push(O),Array.prototype.splice.apply(r,j)}}}}}return r},hooks:{all:{},add:function(e,t){var a=n.hooks.all;a[e]=a[e]||[],a[e].push(t)},run:function(e,t){var a=n.hooks.all[e];if(a&&a.length)for(var r,l=0;r=a[l++];)r(t)}}},a=n.Token=function(e,t,n,a,r){this.type=e,this.content=t,this.alias=n,this.matchedStr=a||null,this.greedy=!!r};if(a.stringify=function(e,t,r){if("string"==typeof e)return e;if("Array"===n.util.type(e))return e.map(function(n){return a.stringify(n,t,e)}).join("");var l={type:e.type,content:a.stringify(e.content,t,r),tag:"span",classes:["token",e.type],attributes:{},language:t,parent:r};if("comment"==l.type&&(l.attributes.spellcheck="true"),e.alias){var i="Array"===n.util.type(e.alias)?e.alias:[e.alias];Array.prototype.push.apply(l.classes,i)}n.hooks.run("wrap",l);var o="";for(var s in l.attributes)o+=(o?" ":"")+s+'="'+(l.attributes[s]||"")+'"';return"<"+l.tag+' class="'+l.classes.join(" ")+'" '+o+">"+l.content+"</"+l.tag+">"},!_self.document)return _self.addEventListener?(_self.addEventListener("message",function(e){var t=JSON.parse(e.data),a=t.language,r=t.code,l=t.immediateClose;_self.postMessage(n.highlight(r,n.languages[a],a)),l&&_self.close()},!1),_self.Prism):_self.Prism;var r=document.currentScript||[].slice.call(document.getElementsByTagName("script")).pop();return r&&(n.filename=r.src,document.addEventListener&&!r.hasAttribute("data-manual")&&document.addEventListener("DOMContentLoaded",n.highlightAll)),_self.Prism}();"undefined"!=typeof module&&module.exports&&(module.exports=Prism),"undefined"!=typeof global&&(global.Prism=Prism);
+</script>
+
+<script type="text/x-mathjax-config">
+(function () {
+
+MathJax.Hub.Config({
+	'showProcessingMessages': false,
+	'messageStyle': 'none'
+});
+
+if (typeof MathJaxListener !== 'undefined') {
+	MathJax.Hub.Register.StartupHook('End', function () {
+		MathJaxListener.invokeCallbackForKey_('End');
+	});
+}
+
 })();
 </script>
-<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
-<script id="dsq-count-scr" src='//' + disqus_shortname + '.disqus.com/count.js' async></script>
--->
 
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 <!-- baidu statistic start -->
 <script>
 var _hmt = _hmt || [];
@@ -728,6 +873,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 </body>
 

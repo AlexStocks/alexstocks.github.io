@@ -108,6 +108,11 @@ FLP的前提是分布式和异步模型。在分布式系统中，异步模型�
 [6]:https://github.com/nusr/hacker-laws-zh#%e5%a4%8d%e6%9d%82%e6%80%a7%e5%ae%88%e6%81%92%e5%ae%9a%e5%be%8b-the-law-of-conservation-of-complexity-or-teslers-law
 [7]:https://en.wikipedia.org/wiki/Law_of_conservation_of_complexity "Law of conservation of complexity"
 
+## Payment
+
+<center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
+
+
 ## 扒粪者-于雨氏 ##
 
 >- 2018/10/08，于雨氏，于丰台。

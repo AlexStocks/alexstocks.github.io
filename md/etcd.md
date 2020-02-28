@@ -1151,6 +1151,10 @@ Put 函数和 KeepAlive 函数都有一个 Lease 对象，如果在进行 Put �
 - 30 [Raft 之 Membership Change](http://www.sohu.com/a/204912012_505827)
 - 31 [深入浅出 Raft - Optimization](http://www.sohu.com/a/202861958_736949)
 
+## Payment
+
+<center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
+
 ## 扒粪者-于雨氏 ##
 
 > 2018/01/09，于雨氏，初作此文于海淀。

@@ -240,6 +240,11 @@ k8s 相关组件采用基于源码编译方式获取，编译过程如下；
 
 [1]:http://blog.sina.com.cn/s/blog_48c95a190102wqpq.html 
 
+## Payment
+
+<center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
+
+
 ## 扒粪者-于雨氏 ##
 
 * 2019/12/08，于雨氏，于帝都丰台。

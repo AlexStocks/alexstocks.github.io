@@ -401,6 +401,10 @@ Monitor 系统有待改进的工作如下：
 - 4 [微服务架构下的监控需要注意哪些方面](https://mp.weixin.qq.com/s/3Flnn4mkh-euF3mKzpnMsQ)
 - 5 [Dapper，大规模分布式系统的跟踪系统](http://bigbully.github.io/Dapper-translation/)
 
+## Payment
+
+<center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
+
 
 ## 扒粪者-于雨氏
 

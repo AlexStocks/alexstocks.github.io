@@ -168,5 +168,9 @@
 
 - 1 http://www.csdn.net/article/2015-11-19/2826264
 
+## Payment
+
+<center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
+
 ## 于雨氏 ##
 于雨氏在原文基础上扒粪后有此新作。2015/11/20，于金箱堂。

@@ -335,6 +335,11 @@ num.streams则是指定consumers的个数。经个人测试，共两个kafka top
 - 14 [Kafka为Consumer分派分区：RangeAssignor和RoundRobinAssignor](http://blog.csdn.net/zhanyuanlin/article/details/76021614)
 - 15 [饶军谈Kafka未来规划](http://mp.weixin.qq.com/s/VXCOFSn8mSgXUPzEda_jdw)
 
+## Payment
+
+<center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
+
+
 ## 扒粪者-于雨氏 ##
 
 * 2017/02/02，于雨氏，于致真大厦。

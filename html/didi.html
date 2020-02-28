@@ -1,442 +1,717 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<title>滴滴专车技术解决方案</title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>didi</title>
+
+
 <style type="text/css">
-
-/* RESET
-=============================================================================*/
-
-html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-/* BODY
-=============================================================================*/
-
 body {
-  font-family: Helvetica, arial, freesans, clean, sans-serif;
+  font-family: Helvetica, arial, sans-serif;
   font-size: 14px;
   line-height: 1.6;
-  color: #333;
-  background-color: #fff;
-  padding: 20px;
-  max-width: 960px;
-  margin: 0 auto;
-}
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: white;
+  padding: 30px; }
 
-body>*:first-child {
-  margin-top: 0 !important;
-}
+body > *:first-child {
+  margin-top: 0 !important; }
+body > *:last-child {
+  margin-bottom: 0 !important; }
 
-body>*:last-child {
-  margin-bottom: 0 !important;
-}
-
-/* BLOCKS
-=============================================================================*/
-
-p, blockquote, ul, ol, dl, table, pre {
-  margin: 15px 0;
-}
-
-/* HEADERS
-=============================================================================*/
+a {
+  color: #4183C4; }
+a.absent {
+  color: #cc0000; }
+a.anchor {
+  display: block;
+  padding-left: 30px;
+  margin-left: -30px;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0; }
 
 h1, h2, h3, h4, h5, h6 {
   margin: 20px 0 10px;
   padding: 0;
   font-weight: bold;
   -webkit-font-smoothing: antialiased;
-}
+  cursor: text;
+  position: relative; }
 
-h1 tt, h1 code, h2 tt, h2 code, h3 tt, h3 code, h4 tt, h4 code, h5 tt, h5 code, h6 tt, h6 code {
-  font-size: inherit;
-}
+h1:hover a.anchor, h2:hover a.anchor, h3:hover a.anchor, h4:hover a.anchor, h5:hover a.anchor, h6:hover a.anchor {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA09pVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoMTMuMCAyMDEyMDMwNS5tLjQxNSAyMDEyLzAzLzA1OjIxOjAwOjAwKSAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OUM2NjlDQjI4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OUM2NjlDQjM4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5QzY2OUNCMDg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5QzY2OUNCMTg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PsQhXeAAAABfSURBVHjaYvz//z8DJYCRUgMYQAbAMBQIAvEqkBQWXI6sHqwHiwG70TTBxGaiWwjCTGgOUgJiF1J8wMRAIUA34B4Q76HUBelAfJYSA0CuMIEaRP8wGIkGMA54bgQIMACAmkXJi0hKJQAAAABJRU5ErkJggg==) no-repeat 10px center;
+  text-decoration: none; }
+
+h1 tt, h1 code {
+  font-size: inherit; }
+
+h2 tt, h2 code {
+  font-size: inherit; }
+
+h3 tt, h3 code {
+  font-size: inherit; }
+
+h4 tt, h4 code {
+  font-size: inherit; }
+
+h5 tt, h5 code {
+  font-size: inherit; }
+
+h6 tt, h6 code {
+  font-size: inherit; }
 
 h1 {
   font-size: 28px;
-  color: #000;
-}
+  color: black; }
 
 h2 {
   font-size: 24px;
-  border-bottom: 1px solid #ccc;
-  color: #000;
-}
+  border-bottom: 1px solid #cccccc;
+  color: black; }
 
 h3 {
-  font-size: 18px;
-}
+  font-size: 18px; }
 
 h4 {
-  font-size: 16px;
-}
+  font-size: 16px; }
 
 h5 {
-  font-size: 14px;
-}
+  font-size: 14px; }
 
 h6 {
-  color: #777;
-  font-size: 14px;
+  color: #777777;
+  font-size: 14px; }
+
+p, blockquote, ul, ol, dl, li, table, pre {
+  margin: 15px 0; }
+
+hr {
+  background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAECAYAAACtBE5DAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OENDRjNBN0E2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OENDRjNBN0I2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo4Q0NGM0E3ODY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo4Q0NGM0E3OTY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqqezsUAAAAfSURBVHjaYmRABcYwBiM2QSA4y4hNEKYDQxAEAAIMAHNGAzhkPOlYAAAAAElFTkSuQmCC) repeat-x 0 0;
+  border: 0 none;
+  color: #cccccc;
+  height: 4px;
+  padding: 0;
 }
 
-body>h2:first-child, body>h1:first-child, body>h1:first-child+h2, body>h3:first-child, body>h4:first-child, body>h5:first-child, body>h6:first-child {
+body > h2:first-child {
   margin-top: 0;
-  padding-top: 0;
-}
+  padding-top: 0; }
+body > h1:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+  body > h1:first-child + h2 {
+    margin-top: 0;
+    padding-top: 0; }
+body > h3:first-child, body > h4:first-child, body > h5:first-child, body > h6:first-child {
+  margin-top: 0;
+  padding-top: 0; }
 
 a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
   margin-top: 0;
-  padding-top: 0;
-}
+  padding-top: 0; }
 
-h1+p, h2+p, h3+p, h4+p, h5+p, h6+p {
-  margin-top: 10px;
-}
+h1 p, h2 p, h3 p, h4 p, h5 p, h6 p {
+  margin-top: 0; }
 
-/* LINKS
-=============================================================================*/
-
-a {
-  color: #4183C4;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-/* LISTS
-=============================================================================*/
-
+li p.first {
+  display: inline-block; }
+li {
+  margin: 0; }
 ul, ol {
-  padding-left: 30px;
-}
+  padding-left: 30px; }
 
-ul li > :first-child,
-ol li > :first-child,
-ul li ul:first-of-type,
-ol li ol:first-of-type,
-ul li ol:first-of-type,
-ol li ul:first-of-type {
-  margin-top: 0px;
-}
-
-ul ul, ul ol, ol ol, ol ul {
-  margin-bottom: 0;
-}
+ul :first-child, ol :first-child {
+  margin-top: 0; }
 
 dl {
-  padding: 0;
-}
+  padding: 0; }
+  dl dt {
+    font-size: 14px;
+    font-weight: bold;
+    font-style: italic;
+    padding: 0;
+    margin: 15px 0 5px; }
+    dl dt:first-child {
+      padding: 0; }
+    dl dt > :first-child {
+      margin-top: 0; }
+    dl dt > :last-child {
+      margin-bottom: 0; }
+  dl dd {
+    margin: 0 0 15px;
+    padding: 0 15px; }
+    dl dd > :first-child {
+      margin-top: 0; }
+    dl dd > :last-child {
+      margin-bottom: 0; }
 
-dl dt {
-  font-size: 14px;
-  font-weight: bold;
-  font-style: italic;
-  padding: 0;
-  margin: 15px 0 5px;
-}
-
-dl dt:first-child {
-  padding: 0;
-}
-
-dl dt>:first-child {
-  margin-top: 0px;
-}
-
-dl dt>:last-child {
-  margin-bottom: 0px;
-}
-
-dl dd {
-  margin: 0 0 15px;
+blockquote {
+  border-left: 4px solid #dddddd;
   padding: 0 15px;
-}
+  color: #777777; }
+  blockquote > :first-child {
+    margin-top: 0; }
+  blockquote > :last-child {
+    margin-bottom: 0; }
 
-dl dd>:first-child {
-  margin-top: 0px;
-}
+table {
+  padding: 0;border-collapse: collapse; }
+  table tr {
+    border-top: 1px solid #cccccc;
+    background-color: white;
+    margin: 0;
+    padding: 0; }
+    table tr:nth-child(2n) {
+      background-color: #f8f8f8; }
+    table tr th {
+      font-weight: bold;
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr td {
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr th :first-child, table tr td :first-child {
+      margin-top: 0; }
+    table tr th :last-child, table tr td :last-child {
+      margin-bottom: 0; }
 
-dl dd>:last-child {
-  margin-bottom: 0px;
-}
+img {
+  max-width: 100%; }
 
-/* CODE
-=============================================================================*/
-
-pre, code, tt {
-  font-size: 12px;
-  font-family: Consolas, "Liberation Mono", Courier, monospace;
-}
+span.frame {
+  display: block;
+  overflow: hidden; }
+  span.frame > span {
+    border: 1px solid #dddddd;
+    display: block;
+    float: left;
+    overflow: hidden;
+    margin: 13px 0 0;
+    padding: 7px;
+    width: auto; }
+  span.frame span img {
+    display: block;
+    float: left; }
+  span.frame span span {
+    clear: both;
+    color: #333333;
+    display: block;
+    padding: 5px 0 0; }
+span.align-center {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-center > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: center; }
+  span.align-center span img {
+    margin: 0 auto;
+    text-align: center; }
+span.align-right {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px 0 0;
+    text-align: right; }
+  span.align-right span img {
+    margin: 0;
+    text-align: right; }
+span.float-left {
+  display: block;
+  margin-right: 13px;
+  overflow: hidden;
+  float: left; }
+  span.float-left span {
+    margin: 13px 0 0; }
+span.float-right {
+  display: block;
+  margin-left: 13px;
+  overflow: hidden;
+  float: right; }
+  span.float-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: right; }
 
 code, tt {
-  margin: 0 0px;
-  padding: 0px 0px;
+  margin: 0 2px;
+  padding: 0 5px;
   white-space: nowrap;
   border: 1px solid #eaeaea;
   background-color: #f8f8f8;
-  border-radius: 3px;
-}
+  border-radius: 3px; }
 
-pre>code {
+pre code {
   margin: 0;
   padding: 0;
   white-space: pre;
   border: none;
-  background: transparent;
-}
+  background: transparent; }
 
-pre {
+.highlight pre {
   background-color: #f8f8f8;
-  border: 1px solid #ccc;
+  border: 1px solid #cccccc;
   font-size: 13px;
   line-height: 19px;
   overflow: auto;
   padding: 6px 10px;
-  border-radius: 3px;
-}
+  border-radius: 3px; }
 
-pre code, pre tt {
-  background-color: transparent;
-  border: none;
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+  pre code, pre tt {
+    background-color: transparent;
+    border: none; }
+
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
 }
 
 kbd {
-    -moz-border-bottom-colors: none;
-    -moz-border-left-colors: none;
-    -moz-border-right-colors: none;
-    -moz-border-top-colors: none;
-    background-color: #DDDDDD;
-    background-image: linear-gradient(#F1F1F1, #DDDDDD);
-    background-repeat: repeat-x;
-    border-color: #DDDDDD #CCCCCC #CCCCCC #DDDDDD;
-    border-image: none;
-    border-radius: 2px 2px 2px 2px;
-    border-style: solid;
-    border-width: 1px;
-    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-    line-height: 10px;
-    padding: 1px 4px;
+  display: inline-block;
+  padding: 3px 5px;
+  font-size: 11px;
+  line-height: 10px;
+  color: #555;
+  vertical-align: middle;
+  background-color: #fcfcfc;
+  border: solid 1px #ccc;
+  border-bottom-color: #bbb;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 #bbb
 }
 
-/* QUOTES
-=============================================================================*/
-
-blockquote {
-  border-left: 4px solid #DDD;
-  padding: 0 15px;
-  color: #777;
+* {
+	-webkit-print-color-adjust: exact;
 }
-
-blockquote>:first-child {
-  margin-top: 0px;
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:0 auto;
+    }
 }
-
-blockquote>:last-child {
-  margin-bottom: 0px;
-}
-
-/* HORIZONTAL RULES
-=============================================================================*/
-
-hr {
-  clear: both;
-  margin: 15px 0;
-  height: 0px;
-  overflow: hidden;
-  border: none;
-  background: transparent;
-  border-bottom: 4px solid #ddd;
-  padding: 0;
-}
-
-/* TABLES
-=============================================================================*/
-
-table th {
-  font-weight: bold;
-}
-
-table th, table td {
-  border: 1px solid #ccc;
-  padding: 6px 13px;
-}
-
-table tr {
-  border-top: 1px solid #ccc;
-  background-color: #fff;
-}
-
-table tr:nth-child(2n) {
-  background-color: #f8f8f8;
-}
-
-/* IMAGES
-=============================================================================*/
-
-img {
-  max-width: 100%
+@media print {
+	table, pre {
+		page-break-inside: avoid;
+	}
+	pre {
+		word-wrap: break-word;
+	}
 }
 </style>
+
+<style type="text/css">
+/**
+ * prism.js default theme for JavaScript, CSS and HTML
+ * Based on dabblet (http://dabblet.com)
+ * @author Lea Verou
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: black;
+	background: none;
+	text-shadow: 0 1px white;
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
+code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
+	text-shadow: none;
+	background: #b3d4fc;
+}
+
+pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
+code[class*="language-"]::selection, code[class*="language-"] ::selection {
+	text-shadow: none;
+	background: #b3d4fc;
+}
+
+@media print {
+	code[class*="language-"],
+	pre[class*="language-"] {
+		text-shadow: none;
+	}
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: #f5f2f0;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: slategray;
+}
+
+.token.punctuation {
+	color: #999;
+}
+
+.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #905;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #690;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+	color: #a67f59;
+	background: hsla(0, 0%, 100%, .5);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+	color: #07a;
+}
+
+.token.function {
+	color: #DD4A68;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+	color: #e90;
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+</style>
+
+
 </head>
+
 <body>
-<h1>滴滴专车业务与技术流程</h1>
-<hr />
+
+<h1 id="toc_0">滴滴专车业务与技术流程</h1>
+
+<hr>
+
 <p><em>written by Alex Stocks on 2015/11/20，版权所有，无授权不得转载</em></p>
-<h2>0 引言</h2>
+
+<h2 id="toc_1">0 引言</h2>
+
 <p>近日读到文章《<a href="http://www.csdn.net/article/2015-11-19/2826264">揭秘全球最大一站式出行平台的技术真相</a>》，对其中一些内容颇感兴趣。</p>
+
 <p>然原文错字连篇，SDCC2015的ppt也没有放出来，没有相关业务背景的人读起来可能味同嚼蜡。现结合原文，根据个人的理解，重新把相关内容整理如下，文中斜体字段是个人的理解或补充。</p>
+
 <p>囿于个人水平有限，如有错误，欢迎指出。</p>
-<h2>1 滴滴的市场占有情况</h2>
+
+<h2 id="toc_2">1 滴滴的市场占有情况</h2>
+
 <ul>
 <li>1. 当前用户规模：5亿注册用户、一千万注册司机;</li>
 <li>2. 业务规模与业务内容:一千万的日订单，同时我们有出租车、专车、顺风车和代驾巴士这样的业务；</li>
 </ul>
-<h2>2 滴滴平台背后的技术体系</h2>
+
+<h2 id="toc_3">2 滴滴平台背后的技术体系</h2>
+
 <p>一个是在线业务系统，另一个是大数据平台(<em>个人理解，应该包含了离线业务系统</em>)。</p>
+
 <p>用户与滴滴平台维持一个长连接，实时上报位置信息，每天能产生10T的位置数据供大数据平台分析。同时用户也可以通过http与后台进行业务交互，如进行订单、计价、券系统、支付、分账，每日有上千万的订单。在线业务系统包含了服务、坐标流、弹性定价（“知道以什么样的定价更合适”）和分单（“怎么招到最合适乘客和司机”）等子系统。</p>
+
 <p>大数据平台任务之一就是spam，防止用户“刷我们的奖励和我们的券”。</p>
+
 <p>大数据平台任务之二是进行用户画像(<em>听着貌似是离线数据分析</em>)，了解用户的偏好。</p>
-<h2>3 用户打的或者使用专车详细流程</h2>
-<h3>3.1 打开app时的平滑移动功能</h3>
+
+<h2 id="toc_4">3 用户打的或者使用专车详细流程</h2>
+
+<h3 id="toc_5">3.1 打开app时的平滑移动功能</h3>
+
 <p>乘客准备要出发了，他打开了我们的App，首先看到的是我们的一堆车标，有时候调头了，这是平滑移动的功能，如果是滴滴的老用户的话，应该了解到在出租车的时候，其实是没有这个功能的。</p>
+
 <p>乘客app与后台维持一个长连接，每5s向后台上报一次位置信息，位置信息大概有{方向、速度、精度(疑应为经度)、维度(疑应为纬度)}。出租车每3秒向后台上报一次位置，通过两次数据上报就能获取到方向、速度，可以预测车头的方向，滴滴后台每天能够收到数十亿次上报请求。</p>
-<h4>3.1.1 平滑移动详细流程</h4>
+
+<h4 id="toc_6">3.1.1 平滑移动详细流程</h4>
+
 <ul>
 <li>1. 用户打开app，app与后台之间建立长连接，每5s向后台上报一次位置信息；</li>
 <li>2. 后台拿到用户的位置信息后，去LBS检索模块获取用户的坐标信息【***个人根据上下文理解，可能是因为GPS或者根据手机基站得到的位置数据有十米或者更多的距离误差，LBS模块对用户的位置信息进行噪点清洗，计算用户的确切位置 ***】；</li>
 <li>3. 后台接着去数据库拉取用户周围的出租车司机信息，然后进行状态的筛选、状体的转换，然后向app端下发司机数组【<strong><em>个人理解：状态筛选就是去除不在线的司机，状态转换可能是既要转换用户的状态也要转换司机的状态，用户的状态从登陆态转变为在线态，司机则从空闲态转换为预备载客态</em></strong>】；</li>
 <li>4. 用户获取到周围司机数组后，可以通过与5s以前的老数组的对比，知道哪些司机是新出现的、哪些司机消失了、某个司机的出租车的车头的方向、出租车速度、新的经纬度位置信息(<em>然后根据一定算法（如随机算法）从数组中抽取一些司机在app端显示出来并作出平滑移动的动作</em>)。</li>
 </ul>
-<h3>3.2 用户发单时的定价功能</h3>
-<h4>3.2.1 弹性定价的原因</h4>
+
+<h3 id="toc_7">3.2 用户发单时的定价功能</h3>
+
+<h4 id="toc_8">3.2.1 弹性定价的原因</h4>
+
 <p>滴滴虽然是出行平台，但是本质来说我们是综合交易的交易平台！我们提供一个交易引擎，更多的是希望交易更好达成。但是如果有一些经济学原理的知识的话就会了解到，其实价格才是调节市场供需的杠杆！</p>
+
 <p>正常的情况是我们对于价格的定价，逐渐调整价格，达到一个平衡点，这时候乘客愿意叫车，司机愿意提供运力！但是有一些极端的情况，暴风雪天气，或者整个会场要结束的时候，大家同时要回家，需求是同时爆发的，但是供给不一定马上给上。以极端情况为例，一个是堵车，另外一个是暴风雪，司机不愿意出来拉活，乘客能不能寻找到一些替代品？比如说他不再打车，他去做顺风车或者地铁，提高价格之后也会刺激司机的接单的积极性，达成新的平衡。</p>
-<h4>3.2.1 由大数据后台辅助的弹性定价</h4>
+
+<h4 id="toc_9">3.2.1 由大数据后台辅助的弹性定价</h4>
+
 <p>乘客的App要发单了，定单请求到我们的在线业务系统，把这个定单的需求专发到动态的模块，大数据平台会考虑当前的供给和需求，综合考虑以下几个情况：</p>
+
 <ul>
 <li>1 周围司机数量；</li>
 <li>2 乘客相应的特征；</li>
 <li>3 周边司机的特征；</li>
 </ul>
+
 <p>我们会借助在线学习的方法来更好更快速的得到合理的定价(<em>个人感觉有点吹牛了，估计就是根据LBS位置附近的天气情况、乘客数量/司机数量之比、距离、随机权重等几个参数算出一个值而已</em>)。</p>
-<h4>3.2.2 弹性定价的效果</h4>
+
+<h4 id="toc_10">3.2.2 弹性定价的效果</h4>
+
 <p>在正常的情况下，动态条件下可以使我们的应答率提高两个点，但是应答量只有一个点。</p>
+
 <p>在极端的天气情况下，动态调价可以使我们的平均应答率提升10个点以上，应答量的损失只有两个点。在整个车速过程中有一个特别极端的例子，是在武汉，一次暴雨的天气动态调价没有上之前和上之后的调价是惊人的，在动调的逻辑上线之前只有53%，我们把动调的危机打开了以后成交率达到85%。这部分乘客是什么样的表现呢？被调价了以后，这些乘客更愿意留在平台！他比没有调价的用户留存率会提高17个点，这足以证明大家到这个平台上来更多的期许是能够打到车，也许会贵一两块钱，但是最重要的目的是能打到车，这是刚需，他的第一需求。</p>
-<h3>3.3 发单</h3>
+
+<h3 id="toc_11">3.3 发单</h3>
+
 <p>动调这个环节乘客已经把定单发出来了，订单到了整个平台这里，平台需要把整个定单分配出去，就是发单。</p>
-<h4>3.3.1 挑战</h4>
+
+<h4 id="toc_12">3.3.1 挑战</h4>
+
 <ul>
 <li>1 怎么样找到最合适的这样的司机？</li>
 <li>2 在比较大的数据量的情况下我们怎么样保证我们分单的性能？</li>
 </ul>
+
 <p>在一个热点的城市，它的在线司机可能有数万这样体量，需要分配的订单可能有几千上万，针对这样的分配实际是二元组的矩阵，这个矩阵的节点数有十亿！ </p>
-<h4>3.3.2 初始解决方案</h4>
+
+<h4 id="toc_13">3.3.2 初始解决方案</h4>
+
 <p>我们第一版的时候是外包开发的产品，分单引擎或者模型非常的简单，一个订单来了，我们检索到周边的司机，做好分配，这个分配信息先写到数据库，司机来了以后，直接查找数据库，就能找到对应的定单信息了。这是出租车的1.0！</p>
+
 <p><strong>提到这一点，更多的想说作为一个创业的企业，需要的是更快的速度，至于架构怎么用？或者说有多好？可以慢慢的来！最重要的是我们的迭代速度。</strong></p>
-<h4>3.3.3 改进方案1.0</h4>
+
+<h4 id="toc_14">3.3.3 改进方案1.0</h4>
+
 <p>后来发现查找数据库这个事情不靠谱，一个订单来了以后我直接通过步行推送出去，后面分配的效率不够高，我们需要对相应的定单和周边的司机做一个全局的优化，同时在分配效益上面能够类似于一个电梯的调度上，先聚一会，大概几百豪秒或者一秒的时间，先聚在一起，通过我们的策略进行优化订单。</p>
+
 <p>司机的App通过长链接服务把它的IT信息放到我们的池子里，通过在线的系统把我们订单信息放到池子里，依据这个池子里当前的司机和订单的特定信息,通过策略计算找到合适的订单和司机的消息然后分发出去！好处是不需要分片，单机就可以计算！</p>
+
 <p>随着定单量的逐渐提升，这种模式下面分单这个模块成为了一个瓶颈，为什么呢？因为它需要去池鱼里拿到ID信息，从特征服务里把每一个订单、每一个司机的特征全部拉回来，做一个矩阵的计算。计算完了以后分配出去，再把分配的结果保存下来！它能成为瓶颈。</p>
-<h4>3.3.4 再改进方案2.0</h4>
+
+<h4 id="toc_15">3.3.4 再改进方案2.0</h4>
+
 <p>我们开始2.0的改进，2.0的时候，我们没有去调整分单，我们的想法是把分单的模块做分期部署，然后将订单和运力做一个切片，这都是在一个城市里所有的信息。</p>
+
 <p>运力和定单都做了切片（<em>个人理解，一个切片就是一个池子</em>）以后，现在性能没有问题了，但是我们会发现因为这种切片会对整个策略的分配情况是有影响的。主要还是在分片的边缘，如果是指派的情况下，我分配只能在分片里进行分配，分配的时机未必是最合适的时机，如果在这种分配的情况下造成司机并不愿意接单，如果有四个切片的话，对于我们应答率的影响是将近一个点！但是，如果把分片切成八个，我们应答率损失在三个点以上，这是巨大的损失。而且它的效率虽然提升了，但是并没有太好，如果说是有5万的在线司机和一两千的订单同时分配的话，它的分配时间大概要在2.5秒左右！这并不够高效，我们希望整个分配在1——2秒就能完成，同时支撑更大的数据量。</p>
-<h4>3.3.5 目前方案3.0</h4>
+
+<h4 id="toc_16">3.3.5 目前方案3.0</h4>
+
 <p>大概10月份上线的分单引擎总的思路是不再做分片，把整个城市的订单和运力同时放在一个池子里，在分单的环节做分布式的计算。先从池子里把所有司机的ID和订单的ID全部拿过来做分配，分配到不同的分布式的处理器上，自己去拉取特征信息，做小的矩阵计算，所有的矩阵汇聚到一起，作为一个预算，最后得到大的预算，全局的矩阵。针对这个矩阵其实就是定单和司机二元组的关系，我们把它分配出去，分配完了以后需要将结果记录到我们的存储里面，以便于进行下一次的分配！这几个改造历时了一个半月左右，最后达到的效果还不错，如果十万个司机在线，一万的订单，我们可以在1.7秒以内把整个分配做完。</p>
-<h3>3.4 坐标流服务</h3>
+
+<h3 id="toc_17">3.4 坐标流服务</h3>
+
 <p>订单分配出去了，司机接单了，用户可以通过App向它行使过来。这个过程中把司机的坐标收集起来，然后给乘客一个更好的呈现，这是一个坐标流服务，。</p>
+
 <p>乘客和司机将坐标信息传递到坐标流里面，首先把坐标存储起来，在坐标存储的过程中，分为持久存储(做后面大数据挖掘和客户查询相应的坐标轨迹)和缓存，整个后端会维护着司机和乘客的对应关系，当乘客上报坐标的时候就能知道司机的坐标，司机上传坐标的时候就了解乘客的位置。</p>
-<h3>3.5 地址围栏与营销活动</h3>
+
+<h3 id="toc_18">3.5 地址围栏与营销活动</h3>
+
 <p>地址围栏是我们做营销活动的时候，你要去机场给你派一个机场券，接送机的券，再做活动，针对活动的人群做特殊的撤销。</p>
-<h4>3.5.1 坐标流与地址围栏</h4>
+
+<h4 id="toc_19">3.5.1 坐标流与地址围栏</h4>
+
 <p>用户上报坐标流的时候，会顺带一些业务状态，数据库存储LBS信息的时候也会存储一些业务状态的编码信息，它的数据结构是一个跳表，支持读写的并发处理，可以支持我们的节点的超时管理。整个数据在内存中是保证安全性的，相应的扩展性、各方面都挺好。如在五公里的范围内，如果节点密度超过几万的话，我们一次查询时间在一毫秒就可以完成。整个检索服务的集群可以承载的数据节点可以超过一亿点。</p>
+
 <p>地理围栏是判定一个围栏形成一个事件，服务器收到用户上报的坐标流的时候，如果坐标在围栏内，就把他放到消费队列里共各个业务方去调阅。</p>
-<h4>3.5.2 营销实例</h4>
+
+<h4 id="toc_20">3.5.2 营销实例</h4>
+
 <p>有这样的一个场景，我们要针对北京机场的用户去派一张接送机的券。首先运营的同学围着手机机场画一个圈(<em>地址围栏</em>)，然后会设定地址围栏500米外面的<strong>预警圈</strong>。等到坐标上传的过程中，到预警区的时候写一个事件放到消费队列里面，业务系统订阅了这个消息，就知道这个时候乘客已经到了首都机场周边500米了，这个时候会触发一个行为，发一个短信或者弹窗提醒，告诉我们的用户我们有这样的活动，或者这样的促销。用户到了围栏的时候，是另外一个事件，只有在围栏里面才允许他使用这样的券，这也是基于反作弊的考量。</p>
-<h4>3.5.3 特殊情况--多个地址围栏之间的交接</h4>
+
+<h4 id="toc_21">3.5.3 特殊情况--多个地址围栏之间的交接</h4>
+
 <p>地址围栏可以是自定义的多边形，也可以是行政区域任意的组合，多个地址围栏之间可能有交接。如果某个地域有几千几万几百万这样的围栏，一个坐标来了之后我需要知道到底属于哪个围栏？需要做一个预盼和筛选！我们的做法是这样的，针对围栏区域设置内聚型和外聚型，快速判定他是否属于这个围栏，从而优化我们查询的速度！关于围栏内部的监测是基于一个比较常规的方法，针对多边形的边区引入一些射线出来，判定这个射线的焦点是奇数还是负数，当前我们单机实力可以支撑水平的扩展。</p>
-<h3>3.6 专车计价</h3>
+
+<h3 id="toc_22">3.6 专车计价</h3>
+
 <p>出租车有一个计价器，不需要记价，到终点的时候司机告诉你是十块还是二十块，大家直接拿出微信支付或者支付宝直接支付就完了，不用无线支付就用现金进行线下支付就完了，使用专车的时候计价就是挑战，专车没有记价器！</p>
-<h4>3.6.1 挑战</h4>
+
+<h4 id="toc_23">3.6.1 挑战</h4>
+
 <p>我们面临的挑战是到底在乘客端计价，还是司机端上计价，还是其他什么方法？</p>
+
 <p>无论乘客还是司机，手机的 <strong>GPS芯片很差</strong> ，被 <strong>安全软件拦截</strong> 了没有办法进行上传和定位，上传的数据质量也不是太高， <strong>精度问题和定位漂移问题</strong>，尤其是一辆车停下来以后，整个坐标上传的结果在周边不停的跳动！</p>
+
 <p>还有<strong>移动网络的不可靠</strong>，到地下通道的时候没有网络了，坐标没有办法上传！这都是针对计价准确性的挑战。</p>
+
 <p>还有企业用车，根据<strong>不同的时段计价又不一样</strong>！他去机场和火车站定价又不一样，这是产品形态的多变，会在灵活性和对于整个架构和复杂度带来的提升。</p>
-<h4>3.6.2 精确定位</h4>
-<p>司机端每一秒会去做定位，十秒形成一个包，将这个包通过长链接的服务上传上来，上传到实时计价模块，需要解决两个事情，一个是<strong>降噪</strong>，另外是**补偿器<em><em>。(</em>两个包上传的坐标的距离</em>)在30米以内我们会采用这个点，如果精度在30米以外我们会抛弃掉，会通过地图的API的接口做数据补偿！经过模块处理了以后，这基本上是一个比较准确的数据线路。</p>
-<h4>3.6.3 防作弊</h4>
+
+<h4 id="toc_24">3.6.2 精确定位</h4>
+
+<p>司机端每一秒会去做定位，十秒形成一个包，将这个包通过长链接的服务上传上来，上传到实时计价模块，需要解决两个事情，一个是<strong>降噪</strong>，另外是<strong>补偿器</strong>。(<em>两个包上传的坐标的距离</em>)在30米以内我们会采用这个点，如果精度在30米以外我们会抛弃掉，会通过地图的API的接口做数据补偿！经过模块处理了以后，这基本上是一个比较准确的数据线路。</p>
+
+<h4 id="toc_25">3.6.3 防作弊</h4>
+
 <p>在反作弊的环节会考虑这样的事情，根据现实情况可以给出以下防作弊规则：</p>
+
 <ul>
 <li>1 司机的历史信用是什么样的人？是不是经常作弊的人？</li>
 <li>2 司机和乘客的路线是否有重合？(<em>个人理解，司机和乘客分别上传坐标流后，后台计算出二者的线路，然后进行重合判断</em>)</li>
 <li>3 是不是靠这种模拟器去定位的虚假信息？</li>
-<li>4 最后做全网的数据校对</li>
+<li><p>4 最后做全网的数据校对</p>
+
+<p>所谓全网的数据校对：把专车的数据和出租车计价器进行比较。我们有一个好处，是在专车上线的时候出租车已经有很大的体量了，而且出租车的数据是依赖出租车计价数据来的，是比较准确的数据！我们计价系统和出租车计价进行对比</p></li>
 </ul>
-<p>所谓全网的数据校对：把专车的数据和出租车计价器进行比较。我们有一个好处，是在专车上线的时候出租车已经有很大的体量了，而且出租车的数据是依赖出租车计价数据来的，是比较准确的数据！我们计价系统和出租车计价进行对比</p>
-<h4>3.6.4 灵活性处理</h4>
+
+<h4 id="toc_26">3.6.4 灵活性处理</h4>
+
 <p>关于计价系统的灵活性，更多的是依赖规则引擎，它是通过一条规则，在规则引擎里进行解析，最后得到一个结果。针对我们各种各样的活动，不同的产品形态，还有不同的乘客的画像，这次出行的起点在哪里？终点在哪里？什么时候出发的？多个维度定义出一条规则来？通过规则引擎做解析以后得到一个计价ID，这就确保了一个计价的灵活性。</p>
-<h4>3.6.5 支付</h4>
+
+<h4 id="toc_27">3.6.5 支付</h4>
+
 <p>计价完了乘客可以选择多种支付渠道、支付宝和手Q、微信支付、待充值这样的支付方式，这次出行就结束了。这是当前针对出行过程中的核心系统的概况。</p>
-<h2>4 运维问题</h2>
-<h3>4.1 挖掘机风险</h3>
+
+<h2 id="toc_28">4 运维问题</h2>
+
+<h3 id="toc_29">4.1 挖掘机风险</h3>
+
 <p>我们接下来或者当前比较急迫的是需要进行跨机房的过程，它面临的问题是网络、机房可能不靠谱，一旦建筑工人一铁锹挖下去光缆就断了，我们在10月份的时候就有过一次机房的网络瘫痪了，终止服务了一段时间。</p>
-<h3>4.2 跨机房解决方案</h3>
+
+<h3 id="toc_30">4.2 跨机房解决方案</h3>
+
 <p>针对整个跨机房的解决方案，我们构想是这样的，前面有一个Proxy来解决，到底是机房1还是机房2，北京是一个围栏，上海是另外一个围栏，北京部署在机房1，上海部署在机房2。对应着这样的部署。所有的业务流程往走，但是到存储节点的时候，会把数据信息囤到相应的机房。这是我们急切或者正在做的动作。(<em>没有看到ppt，这段个人就不发挥或者想象了，否则会有误导</em>)。</p>
-<h3>4.３ 自动化运维平台</h3>
+
+<h3 id="toc_31">4.３ 自动化运维平台</h3>
+
 <p>另外是关于自动化运维平台的构想！数据收集平台会收集各种各样的数据信息，全部收集起来，它就形成了数据支撑，在自动化的运维平台里要去关注对于机器的管理，对于预警的处理和容量的管理，以及容灾处理。容量的管理这一部分更多的是为了应对我们不定期的促销活动，可能一个决策信息或者是一次快乐周末的大促，我们需要评估当前的容量是否能够支撑？有一个容量的评估模型？快速的判定哪些模块需要改造的？哪些需要扩容的？经过自动化部署把扩容这个事情做了，针对线上出现的灾难，比如光缆被建筑工人刨断了，有相应的降低预案，通过监控的处理和预制判断，制度的流程和平台的切换，最终会产生一个解决方案，通过配置和更改的方式，影响到了我们在线业务系统。</p>
-<h2>5 关于坐标流的一些补充</h2>
+
+<h2 id="toc_32">5 关于坐标流的一些补充</h2>
+
 <p>司机的坐标流是三秒一次，只要他在线，这个坐标就会不断上传，这个时间轴上，可以做很多事情：</p>
+
 <ul>
 <li>1 在这个时间轴上去加入一些事件会怎么样？</li>
 <li>2 司机当前是出车了还是收车了？是否在接单？</li>
-<li>3 他是否已经到达了乘客的位置？</li>
+<li><p>3 他是否已经到达了乘客的位置？</p>
+
+<p>这样的状态信息能够覆盖就形成了数据流，有了这样的流以后，任何一个查询过来我就知道:</p></li>
+<li><p>1 司机当前是在什么样的位置？</p></li>
+<li><p>2 它的历史轨迹怎么样？历史状态是怎么样的？</p></li>
 </ul>
-<p>这样的状态信息能够覆盖就形成了数据流，有了这样的流以后，任何一个查询过来我就知道:</p>
-<ul>
-<li>1 司机当前是在什么样的位置？</li>
-<li>2 它的历史轨迹怎么样？历史状态是怎么样的？</li>
-</ul>
+
 <p>当订单需要分配的时候，我们的乘用模块通过检索找到一个时间切片，当前这个时间切片或者司机是空闲的做一些筛选就可以完成自己的订单分配。</p>
-<hr />
-<h2>参考文档：</h2>
+
+<hr>
+
+<h2 id="toc_33">参考文档：</h2>
+
 <ul>
-<li>1 http://www.csdn.net/article/2015-11-19/2826264</li>
-<li>2 https://github.com/AlexStocks/test/blob/master/sdcc2015/%E6%BB%B4%E6%BB%B4%E4%B8%93%E8%BD%A6%E6%8A%80%E6%9C%AF%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88.md</li>
+<li>1 <a href="http://www.csdn.net/article/2015-11-19/2826264">http://www.csdn.net/article/2015-11-19/2826264</a></li>
 </ul>
-<h2>于雨氏</h2>
-<p>于雨氏在原文 [参考文档1] 基础上扒粪后有此新作。2015/11/20，于金箱堂。</p>
-<p>又，把github上的markdown文档 [参考文档2] 转换成html格式而后转移到本网站，并添加了disqus评论功能。2016/02/10，于金箱堂。</p>
 
-<!--
-<div id="disqus_thread"></div>
+<h2 id="toc_34">Payment</h2>
+
+<p><center> <img src="../pic/pay/wepay.jpg" alt="阿弥托福，于雨谢过" title="阿弥托福，于雨谢过"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img src="../pic/pay/alipay.jpg" alt="无量天尊，于雨奉献" title="无量天尊，于雨奉献"> </center></p>
+
+<h2 id="toc_35">于雨氏</h2>
+
+<p>于雨氏在原文基础上扒粪后有此新作。2015/11/20，于金箱堂。</p>
+
+
+
 <script type="text/javascript">
-// disqus comment js block, added on 2016/02/10
-// https://segmentfault.com/a/1190000002807674
-var disqus_shortname = 'alexstocks'; // Required - Replace example with your forum shortname
-var disqus_identifier = window.location.pathname; //'a unique identifier for each page where Disqus is present';
-var disqus_title = document.title; // 'a unique title for each page where Disqus is present';
-var disqus_url = document.URL; // window.location.origin + window.location.pathname; // 'a unique URL for each page where Disqus is present';
-var disqus_config = function () {
-this.page.url = window.location.href; // Replace PAGE_URL with your page's canonical URL variable
-this.page.identifier = window.location.pathname; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
-};
+var _self="undefined"!=typeof window?window:"undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?self:{},Prism=function(){var e=/\blang(?:uage)?-(\w+)\b/i,t=0,n=_self.Prism={util:{encode:function(e){return e instanceof a?new a(e.type,n.util.encode(e.content),e.alias):"Array"===n.util.type(e)?e.map(n.util.encode):e.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\u00a0/g," ")},type:function(e){return Object.prototype.toString.call(e).match(/\[object (\w+)\]/)[1]},objId:function(e){return e.__id||Object.defineProperty(e,"__id",{value:++t}),e.__id},clone:function(e){var t=n.util.type(e);switch(t){case"Object":var a={};for(var r in e)e.hasOwnProperty(r)&&(a[r]=n.util.clone(e[r]));return a;case"Array":return e.map&&e.map(function(e){return n.util.clone(e)})}return e}},languages:{extend:function(e,t){var a=n.util.clone(n.languages[e]);for(var r in t)a[r]=t[r];return a},insertBefore:function(e,t,a,r){r=r||n.languages;var l=r[e];if(2==arguments.length){a=arguments[1];for(var i in a)a.hasOwnProperty(i)&&(l[i]=a[i]);return l}var o={};for(var s in l)if(l.hasOwnProperty(s)){if(s==t)for(var i in a)a.hasOwnProperty(i)&&(o[i]=a[i]);o[s]=l[s]}return n.languages.DFS(n.languages,function(t,n){n===r[e]&&t!=e&&(this[t]=o)}),r[e]=o},DFS:function(e,t,a,r){r=r||{};for(var l in e)e.hasOwnProperty(l)&&(t.call(e,l,e[l],a||l),"Object"!==n.util.type(e[l])||r[n.util.objId(e[l])]?"Array"!==n.util.type(e[l])||r[n.util.objId(e[l])]||(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,l,r)):(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,null,r)))}},plugins:{},highlightAll:function(e,t){var a={callback:t,selector:'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'};n.hooks.run("before-highlightall",a);for(var r,l=a.elements||document.querySelectorAll(a.selector),i=0;r=l[i++];)n.highlightElement(r,e===!0,a.callback)},highlightElement:function(t,a,r){for(var l,i,o=t;o&&!e.test(o.className);)o=o.parentNode;o&&(l=(o.className.match(e)||[,""])[1],i=n.languages[l]),t.className=t.className.replace(e,"").replace(/\s+/g," ")+" language-"+l,o=t.parentNode,/pre/i.test(o.nodeName)&&(o.className=o.className.replace(e,"").replace(/\s+/g," ")+" language-"+l);var s=t.textContent,u={element:t,language:l,grammar:i,code:s};if(!s||!i)return n.hooks.run("complete",u),void 0;if(n.hooks.run("before-highlight",u),a&&_self.Worker){var c=new Worker(n.filename);c.onmessage=function(e){u.highlightedCode=e.data,n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(u.element),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},c.postMessage(JSON.stringify({language:u.language,code:u.code,immediateClose:!0}))}else u.highlightedCode=n.highlight(u.code,u.grammar,u.language),n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(t),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},highlight:function(e,t,r){var l=n.tokenize(e,t);return a.stringify(n.util.encode(l),r)},tokenize:function(e,t){var a=n.Token,r=[e],l=t.rest;if(l){for(var i in l)t[i]=l[i];delete t.rest}e:for(var i in t)if(t.hasOwnProperty(i)&&t[i]){var o=t[i];o="Array"===n.util.type(o)?o:[o];for(var s=0;s<o.length;++s){var u=o[s],c=u.inside,g=!!u.lookbehind,h=!!u.greedy,f=0,d=u.alias;u=u.pattern||u;for(var p=0;p<r.length;p++){var m=r[p];if(r.length>e.length)break e;if(!(m instanceof a)){u.lastIndex=0;var y=u.exec(m),v=1;if(!y&&h&&p!=r.length-1){var b=r[p+1].matchedStr||r[p+1],k=m+b;if(p<r.length-2&&(k+=r[p+2].matchedStr||r[p+2]),u.lastIndex=0,y=u.exec(k),!y)continue;var w=y.index+(g?y[1].length:0);if(w>=m.length)continue;var _=y.index+y[0].length,P=m.length+b.length;if(v=3,P>=_){if(r[p+1].greedy)continue;v=2,k=k.slice(0,P)}m=k}if(y){g&&(f=y[1].length);var w=y.index+f,y=y[0].slice(f),_=w+y.length,S=m.slice(0,w),O=m.slice(_),j=[p,v];S&&j.push(S);var A=new a(i,c?n.tokenize(y,c):y,d,y,h);j.push(A),O&&j.push(O),Array.prototype.splice.apply(r,j)}}}}}return r},hooks:{all:{},add:function(e,t){var a=n.hooks.all;a[e]=a[e]||[],a[e].push(t)},run:function(e,t){var a=n.hooks.all[e];if(a&&a.length)for(var r,l=0;r=a[l++];)r(t)}}},a=n.Token=function(e,t,n,a,r){this.type=e,this.content=t,this.alias=n,this.matchedStr=a||null,this.greedy=!!r};if(a.stringify=function(e,t,r){if("string"==typeof e)return e;if("Array"===n.util.type(e))return e.map(function(n){return a.stringify(n,t,e)}).join("");var l={type:e.type,content:a.stringify(e.content,t,r),tag:"span",classes:["token",e.type],attributes:{},language:t,parent:r};if("comment"==l.type&&(l.attributes.spellcheck="true"),e.alias){var i="Array"===n.util.type(e.alias)?e.alias:[e.alias];Array.prototype.push.apply(l.classes,i)}n.hooks.run("wrap",l);var o="";for(var s in l.attributes)o+=(o?" ":"")+s+'="'+(l.attributes[s]||"")+'"';return"<"+l.tag+' class="'+l.classes.join(" ")+'" '+o+">"+l.content+"</"+l.tag+">"},!_self.document)return _self.addEventListener?(_self.addEventListener("message",function(e){var t=JSON.parse(e.data),a=t.language,r=t.code,l=t.immediateClose;_self.postMessage(n.highlight(r,n.languages[a],a)),l&&_self.close()},!1),_self.Prism):_self.Prism;var r=document.currentScript||[].slice.call(document.getElementsByTagName("script")).pop();return r&&(n.filename=r.src,document.addEventListener&&!r.hasAttribute("data-manual")&&document.addEventListener("DOMContentLoaded",n.highlightAll)),_self.Prism}();"undefined"!=typeof module&&module.exports&&(module.exports=Prism),"undefined"!=typeof global&&(global.Prism=Prism);
+</script>
 
-(function() {
-var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js'; dsq.setAttribute('data-timestamp', +new Date());
-(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+<script type="text/x-mathjax-config">
+(function () {
+
+MathJax.Hub.Config({
+	'showProcessingMessages': false,
+	'messageStyle': 'none'
+});
+
+if (typeof MathJaxListener !== 'undefined') {
+	MathJax.Hub.Register.StartupHook('End', function () {
+		MathJaxListener.invokeCallbackForKey_('End');
+	});
+}
+
 })();
 </script>
-<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
-<script id="dsq-count-scr" src='//' + disqus_shortname + '.disqus.com/count.js' async></script>
--->
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 <!-- baidu statistic start -->
 <script>
@@ -469,5 +744,5 @@ gitalk.render('gitalk-container');
 <!-- Gitalk end -->
 
 </body>
-</html>
 
+</html>

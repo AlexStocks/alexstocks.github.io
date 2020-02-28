@@ -4,7 +4,7 @@
 
 关于 SOFAMosn 与愚人的故事，须从 2018 年 9 月 16 日说起。此日在离京南下某地参加毕业 X 周年聚会的火车途中，dubbogo QQ 群群友 老C 发来一条连接，说是其参与的一个叫做 [SOFAMosn][1] 的开源项目使用了愚人的 [dubbogo/hessian2][8] 项目，以与 [apache/dubbo][2] 进行通信。
 
-老C顺便提及，项目由其所在的阿里大文娱UC事业部和蚂蚁金服共建。既然是大厂出品，愚人便兴起翻阅了下此项目，一阅其工程组织架构，不知其是西渣渣还是爪哇风格，二阅其代码风格亦看不出师承何处，且彼时对 Service Mesh 无甚了解，便意兴阑珊掩鼻而过。
+老C顺便提及，项目由其所在的阿里大文娱UC事业部和蚂蚁金服共建。既然是大厂出品，愚人便兴起翻阅了下此项目，彼时对 Service Mesh 无甚了解，便意兴阑珊掩鼻而过。
 
 话说缘分天注定。半载过后，愚人工作内容便是参与此项目相关系统开发，便需要对其机理深入了解，以免踩坑。
 
@@ -320,6 +320,11 @@ listener 启动流程如下：
 [6]:(https://github.com/sofastack/sofa-mosn/blob/master/configs/mosn_config.json)
 [7]:(https://jimmysong.io/posts/envoy-archiecture-and-terminology/)
 [8]:(https://github.com/dubbogo/hessian2)
+
+## Payment
+
+<center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
+
 
 ## 扒粪者-于雨氏
 

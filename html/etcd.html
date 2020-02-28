@@ -9,82 +9,301 @@
 
 
 <style type="text/css">
-*{margin:0;padding:0;}
 body {
-	font:13.34px helvetica,arial,freesans,clean,sans-serif;
-	color:black;
-	line-height:1.4em;
-	background-color: #F8F8F8;
-	padding: 0.7em;
+  font-family: Helvetica, arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: white;
+  padding: 30px; }
+
+body > *:first-child {
+  margin-top: 0 !important; }
+body > *:last-child {
+  margin-bottom: 0 !important; }
+
+a {
+  color: #4183C4; }
+a.absent {
+  color: #cc0000; }
+a.anchor {
+  display: block;
+  padding-left: 30px;
+  margin-left: -30px;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0; }
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+  cursor: text;
+  position: relative; }
+
+h1:hover a.anchor, h2:hover a.anchor, h3:hover a.anchor, h4:hover a.anchor, h5:hover a.anchor, h6:hover a.anchor {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA09pVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoMTMuMCAyMDEyMDMwNS5tLjQxNSAyMDEyLzAzLzA1OjIxOjAwOjAwKSAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OUM2NjlDQjI4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OUM2NjlDQjM4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5QzY2OUNCMDg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5QzY2OUNCMTg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PsQhXeAAAABfSURBVHjaYvz//z8DJYCRUgMYQAbAMBQIAvEqkBQWXI6sHqwHiwG70TTBxGaiWwjCTGgOUgJiF1J8wMRAIUA34B4Q76HUBelAfJYSA0CuMIEaRP8wGIkGMA54bgQIMACAmkXJi0hKJQAAAABJRU5ErkJggg==) no-repeat 10px center;
+  text-decoration: none; }
+
+h1 tt, h1 code {
+  font-size: inherit; }
+
+h2 tt, h2 code {
+  font-size: inherit; }
+
+h3 tt, h3 code {
+  font-size: inherit; }
+
+h4 tt, h4 code {
+  font-size: inherit; }
+
+h5 tt, h5 code {
+  font-size: inherit; }
+
+h6 tt, h6 code {
+  font-size: inherit; }
+
+h1 {
+  font-size: 28px;
+  color: black; }
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #cccccc;
+  color: black; }
+
+h3 {
+  font-size: 18px; }
+
+h4 {
+  font-size: 16px; }
+
+h5 {
+  font-size: 14px; }
+
+h6 {
+  color: #777777;
+  font-size: 14px; }
+
+p, blockquote, ul, ol, dl, li, table, pre {
+  margin: 15px 0; }
+
+hr {
+  background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAECAYAAACtBE5DAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OENDRjNBN0E2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OENDRjNBN0I2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo4Q0NGM0E3ODY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo4Q0NGM0E3OTY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqqezsUAAAAfSURBVHjaYmRABcYwBiM2QSA4y4hNEKYDQxAEAAIMAHNGAzhkPOlYAAAAAElFTkSuQmCC) repeat-x 0 0;
+  border: 0 none;
+  color: #cccccc;
+  height: 4px;
+  padding: 0;
 }
-p {
-	margin:1em 0;
-	line-height:1.5em;
-}
+
+body > h2:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+body > h1:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+  body > h1:first-child + h2 {
+    margin-top: 0;
+    padding-top: 0; }
+body > h3:first-child, body > h4:first-child, body > h5:first-child, body > h6:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0; }
+
+h1 p, h2 p, h3 p, h4 p, h5 p, h6 p {
+  margin-top: 0; }
+
+li p.first {
+  display: inline-block; }
+li {
+  margin: 0; }
+ul, ol {
+  padding-left: 30px; }
+
+ul :first-child, ol :first-child {
+  margin-top: 0; }
+
+dl {
+  padding: 0; }
+  dl dt {
+    font-size: 14px;
+    font-weight: bold;
+    font-style: italic;
+    padding: 0;
+    margin: 15px 0 5px; }
+    dl dt:first-child {
+      padding: 0; }
+    dl dt > :first-child {
+      margin-top: 0; }
+    dl dt > :last-child {
+      margin-bottom: 0; }
+  dl dd {
+    margin: 0 0 15px;
+    padding: 0 15px; }
+    dl dd > :first-child {
+      margin-top: 0; }
+    dl dd > :last-child {
+      margin-bottom: 0; }
+
+blockquote {
+  border-left: 4px solid #dddddd;
+  padding: 0 15px;
+  color: #777777; }
+  blockquote > :first-child {
+    margin-top: 0; }
+  blockquote > :last-child {
+    margin-bottom: 0; }
+
 table {
-	font-size:inherit;
-	font:100%;
-	margin:1em;
-}
-table th{border-bottom:1px solid #bbb;padding:.2em 1em;}
-table td{border-bottom:1px solid #ddd;padding:.2em 1em;}
-input[type=text],input[type=password],input[type=image],textarea{font:99% helvetica,arial,freesans,sans-serif;}
-select,option{padding:0 .25em;}
-optgroup{margin-top:.5em;}
-pre,code{font:12px Monaco,"Courier New","DejaVu Sans Mono","Bitstream Vera Sans Mono",monospace;}
-pre {
-	margin:1em 0;
-	font-size:12px;
-	background-color:#eee;
-	border:1px solid #ddd;
-	padding:5px;
-	line-height:1.5em;
-	color:#444;
-	overflow:auto;
-	-webkit-box-shadow:rgba(0,0,0,0.07) 0 1px 2px inset;
-	-webkit-border-radius:3px;
-	-moz-border-radius:3px;border-radius:3px;
-}
+  padding: 0;border-collapse: collapse; }
+  table tr {
+    border-top: 1px solid #cccccc;
+    background-color: white;
+    margin: 0;
+    padding: 0; }
+    table tr:nth-child(2n) {
+      background-color: #f8f8f8; }
+    table tr th {
+      font-weight: bold;
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr td {
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr th :first-child, table tr td :first-child {
+      margin-top: 0; }
+    table tr th :last-child, table tr td :last-child {
+      margin-bottom: 0; }
+
+img {
+  max-width: 100%; }
+
+span.frame {
+  display: block;
+  overflow: hidden; }
+  span.frame > span {
+    border: 1px solid #dddddd;
+    display: block;
+    float: left;
+    overflow: hidden;
+    margin: 13px 0 0;
+    padding: 7px;
+    width: auto; }
+  span.frame span img {
+    display: block;
+    float: left; }
+  span.frame span span {
+    clear: both;
+    color: #333333;
+    display: block;
+    padding: 5px 0 0; }
+span.align-center {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-center > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: center; }
+  span.align-center span img {
+    margin: 0 auto;
+    text-align: center; }
+span.align-right {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px 0 0;
+    text-align: right; }
+  span.align-right span img {
+    margin: 0;
+    text-align: right; }
+span.float-left {
+  display: block;
+  margin-right: 13px;
+  overflow: hidden;
+  float: left; }
+  span.float-left span {
+    margin: 13px 0 0; }
+span.float-right {
+  display: block;
+  margin-left: 13px;
+  overflow: hidden;
+  float: right; }
+  span.float-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: right; }
+
+code, tt {
+  margin: 0 2px;
+  padding: 0 5px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px; }
+
 pre code {
-	padding:0;
-	font-size:12px;
-	background-color:#eee;
-	border:none;
-}
-code {
-	font-size:12px;
-	background-color:#f8f8ff;
-	color:#444;
-	padding:0 .2em;
-	border:1px solid #dedede;
-}
-img{border:0;max-width:100%;}
-abbr{border-bottom:none;}
-a{color:#4183c4;text-decoration:none;}
-a:hover{text-decoration:underline;}
-a code,a:link code,a:visited code{color:#4183c4;}
-h2,h3{margin:1em 0;}
-h1,h2,h3,h4,h5,h6{border:0;}
-h1{font-size:170%;border-top:4px solid #aaa;padding-top:.5em;margin-top:1.5em;}
-h1:first-child{margin-top:0;padding-top:.25em;border-top:none;}
-h2{font-size:150%;margin-top:1.5em;border-top:4px solid #e0e0e0;padding-top:.5em;}
-h3{margin-top:1em;}
-hr{border:1px solid #ddd;}
-ul{margin:1em 0 1em 2em;}
-ol{margin:1em 0 1em 2em;}
-ul li,ol li{margin-top:.5em;margin-bottom:.5em;}
-ul ul,ul ol,ol ol,ol ul{margin-top:0;margin-bottom:0;}
-blockquote{margin:1em 0;border-left:5px solid #ddd;padding-left:.6em;color:#555;}
-dt{font-weight:bold;margin-left:1em;}
-dd{margin-left:2em;margin-bottom:1em;}
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent; }
+
+.highlight pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+  pre code, pre tt {
+    background-color: transparent;
+    border: none; }
+
 sup {
     font-size: 0.83em;
     vertical-align: super;
     line-height: 0;
 }
+
 kbd {
-  display: inline-block;padding: 3px 5px;font-size: 11px;line-height: 10px;color: #555;vertical-align: middle;background-color: #fcfcfc;border: solid 1px #ccc;border-bottom-color: #bbb;border-radius: 3px;box-shadow: inset 0 -1px 0 #bbb;
+  display: inline-block;
+  padding: 3px 5px;
+  font-size: 11px;
+  line-height: 10px;
+  color: #555;
+  vertical-align: middle;
+  background-color: #fcfcfc;
+  border: solid 1px #ccc;
+  border-bottom-color: #bbb;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 #bbb
 }
+
 * {
 	-webkit-print-color-adjust: exact;
 }
@@ -104,6 +323,146 @@ kbd {
 }
 </style>
 
+<style type="text/css">
+/**
+ * prism.js default theme for JavaScript, CSS and HTML
+ * Based on dabblet (http://dabblet.com)
+ * @author Lea Verou
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: black;
+	background: none;
+	text-shadow: 0 1px white;
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
+code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
+	text-shadow: none;
+	background: #b3d4fc;
+}
+
+pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
+code[class*="language-"]::selection, code[class*="language-"] ::selection {
+	text-shadow: none;
+	background: #b3d4fc;
+}
+
+@media print {
+	code[class*="language-"],
+	pre[class*="language-"] {
+		text-shadow: none;
+	}
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: #f5f2f0;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: slategray;
+}
+
+.token.punctuation {
+	color: #999;
+}
+
+.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #905;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #690;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+	color: #a67f59;
+	background: hsla(0, 0%, 100%, .5);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+	color: #07a;
+}
+
+.token.function {
+	color: #DD4A68;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+	color: #e90;
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+</style>
+
 
 </head>
 
@@ -119,19 +478,19 @@ kbd {
 
 <hr>
 
-<p>近日在单机上部署了一个etcd静态集群和基于这个静态集群的动态集群，并进行了相关测试，本文是部署以及测试过程的遇到的相关问题的流水账，权做记忆，以备后来参考。</p>
+<p>近日在单机上部署了一个 etcd 静态集群和基于这个静态集群的动态集群，并进行了相关测试，本文是部署以及测试过程的遇到的相关问题的流水账，权做记忆，以备后来参考。</p>
 
-<p>为分布式集群提供一致性服务的组件，先有google内部的Chubby，后有hadoop生态的zookeeper。基于Java的zookeeper保证CP，但是廉颇老矣，以往曾有同事曾经测试过在三千左右的客户端的频繁读写情况下zookeeper会频繁死掉。和zookeeper等同类产品相比，coreos开发的同样保证CP的etcd与其功能几乎雷同，但是zookeeper的设计和实现都很繁琐，而采用了gRPC作为底层通信框架的etcd几乎有所有直流语言的客户端支持。zookeeper的通信协议是自定制的Jute RPC协议，而etcd使用的gRPC可以接收通过HTTP发来的JSON请求，通过curl工具就可以对etcd进行测试。容器时代的王者kubuernets依赖它可实现上万个容器的管理。</p>
+<p>为分布式集群提供一致性服务的组件，先有 google 内部的 Chubby，后有 hadoop 生态的 zookeeper。基于 Java 的 zookeeper 保证 CP，但是廉颇老矣，以往曾有同事曾经测试过在三千左右的客户端的频繁读写情况下 zookeeper 会频繁死掉。和 zookeeper 等同类产品相比，coreos 开发的同样保证 CP 的 etcd 与其功能几乎雷同，但是 zookeeper 的设计和实现都很繁琐，而采用了 gRPC 作为底层通信框架的 etcd 几乎有所有主流语言的客户端支持。zookeeper 的通信协议是自定制的 Jute RPC 协议，而 etcd 使用的 gRPC 可以接收通过 HTTP 发来的 JSON 请求，通过 curl 工具就可以对etcd 进行测试。容器时代的王者 kubuernets 依赖它可实现上万个容器的管理。</p>
 
-<p>etcd提供了leader选举、分布式时钟、分布式锁、持续监控（watch）和集群内各个成员的liveness监控等功能。zookeer虽然也实现了类似的功能，但是不方便易用，还需借助Netflix提供的Apache Curator库。</p>
+<p>etcd 提供了 leader 选举、分布式时钟、分布式锁、持续监控（watch）和集群内各个成员的 liveness 监控等功能。zookeer虽然也实现了类似的功能，但是不方便易用，还需借助 Netflix 提供的 Apache Curator 库。</p>
 
-<p>etcd目前主要有v2和v3两个版本，但v3比v2在API层做了大幅度的优化，且etcd2客户端经过解析优化后与etcd3的消息处理性能仍然有2倍的差距，而v2的JSON外部协议和集群内部协议在v3中同样支持，所以本文以v3为主。个人使用etcd的体会：etcd与其说是一个提供一致性服务的分布式系统，不如说是一个分布式kv数据库。</p>
+<p>etcd 目前主要有 v2 和 v3 两个版本，但 v3 比 v2 在 API 层做了大幅度的优化，且 v2 客户端经过解析优化后与 v3 的消息处理性能仍然有 2 倍的差距，而 v2 的 JSON 外部协议和集群内部协议在 v3 中同样支持，所以本文以 v3 为主。个人使用 etcd 的体会：etcd 与其说是一个提供一致性服务的分布式系统，不如说是一个分布式 kv 数据库。</p>
 
-<p><a href="https://github.com/coreos/etcd/blob/master/Documentation/learning/why.md">参考文档21</a>提到etcd名字的由来：unix系统的目录/etc是存储配置文件的地方，后来再加上一个代表distributed systems的”d”就组成了etcd。所以说etcd可以被认识是一个分布式kv配置项数据库。</p>
+<p><a href="https://github.com/coreos/etcd/blob/master/Documentation/learning/why.md">参考文档21</a>提到etcd名字的由来：unix 系统的目录 /etc 是存储配置文件的地方，后来再加上一个代表distributed systems 的 ”d” 就组成了 etcd。所以说 etcd 可以被认识是一个分布式 kv 配置项数据库。</p>
 
-<p><a href="https://github.com/coreos/etcd/blob/master/Documentation/learning/data_model.md">参考文档23</a>提到etcd是一个存储 <strong>更新频率不高</strong> 的kv存储库并能提供查询服务，其数据只有一个层级，数据模型采用MVCC，每个key创建时其实version是1，每次更新操作增一。实际etcd底层的boltdb采用B+树形式存储kv的MVCC数据，每次修改的数据只存储增量版本，所以创建snapshot的成本也是挺高的。kv中的key是一个三元组(major, sub, type)，Major存储了key的revision，Sub则存储了同样revision下的差异，type则是一个后缀，用于指明一些特殊value的类型，如果当前value中有tombstone则type为t。B+树的key按照词典顺序进行排序。etcd在内存中对key的revision也是以B+树组织起来形成一个索引，value指针指向磁盘中相应地增量值，这种组织形式便于进行iteration。</p>
+<p><a href="https://github.com/coreos/etcd/blob/master/Documentation/learning/data_model.md">参考文档23</a>提到 etcd 是一个存储 <strong>更新频率不高</strong> 的 kv 存储库并能提供查询服务，其数据只有一个层级，数据模型采用 MVCC，每个 key 创建时其实 version 是 1，每次更新操作增一。实际 etcd 底层的 boltdb 采用 B+ 树形式存储 kv 的 MVCC 数据，每次修改的数据只存储增量版本，所以创建snapshot 的成本也是挺高的。kv 中的 key 是一个三元组 (major, sub, type)，Major 存储了 key 的 revision，Sub 则存储了同样 revision 下的差异，type 则是一个后缀，用于指明一些特殊value 的类型，如果当前 value 中有 tombstone 则 type 为 t。B+ 树的 key 按照词典顺序进行排序。etcd 在内存中对 key 的 revision 也是以 B+ 树组织起来形成一个索引，value 指针指向磁盘中相应地增量值，这种组织形式便于进行 iteration。</p>
 
-<p>etcd还提供了一个客户端工具<a href="https://github.com/coreos/etcd/blob/master/etcdctl/README.md">etcdctl</a>，关于其详细用法见参考文档22。</p>
+<p>etcd 还提供了一个客户端工具 <a href="https://github.com/coreos/etcd/blob/master/etcdctl/README.md">etcdctl</a>，关于其详细用法见参考文档22。</p>
 
 <h3 id="toc_2">1 静态集群</h3>
 
@@ -161,9 +520,9 @@ kbd {
 <p>各个参数的详细意义见参考文档17，下面列出一些主要参数的含义如下：</p>
 
 <ul>
-<li>1 name是node的名称，用于在集群中标识当前节点，etcd单节点允许迁移，迁移后名称不变即可被其他节点识别；</li>
-<li>2 etcd底层使用的kv数据库coreos/bbolt是类似于Rocksdb的一个LSM数据库实现，与Rocksdb一样数据有wal和data两种，建议两种数据分别存储到不同的存储系统上，以保证数据安全和系统性能；</li>
-<li>3 etcd底层使用的coreos/bbolt类似于rocksdb会定期做compaction以清除过期数据，上面的auto-compaction-retention指定的时间单位是小时，当然也可以借助工具etcdctl强行进行compaction，使用方法详见参考文档9#History compaction#一节；</li>
+<li>1 name 是 node 的名称，用于在集群中标识当前节点，etcd 单节点允许迁移，迁移后名称不变即可被其他节点识别；</li>
+<li>2 etcd 底层使用的 kv 数据库 coreos/bbolt 是类似于 Rocksdb 的一个 LSM 数据库实现，与Rocksdb 一样数据有 wal 和 data 两种，建议两种数据分别存储到不同的存储系统上，以保证数据安全和系统性能；</li>
+<li>3 etcd 底层使用的 coreos/bbolt 类似于 rocksdb 会定期做 compaction 以清除过期数据，上面的  auto-compaction-retention 指定的时间单位是小时，当然也可以借助工具 etcdctl 强行进行 compaction，使用方法详见参考文档9#History compaction#一节；</li>
 <li>4 参考文档9#Space quota#一节建议给etcd限定磁盘使用量，以防止etcd无限度的使用磁盘导致磁盘爆满后再去做compaction导致系统响应速度下降进而导致系统不稳定，当etcd使用的磁盘额度到达限定额度的时候会发出cluster级别的alarm使集群进入maintenance模式，只接收读和删除请求，当进行compaction和defragmenting(碎片化整理)完毕留出足够空间的时候才会回到正常工作状态；</li>
 <li>5 max-request-bytes可以限制key的最大长度，此处限制长度为15KiB；</li>
 <li>5 initial-cluster-token用于标识集群的名称，initial-cluster则给出了静态cluster的各个成员的名称以及地址；</li>
@@ -195,7 +554,7 @@ etcdctl --endpoints=“http://localhost:2379“ cluster-health</code></pre></div
 <p>参考文档7#Update advertise peer URLs#给出了更改这个参数的方法：</p>
 
 <ul>
-<li>1 执行命令 <strong>etcdctl member update a8266ecf031671f3 http://10.0.1.10:2380</strong> 以告知cluster内其他成员这个节点的新地址；</li>
+<li>1 执行命令 <strong>etcdctl member update a8266ecf031671f3 <a href="http://10.0.1.10:2380">http://10.0.1.10:2380</a></strong> 以告知cluster内其他成员这个节点的新地址；</li>
 <li>2 更改节点配置，重启节点，以恢复节点的quorum。</li>
 </ul>
 
@@ -206,20 +565,20 @@ etcdctl --endpoints=“http://localhost:2379“ cluster-health</code></pre></div
 <p>具体详细步骤见参考文档7#Add a New Member#一节，下面给出操作过程：</p>
 
 <ul>
-<li><p>1 ETCDCTL<em>API=3 etcdctl --endpoints=http://192.168.11.1:2379,http://192.168.11.1:12379,http://192.168.11.1:22379 member add etcd</em>node3 --peer-urls=http://192.168.11.1:32379</p>
+<li><p>1 ETCDCTL<u>API=3 etcdctl --endpoints=<a href="http://192.168.11.1:2379,http://192.168.11.1:12379,http://192.168.11.1:22379">http://192.168.11.1:2379,http://192.168.11.1:12379,http://192.168.11.1:22379</a> member add etcd</u>node3 --peer-urls=<a href="http://192.168.11.1:32379">http://192.168.11.1:32379</a></p>
 
-<p>ETCD<em>NAME=&quot;etcd</em>node3&quot;
- ETCD<em>INITIAL</em>CLUSTER=&quot;etcd<em>node1=http://192.168.11.1:12380,etcd</em>node2=http://192.168.11.1:22380,etcd<em>node0=http://192.168.11.1:2380,etcd</em>node3=http://192.168.11.1:32379&quot;
- ETCD<em>INITIAL</em>CLUSTER_STATE=&quot;existing&quot;</p></li>
-<li><p>2 etcd --name=etcd<em>node3 \<br>
---data-dir=/tmp/etcd/etcd</em>node3/./data/ \<br>
---wal-dir=/tmp/etcd/etcd<em>node3/./wal/ \<br>
---listen-peer-urls=http://192.168.11.100:32380 \<br>
---initial-advertise-peer-urls=http://192.168.11.100:32380 \<br>
---listen-client-urls=http://192.168.11.100:32379,http://127.0.0.1:32379 \<br>
---advertise-client-urls=http://192.168.11.100:32379 \<br>
---initial-cluster-state=existing \<br>
---initial-cluster=&quot;etcd</em>node2=http://192.168.11.100:22380,etcd<em>node1=http://192.168.11.100:12380,etcd</em>node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380&quot;</p></li>
+<p>ETCD<u>NAME=&quot;etcd</u>node3<q><br>
+ ETCD<u>INITIAL</u>CLUSTER=</q>etcd<u>node1=<a href="http://192.168.11.1:12380,etcd">http://192.168.11.1:12380,etcd</a></u>node2=<a href="http://192.168.11.1:22380,etcd_node0=http://192.168.11.1:2380,etcd_node3=http://192.168.11.1:32379">http://192.168.11.1:22380,etcd_node0=http://192.168.11.1:2380,etcd_node3=http://192.168.11.1:32379</a><q><br>
+ ETCD<u>INITIAL</u>CLUSTER_STATE=</q>existing&quot;</p></li>
+<li><p>2 etcd --name=etcd<u>node3 \<br><br>
+--data-dir=/tmp/etcd/etcd</u>node3/./data/ \<br><br>
+--wal-dir=/tmp/etcd/etcd<u>node3/./wal/ \<br><br>
+--listen-peer-urls=<a href="http://192.168.11.100:32380">http://192.168.11.100:32380</a> \<br><br>
+--initial-advertise-peer-urls=<a href="http://192.168.11.100:32380">http://192.168.11.100:32380</a> \<br><br>
+--listen-client-urls=<a href="http://192.168.11.100:32379,http://127.0.0.1:32379">http://192.168.11.100:32379,http://127.0.0.1:32379</a> \<br><br>
+--advertise-client-urls=<a href="http://192.168.11.100:32379">http://192.168.11.100:32379</a> \<br><br>
+--initial-cluster-state=existing \<br><br>
+--initial-cluster=&quot;etcd</u>node2=<a href="http://192.168.11.100:22380,etcd_node1=http://192.168.11.100:12380,etcd_node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380">http://192.168.11.100:22380,etcd_node1=http://192.168.11.100:12380,etcd_node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380</a>&quot;</p></li>
 </ul>
 
 <p>一定要注意，”initial-cluster”里面一定要有新成员的peer地址。参考文档7#Strict Reconfiguration Check Mode#提到：etcdctl执行完毕”etcdctl member add“后，etcd cluster就把这个还未存在的node算进quorum了，<strong>第二步必须准确完成</strong>。</p>
@@ -316,7 +675,7 @@ exit 1</code></pre></div>
 <li>2 以kill方式杀死一个成员，然后给成员一个新名称，重启失败；</li>
 </ul>
 
-<p>此时etcd的log给出critical级别错误log“etcdmain: couldn&#39;t find local name &quot;etcd_node3&quot; in the initial cluster configuration”。</p>
+<p>此时etcd的log给出critical级别错误log“etcdmain: couldn&#39;t find local name <q>etcd_node3</q> in the initial cluster configuration”。</p>
 
 <p>修改名称等同于扩充集群，正确的操作步骤参见#1.3#节。</p>
 
@@ -333,7 +692,7 @@ exit 1</code></pre></div>
 <li>4 通过etcdctl查看动态集群成员列表以及集群状态，成员不变，集群状态是healthy；</li>
 <li>5 向动态集群添加新成员失败；</li>
 <li>6 杀掉一个动态集群成员，再重新启动后成功加入动态集群；</li>
-<li>7 杀掉一个动态集群成员，清空其data<em>dir和wal</em>dir下数据，再重新启动后加入动态集群失败；</li>
+<li>7 杀掉一个动态集群成员，清空其data<u>dir和wal</u>dir下数据，再重新启动后加入动态集群失败；</li>
 </ul>
 
 <p>只要动态集群现有成员的数据还在，就能保证动态集群自身的稳定运行【参考文档6#Do not use public discovery service for runtime reconfiguration#也证实了这点】。又有作证明的测试过程如下：</p>
@@ -401,9 +760,9 @@ exit 1</code></pre></div>
 
 <ul>
 <li><p>mini transaction支持原子性比较多个键值并且操作多个键值。之前的CompareAndSwap实际上一个针对单个key的mini transaction。一个简单的例子是 Tx(compare: A=1 &amp;&amp; B=2, success: C = 3, D = 3, fail: C = 0, D = 0)。当etcd收到这条transcation请求，etcd会原子性的判断A和B当前的值和期待的值。如果判断成功，C和D的值会被设置为3。</p></li>
-<li><p>etcd 2保存了一个仅保存了1000个历史更改，如果watch过慢就无法得到之前的变更。etcd 3为了支持多纪录，采用了历史记录为主索引的存储结构。etcd3可以存储上十万个纪录，进行快速查询并且支持根据用户的要求进行compaction。</p></li>
+<li><p>etcd 2对一个key仅保存了1000个历史更改，如果watch过慢就无法得到之前的变更。etcd 3为了支持多纪录，采用了历史记录为主索引的存储结构。etcd3可以存储上十万个纪录，进行快速查询并且支持根据用户的要求进行compaction。</p></li>
 <li><p>etcd 2和其它类似开源一致性系统一样最多只能存储数十万级别的key。主要原因是一致性系统都采用了基于log的复制，log不能无限增长，所以在某一时刻系统需要做一个完整的snapshot并且将snapshot存储到磁盘。在存储snapshot之后才能将之前的log丢弃。每次存储完整的snapshot是非常没有效率的，但是对于一致性系统来说设计增量snapshot以及传输同步大量数据都是非常繁琐的。etcd 3通过对raft和存储系统的重构，能够很好的支持增量snapshot和传输相对较大的snapshot。目前etcd 3可以存储百万到千万级别的key。</p></li>
-<li><p>另外一个问题是支持大规模watch。我们主要工作是减小每个watch带来的资源消耗。首先我们利用了HTTP/2的multiple stream per tcp connection，这样同一个client的不同watch可以share同一个tcp connection。另一方面我们对于同一个用户的不同watch只使用一个go routine来serve，这样再一次减轻了server的资源消耗。【v2 每个watch都会占用一个tcp资源和一个go routine资源，大概要消耗30-40kb。】</p></li>
+<li><p>另外一个问题是支持大规模watch。我们主要工作是减小每个watch带来的资源消耗。首先我们利用了HTTP/2的multiple stream per tcp connection，这样同一个client的不同watch可以share同一个tcp connection。另一方面我们对于同一个用户的不同watch只使用一个goroutine来serve，这样再一次减轻了server的资源消耗。【v2 每个watch都会占用一个tcp资源和一个go routine资源，大概要消耗30-40kb。</p></li>
 <li><p>我们在性能方面也做了很多相关的优化。etcd 3目前的性能远强于etcd 2，我们相信etcd 3的性能在不进行特殊优化的情况下就可以足够应付绝大部分的使用场景。在一个由3台8核节点组成的的云服务器上，<font color=red><strong>etcd 3可以做到每秒数万次的写操作和十万次读操作</strong></font>。</p></li>
 </ul>
 
@@ -579,24 +938,24 @@ type generation struct {
 
 <!--- golang --->
 
-<p>​   ibytes := newRevBytes()
-​   idxRev := revision{main: rev, sub: int64(len(tw.changes))}
+<p>​   ibytes := newRevBytes()<br>
+​   idxRev := revision{main: rev, sub: int64(len(tw.changes))}<br>
 ​   revToBytes(idxRev, ibytes)</p>
 
 <p>delete 操作的 key 由 main+sub+”t” 构成：</p>
 
 <!--- golang --->
 
-<p>​   idxRev := revision{main: tw.beginRev + 1, sub: int64(len(tw.changes))}
-​   revToBytes(idxRev, ibytes)
-​   ibytes = appendMarkTombstone(ibytes)
-​   ​
-​   // appendMarkTombstone appends tombstone mark to normal revision bytes.
-​   func appendMarkTombstone(b []byte) []byte {
-​       if len(b) != revBytesLen {
-​           plog.Panicf(“cannot append mark to non normal revision bytes”)
-​       }
-​       return append(b, markTombstone)
+<p>​   idxRev := revision{main: tw.beginRev + 1, sub: int64(len(tw.changes))}<br>
+​   revToBytes(idxRev, ibytes)<br>
+​   ibytes = appendMarkTombstone(ibytes)<br>
+​   ​<br>
+​   // appendMarkTombstone appends tombstone mark to normal revision bytes.<br>
+​   func appendMarkTombstone(b []byte) []byte {<br>
+​       if len(b) != revBytesLen {<br>
+​           plog.Panicf(“cannot append mark to non normal revision bytes”)<br>
+​       }<br>
+​       return append(b, markTombstone)<br>
 ​   }</p>
 
 <div><pre><code class="language-none">// isTombstone checks whether the revision bytes is a tombstone.
@@ -608,13 +967,13 @@ func isTombstone(b []byte) bool {
 
 <!--- golang --->
 
-<p>​   kv := mvccpb.KeyValue{
-​       Key:            key,
-​       Value:          value,
-​       CreateRevision: c,
-​       ModRevision:    rev,
-​       Version:        ver,  // version is the version of the key. A deletion resets the version to zero and any modification of the key increases its version.
-​       Lease:          int64(leaseID),
+<p>​   kv := mvccpb.KeyValue{<br>
+​       Key:            key,<br>
+​       Value:          value,<br>
+​       CreateRevision: c,<br>
+​       ModRevision:    rev,<br>
+​       Version:        ver,  // version is the version of the key. A deletion resets the version to zero and any modification of the key increases its version.<br>
+​       Lease:          int64(leaseID),<br>
 ​   }</p>
 
 <p>总结来说：内存btree维护的是用户key =&gt; keyIndex的映射，keyIndex内维护多版本的revision信息，而revision可以映射到磁盘bbolt中的用户value。</p>
@@ -649,7 +1008,7 @@ func isTombstone(b []byte) bool {
 
 <hr>
 
-<p>etcd集群接受一个写请求后，每个etcd成员都需要把写请求数据固化到cores/bbolt之中，整个过程不要超过50ms。如果超过100ms，则etcd就会打印此条log进行警告。通常情况下是因为磁盘慢，比如磁盘竞争或者譬如虚拟块磁盘这种烂设备。etcd暴露给Prometheus的metrics指标backend<em>commit</em>duration_seconds就显示了commit的瓶颈时间，这个指标低于25ms即可认为服务正常，如果磁盘本身确实慢则设置一个etcd专用磁盘或者更换成SSD通常就能解决问题。</p>
+<p>etcd集群接受一个写请求后，每个etcd成员都需要把写请求数据固化到cores/bbolt之中，整个过程不要超过50ms。如果超过100ms，则etcd就会打印此条log进行警告。通常情况下是因为磁盘慢，比如磁盘竞争或者譬如虚拟块磁盘这种烂设备。etcd暴露给Prometheus的metrics指标backend<u>commit</u>duration_seconds就显示了commit的瓶颈时间，这个指标低于25ms即可认为服务正常，如果磁盘本身确实慢则设置一个etcd专用磁盘或者更换成SSD通常就能解决问题。</p>
 
 <p>第二个原因是CPU计算力不足。如果是通过监控系统发现CPU利用率确实很高，就应该把etcd移到更好的机器上，然后通过cgroups保证etcd进程独享某些核的计算能力，或者提高etcd的priority。</p>
 
@@ -659,7 +1018,7 @@ func isTombstone(b []byte) bool {
 
 <hr>
 
-<p>etcd使用了raft算法，leader会定时地给每个follower发送心跳，如果leader连续两个心跳时间没有给follower发送心跳，etcd会打印这个log以给出告警。通常情况下这个issue是disk运行过慢导致的，leader一般会在心跳包里附带一些metadata，leader需要先把这些数据固化到磁盘上，然后才能发送。写磁盘过程可能要与其他应用竞争，或者因为磁盘是一个虚拟的或者是SATA类型的导致运行过慢，此时只有更好更快磁盘硬件才能解决问题。etcd暴露给Prometheus的metrics指标wal<em>fsync</em>duration_seconds就显示了wal日志的平均花费时间，通常这个指标应低于10ms。</p>
+<p>etcd使用了raft算法，leader会定时地给每个follower发送心跳，如果leader连续两个心跳时间没有给follower发送心跳，etcd会打印这个log以给出告警。通常情况下这个issue是disk运行过慢导致的，leader一般会在心跳包里附带一些metadata，leader需要先把这些数据固化到磁盘上，然后才能发送。写磁盘过程可能要与其他应用竞争，或者因为磁盘是一个虚拟的或者是SATA类型的导致运行过慢，此时只有更好更快磁盘硬件才能解决问题。etcd暴露给Prometheus的metrics指标wal<u>fsync</u>duration_seconds就显示了wal日志的平均花费时间，通常这个指标应低于10ms。</p>
 
 <p>第二种原因就是CPU计算能力不足。如果是通过监控系统发现CPU利用率确实很高，就应该把etcd移到更好的机器上，然后通过cgroups保证etcd进程独享某些核的计算能力，或者提高etcd的priority。</p>
 
@@ -743,14 +1102,14 @@ tc filter add dev eth0 parent 1: protocol ip prio 2 u32 match ip dport 2739 0xff
 
 <div><pre><code class="language-none">$ etcdctl snapshot save backup.db</code></pre></div>
 
-<p>​   $ etcdctl  --endpoints $ENDPOINT —write-out=table snapshot status backup.db
-​   +———————————+———————————+—————————————+————————————+
-​   |   HASH    | REVISION  | TOTAL KEYS  | TOTAL SIZE |
-​   +———————————+———————————+—————————————+————————————+
-​   | fe01cf57  |   10      |       7     |   2.1 MB   |
-​   +———————————+———————————+—————————————+————————————+
-​
-​
+<p>​   \( etcdctl  --endpoints \)ENDPOINT —write-out=table snapshot status backup.db<br>
+​   +———————————+———————————+—————————————+————————————+<br>
+​   |   HASH    | REVISION  | TOTAL KEYS  | TOTAL SIZE |<br>
+​   +———————————+———————————+—————————————+————————————+<br>
+​   | fe01cf57  |   10      |       7     |   2.1 MB   |<br>
+​   +———————————+———————————+—————————————+————————————+<br>
+​<br>
+​<br>
 参考文档10#Snapshotting the keyspace#一节中提到了另一种方法：直接把数据目录member/snap/db下的数据拷贝备份。</p>
 
 <p>至于用冷备数据如何恢复一个cluster，请参见参考文档10#Restoring a cluster#。</p>
@@ -872,7 +1231,7 @@ Finished defragmenting etcd member[127.0.0.1:2379]</code></pre></div>
 <li>Lease 与key关联的Lease，如果其值为0则说明没有关联的Lease；</li>
 </ul>
 
-<p>revision是MVCC中的概念，是etcd中cluster级别的计数器，每次修改操作都会让其自增，可以认为是全局逻辑时钟(global logical clock)，对所有修改操作进行排序：revision越大说明其值越新，etcd对key索引使用B+树方式进行组织。etcd每个key都有很多revision（修订版本），每次事务操作都会创建一个revision，老的revision在etcd进行compaction操作的时候会被清除。create<em>revision会在使用<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/mutex.go">mutex lock</a>的时候使用，Mod</em>Revision与<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/stm.go">事务</a>操作和<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/election.go">leader选举</a>有关。</p>
+<p>revision是MVCC中的概念，是etcd中cluster级别的计数器，每次修改操作都会让其自增，可以认为是全局逻辑时钟(global logical clock)，对所有修改操作进行排序：revision越大说明其值越新，etcd对key索引使用B+树方式进行组织。etcd每个key都有很多revision（修订版本），每次事务操作都会创建一个revision，老的revision在etcd进行compaction操作的时候会被清除。create<u>revision会在使用<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/mutex.go">mutex lock</a>的时候使用，Mod</u>Revision与<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/stm.go">事务</a>操作和<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/election.go">leader选举</a>有关。</p>
 
 <p>revision也与watch有关，当watch的client与server闪断重连后，etcd根据client上次watch相关的revision，把其后的修改再通知给client。</p>
 
@@ -880,7 +1239,7 @@ Finished defragmenting etcd member[127.0.0.1:2379]</code></pre></div>
 
 <hr>
 
-<p>etcd允许一次以range形式操作多个key。etcd对数据的组织不像zookeeper那样以目录层次结构的方式进行，而只有一个层级，range的形式是[a, b)，即[key, key<em>end)。如果key</em>end为空则请求只有key；如果range是[key, key+0x1)则是请求以key为前缀的所有key；如果key_end是’\0’，则请求所有大于等于key的所有key。</p>
+<p>etcd允许一次以range形式操作多个key。etcd对数据的组织不像zookeeper那样以目录层次结构的方式进行，而只有一个层级，range的形式是[a, b)，即[key, key<u>end)。如果key</u>end为空则请求只有key；如果range是[key, key+0x1)则是请求以key为前缀的所有key；如果key_end是’\0’，则请求所有大于等于key的所有key。</p>
 
 <p>Range请求定义如下：</p>
 
@@ -1371,7 +1730,11 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 <li>31 <a href="http://www.sohu.com/a/202861958_736949">深入浅出 Raft - Optimization</a></li>
 </ul>
 
-<h2 id="toc_42">扒粪者-于雨氏</h2>
+<h2 id="toc_42">Payment</h2>
+
+<p><center> <img src="../pic/pay/wepay.jpg" alt="阿弥托福，于雨谢过" title="阿弥托福，于雨谢过"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img src="../pic/pay/alipay.jpg" alt="无量天尊，于雨奉献" title="无量天尊，于雨奉献"> </center></p>
+
+<h2 id="toc_43">扒粪者-于雨氏</h2>
 
 <blockquote>
 <p>2018/01/09，于雨氏，初作此文于海淀。</p>
@@ -1388,6 +1751,29 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 </blockquote>
 
 
+
+<script type="text/javascript">
+var _self="undefined"!=typeof window?window:"undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?self:{},Prism=function(){var e=/\blang(?:uage)?-(\w+)\b/i,t=0,n=_self.Prism={util:{encode:function(e){return e instanceof a?new a(e.type,n.util.encode(e.content),e.alias):"Array"===n.util.type(e)?e.map(n.util.encode):e.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\u00a0/g," ")},type:function(e){return Object.prototype.toString.call(e).match(/\[object (\w+)\]/)[1]},objId:function(e){return e.__id||Object.defineProperty(e,"__id",{value:++t}),e.__id},clone:function(e){var t=n.util.type(e);switch(t){case"Object":var a={};for(var r in e)e.hasOwnProperty(r)&&(a[r]=n.util.clone(e[r]));return a;case"Array":return e.map&&e.map(function(e){return n.util.clone(e)})}return e}},languages:{extend:function(e,t){var a=n.util.clone(n.languages[e]);for(var r in t)a[r]=t[r];return a},insertBefore:function(e,t,a,r){r=r||n.languages;var l=r[e];if(2==arguments.length){a=arguments[1];for(var i in a)a.hasOwnProperty(i)&&(l[i]=a[i]);return l}var o={};for(var s in l)if(l.hasOwnProperty(s)){if(s==t)for(var i in a)a.hasOwnProperty(i)&&(o[i]=a[i]);o[s]=l[s]}return n.languages.DFS(n.languages,function(t,n){n===r[e]&&t!=e&&(this[t]=o)}),r[e]=o},DFS:function(e,t,a,r){r=r||{};for(var l in e)e.hasOwnProperty(l)&&(t.call(e,l,e[l],a||l),"Object"!==n.util.type(e[l])||r[n.util.objId(e[l])]?"Array"!==n.util.type(e[l])||r[n.util.objId(e[l])]||(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,l,r)):(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,null,r)))}},plugins:{},highlightAll:function(e,t){var a={callback:t,selector:'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'};n.hooks.run("before-highlightall",a);for(var r,l=a.elements||document.querySelectorAll(a.selector),i=0;r=l[i++];)n.highlightElement(r,e===!0,a.callback)},highlightElement:function(t,a,r){for(var l,i,o=t;o&&!e.test(o.className);)o=o.parentNode;o&&(l=(o.className.match(e)||[,""])[1],i=n.languages[l]),t.className=t.className.replace(e,"").replace(/\s+/g," ")+" language-"+l,o=t.parentNode,/pre/i.test(o.nodeName)&&(o.className=o.className.replace(e,"").replace(/\s+/g," ")+" language-"+l);var s=t.textContent,u={element:t,language:l,grammar:i,code:s};if(!s||!i)return n.hooks.run("complete",u),void 0;if(n.hooks.run("before-highlight",u),a&&_self.Worker){var c=new Worker(n.filename);c.onmessage=function(e){u.highlightedCode=e.data,n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(u.element),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},c.postMessage(JSON.stringify({language:u.language,code:u.code,immediateClose:!0}))}else u.highlightedCode=n.highlight(u.code,u.grammar,u.language),n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(t),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},highlight:function(e,t,r){var l=n.tokenize(e,t);return a.stringify(n.util.encode(l),r)},tokenize:function(e,t){var a=n.Token,r=[e],l=t.rest;if(l){for(var i in l)t[i]=l[i];delete t.rest}e:for(var i in t)if(t.hasOwnProperty(i)&&t[i]){var o=t[i];o="Array"===n.util.type(o)?o:[o];for(var s=0;s<o.length;++s){var u=o[s],c=u.inside,g=!!u.lookbehind,h=!!u.greedy,f=0,d=u.alias;u=u.pattern||u;for(var p=0;p<r.length;p++){var m=r[p];if(r.length>e.length)break e;if(!(m instanceof a)){u.lastIndex=0;var y=u.exec(m),v=1;if(!y&&h&&p!=r.length-1){var b=r[p+1].matchedStr||r[p+1],k=m+b;if(p<r.length-2&&(k+=r[p+2].matchedStr||r[p+2]),u.lastIndex=0,y=u.exec(k),!y)continue;var w=y.index+(g?y[1].length:0);if(w>=m.length)continue;var _=y.index+y[0].length,P=m.length+b.length;if(v=3,P>=_){if(r[p+1].greedy)continue;v=2,k=k.slice(0,P)}m=k}if(y){g&&(f=y[1].length);var w=y.index+f,y=y[0].slice(f),_=w+y.length,S=m.slice(0,w),O=m.slice(_),j=[p,v];S&&j.push(S);var A=new a(i,c?n.tokenize(y,c):y,d,y,h);j.push(A),O&&j.push(O),Array.prototype.splice.apply(r,j)}}}}}return r},hooks:{all:{},add:function(e,t){var a=n.hooks.all;a[e]=a[e]||[],a[e].push(t)},run:function(e,t){var a=n.hooks.all[e];if(a&&a.length)for(var r,l=0;r=a[l++];)r(t)}}},a=n.Token=function(e,t,n,a,r){this.type=e,this.content=t,this.alias=n,this.matchedStr=a||null,this.greedy=!!r};if(a.stringify=function(e,t,r){if("string"==typeof e)return e;if("Array"===n.util.type(e))return e.map(function(n){return a.stringify(n,t,e)}).join("");var l={type:e.type,content:a.stringify(e.content,t,r),tag:"span",classes:["token",e.type],attributes:{},language:t,parent:r};if("comment"==l.type&&(l.attributes.spellcheck="true"),e.alias){var i="Array"===n.util.type(e.alias)?e.alias:[e.alias];Array.prototype.push.apply(l.classes,i)}n.hooks.run("wrap",l);var o="";for(var s in l.attributes)o+=(o?" ":"")+s+'="'+(l.attributes[s]||"")+'"';return"<"+l.tag+' class="'+l.classes.join(" ")+'" '+o+">"+l.content+"</"+l.tag+">"},!_self.document)return _self.addEventListener?(_self.addEventListener("message",function(e){var t=JSON.parse(e.data),a=t.language,r=t.code,l=t.immediateClose;_self.postMessage(n.highlight(r,n.languages[a],a)),l&&_self.close()},!1),_self.Prism):_self.Prism;var r=document.currentScript||[].slice.call(document.getElementsByTagName("script")).pop();return r&&(n.filename=r.src,document.addEventListener&&!r.hasAttribute("data-manual")&&document.addEventListener("DOMContentLoaded",n.highlightAll)),_self.Prism}();"undefined"!=typeof module&&module.exports&&(module.exports=Prism),"undefined"!=typeof global&&(global.Prism=Prism);
+</script>
+
+<script type="text/x-mathjax-config">
+(function () {
+
+MathJax.Hub.Config({
+	'showProcessingMessages': false,
+	'messageStyle': 'none'
+});
+
+if (typeof MathJaxListener !== 'undefined') {
+	MathJax.Hub.Register.StartupHook('End', function () {
+		MathJaxListener.invokeCallbackForKey_('End');
+	});
+}
+
+})();
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 <!-- baidu statistic start -->
 <script>
@@ -1418,8 +1804,6 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
-
-
 
 </body>
 

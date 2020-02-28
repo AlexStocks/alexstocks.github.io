@@ -298,6 +298,11 @@ step H要求router至少要存储client最新四次的登录时间，然后根�
 - 9 [即时消息的处理方法和装置](http://industry.wanfangdata.com.cn/sh/Detail/Patent?id=Patent_CN201410171968.0)
 - 10 [分布式系统的时间](http://www.jianshu.com/p/8500882ab38c)
 
+## Payment
+
+<center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
+
+
 ## 扒粪者-于雨氏 ##
 > 于雨氏，2016/03/07，初作此文于金箱堂。
 >
