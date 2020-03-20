@@ -84,7 +84,9 @@ etcd v2 直接采用 coreos 公司的二进制发行版，通过命令 `wget htt
 	sbin/etcdctl --endpoints=http://${ip}:2379,http://${ip}:4001 mk /coreos.com/network/config '{"Network":"172.17.0.0/16", "SubnetMin": "172.17.1.0", "SubnetMax": "172.17.254.0", "Backend": {"Type": "vxlan"}}'
 	```
 	
-	这里的 backend 选用 vxlan，没有使用默认的 UDP，效率最高的是 host-gw。
+这里的 backend 选用 vxlan，没有使用默认的 UDP，效率最高的是 host-gw。 如果 type 指定为 host-gw，则主机上不会有 flannel0 网卡，所有主机上的各个容器节点直接映射到同一个 LAN 里，没有 vxlan 等封装方式带来的负担直接通信，减少转发成本。
+
+使用 UDP/vxlan 网络模型的 flannel 会在每个 Node 上单独划分一个子网，然后给 Node 上的每个 Pod 分配 IP。一个集群内的所有的 Node 上的 Pod 同处于一个网段。
 	
 ## 1.4 flannel
 
@@ -113,7 +115,10 @@ flannel 系 CoreOS 公司出品的一个 k8s 网络管理工具，整体通信�
 
     ```Bash
     ip=172.27.137.10
-nohup sudo sbin/flanneld -etcd-endpoints=http://${ip}:2379,http://${ip}:4001 >> logs/flanneld.log 2>&1 &
+nohup sudo sbin/flanneld -etcd-endpoints=http://${ip}:2379,http://${ip}:4001  --ip-masq -iface=eth0 >> logs/flanneld.log 2>&1 &
+    ```
+    
+如果是多网卡（如vagrant环境），需要指定的外网出口的网卡，如上面命令参数 `iface=eth0`。
 
 flannel 部署完毕之后，可通过 `ifconfig` 命令启动一个 flannel0 网卡，但可以观察到 docker0 虚机网卡的 ip 和 flannel0 虚拟网卡的 ip 并不在同一个网络段。docker 容器需要借助 docker0 --> flannel0 通道与其他 node 上的 容器进行通信，所以两个网卡必须处于同一个网络子网段。
 
@@ -128,8 +133,17 @@ flannel 部署完毕之后，可通过 `ifconfig` 命令启动一个 flannel0 �
 	if [ -z "${DOCKER_CERT_PATH}" ]; then
 	    DOCKER_CERT_PATH=/etc/docker
 	fi
-
+	```
+	
 - 4 通过命令 `systemctl  restart docker.service` 重启 docker，即可看到两个网卡已经处于同一子网段；
+
+   
+	```Bash
+	source /run/flannel/subnet.env
+	ifconfig docker0 ${FLANNEL_SUBNET}
+	```
+或者执行上面的命令亦可，不用执行第 3 和 第 4 步骤。
+
 - 5 在 k1 和 k2 执行同样的配置过程。
 
   配置成功后，在各个容器内互相发送 ping 指令验证网络是否互通，如果没有 ping 成功，则表明主机防火墙开了，手工关闭一下即可。
@@ -239,11 +253,6 @@ k8s 相关组件采用基于源码编译方式获取，编译过程如下；
 - 1 [CentOS 6.5安装部署Kubernetes 1.4过程记录](http://blog.sina.com.cn/s/blog_48c95a190102wqpq.html)
 
 [1]:http://blog.sina.com.cn/s/blog_48c95a190102wqpq.html 
-
-## Payment
-
-<center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
-
 
 ## 扒粪者-于雨氏 ##
 
