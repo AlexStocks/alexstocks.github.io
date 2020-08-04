@@ -92,7 +92,7 @@ dubbogo 当前的 k8s 注册中心技术方案就是紧跟最新最新技术发�
 * 2020 年 4 月，有用户要求在 k8s 环境中 consumer 可跨 namespace 访问 provider，相应实现在 2020 年 7 月随着 dubbogo v1.5 版本发布；
 * 2020 年 5 月，dubbogo 社区和 mosn 社区合作实现了 dubbo mesh；
 * 2020 年 6 月，社区意识到 kube-apiserver 是系统的运维态 IAAS 层的核心组件，不应该跨过 PAAS 层直接暴露给应用层，否则应用层使用不当或者框架自身的流量方面的 bug把 kube-apiserver  打垮后将造成整个系统的 P0 级故障，dubbogo v1.6 应当给出 dubbogo operator 的具体实现；
-* 2020 年 7 月，dubbogo v1.5 发布后，社区已经知道完全可以根据目前的 kube-apiserver 注册中心的实现一个 dubbogo operator，未来的方向是结合 istio 拓展其灰度发布、限流、故障注入和配置动态下发能力。
+* 2020 年 7 月，dubbogo v1.5 发布后，社区已经知道完全可以把目前的 kube-apiserver 注册中心的实现方案独立成为一个 dubbogo operator，未来的方向是结合 istio 拓展其灰度发布、限流、故障注入和配置动态下发能力。
 
 至于 dubbo-go-proxy ，dubbogo 社区并不打算借鉴其他项目，完全依靠社区同学贡献各自想法后，进行项目需求收集。目前 dubbogo 社区已经收集完毕 dubbo-go-proxy 的[项目需求方的意见](https://github.com/apache/dubbo-go/issues/540)，预计在 8 月中旬给出项目目标。
 
