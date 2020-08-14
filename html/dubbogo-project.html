@@ -407,7 +407,7 @@ kbd {
 
 <p>项目发展初期有很多同学会 Java 不懂 Dubbo 不会 Go，最后都通过参与项目提升了自我的能力。当然有些人会担心项目代码的质量，但只要秉持 &quot;Commnity Over Code&quot; 这个 &quot;Apache Way&quot;，在发展过程中这些问题都不大。</p>
 
-<p>2019 年时，参与 dubbogo 项目的成员相当一部分同学平时工作是进行业务开发，秉承着对中间件通信技术 “我是谁？我从哪里来？要到那里去” 的初心参与 dubbogo 的开发，无论是对 dubbogo 抑或是对其自身技术水平提升都产生了积极得影响。</p>
+<p>2019 年时，参与 dubbogo 项目的成员相当一部分同学平时工作是进行业务开发，秉承着对中间件通信技术 “我是谁？我从哪里来？要到那里去” 的初心参与 dubbogo 的开发，无论是对 dubbogo 抑或是对其自身技术水平提升都产生了积极的影响。</p>
 
 <p>dubbogo 社区对 dubbogo 发版时间有一定期限要求，所以对参与人员的时间投入也有一定的要求。每个版本的核心功能的 owner，需要保证在 deadline 期限内完成开发任务。</p>
 
@@ -427,7 +427,7 @@ kbd {
 <li>为紧跟当下最近技术发展方向而进行的技术预演；</li>
 </ul>
 
-<p>dubbogo 当前的 k8s 注册中心技术方案就是紧跟最新最新技术发展方向而进行预演的极好例证，其发展时间线如下：</p>
+<p>dubbogo 当前的 k8s 注册中心技术方案就是紧跟最新技术发展方向而进行预演的极好例证，其发展时间线如下：</p>
 
 <ul>
 <li>2019 年 7 月，随着阿里集团和蚂蚁金服在云原生方向的推波助澜，阿里 dubbo 开发团队并未给出可靠的技术方向，dubbogo 社区 core members 也都没有云原生方向的技术积累和相应人才，决定先开发一个基于 kube-apiserver 的注册中心，以进行技术储备；</li>
@@ -436,7 +436,7 @@ kbd {
 <li>2020 年 4 月，有用户要求在 k8s 环境中 consumer 可跨 namespace 访问 provider，相应实现在 2020 年 7 月随着 dubbogo v1.5 版本发布；</li>
 <li>2020 年 5 月，dubbogo 社区和 mosn 社区合作实现了 dubbo mesh；</li>
 <li>2020 年 6 月，社区意识到 kube-apiserver 是系统的运维态 IAAS 层的核心组件，不应该跨过 PAAS 层直接暴露给应用层，否则应用层使用不当或者框架自身的流量方面的 bug把 kube-apiserver  打垮后将造成整个系统的 P0 级故障，dubbogo v1.6 应当给出 dubbogo operator 的具体实现；</li>
-<li>2020 年 7 月，dubbogo v1.5 发布后，社区已经知道完全可以把目前的 kube-apiserver 注册中心的实现独立成个 dubbogo operator，未来的方向是结合 istio 拓展其灰度发布、限流、故障注入和配置动态下发能力。</li>
+<li>2020 年 7 月，dubbogo v1.5 发布后，社区已经知道完全可以把目前的 kube-apiserver 注册中心的实现方案独立成为一个 dubbogo operator，未来的方向是结合 istio 拓展其灰度发布、限流、故障注入和配置动态下发能力。</li>
 </ul>
 
 <p>至于 dubbo-go-proxy ，dubbogo 社区并不打算借鉴其他项目，完全依靠社区同学贡献各自想法后，进行项目需求收集。目前 dubbogo 社区已经收集完毕 dubbo-go-proxy 的<a href="https://github.com/apache/dubbo-go/issues/540">项目需求方的意见</a>，预计在 8 月中旬给出项目目标。</p>
@@ -532,6 +532,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 
 
