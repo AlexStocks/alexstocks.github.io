@@ -19,7 +19,7 @@
 
 - 1 [Elasticsearch 6.0 移除 Type](https://elasticsearch.cn/article/158)
 
-## 扒粪者-于雨氏 ##
+## Timeline ##
 
 > 2017/05/05，于雨氏，于致真大厦。
 

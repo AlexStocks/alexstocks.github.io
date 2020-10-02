@@ -715,7 +715,7 @@ Proxy 对 Group Message 的处理仅仅是转发了事，并不需要复制，�
 
 <center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
 
-## 扒粪者-于雨氏 ##
+## Timeline ##
 >- 于雨氏，2017/12/31，初作此文于丰台金箱堂。
 >- 于雨氏，2018/01/16，于海淀添加 <a href="#3">[3 系统稳定性] 一节。
 >- 于雨氏，2018/01/29，于海淀添加 <a href="#4">[4 消息可靠性]</a> 一节。

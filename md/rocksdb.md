@@ -1168,7 +1168,7 @@ Private 目录则包含一些非 SST 文件：options, current, manifest, WALs�
 <center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
 
 
-## 扒粪者-于雨氏 ##
+## Timeline ##
 
 > 1 2018/03/28，于雨氏，初作此文于海淀。
 >

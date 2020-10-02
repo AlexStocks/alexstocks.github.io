@@ -242,7 +242,7 @@ linux 系统有预读行为，但预读数据量则是用户所不知道的。li
 <center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
 
 
-## 扒粪者-于雨氏
+## Timeline
 
 >- 2019/05/05，于雨氏，于 G44，初作此文。
 >- 2019/05/11，于雨氏，于 wfc 添加 <a href="#1.5">[1.5 Journal]</a>  一节。

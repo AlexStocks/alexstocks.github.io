@@ -1,4 +1,4 @@
-## 扒粪者-于雨氏 * 追述以往 ##
+## 于雨氏 * 追述以往 ##
 ---
 *written by Alex Stocks on 2016/02/05，版权所有，无授权不得转载*
 
@@ -242,7 +242,7 @@
 
 <center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
 
-## 扒粪者-于雨氏 ##
+## Timeline ##
 
 >- 2016/02/05，于雨氏，于金箱堂。
 >- 2016/02/10，于金箱堂，添加了disqus评论功能。

@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>sentinel</title>
+
+
+<style type="text/css">
+body {
+  font-family: Helvetica, arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: white;
+  padding: 30px; }
+
+body > *:first-child {
+  margin-top: 0 !important; }
+body > *:last-child {
+  margin-bottom: 0 !important; }
+
+a {
+  color: #4183C4; }
+a.absent {
+  color: #cc0000; }
+a.anchor {
+  display: block;
+  padding-left: 30px;
+  margin-left: -30px;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0; }
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+  cursor: text;
+  position: relative; }
+
+h1:hover a.anchor, h2:hover a.anchor, h3:hover a.anchor, h4:hover a.anchor, h5:hover a.anchor, h6:hover a.anchor {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA09pVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoMTMuMCAyMDEyMDMwNS5tLjQxNSAyMDEyLzAzLzA1OjIxOjAwOjAwKSAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OUM2NjlDQjI4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OUM2NjlDQjM4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5QzY2OUNCMDg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5QzY2OUNCMTg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PsQhXeAAAABfSURBVHjaYvz//z8DJYCRUgMYQAbAMBQIAvEqkBQWXI6sHqwHiwG70TTBxGaiWwjCTGgOUgJiF1J8wMRAIUA34B4Q76HUBelAfJYSA0CuMIEaRP8wGIkGMA54bgQIMACAmkXJi0hKJQAAAABJRU5ErkJggg==) no-repeat 10px center;
+  text-decoration: none; }
+
+h1 tt, h1 code {
+  font-size: inherit; }
+
+h2 tt, h2 code {
+  font-size: inherit; }
+
+h3 tt, h3 code {
+  font-size: inherit; }
+
+h4 tt, h4 code {
+  font-size: inherit; }
+
+h5 tt, h5 code {
+  font-size: inherit; }
+
+h6 tt, h6 code {
+  font-size: inherit; }
+
+h1 {
+  font-size: 28px;
+  color: black; }
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #cccccc;
+  color: black; }
+
+h3 {
+  font-size: 18px; }
+
+h4 {
+  font-size: 16px; }
+
+h5 {
+  font-size: 14px; }
+
+h6 {
+  color: #777777;
+  font-size: 14px; }
+
+p, blockquote, ul, ol, dl, li, table, pre {
+  margin: 15px 0; }
+
+hr {
+  background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAECAYAAACtBE5DAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OENDRjNBN0E2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OENDRjNBN0I2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo4Q0NGM0E3ODY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo4Q0NGM0E3OTY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqqezsUAAAAfSURBVHjaYmRABcYwBiM2QSA4y4hNEKYDQxAEAAIMAHNGAzhkPOlYAAAAAElFTkSuQmCC) repeat-x 0 0;
+  border: 0 none;
+  color: #cccccc;
+  height: 4px;
+  padding: 0;
+}
+
+body > h2:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+body > h1:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+  body > h1:first-child + h2 {
+    margin-top: 0;
+    padding-top: 0; }
+body > h3:first-child, body > h4:first-child, body > h5:first-child, body > h6:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0; }
+
+h1 p, h2 p, h3 p, h4 p, h5 p, h6 p {
+  margin-top: 0; }
+
+li p.first {
+  display: inline-block; }
+li {
+  margin: 0; }
+ul, ol {
+  padding-left: 30px; }
+
+ul :first-child, ol :first-child {
+  margin-top: 0; }
+
+dl {
+  padding: 0; }
+  dl dt {
+    font-size: 14px;
+    font-weight: bold;
+    font-style: italic;
+    padding: 0;
+    margin: 15px 0 5px; }
+    dl dt:first-child {
+      padding: 0; }
+    dl dt > :first-child {
+      margin-top: 0; }
+    dl dt > :last-child {
+      margin-bottom: 0; }
+  dl dd {
+    margin: 0 0 15px;
+    padding: 0 15px; }
+    dl dd > :first-child {
+      margin-top: 0; }
+    dl dd > :last-child {
+      margin-bottom: 0; }
+
+blockquote {
+  border-left: 4px solid #dddddd;
+  padding: 0 15px;
+  color: #777777; }
+  blockquote > :first-child {
+    margin-top: 0; }
+  blockquote > :last-child {
+    margin-bottom: 0; }
+
+table {
+  padding: 0;border-collapse: collapse; }
+  table tr {
+    border-top: 1px solid #cccccc;
+    background-color: white;
+    margin: 0;
+    padding: 0; }
+    table tr:nth-child(2n) {
+      background-color: #f8f8f8; }
+    table tr th {
+      font-weight: bold;
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr td {
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr th :first-child, table tr td :first-child {
+      margin-top: 0; }
+    table tr th :last-child, table tr td :last-child {
+      margin-bottom: 0; }
+
+img {
+  max-width: 100%; }
+
+span.frame {
+  display: block;
+  overflow: hidden; }
+  span.frame > span {
+    border: 1px solid #dddddd;
+    display: block;
+    float: left;
+    overflow: hidden;
+    margin: 13px 0 0;
+    padding: 7px;
+    width: auto; }
+  span.frame span img {
+    display: block;
+    float: left; }
+  span.frame span span {
+    clear: both;
+    color: #333333;
+    display: block;
+    padding: 5px 0 0; }
+span.align-center {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-center > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: center; }
+  span.align-center span img {
+    margin: 0 auto;
+    text-align: center; }
+span.align-right {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px 0 0;
+    text-align: right; }
+  span.align-right span img {
+    margin: 0;
+    text-align: right; }
+span.float-left {
+  display: block;
+  margin-right: 13px;
+  overflow: hidden;
+  float: left; }
+  span.float-left span {
+    margin: 13px 0 0; }
+span.float-right {
+  display: block;
+  margin-left: 13px;
+  overflow: hidden;
+  float: right; }
+  span.float-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: right; }
+
+code, tt {
+  margin: 0 2px;
+  padding: 0 5px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px; }
+
+pre code {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent; }
+
+.highlight pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+  pre code, pre tt {
+    background-color: transparent;
+    border: none; }
+
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
+}
+
+kbd {
+  display: inline-block;
+  padding: 3px 5px;
+  font-size: 11px;
+  line-height: 10px;
+  color: #555;
+  vertical-align: middle;
+  background-color: #fcfcfc;
+  border: solid 1px #ccc;
+  border-bottom-color: #bbb;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 #bbb
+}
+
+* {
+	-webkit-print-color-adjust: exact;
+}
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:0 auto;
+    }
+}
+@media print {
+	table, pre {
+		page-break-inside: avoid;
+	}
+	pre {
+		word-wrap: break-word;
+	}
+  body {
+    padding: 2cm; 
+  }
+}
+</style>
+
+
+</head>
+
+<body>
+
+<h1 id="toc_0">Sentinel 笔记</h1>
+
+<hr>
+
+<p><em>written by Alex Stocks on 2020/10/02，版权所有，无授权不得转载</em></p>
+
+<p>本文主要分析阿里巴巴集团开源的流量控制中间件 Sentinel，其原生支持了 Java/Go/C++ 等多种语言，本文仅仅分析其 Go 语言实现。下文如无特殊说明，sentinel 指代 Sentinel-Go。</p>
+
+<h2 id="toc_1">1 基本概念 Resource  和 Rule</h2>
+
+<h3 id="toc_2">1.1 Resource</h3>
+
+<div><pre><code class="language-Go">    // ResourceType represents classification of the resources
+    type ResourceType int32
+    
+    const (
+        ResTypeCommon ResourceType = iota
+        ResTypeWeb
+        ResTypeRPC
+    )
+    
+    // TrafficType describes the traffic type: Inbound or Outbound
+    type TrafficType int32
+    
+    const (
+        // Inbound represents the inbound traffic (e.g. provider)
+        Inbound TrafficType = iota
+        // Outbound represents the outbound traffic (e.g. consumer)
+        Outbound
+    )
+    
+    // ResourceWrapper represents the invocation
+    type ResourceWrapper struct {
+        // global unique resource name
+        name string
+        // resource classification
+        classification ResourceType
+        // Inbound or Outbound
+        flowType TrafficType
+    }</code></pre></div>
+
+<p>Resource(ResourceWrapper) 存储了应用场景 ResourceType，以及目标流控的方向 FlowType(TrafficType)。</p>
+
+<h3 id="toc_3">1.2 Entry</h3>
+
+<div><pre><code class="language-Go">    // EntryOptions represents the options of a Sentinel resource entry.
+    type EntryOptions struct {
+        resourceType base.ResourceType
+        entryType    base.TrafficType
+        acquireCount uint32
+        slotChain    *base.SlotChain
+    }
+    
+    type EntryContext struct {
+        entry *SentinelEntry
+        
+        // Use to calculate RT
+        startTime uint64
+
+        Resource *ResourceWrapper
+        StatNode StatNode
+    
+        Input *SentinelInput
+        // the result of rule slots check
+        RuleCheckResult *TokenResult
+    }   
+    
+    type SentinelEntry struct {
+        res *ResourceWrapper
+        // one entry bounds with one context
+        ctx *EntryContext
+
+        sc *SlotChain
+    }</code></pre></div>
+
+<p>Entry 实体 SentinelEntry 关联了 Resource(ResourceWrapper) 以及其流控规则集合 SlotChain。每个 Entry 实体有一个上下文环境 EntryContext，存储每个 Rule 检测时用到的一些流控参数和流控判定结果。</p>
+
+<p>值得注意的是，<code>SentinelEntry.sc</code> 值来自于 <code>EntryOptions.slotChain</code>，<code>EntryOptions.slotChain</code> 存储了全局 SlotChain 对象 <code>api/slot_chain.go:globalSlotChain</code>。</p>
+
+<p>至于何为 <code>SlotChain</code>，就是 sentinel 提供的所有的流控组件的集合，可以简单地认为每个流控组件就是一个 Slot，其详细分析见 
+<a href="#3.5">[3.5 SlotChain]</a>。</p>
+
+<p><strong><em>吐槽</em></strong>：sentinel 一些变量和函数命名的可读性极差，如 <code>EntryOptions.acquireCount</code> 实在无法让人望文生义，看过函数 <code>core/api.go:WithAcquireCount()</code> 的注释才明白：<code>EntryOptions.acquireCount</code> 是批量动作执行次数。如有的一次 RPC 请求中调用了服务端的一个服务接口，则取值 1【也是 <code>EntryOptions.acquireCount</code> 的默认取值】，如果调用了服务端的 3 个服务接口，则取值 3。所以建议改名为 <code>EntryOptions.batchCount</code> 比较好，考虑到最小改动原则，可以在保留 <code>core/api.go:WithAcquireCount()</code> 的同时增加一个同样功能的 <code>core/api.go:WithBatchCount()</code> 接口。 </p>
+
+<h3 id="toc_4">1.3 Rule</h3>
+
+<div><pre><code class="language-Go">    type TokenCalculateStrategy int32
+    const (
+        Direct TokenCalculateStrategy = iota
+        WarmUp
+    )
+    
+    type ControlBehavior int32
+    const (
+        Reject ControlBehavior = iota
+        Throttling
+    )
+    
+    // Rule describes the strategy of flow control, the flow control strategy is based on QPS statistic metric
+    type Rule struct {
+        // Resource represents the resource name.
+        Resource               string                 `json:&quot;resource&quot;`
+        ControlBehavior        ControlBehavior        `json:&quot;controlBehavior&quot;`
+        // Threshold means the threshold during StatIntervalInMs
+        // If StatIntervalInMs is 1000(1 second), Threshold means QPS
+        Threshold         float64          `json:&quot;threshold&quot;`
+        MaxQueueingTimeMs uint32           `json:&quot;maxQueueingTimeMs&quot;`
+        // StatIntervalInMs indicates the statistic interval and it&#39;s the optional setting for flow Rule.
+        // If user doesn&#39;t set StatIntervalInMs, that means using default metric statistic of resource.
+        // If the StatIntervalInMs user specifies can not reuse the global statistic of resource,
+        //      sentinel will generate independent statistic structure for this rule.
+        StatIntervalInMs uint32 `json:&quot;statIntervalInMs&quot;`
+    }</code></pre></div>
+
+<p>Rule 记录了某 Resource 的限流判定阈值 Threshold、限流时间窗口计时长度 StatIntervalInMs 以及 触发限流后的判罚动作 ControlBehavior。</p>
+
+<p>上面核心是 Rule 的接口 RuleCheckSlot，至于 StatSlot 则用于统计 sentinel 自身的运行 metrics。</p>
+
+<h3 id="toc_5">1.4 Flow</h3>
+
+<p>当前章节主要分析流控中的限流（core/flow），根据流控的处理流程梳理 sentinel 整体骨架。</p>
+
+<h4 id="toc_6">1.4.1 TrafficShapingController</h4>
+
+<p>所谓 <code>TrafficShapingController</code>，顾名思义，就是 流量塑形控制器，是流控的具体实施者。</p>
+
+<div><pre><code class="language-Go">    // core/flow/traffic_shaping.go
+    
+    // TrafficShapingCalculator calculates the actual traffic shaping threshold
+    // based on the threshold of rule and the traffic shaping strategy.
+    type TrafficShapingCalculator interface {
+        CalculateAllowedTokens(acquireCount uint32, flag int32) float64
+    }
+    
+    type DirectTrafficShapingCalculator struct {
+        threshold float64
+    }
+    
+    func (d *DirectTrafficShapingCalculator) CalculateAllowedTokens(uint32, int32) float64 {
+        return d.threshold
+    }</code></pre></div>
+
+<p><code>TrafficShapingCalculator</code> 接口用于计算限流的上限，如果不使用 warm-up 功能，可以不去深究其实现，其实体之一 DirectTrafficShapingCalculator 返回 <code>Rule.Threshold</code>【用户设定的限流上限】。</p>
+
+<div><pre><code class="language-Go">    // TrafficShapingChecker performs checking according to current metrics and the traffic
+    // shaping strategy, then yield the token result.
+    type TrafficShapingChecker interface {
+        DoCheck(resStat base.StatNode, acquireCount uint32, threshold float64) *base.TokenResult
+    }
+    
+    type RejectTrafficShapingChecker struct {
+        rule  *Rule
+    }
+    
+    func (d *RejectTrafficShapingChecker) DoCheck(resStat base.StatNode, acquireCount uint32, threshold float64) *base.TokenResult {
+        metricReadonlyStat := d.BoundOwner().boundStat.readOnlyMetric
+        if metricReadonlyStat == nil {
+            return nil
+        }
+        curCount := float64(metricReadonlyStat.GetSum(base.MetricEventPass))
+        if curCount+float64(acquireCount) &gt; threshold {
+            return base.NewTokenResultBlockedWithCause(base.BlockTypeFlow, &quot;&quot;, d.rule, curCount)
+        }
+        return nil
+    }</code></pre></div>
+
+<p><code>TrafficShapingChecker</code> 依据 <code>Rule.Threshold</code> 判定 Resource 在当前时间窗口是否超限。</p>
+
+<div><pre><code class="language-Go">    type TrafficShapingController struct {
+        flowCalculator TrafficShapingCalculator
+        flowChecker    TrafficShapingChecker
+        
+        rule *Rule
+        // boundStat is the statistic of current TrafficShapingController
+        boundStat standaloneStatistic   
+    }
+
+    func (t *TrafficShapingController) PerformChecking(acquireCount uint32, flag int32) *base.TokenResult {
+        allowedTokens := t.flowCalculator.CalculateAllowedTokens(acquireCount, flag)
+        return t.flowChecker.DoCheck(resStat, acquireCount, allowedTokens)
+    }</code></pre></div>
+
+<p>在限流的场景下，这三个接口其实并无多大意义，其核心函数 <code>TrafficShapingController. PerformChecking()</code> 的主要流程是：</p>
+
+<ul>
+<li>1  从 TrafficShapingController.boundStat 中获取当前 Resource 的 metrics 值【curCount】；</li>
+<li>2 如果 curCount + batchNum(acquireCount) &gt; Rule.Threshold，则 pass，否则就 reject。</li>
+</ul>
+
+<p>在限流场景下， <code>TrafficShapingController</code> 四个成员的意义如下：</p>
+
+<ul>
+<li>flowCalculator 计算限流上限；</li>
+<li>flowChecker 执行限流 Check 动作；</li>
+<li>rule 存储限流规则；</li>
+<li>boundStat 存储限流的 Check 结果和时间窗口参数，作为下次限流 Check 动作判定的依据。</li>
+</ul>
+
+<h4 id="toc_7">1.4.2 TrafficControllerMap</h4>
+
+<p>在执行限流判定时，需要根据 Resource 名称获取其对应的 <code>TrafficShapingController</code>。</p>
+
+<div><pre><code class="language-Go">   // TrafficControllerMap represents the map storage for TrafficShapingController.
+   type TrafficControllerMap map[string][]*TrafficShapingController
+    // core/flow/rule_manager.go
+    tcMap        = make(TrafficControllerMap)</code></pre></div>
+
+<p>package 级别全局私有变量 tcMap 存储了所有的 Rule，其 key 为 Resource 名称，value 则是与 Resource 对应的 TrafficShapingController。</p>
+
+<p>用户级别接口函数 <code>core/flow/rule_manager.go:LoadRules()</code> 会根据用户定义的 Rule 构造其对应的 <code>TrafficShapingController</code> 存入 <code>tcMap</code>，这个接口调用函数 <code>generateStatFor(*Rule)</code> 构造 <code>TrafficShapingController.boundStat</code>。</p>
+
+<p>限流场景下，函数 <code>generateStatFor(*Rule)</code> 的核心代码如下：</p>
+
+<div><pre><code class="language-Go">    func generateStatFor(rule *Rule) (*standaloneStatistic, error) {
+        resNode = stat.GetOrCreateResourceNode(rule.Resource, base.ResTypeCommon)
+
+        // default case, use the resource&#39;s default statistic
+        readStat := resNode.DefaultMetric()
+        retStat.reuseResourceStat = true
+        retStat.readOnlyMetric = readStat
+        retStat.writeOnlyMetric = nil
+        return &amp;retStat, nil
+    }   </code></pre></div>
+
+<h2 id="toc_8">2 Metrics</h2>
+
+<p>Resource 的指标 Metrics 是进行 Rule 判定的基础。</p>
+
+<h3 id="toc_9">2.1 原子时间轮 AtomicBucketWrapArray</h3>
+
+<p>Sentinel 库功能丰富，但无论是限流还是熔断，其存储基础都是滑动时间窗口。其间包含了众多优化：如无锁定长时间轮。</p>
+
+<p>滑动窗口实现有很多种，时间轮算法是其中一种比较简单的实现，在时间轮算法之上可以实现多种限流方法。时间轮整体框图如下：</p>
+
+<p><img src="../pic/sentinel/sliding-window.png" alt=""></p>
+
+<blockquote>
+<p>1 BucketWrap</p>
+</blockquote>
+
+<p>时间轮的最基本单元是一个桶【时间窗口】。</p>
+
+<div><pre><code class="language-Go">    // BucketWrap represent a slot to record metrics
+    // In order to reduce the usage of memory, BucketWrap don&#39;t hold length of BucketWrap
+    // The length of BucketWrap could be seen in LeapArray.
+    // The scope of time is [startTime, startTime+bucketLength)
+    // The size of BucketWrap is 24(8+16) bytes
+    type BucketWrap struct {
+        // The start timestamp of this statistic bucket wrapper.
+        BucketStart uint64
+        // The actual data structure to record the metrics (e.g. MetricBucket).
+        Value atomic.Value
+    }</code></pre></div>
+
+<blockquote>
+<blockquote>
+<p>1.1 MetricBucket</p>
+</blockquote>
+</blockquote>
+
+<p>BucketWrap 可以认作是一种 时间桶模板，具体的桶的实体是 MetricsBucket，其定义如下：</p>
+
+<div><pre><code class="language-Go">    // MetricBucket represents the entity to record metrics per minimum time unit (i.e. the bucket time span).
+    // Note that all operations of the MetricBucket are required to be thread-safe.
+    type MetricBucket struct {
+        // Value of statistic
+        counter [base.MetricEventTotal]int64
+        minRt   int64
+    }</code></pre></div>
+
+<p>MetricBucket 存储了五种类型的 metric：</p>
+
+<div><pre><code class="language-Go">    // There are five events to record
+    // pass + block == Total
+    const (
+        // sentinel rules check pass
+        MetricEventPass MetricEvent = iota
+        // sentinel rules check block
+        MetricEventBlock
+    
+        MetricEventComplete
+        // Biz error, used for circuit breaker
+        MetricEventError
+        // request execute rt, unit is millisecond
+        MetricEventRt
+        // hack for the number of event
+        MetricEventTotal
+    )</code></pre></div>
+
+<blockquote>
+<p>2 AtomicBucketWrapArray</p>
+</blockquote>
+
+<p>每个桶只记录了其起始时间和 metric 值，至于每个桶的时间窗口长度这种公共值则统一记录在 AtomicBucketWrapArray 内，AtomicBucketWrapArray 定义如下：</p>
+
+<div><pre><code class="language-Go">    // atomic BucketWrap array to resolve race condition
+    // AtomicBucketWrapArray can not append or delete element after initializing
+    type AtomicBucketWrapArray struct {
+        // The base address for real data array
+        base unsafe.Pointer
+        // The length of slice(array), it can not be modified.
+        length int
+        data   []*BucketWrap
+    }</code></pre></div>
+
+<p>AtomicBucketWrapArray.base 的值是 AtomicBucketWrapArray.data slice 的 data 区域的首指针。因为 AtomicBucketWrapArray.data 是一个固定长度的 slice，所以 AtomicBucketWrapArray.base 直接存储数据内存区域的首地址，以加速访问速度。</p>
+
+<p>其次，AtomicBucketWrapArray.data 中存储的是 BucketWrap 的指针，而不是 BucketWrap。</p>
+
+<p>NewAtomicBucketWrapArrayWithTime() 函数会预热一下，把所有的时间桶都生成出来。</p>
+
+<h3 id="toc_10">2.2 时间轮</h3>
+
+<blockquote>
+<p>1 leapArray</p>
+</blockquote>
+
+<div><pre><code class="language-Go">    // Give a diagram to illustrate
+    // Suppose current time is 888, bucketLengthInMs is 200ms, 
+    // intervalInMs is 1000ms, LeapArray will build the below windows
+    //   B0       B1      B2     B3      B4
+    //   |_______|_______|_______|_______|_______|
+    //  1000    1200    1400    1600    800    (1000)
+    //                                        ^
+    //                                      time=888
+    type LeapArray struct {
+        bucketLengthInMs uint32
+        sampleCount      uint32
+        intervalInMs     uint32
+        array            *AtomicBucketWrapArray
+        // update lock
+        updateLock mutex
+    }</code></pre></div>
+
+<p>LeapArray 各个成员解析：</p>
+
+<ul>
+<li>bucketLengthInMs 是漏桶长度，以毫秒为单位；</li>
+<li>sampleCount 则是时间漏桶个数；</li>
+<li>intervalInMs 是时间窗口长度，以毫秒为单位。</li>
+</ul>
+
+<p>其注释中的 ASCII 图很好地解释了每个字段的含义。</p>
+
+<p><code>LeapArray</code> 核心函数是 <code>LeapArray.currentBucketOfTime()</code>，其作用是根据某个时间点获取其做对应的时间桶 <code>BucketWrap</code>，代码如下：</p>
+
+<div><pre><code class="language-Go">    func (la *LeapArray) currentBucketOfTime(now uint64, bg BucketGenerator) (*BucketWrap, error) {
+        if now &lt;= 0 {
+            return nil, errors.New(&quot;Current time is less than 0.&quot;)
+        }
+    
+        idx := la.calculateTimeIdx(now)
+        bucketStart := calculateStartTime(now, la.bucketLengthInMs)
+    
+        for { //spin to get the current BucketWrap
+            old := la.array.get(idx)
+            if old == nil {
+                // because la.array.data had initiated when new la.array
+                // theoretically, here is not reachable
+                newWrap := &amp;BucketWrap{
+                    BucketStart: bucketStart,
+                    Value:       atomic.Value{},
+                }
+                newWrap.Value.Store(bg.NewEmptyBucket())
+                if la.array.compareAndSet(idx, nil, newWrap) {
+                    return newWrap, nil
+                } else {
+                    runtime.Gosched()
+                }
+            } else if bucketStart == atomic.LoadUint64(&amp;old.BucketStart) {
+                return old, nil
+            } else if bucketStart &gt; atomic.LoadUint64(&amp;old.BucketStart) {
+                // current time has been next cycle of LeapArray and LeapArray dont&#39;t count in last cycle.
+                // reset BucketWrap
+                if la.updateLock.TryLock() {
+                    old = bg.ResetBucketTo(old, bucketStart)
+                    la.updateLock.Unlock()
+                    return old, nil
+                } else {
+                    runtime.Gosched()
+                }
+            } else if bucketStart &lt; atomic.LoadUint64(&amp;old.BucketStart) {
+                // TODO: reserve for some special case (e.g. when occupying &quot;future&quot; buckets).
+                return nil, errors.New(fmt.Sprintf(&quot;Provided time timeMillis=%d is already behind old.BucketStart=%d.&quot;, bucketStart, old.BucketStart))
+            }
+        }
+    }</code></pre></div>
+
+<p>其 for-loop 核心逻辑是：</p>
+
+<ul>
+<li>1 获取时间点对应的时间桶 old；</li>
+<li>2 如果 old 为空，则新建一个时间桶，以原子操作的方式尝试存入时间窗口的时间轮中，存入失败则重新尝试；</li>
+<li>3 如果 old 就是当前时间点所在的时间桶，则返回；</li>
+<li>4 如果 old 的时间起点小于当前时间，则通过乐观锁尝试 reset 桶的起始时间等参数值，加锁更新成功则返回；</li>
+<li>5 如果 old 的时间起点大于当前时间，则系统发生了时间扭曲，返回错误。</li>
+</ul>
+
+<blockquote>
+<p>2 BucketLeapArray</p>
+</blockquote>
+
+<p>leapArray 实现了滑动时间窗口的所有主体，其对外使用接口则是 BucketLeapArray： </p>
+
+<div><pre><code class="language-Go">    // The implementation of sliding window based on LeapArray (as the sliding window infrastructure)
+    // and MetricBucket (as the data type). The MetricBucket is used to record statistic
+    // metrics per minimum time unit (i.e. the bucket time span).
+    type BucketLeapArray struct {
+        data     LeapArray
+        dataType string
+    }</code></pre></div>
+
+<p>从这个 struct 的注释可见，其时间窗口 BucketWrap 的实体是 MetricBucket。</p>
+
+<h3 id="toc_11">2.3 Metric 数据读写</h3>
+
+<blockquote>
+<p>SlidingWindowMetric</p>
+</blockquote>
+
+<div><pre><code class="language-Go">    // SlidingWindowMetric represents the sliding window metric wrapper.
+    // It does not store any data and is the wrapper of BucketLeapArray to adapt to different internal bucket
+    // SlidingWindowMetric is used for SentinelRules and BucketLeapArray is used for monitor
+    // BucketLeapArray is per resource, and SlidingWindowMetric support only read operation.
+    type SlidingWindowMetric struct {
+        bucketLengthInMs uint32
+        sampleCount      uint32
+        intervalInMs     uint32
+        real             *BucketLeapArray
+    }</code></pre></div>
+
+<p>SlidingWindowMetric 是对 BucketLeapArray 的一个封装，只提供了只读接口。</p>
+
+<blockquote>
+<p>ResourceNode</p>
+</blockquote>
+
+<div><pre><code class="language-Go">    type BaseStatNode struct {
+        sampleCount uint32
+        intervalMs  uint32
+    
+        goroutineNum int32
+    
+        arr    *sbase.BucketLeapArray
+        metric *sbase.SlidingWindowMetric
+    }
+    
+    type ResourceNode struct {
+        BaseStatNode
+    
+        resourceName string
+        resourceType base.ResourceType
+    }
+    
+    // core/stat/node_storage.go
+    type ResourceNodeMap map[string]*ResourceNode
+    var (
+        inboundNode = NewResourceNode(base.TotalInBoundResourceName, base.ResTypeCommon)
+    
+        resNodeMap = make(ResourceNodeMap)
+        rnsMux     = new(sync.RWMutex)
+    )</code></pre></div>
+
+<p>BaseStatNode 对外提供了读写接口，其数据写入 BaseStatNode.arr，读取接口则依赖 BaseStatNode.metric。<code>BaseStatNode.arr</code> 是在 <code>NewBaseStatNode()</code> 中创建的，指针 <code>SlidingWindowMetric.real</code> 也指向它。</p>
+
+<p><code>ResourceNode</code> 则顾名思义，其代表了某资源和它的 Metrics 存储  <code>ResourceNode.BaseStatNode</code>。</p>
+
+<p>全局变量 <code>resNodeMap</code> 存储了所有资源的 Metrics 指标数据。</p>
+
+<h2 id="toc_12">3 限流流程</h2>
+
+<p>本节只分析 Sentinel 库提供的最基础的流量整形功能 -- 限流，限流算法多种多样，可以使用其内置的算法，用户自己也可以进行扩展。</p>
+
+<p>限流过程有三步步骤：</p>
+
+<ul>
+<li>1 针对特定 Resource 构造其 EntryContext，存储其 Metrics、限流开始时间等，Sentinel 称之为 StatPrepareSlot；</li>
+<li>2 依据 Resource 的限流算法判定其是否应该进行限流，并给出限流判定结果，Sentinel 称之为 RuleCheckSlot；
+
+<ul>
+<li>补充：这个限流算法是一系列判断方法的合集（SlotChain）；<br></li>
+</ul></li>
+<li>3 判定之后，除了用户自身根据判定结果执行相应的 action，Sentinel 也需要根据判定结果执行自身的 Action，以及把整个判定流程所使用的的时间 RT 等指标存储下来，Sentinel 称之为 StatSlot。</li>
+</ul>
+
+<p>整体流程如下图所示：</p>
+
+<p><img src="../pic/sentinel/framework.png" alt=""></p>
+
+<h3 id="toc_13">3.1 Slot</h3>
+
+<p>针对 Check 三个步骤，有三个对应的 Slot 分别定义如下：</p>
+
+<div><pre><code class="language-Go">    // StatPrepareSlot is responsible for some preparation before statistic
+    // For example: init structure and so on
+    type StatPrepareSlot interface {
+        // Prepare function do some initialization
+        // Such as: init statistic structure、node and etc
+        // The result of preparing would store in EntryContext
+        // All StatPrepareSlots execute in sequence
+        // Prepare function should not throw panic.
+        Prepare(ctx *EntryContext)
+    }
+    
+    // RuleCheckSlot is rule based checking strategy
+    // All checking rule must implement this interface.
+    type RuleCheckSlot interface {
+        // Check function do some validation
+        // It can break off the slot pipeline
+        // Each TokenResult will return check result
+        // The upper logic will control pipeline according to SlotResult.
+        Check(ctx *EntryContext) *TokenResult
+    }
+    
+    // StatSlot is responsible for counting all custom biz metrics.
+    // StatSlot would not handle any panic, and pass up all panic to slot chain
+    type StatSlot interface {
+        // OnEntryPass function will be invoked when StatPrepareSlots and RuleCheckSlots execute pass
+        // StatSlots will do some statistic logic, such as QPS、log、etc
+        OnEntryPassed(ctx *EntryContext)
+        // OnEntryBlocked function will be invoked when StatPrepareSlots and RuleCheckSlots fail to execute
+        // It may be inbound flow control or outbound cir
+        // StatSlots will do some statistic logic, such as QPS、log、etc
+        // blockError introduce the block detail
+        OnEntryBlocked(ctx *EntryContext, blockError *BlockError)
+        // OnCompleted function will be invoked when chain exits.
+        // The semantics of OnCompleted is the entry passed and completed
+        // Note: blocked entry will not call this function
+        OnCompleted(ctx *EntryContext)
+    }</code></pre></div>
+
+<p>抛却 Prepare 和 Stat，可以简单的认为：所谓的 slot，就是 sentinel 提供的某个流控组件。 </p>
+
+<p>值得注意的是，根据注释 StatSlot.OnCompleted 只有在 RuleCheckSlot.Check 通过才会执行，用于计算从请求开始到结束所使用的 RT 等 Metrics。</p>
+
+<h3 id="toc_14">3.2 Prepare</h3>
+
+<div><pre><code class="language-Go">    // core/base/slot_chain.go
+    // StatPrepareSlot is responsible for some preparation before statistic
+    // For example: init structure and so on
+    type StatPrepareSlot interface {
+        // Prepare function do some initialization
+        // Such as: init statistic structure、node and etc
+        // The result of preparing would store in EntryContext
+        // All StatPrepareSlots execute in sequence
+        // Prepare function should not throw panic.
+        Prepare(ctx *EntryContext)
+    }
+    
+    // core/stat/stat_prepare_slot.go
+    type ResourceNodePrepareSlot struct {
+    }
+    
+    func (s *ResourceNodePrepareSlot) Prepare(ctx *base.EntryContext) {
+        node := GetOrCreateResourceNode(ctx.Resource.Name(), ctx.Resource.Classification())
+        // Set the resource node to the context.
+        ctx.StatNode = node
+    }</code></pre></div>
+
+<p>如前面解释，Prepare 主要是构造存储 Resource Metrics 所使用的 ResourceNode。所有 Resource 的 StatNode 都会存储在 package 级别的全局变量 <code>core/stat/node_storage.go:resNodeMap [type: map[string]*ResourceNode]</code> 中，函数 <code>GetOrCreateResourceNode</code> 用于根据 Resource Name 从 <code>resNodeMap</code> 中获取其对应的 StatNode，如果不存在则创建一个 StatNode 并存入 <code>resNodeMap</code>。</p>
+
+<h3 id="toc_15">3.3 Check</h3>
+
+<p>RuleCheckSlot.Check() 执行流程：</p>
+
+<ul>
+<li>1 根据 Resource 名称获取其所有的 Rule 集合；</li>
+<li>2 遍历 Rule 集合，对 Resource 依次执行 Check，任何一个 Rule 判定 Resource 需要进行限流【Blocked】则返回，否则放行。</li>
+</ul>
+
+<div><pre><code class="language-Go">    type Slot struct {
+    }
+    
+    func (s *Slot) Check(ctx *base.EntryContext) *base.TokenResult {
+        res := ctx.Resource.Name()
+        tcs := getTrafficControllerListFor(res)
+        result := ctx.RuleCheckResult
+    
+        // Check rules in order
+        for _, tc := range tcs {
+            r := canPassCheck(tc, ctx.StatNode, ctx.Input.AcquireCount)
+            if r == nil {
+                // nil means pass
+                continue
+            }
+            if r.Status() == base.ResultStatusBlocked {
+                return r
+            }
+            if r.Status() == base.ResultStatusShouldWait {
+                if waitMs := r.WaitMs(); waitMs &gt; 0 {
+                    // Handle waiting action.
+                    time.Sleep(time.Duration(waitMs) * time.Millisecond)
+                }
+                continue
+            }
+        }
+        return result
+    }
+    
+    func canPassCheck(tc *TrafficShapingController, node base.StatNode, acquireCount uint32) *base.TokenResult {
+        return canPassCheckWithFlag(tc, node, acquireCount, 0)
+    }
+    
+    func canPassCheckWithFlag(tc *TrafficShapingController, node base.StatNode, acquireCount uint32, flag int32) *base.TokenResult {
+        return checkInLocal(tc, node, acquireCount, flag)
+    }
+
+    func checkInLocal(tc *TrafficShapingController, resStat base.StatNode, acquireCount uint32, flag int32) *base.TokenResult {
+        return tc.PerformChecking(resStat, acquireCount, flag)
+    }</code></pre></div>
+
+<h4 id="toc_16">3.4 Exit</h4>
+
+<p>sentinel 对 Resource 进行 Check 后，其后续逻辑执行顺序是：</p>
+
+<ul>
+<li>1 如果 RuleCheckSlot.Check() 判定 pass 通过则执行 StatSlot.OnEntryPassed()，否则 RuleCheckSlot.Check() 判定 reject 则执行 StatSlot.OnEntryBlocked()；</li>
+<li>2 如果 RuleCheckSlot.Check() 判定 pass 通过，则执行本次 Action；</li>
+<li>3 如果 RuleCheckSlot.Check() 判定 pass 通过，则执行 SentinelEntry.Exit() --&gt; SlotChain.ext() --&gt; StatSlot.OnCompleted() 。</li>
+</ul>
+
+<p>第三步骤的调用链路如下：</p>
+
+<blockquote>
+<p>StatSlot.OnCompleted()</p>
+</blockquote>
+
+<div><pre><code class="language-Go">    // core/flow/standalone_stat_slot.go
+    type StandaloneStatSlot struct {
+    }
+    
+    func (s StandaloneStatSlot) OnEntryPassed(ctx *base.EntryContext) {
+        res := ctx.Resource.Name()
+        for _, tc := range getTrafficControllerListFor(res) {
+            if !tc.boundStat.reuseResourceStat {
+                if tc.boundStat.writeOnlyMetric != nil {
+                    tc.boundStat.writeOnlyMetric.AddCount(base.MetricEventPass, int64(ctx.Input.AcquireCount))
+                } 
+            }
+        }
+    }
+    
+    func (s StandaloneStatSlot) OnEntryBlocked(ctx *base.EntryContext, blockError *base.BlockError) {
+        // Do nothing
+    }
+    
+    func (s StandaloneStatSlot) OnCompleted(ctx *base.EntryContext) {
+        // Do nothing
+    }</code></pre></div>
+
+<blockquote>
+<p>SlotChain.exit()</p>
+</blockquote>
+
+<div><pre><code class="language-Go">    // core/base/slot_chain.go
+    type SlotChain struct {
+    }
+    
+    func (sc *SlotChain) exit(ctx *EntryContext) {
+        // The OnCompleted is called only when entry passed
+        if ctx.IsBlocked() {
+            return
+        }
+        for _, s := range sc.stats {
+            s.OnCompleted(ctx)
+        }
+    }</code></pre></div>
+
+<blockquote>
+<p>SentinelEntry.Exit()  </p>
+</blockquote>
+
+<div><pre><code class="language-Go">    // core/base/entry.go
+    type SentinelEntry struct {
+        sc *SlotChain
+        exitCtl sync.Once
+    }
+    
+    func (e *SentinelEntry) Exit() {
+        e.exitCtl.Do(func() {
+            if e.sc != nil {
+                e.sc.exit(ctx)
+            }
+        })
+    }</code></pre></div>
+
+<p>从上面执行可见，<code>StatSlot.OnCompleted()</code> 是在 Action 【如一次 RPC 的请求-响应 Invokation】完成之后调用的。如果有的组件需要计算一次 Action 的时间耗费  RT，就在其对应的 <code>StatSlot.OnCompleted()</code> 中依据 <code>EntryContext.startTime</code> 完成时间耗费计算。</p>
+
+<h3 id="toc_17"><a name="1.5">3.5 SlotChain</a></h3>
+
+<p>Sentinel 本质是一个流控包，不仅提供了限流功能，还提供了众多其他诸如自适应流量保护、熔断降级、冷启动、全局流量 Metrics 结果等功能流控组件，Sentinel-Go 包定义了一个 <code>SlotChain</code> 实体存储其所有的流控组件。</p>
+
+<div><pre><code class="language-Go">   // core/base/slot_chain.go
+
+    // SlotChain hold all system slots and customized slot.
+    // SlotChain support plug-in slots developed by developer.
+    type SlotChain struct {
+        statPres   []StatPrepareSlot
+        ruleChecks []RuleCheckSlot
+        stats      []StatSlot
+    }
+    
+    // The entrance of slot chain
+    // Return the TokenResult and nil if internal panic.
+    func (sc *SlotChain) Entry(ctx *EntryContext) *TokenResult {
+        // execute prepare slot
+        sps := sc.statPres
+        if len(sps) &gt; 0 {
+            for _, s := range sps {
+                s.Prepare(ctx)
+            }
+        }
+    
+        // execute rule based checking slot
+        rcs := sc.ruleChecks
+        var ruleCheckRet *TokenResult
+        if len(rcs) &gt; 0 {
+            for _, s := range rcs {
+                sr := s.Check(ctx)
+                if sr == nil {
+                    // nil equals to check pass
+                    continue
+                }
+                // check slot result
+                if sr.IsBlocked() {
+                    ruleCheckRet = sr
+                    break
+                }
+            }
+        }
+        if ruleCheckRet == nil {
+            ctx.RuleCheckResult.ResetToPass()
+        } else {
+            ctx.RuleCheckResult = ruleCheckRet
+        }
+    
+        // execute statistic slot
+        ss := sc.stats
+        ruleCheckRet = ctx.RuleCheckResult
+        if len(ss) &gt; 0 {
+            for _, s := range ss {
+                // indicate the result of rule based checking slot.
+                if !ruleCheckRet.IsBlocked() {
+                    s.OnEntryPassed(ctx)
+                } else {
+                    // The block error should not be nil.
+                    s.OnEntryBlocked(ctx, ruleCheckRet.blockErr)
+                }
+            }
+        }
+        return ruleCheckRet
+    }
+    
+    func (sc *SlotChain) exit(ctx *EntryContext) {
+        if ctx == nil || ctx.Entry() == nil {
+            logging.Error(errors.New(&quot;nil EntryContext or SentinelEntry&quot;), &quot;&quot;)
+            return
+        }
+        // The OnCompleted is called only when entry passed
+        if ctx.IsBlocked() {
+            return
+        }
+        for _, s := range sc.stats {
+            s.OnCompleted(ctx)
+        }
+        // relieve the context here
+    }   </code></pre></div>
+
+<p><strong><em>吐槽</em></strong>：Sentinel 包针对某个 Resource 无法确知其使用了那个组件，在运行时会针对某个 Resource 的 EntryContext 依次执行所有的组件的 Rule。Sentinel-golang 为何不给用户相关用户提供一个接口让其设置使用的流控组件集合，以减少下面函数 <code>SlotChain.Entry()</code> 中执行 <code>Rule.Check()</code> 执行次数？</p>
+
+<blockquote>
+<p>globalSlotChain</p>
+</blockquote>
+
+<p>Sentinel-Go 定义了一个 SlotChain 的 package 级别的全局私有变量 <code>globalSlotChain</code> 用于存储其所有的流控组件对象。相关代码示例如下。因本文只关注限流组件，所以下面只给出了限流组件的注册代码。</p>
+
+<div><pre><code class="language-Go">   // api/slot_chain.go 
+   
+    func BuildDefaultSlotChain() *base.SlotChain {
+        sc := base.NewSlotChain()
+        sc.AddStatPrepareSlotLast(&amp;stat.ResourceNodePrepareSlot{})
+    
+        sc.AddRuleCheckSlotLast(&amp;flow.Slot{})
+    
+        sc.AddStatSlotLast(&amp;flow.StandaloneStatSlot{})
+        
+        return sc
+    }
+    
+    var globalSlotChain = BuildDefaultSlotChain()</code></pre></div>
+
+<blockquote>
+<p>Entry</p>
+</blockquote>
+
+<p>在 Sentinel-Go 对外的最重要的入口函数 <code>api/api.go:Entry()</code> 中，<code>globalSlotChain</code> 会作为 EntryOptions 的 SlotChain 参数被使用。</p>
+
+<div><pre><code class="language-Go">    // api/api.go
+    
+    // Entry is the basic API of Sentinel.
+    func Entry(resource string, opts ...EntryOption) (*base.SentinelEntry, *base.BlockError) {
+        options := entryOptsPool.Get().(*EntryOptions)
+        options.slotChain = globalSlotChain
+    
+        return entry(resource, options)
+    }</code></pre></div>
+
+<h2 id="toc_18">Payment</h2>
+
+<p><center> <img src="../pic/pay/wepay.jpg" alt="阿弥托福，于雨谢过" title="阿弥托福，于雨谢过"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img src="../pic/pay/alipay.jpg" alt="无量天尊，于雨奉献" title="无量天尊，于雨奉献"> </center></p>
+
+<h2 id="toc_19">Timeline</h2>
+
+<blockquote>
+<ul>
+<li>2020/10/02，于雨氏，初作此文于朝阳 WFC。</li>
+</ul>
+</blockquote>
+
+
+
+
+</body>
+
+</html>
