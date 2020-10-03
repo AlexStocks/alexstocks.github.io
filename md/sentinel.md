@@ -6,28 +6,28 @@
 
 ## 1 基本概念 Resource  和 Rule
 
-### 1.1 Resource 
+### 1.1 Resource
 
 ```Go
 	// ResourceType represents classification of the resources
 	type ResourceType int32
-	
+
 	const (
 		ResTypeCommon ResourceType = iota
 		ResTypeWeb
 		ResTypeRPC
 	)
-	
+
 	// TrafficType describes the traffic type: Inbound or Outbound
 	type TrafficType int32
-	
+
 	const (
 		// Inbound represents the inbound traffic (e.g. provider)
 		Inbound TrafficType = iota
 		// Outbound represents the outbound traffic (e.g. consumer)
 		Outbound
 	)
-	
+
 	// ResourceWrapper represents the invocation
 	type ResourceWrapper struct {
 		// global unique resource name
@@ -51,21 +51,21 @@ Resource(ResourceWrapper) 存储了应用场景 ResourceType，以及目标流�
 		acquireCount uint32
 		slotChain    *base.SlotChain
 	}
-	
+
 	type EntryContext struct {
 		entry *SentinelEntry
-		
+
 		// Use to calculate RT
 		startTime uint64
 
 		Resource *ResourceWrapper
 		StatNode StatNode
-	
+
 		Input *SentinelInput
 		// the result of rule slots check
 		RuleCheckResult *TokenResult
-	}	
-	
+	}
+
 	type SentinelEntry struct {
 		res *ResourceWrapper
 		// one entry bounds with one context
@@ -79,10 +79,10 @@ Entry 实体 SentinelEntry 关联了 Resource(ResourceWrapper) 以及其流控�
 
 值得注意的是，`SentinelEntry.sc` 值来自于 `EntryOptions.slotChain`，`EntryOptions.slotChain` 存储了全局 SlotChain 对象 `api/slot_chain.go:globalSlotChain`。
 
-至于何为 `SlotChain`，就是 sentinel 提供的所有的流控组件的集合，可以简单地认为每个流控组件就是一个 Slot，其详细分析见 
+至于何为 `SlotChain`，就是 sentinel 提供的所有的流控组件的集合，可以简单地认为每个流控组件就是一个 Slot，其详细分析见
 <a href="#3.5">[3.5 SlotChain]</a>。
 
-***吐槽***：sentinel 一些变量和函数命名的可读性极差，如 `EntryOptions.acquireCount` 实在无法让人望文生义，看过函数 `core/api.go:WithAcquireCount()` 的注释才明白：`EntryOptions.acquireCount` 是批量动作执行次数。如有的一次 RPC 请求中调用了服务端的一个服务接口，则取值 1【也是 `EntryOptions.acquireCount` 的默认取值】，如果调用了服务端的 3 个服务接口，则取值 3。所以建议改名为 `EntryOptions.batchCount` 比较好，考虑到最小改动原则，可以在保留 `core/api.go:WithAcquireCount()` 的同时增加一个同样功能的 `core/api.go:WithBatchCount()` 接口。 
+***吐槽***：sentinel 一些变量和函数命名的可读性极差，如 `EntryOptions.acquireCount` 实在无法让人望文生义，看过函数 `core/api.go:WithAcquireCount()` 的注释才明白：`EntryOptions.acquireCount` 是批量动作执行次数。如有的一次 RPC 请求中调用了服务端的一个服务接口，则取值 1【也是 `EntryOptions.acquireCount` 的默认取值】，如果调用了服务端的 3 个服务接口，则取值 3。所以建议改名为 `EntryOptions.batchCount` 比较好，考虑到最小改动原则，可以在保留 `core/api.go:WithAcquireCount()` 的同时增加一个同样功能的 `core/api.go:WithBatchCount()` 接口。
 
 ### 1.3 Rule
 
@@ -92,13 +92,13 @@ Entry 实体 SentinelEntry 关联了 Resource(ResourceWrapper) 以及其流控�
 		Direct TokenCalculateStrategy = iota
 		WarmUp
 	)
-	
+
 	type ControlBehavior int32
 	const (
 		Reject ControlBehavior = iota
 		Throttling
 	)
-	
+
 	// Rule describes the strategy of flow control, the flow control strategy is based on QPS statistic metric
 	type Rule struct {
 		// Resource represents the resource name.
@@ -130,36 +130,36 @@ Rule 记录了某 Resource 的限流判定阈值 Threshold、限流时间窗口�
 
 ```Go
 	// core/flow/traffic_shaping.go
-	
+
 	// TrafficShapingCalculator calculates the actual traffic shaping threshold
 	// based on the threshold of rule and the traffic shaping strategy.
 	type TrafficShapingCalculator interface {
 		CalculateAllowedTokens(acquireCount uint32, flag int32) float64
 	}
-	
+
 	type DirectTrafficShapingCalculator struct {
 		threshold float64
 	}
-	
+
 	func (d *DirectTrafficShapingCalculator) CalculateAllowedTokens(uint32, int32) float64 {
 		return d.threshold
 	}
-```	
+```
 
 `TrafficShapingCalculator` 接口用于计算限流的上限，如果不使用 warm-up 功能，可以不去深究其实现，其实体之一 DirectTrafficShapingCalculator 返回 `Rule.Threshold`【用户设定的限流上限】。
 
-	
+
 ```Go
 	// TrafficShapingChecker performs checking according to current metrics and the traffic
 	// shaping strategy, then yield the token result.
 	type TrafficShapingChecker interface {
 		DoCheck(resStat base.StatNode, acquireCount uint32, threshold float64) *base.TokenResult
 	}
-	
+
 	type RejectTrafficShapingChecker struct {
 		rule  *Rule
 	}
-	
+
 	func (d *RejectTrafficShapingChecker) DoCheck(resStat base.StatNode, acquireCount uint32, threshold float64) *base.TokenResult {
 		metricReadonlyStat := d.BoundOwner().boundStat.readOnlyMetric
 		if metricReadonlyStat == nil {
@@ -179,10 +179,10 @@ Rule 记录了某 Resource 的限流判定阈值 Threshold、限流时间窗口�
 	type TrafficShapingController struct {
 		flowCalculator TrafficShapingCalculator
 		flowChecker    TrafficShapingChecker
-		
+
 		rule *Rule
 		// boundStat is the statistic of current TrafficShapingController
-		boundStat standaloneStatistic	
+		boundStat standaloneStatistic
 	}
 
 	func (t *TrafficShapingController) PerformChecking(acquireCount uint32, flag int32) *base.TokenResult {
@@ -230,7 +230,7 @@ package 级别全局私有变量 tcMap 存储了所有的 Rule，其 key 为 Res
 		retStat.readOnlyMetric = readStat
 		retStat.writeOnlyMetric = nil
 		return &retStat, nil
-	}	
+	}
 ```
 
 ## 2 Metrics
@@ -275,7 +275,7 @@ BucketWrap 可以认作是一种 时间桶模板，具体的桶的实体是 Metr
 		counter [base.MetricEventTotal]int64
 		minRt   int64
 	}
-```	
+```
 
 MetricBucket 存储了五种类型的 metric：
 
@@ -287,7 +287,7 @@ MetricBucket 存储了五种类型的 metric：
 		MetricEventPass MetricEvent = iota
 		// sentinel rules check block
 		MetricEventBlock
-	
+
 		MetricEventComplete
 		// Biz error, used for circuit breaker
 		MetricEventError
@@ -320,13 +320,13 @@ AtomicBucketWrapArray.base 的值是 AtomicBucketWrapArray.data slice 的 data �
 
 NewAtomicBucketWrapArrayWithTime() 函数会预热一下，把所有的时间桶都生成出来。
 
-### 2.2 时间轮 
+### 2.2 时间轮
 
 > 1 leapArray
 
 ```Go
 	// Give a diagram to illustrate
-	// Suppose current time is 888, bucketLengthInMs is 200ms, 
+	// Suppose current time is 888, bucketLengthInMs is 200ms,
 	// intervalInMs is 1000ms, LeapArray will build the below windows
 	//   B0       B1      B2     B3      B4
 	//   |_______|_______|_______|_______|_______|
@@ -358,10 +358,10 @@ LeapArray 各个成员解析：
 		if now <= 0 {
 			return nil, errors.New("Current time is less than 0.")
 		}
-	
+
 		idx := la.calculateTimeIdx(now)
 		bucketStart := calculateStartTime(now, la.bucketLengthInMs)
-	
+
 		for { //spin to get the current BucketWrap
 			old := la.array.get(idx)
 			if old == nil {
@@ -407,7 +407,7 @@ LeapArray 各个成员解析：
 
 > 2 BucketLeapArray
 
-leapArray 实现了滑动时间窗口的所有主体，其对外使用接口则是 BucketLeapArray： 
+leapArray 实现了滑动时间窗口的所有主体，其对外使用接口则是 BucketLeapArray：
 
 ```Go
 	// The implementation of sliding window based on LeapArray (as the sliding window infrastructure)
@@ -446,25 +446,25 @@ SlidingWindowMetric 是对 BucketLeapArray 的一个封装，只提供了只读�
 	type BaseStatNode struct {
 		sampleCount uint32
 		intervalMs  uint32
-	
+
 		goroutineNum int32
-	
+
 		arr    *sbase.BucketLeapArray
 		metric *sbase.SlidingWindowMetric
 	}
-	
+
 	type ResourceNode struct {
 		BaseStatNode
-	
+
 		resourceName string
 		resourceType base.ResourceType
 	}
-	
+
 	// core/stat/node_storage.go
 	type ResourceNodeMap map[string]*ResourceNode
 	var (
 		inboundNode = NewResourceNode(base.TotalInBoundResourceName, base.ResTypeCommon)
-	
+
 		resNodeMap = make(ResourceNodeMap)
 		rnsMux     = new(sync.RWMutex)
 	)
@@ -484,7 +484,7 @@ BaseStatNode 对外提供了读写接口，其数据写入 BaseStatNode.arr，�
 
 * 1 针对特定 Resource 构造其 EntryContext，存储其 Metrics、限流开始时间等，Sentinel 称之为 StatPrepareSlot；
 * 2 依据 Resource 的限流算法判定其是否应该进行限流，并给出限流判定结果，Sentinel 称之为 RuleCheckSlot；
-     + 补充：这个限流算法是一系列判断方法的合集（SlotChain）；  
+     + 补充：这个限流算法是一系列判断方法的合集（SlotChain）；
 * 3 判定之后，除了用户自身根据判定结果执行相应的 action，Sentinel 也需要根据判定结果执行自身的 Action，以及把整个判定流程所使用的的时间 RT 等指标存储下来，Sentinel 称之为 StatSlot。
 
 整体流程如下图所示：
@@ -507,7 +507,7 @@ BaseStatNode 对外提供了读写接口，其数据写入 BaseStatNode.arr，�
 		// Prepare function should not throw panic.
 		Prepare(ctx *EntryContext)
 	}
-	
+
 	// RuleCheckSlot is rule based checking strategy
 	// All checking rule must implement this interface.
 	type RuleCheckSlot interface {
@@ -517,7 +517,7 @@ BaseStatNode 对外提供了读写接口，其数据写入 BaseStatNode.arr，�
 		// The upper logic will control pipeline according to SlotResult.
 		Check(ctx *EntryContext) *TokenResult
 	}
-	
+
 	// StatSlot is responsible for counting all custom biz metrics.
 	// StatSlot would not handle any panic, and pass up all panic to slot chain
 	type StatSlot interface {
@@ -536,7 +536,7 @@ BaseStatNode 对外提供了读写接口，其数据写入 BaseStatNode.arr，�
 	}
 ```
 
-抛却 Prepare 和 Stat，可以简单的认为：所谓的 slot，就是 sentinel 提供的某个流控组件。 
+抛却 Prepare 和 Stat，可以简单的认为：所谓的 slot，就是 sentinel 提供的某个流控组件。
 
 值得注意的是，根据注释 StatSlot.OnCompleted 只有在 RuleCheckSlot.Check 通过才会执行，用于计算从请求开始到结束所使用的 RT 等 Metrics。
 
@@ -554,11 +554,11 @@ BaseStatNode 对外提供了读写接口，其数据写入 BaseStatNode.arr，�
 		// Prepare function should not throw panic.
 		Prepare(ctx *EntryContext)
 	}
-	
+
 	// core/stat/stat_prepare_slot.go
 	type ResourceNodePrepareSlot struct {
 	}
-	
+
 	func (s *ResourceNodePrepareSlot) Prepare(ctx *base.EntryContext) {
 		node := GetOrCreateResourceNode(ctx.Resource.Name(), ctx.Resource.Classification())
 		// Set the resource node to the context.
@@ -578,12 +578,12 @@ RuleCheckSlot.Check() 执行流程：
 ```Go
 	type Slot struct {
 	}
-	
+
 	func (s *Slot) Check(ctx *base.EntryContext) *base.TokenResult {
 		res := ctx.Resource.Name()
 		tcs := getTrafficControllerListFor(res)
 		result := ctx.RuleCheckResult
-	
+
 		// Check rules in order
 		for _, tc := range tcs {
 			r := canPassCheck(tc, ctx.StatNode, ctx.Input.AcquireCount)
@@ -604,11 +604,11 @@ RuleCheckSlot.Check() 执行流程：
 		}
 		return result
 	}
-	
+
 	func canPassCheck(tc *TrafficShapingController, node base.StatNode, acquireCount uint32) *base.TokenResult {
 		return canPassCheckWithFlag(tc, node, acquireCount, 0)
 	}
-	
+
 	func canPassCheckWithFlag(tc *TrafficShapingController, node base.StatNode, acquireCount uint32, flag int32) *base.TokenResult {
 		return checkInLocal(tc, node, acquireCount, flag)
 	}
@@ -634,22 +634,22 @@ sentinel 对 Resource 进行 Check 后，其后续逻辑执行顺序是：
 	// core/flow/standalone_stat_slot.go
 	type StandaloneStatSlot struct {
 	}
-	
+
 	func (s StandaloneStatSlot) OnEntryPassed(ctx *base.EntryContext) {
 		res := ctx.Resource.Name()
 		for _, tc := range getTrafficControllerListFor(res) {
 			if !tc.boundStat.reuseResourceStat {
 				if tc.boundStat.writeOnlyMetric != nil {
 					tc.boundStat.writeOnlyMetric.AddCount(base.MetricEventPass, int64(ctx.Input.AcquireCount))
-				} 
+				}
 			}
 		}
 	}
-	
+
 	func (s StandaloneStatSlot) OnEntryBlocked(ctx *base.EntryContext, blockError *base.BlockError) {
 		// Do nothing
 	}
-	
+
 	func (s StandaloneStatSlot) OnCompleted(ctx *base.EntryContext) {
 		// Do nothing
 	}
@@ -657,12 +657,12 @@ sentinel 对 Resource 进行 Check 后，其后续逻辑执行顺序是：
 
 > SlotChain.exit()
 
-	
+
 ```Go
 	// core/base/slot_chain.go
 	type SlotChain struct {
 	}
-	
+
 	func (sc *SlotChain) exit(ctx *EntryContext) {
 		// The OnCompleted is called only when entry passed
 		if ctx.IsBlocked() {
@@ -674,15 +674,15 @@ sentinel 对 Resource 进行 Check 后，其后续逻辑执行顺序是：
 	}
 ```
 
-> SentinelEntry.Exit()	
-	
-```Go	
+> SentinelEntry.Exit()
+
+```Go
 	// core/base/entry.go
 	type SentinelEntry struct {
 		sc *SlotChain
 		exitCtl sync.Once
 	}
-	
+
 	func (e *SentinelEntry) Exit() {
 		e.exitCtl.Do(func() {
 			if e.sc != nil {
@@ -708,7 +708,7 @@ Sentinel 本质是一个流控包，不仅提供了限流功能，还提供了�
 		ruleChecks []RuleCheckSlot
 		stats      []StatSlot
 	}
-	
+
 	// The entrance of slot chain
 	// Return the TokenResult and nil if internal panic.
 	func (sc *SlotChain) Entry(ctx *EntryContext) *TokenResult {
@@ -719,7 +719,7 @@ Sentinel 本质是一个流控包，不仅提供了限流功能，还提供了�
 				s.Prepare(ctx)
 			}
 		}
-	
+
 		// execute rule based checking slot
 		rcs := sc.ruleChecks
 		var ruleCheckRet *TokenResult
@@ -742,7 +742,7 @@ Sentinel 本质是一个流控包，不仅提供了限流功能，还提供了�
 		} else {
 			ctx.RuleCheckResult = ruleCheckRet
 		}
-	
+
 		// execute statistic slot
 		ss := sc.stats
 		ruleCheckRet = ctx.RuleCheckResult
@@ -759,7 +759,7 @@ Sentinel 本质是一个流控包，不仅提供了限流功能，还提供了�
 		}
 		return ruleCheckRet
 	}
-	
+
 	func (sc *SlotChain) exit(ctx *EntryContext) {
 		if ctx == nil || ctx.Entry() == nil {
 			logging.Error(errors.New("nil EntryContext or SentinelEntry"), "")
@@ -773,29 +773,29 @@ Sentinel 本质是一个流控包，不仅提供了限流功能，还提供了�
 			s.OnCompleted(ctx)
 		}
 		// relieve the context here
-	}	
+	}
 ```
 
-***吐槽***：Sentinel 包针对某个 Resource 无法确知其使用了那个组件，在运行时会针对某个 Resource 的 EntryContext 依次执行所有的组件的 Rule。Sentinel-golang 为何不给用户相关用户提供一个接口让其设置使用的流控组件集合，以减少下面函数 `SlotChain.Entry()` 中执行 `Rule.Check()` 执行次数？
+***吐槽***：Sentinel 包针对某个 Resource 无法确知其使用了那个组件，在运行时会针对某个 Resource 的 EntryContext 依次执行所有的组件的 Rule。Sentinel-golang 为何不给用户相关用户提供一个接口让其设置使用的流控组件集合，以减少下面函数 `SlotChain.Entry()` 中执行 `RuleCheckSlot.Check()` 执行次数？
 
 > globalSlotChain
 
 Sentinel-Go 定义了一个 SlotChain 的 package 级别的全局私有变量 `globalSlotChain` 用于存储其所有的流控组件对象。相关代码示例如下。因本文只关注限流组件，所以下面只给出了限流组件的注册代码。
 
 ```Go
-   // api/slot_chain.go 
-   
+   // api/slot_chain.go
+
 	func BuildDefaultSlotChain() *base.SlotChain {
 		sc := base.NewSlotChain()
 		sc.AddStatPrepareSlotLast(&stat.ResourceNodePrepareSlot{})
-	
+
 		sc.AddRuleCheckSlotLast(&flow.Slot{})
-	
+
 		sc.AddStatSlotLast(&flow.StandaloneStatSlot{})
-		
+
 		return sc
 	}
-	
+
 	var globalSlotChain = BuildDefaultSlotChain()
 ```
 
@@ -805,12 +805,12 @@ Sentinel-Go 定义了一个 SlotChain 的 package 级别的全局私有变量 `g
 
 ```Go
 	// api/api.go
-	
+
 	// Entry is the basic API of Sentinel.
 	func Entry(resource string, opts ...EntryOption) (*base.SentinelEntry, *base.BlockError) {
 		options := entryOptsPool.Get().(*EntryOptions)
 		options.slotChain = globalSlotChain
-	
+
 		return entry(resource, options)
 	}
 ```

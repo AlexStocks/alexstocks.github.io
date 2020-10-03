@@ -321,7 +321,7 @@ kbd {
 		word-wrap: break-word;
 	}
   body {
-    padding: 2cm; 
+    padding: 2cm;
   }
 }
 </style>
@@ -345,23 +345,23 @@ kbd {
 
 <div><pre><code class="language-Go">    // ResourceType represents classification of the resources
     type ResourceType int32
-    
+
     const (
         ResTypeCommon ResourceType = iota
         ResTypeWeb
         ResTypeRPC
     )
-    
+
     // TrafficType describes the traffic type: Inbound or Outbound
     type TrafficType int32
-    
+
     const (
         // Inbound represents the inbound traffic (e.g. provider)
         Inbound TrafficType = iota
         // Outbound represents the outbound traffic (e.g. consumer)
         Outbound
     )
-    
+
     // ResourceWrapper represents the invocation
     type ResourceWrapper struct {
         // global unique resource name
@@ -383,21 +383,21 @@ kbd {
         acquireCount uint32
         slotChain    *base.SlotChain
     }
-    
+
     type EntryContext struct {
         entry *SentinelEntry
-        
+
         // Use to calculate RT
         startTime uint64
 
         Resource *ResourceWrapper
         StatNode StatNode
-    
+
         Input *SentinelInput
         // the result of rule slots check
         RuleCheckResult *TokenResult
-    }   
-    
+    }
+
     type SentinelEntry struct {
         res *ResourceWrapper
         // one entry bounds with one context
@@ -410,7 +410,7 @@ kbd {
 
 <p>值得注意的是，<code>SentinelEntry.sc</code> 值来自于 <code>EntryOptions.slotChain</code>，<code>EntryOptions.slotChain</code> 存储了全局 SlotChain 对象 <code>api/slot_chain.go:globalSlotChain</code>。</p>
 
-<p>至于何为 <code>SlotChain</code>，就是 sentinel 提供的所有的流控组件的集合，可以简单地认为每个流控组件就是一个 Slot，其详细分析见 
+<p>至于何为 <code>SlotChain</code>，就是 sentinel 提供的所有的流控组件的集合，可以简单地认为每个流控组件就是一个 Slot，其详细分析见
 <a href="#3.5">[3.5 SlotChain]</a>。</p>
 
 <p><strong><em>吐槽</em></strong>：sentinel 一些变量和函数命名的可读性极差，如 <code>EntryOptions.acquireCount</code> 实在无法让人望文生义，看过函数 <code>core/api.go:WithAcquireCount()</code> 的注释才明白：<code>EntryOptions.acquireCount</code> 是批量动作执行次数。如有的一次 RPC 请求中调用了服务端的一个服务接口，则取值 1【也是 <code>EntryOptions.acquireCount</code> 的默认取值】，如果调用了服务端的 3 个服务接口，则取值 3。所以建议改名为 <code>EntryOptions.batchCount</code> 比较好，考虑到最小改动原则，可以在保留 <code>core/api.go:WithAcquireCount()</code> 的同时增加一个同样功能的 <code>core/api.go:WithBatchCount()</code> 接口。 </p>
@@ -422,13 +422,13 @@ kbd {
         Direct TokenCalculateStrategy = iota
         WarmUp
     )
-    
+
     type ControlBehavior int32
     const (
         Reject ControlBehavior = iota
         Throttling
     )
-    
+
     // Rule describes the strategy of flow control, the flow control strategy is based on QPS statistic metric
     type Rule struct {
         // Resource represents the resource name.
@@ -458,17 +458,17 @@ kbd {
 <p>所谓 <code>TrafficShapingController</code>，顾名思义，就是 流量塑形控制器，是流控的具体实施者。</p>
 
 <div><pre><code class="language-Go">    // core/flow/traffic_shaping.go
-    
+
     // TrafficShapingCalculator calculates the actual traffic shaping threshold
     // based on the threshold of rule and the traffic shaping strategy.
     type TrafficShapingCalculator interface {
         CalculateAllowedTokens(acquireCount uint32, flag int32) float64
     }
-    
+
     type DirectTrafficShapingCalculator struct {
         threshold float64
     }
-    
+
     func (d *DirectTrafficShapingCalculator) CalculateAllowedTokens(uint32, int32) float64 {
         return d.threshold
     }</code></pre></div>
@@ -480,11 +480,11 @@ kbd {
     type TrafficShapingChecker interface {
         DoCheck(resStat base.StatNode, acquireCount uint32, threshold float64) *base.TokenResult
     }
-    
+
     type RejectTrafficShapingChecker struct {
         rule  *Rule
     }
-    
+
     func (d *RejectTrafficShapingChecker) DoCheck(resStat base.StatNode, acquireCount uint32, threshold float64) *base.TokenResult {
         metricReadonlyStat := d.BoundOwner().boundStat.readOnlyMetric
         if metricReadonlyStat == nil {
@@ -502,10 +502,10 @@ kbd {
 <div><pre><code class="language-Go">    type TrafficShapingController struct {
         flowCalculator TrafficShapingCalculator
         flowChecker    TrafficShapingChecker
-        
+
         rule *Rule
         // boundStat is the statistic of current TrafficShapingController
-        boundStat standaloneStatistic   
+        boundStat standaloneStatistic
     }
 
     func (t *TrafficShapingController) PerformChecking(acquireCount uint32, flag int32) *base.TokenResult {
@@ -610,7 +610,7 @@ kbd {
         MetricEventPass MetricEvent = iota
         // sentinel rules check block
         MetricEventBlock
-    
+
         MetricEventComplete
         // Biz error, used for circuit breaker
         MetricEventError
@@ -649,7 +649,7 @@ kbd {
 </blockquote>
 
 <div><pre><code class="language-Go">    // Give a diagram to illustrate
-    // Suppose current time is 888, bucketLengthInMs is 200ms, 
+    // Suppose current time is 888, bucketLengthInMs is 200ms,
     // intervalInMs is 1000ms, LeapArray will build the below windows
     //   B0       B1      B2     B3      B4
     //   |_______|_______|_______|_______|_______|
@@ -681,10 +681,10 @@ kbd {
         if now &lt;= 0 {
             return nil, errors.New(&quot;Current time is less than 0.&quot;)
         }
-    
+
         idx := la.calculateTimeIdx(now)
         bucketStart := calculateStartTime(now, la.bucketLengthInMs)
-    
+
         for { //spin to get the current BucketWrap
             old := la.array.get(idx)
             if old == nil {
@@ -771,25 +771,25 @@ kbd {
 <div><pre><code class="language-Go">    type BaseStatNode struct {
         sampleCount uint32
         intervalMs  uint32
-    
+
         goroutineNum int32
-    
+
         arr    *sbase.BucketLeapArray
         metric *sbase.SlidingWindowMetric
     }
-    
+
     type ResourceNode struct {
         BaseStatNode
-    
+
         resourceName string
         resourceType base.ResourceType
     }
-    
+
     // core/stat/node_storage.go
     type ResourceNodeMap map[string]*ResourceNode
     var (
         inboundNode = NewResourceNode(base.TotalInBoundResourceName, base.ResTypeCommon)
-    
+
         resNodeMap = make(ResourceNodeMap)
         rnsMux     = new(sync.RWMutex)
     )</code></pre></div>
@@ -834,7 +834,7 @@ kbd {
         // Prepare function should not throw panic.
         Prepare(ctx *EntryContext)
     }
-    
+
     // RuleCheckSlot is rule based checking strategy
     // All checking rule must implement this interface.
     type RuleCheckSlot interface {
@@ -844,7 +844,7 @@ kbd {
         // The upper logic will control pipeline according to SlotResult.
         Check(ctx *EntryContext) *TokenResult
     }
-    
+
     // StatSlot is responsible for counting all custom biz metrics.
     // StatSlot would not handle any panic, and pass up all panic to slot chain
     type StatSlot interface {
@@ -879,11 +879,11 @@ kbd {
         // Prepare function should not throw panic.
         Prepare(ctx *EntryContext)
     }
-    
+
     // core/stat/stat_prepare_slot.go
     type ResourceNodePrepareSlot struct {
     }
-    
+
     func (s *ResourceNodePrepareSlot) Prepare(ctx *base.EntryContext) {
         node := GetOrCreateResourceNode(ctx.Resource.Name(), ctx.Resource.Classification())
         // Set the resource node to the context.
@@ -903,12 +903,12 @@ kbd {
 
 <div><pre><code class="language-Go">    type Slot struct {
     }
-    
+
     func (s *Slot) Check(ctx *base.EntryContext) *base.TokenResult {
         res := ctx.Resource.Name()
         tcs := getTrafficControllerListFor(res)
         result := ctx.RuleCheckResult
-    
+
         // Check rules in order
         for _, tc := range tcs {
             r := canPassCheck(tc, ctx.StatNode, ctx.Input.AcquireCount)
@@ -929,11 +929,11 @@ kbd {
         }
         return result
     }
-    
+
     func canPassCheck(tc *TrafficShapingController, node base.StatNode, acquireCount uint32) *base.TokenResult {
         return canPassCheckWithFlag(tc, node, acquireCount, 0)
     }
-    
+
     func canPassCheckWithFlag(tc *TrafficShapingController, node base.StatNode, acquireCount uint32, flag int32) *base.TokenResult {
         return checkInLocal(tc, node, acquireCount, flag)
     }
@@ -961,22 +961,22 @@ kbd {
 <div><pre><code class="language-Go">    // core/flow/standalone_stat_slot.go
     type StandaloneStatSlot struct {
     }
-    
+
     func (s StandaloneStatSlot) OnEntryPassed(ctx *base.EntryContext) {
         res := ctx.Resource.Name()
         for _, tc := range getTrafficControllerListFor(res) {
             if !tc.boundStat.reuseResourceStat {
                 if tc.boundStat.writeOnlyMetric != nil {
                     tc.boundStat.writeOnlyMetric.AddCount(base.MetricEventPass, int64(ctx.Input.AcquireCount))
-                } 
+                }
             }
         }
     }
-    
+
     func (s StandaloneStatSlot) OnEntryBlocked(ctx *base.EntryContext, blockError *base.BlockError) {
         // Do nothing
     }
-    
+
     func (s StandaloneStatSlot) OnCompleted(ctx *base.EntryContext) {
         // Do nothing
     }</code></pre></div>
@@ -988,7 +988,7 @@ kbd {
 <div><pre><code class="language-Go">    // core/base/slot_chain.go
     type SlotChain struct {
     }
-    
+
     func (sc *SlotChain) exit(ctx *EntryContext) {
         // The OnCompleted is called only when entry passed
         if ctx.IsBlocked() {
@@ -1008,7 +1008,7 @@ kbd {
         sc *SlotChain
         exitCtl sync.Once
     }
-    
+
     func (e *SentinelEntry) Exit() {
         e.exitCtl.Do(func() {
             if e.sc != nil {
@@ -1032,7 +1032,7 @@ kbd {
         ruleChecks []RuleCheckSlot
         stats      []StatSlot
     }
-    
+
     // The entrance of slot chain
     // Return the TokenResult and nil if internal panic.
     func (sc *SlotChain) Entry(ctx *EntryContext) *TokenResult {
@@ -1043,7 +1043,7 @@ kbd {
                 s.Prepare(ctx)
             }
         }
-    
+
         // execute rule based checking slot
         rcs := sc.ruleChecks
         var ruleCheckRet *TokenResult
@@ -1066,7 +1066,7 @@ kbd {
         } else {
             ctx.RuleCheckResult = ruleCheckRet
         }
-    
+
         // execute statistic slot
         ss := sc.stats
         ruleCheckRet = ctx.RuleCheckResult
@@ -1083,7 +1083,7 @@ kbd {
         }
         return ruleCheckRet
     }
-    
+
     func (sc *SlotChain) exit(ctx *EntryContext) {
         if ctx == nil || ctx.Entry() == nil {
             logging.Error(errors.New(&quot;nil EntryContext or SentinelEntry&quot;), &quot;&quot;)
@@ -1099,7 +1099,7 @@ kbd {
         // relieve the context here
     }   </code></pre></div>
 
-<p><strong><em>吐槽</em></strong>：Sentinel 包针对某个 Resource 无法确知其使用了那个组件，在运行时会针对某个 Resource 的 EntryContext 依次执行所有的组件的 Rule。Sentinel-golang 为何不给用户相关用户提供一个接口让其设置使用的流控组件集合，以减少下面函数 <code>SlotChain.Entry()</code> 中执行 <code>Rule.Check()</code> 执行次数？</p>
+<p><strong><em>吐槽</em></strong>：Sentinel 包针对某个 Resource 无法确知其使用了那个组件，在运行时会针对某个 Resource 的 EntryContext 依次执行所有的组件的 Rule。Sentinel-golang 为何不给用户相关用户提供一个接口让其设置使用的流控组件集合，以减少下面函数 <code>SlotChain.Entry()</code> 中执行 <code>RuleCheckSlot.Check()</code> 执行次数？</p>
 
 <blockquote>
 <p>globalSlotChain</p>
@@ -1107,19 +1107,19 @@ kbd {
 
 <p>Sentinel-Go 定义了一个 SlotChain 的 package 级别的全局私有变量 <code>globalSlotChain</code> 用于存储其所有的流控组件对象。相关代码示例如下。因本文只关注限流组件，所以下面只给出了限流组件的注册代码。</p>
 
-<div><pre><code class="language-Go">   // api/slot_chain.go 
-   
+<div><pre><code class="language-Go">   // api/slot_chain.go
+
     func BuildDefaultSlotChain() *base.SlotChain {
         sc := base.NewSlotChain()
         sc.AddStatPrepareSlotLast(&amp;stat.ResourceNodePrepareSlot{})
-    
+
         sc.AddRuleCheckSlotLast(&amp;flow.Slot{})
-    
+
         sc.AddStatSlotLast(&amp;flow.StandaloneStatSlot{})
-        
+
         return sc
     }
-    
+
     var globalSlotChain = BuildDefaultSlotChain()</code></pre></div>
 
 <blockquote>
@@ -1129,12 +1129,12 @@ kbd {
 <p>在 Sentinel-Go 对外的最重要的入口函数 <code>api/api.go:Entry()</code> 中，<code>globalSlotChain</code> 会作为 EntryOptions 的 SlotChain 参数被使用。</p>
 
 <div><pre><code class="language-Go">    // api/api.go
-    
+
     // Entry is the basic API of Sentinel.
     func Entry(resource string, opts ...EntryOption) (*base.SentinelEntry, *base.BlockError) {
         options := entryOptsPool.Get().(*EntryOptions)
         options.slotChain = globalSlotChain
-    
+
         return entry(resource, options)
     }</code></pre></div>
 
@@ -1149,6 +1149,37 @@ kbd {
 <li>2020/10/02，于雨氏，初作此文于朝阳 WFC。</li>
 </ul>
 </blockquote>
+
+
+<!-- baidu statistic start -->
+<script>
+var _hmt = _hmt || [];
+(function() {
+	  var hm = document.createElement("script");
+	    hm.src = "https://hm.baidu.com/hm.js?170a8df8802fbc47c7acc272d270979c";
+		  var s = document.getElementsByTagName("script")[0];
+		    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+<!-- baidu statistic end -->
+
+<!-- Gitalk start -->
+<link rel="stylesheet" href="https://unpkg.com/gitalk@latest/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk@latest/dist/gitalk.min.js"></script>
+<div id="gitalk-container"></div>
+<script type="text/javascript">
+var gitalk = new Gitalk({
+	clientID: '6211d8b94a8106bed6b0',
+	clientSecret: 'bf77ca26c237eabbd45169e01bf03a5e96a1b26f',
+	repo: 'alexstocks.github.io',
+	owner: 'AlexStocks',
+	admin: ['AlexStocks'],
+	id: window.location.pathname,
+	distractionFreeMode: true
+});
+gitalk.render('gitalk-container');
+</script>
+<!-- Gitalk end -->
 
 
 
