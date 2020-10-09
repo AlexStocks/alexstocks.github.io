@@ -413,7 +413,7 @@ kbd {
 <p>至于何为 <code>SlotChain</code>，就是 sentinel 提供的所有的流控组件的集合，可以简单地认为每个流控组件就是一个 Slot，其详细分析见
 <a href="#3.5">[3.5 SlotChain]</a>。</p>
 
-<p><strong><em>吐槽</em></strong>：sentinel 一些变量和函数命名的可读性极差，如 <code>EntryOptions.acquireCount</code> 实在无法让人望文生义，看过函数 <code>core/api.go:WithAcquireCount()</code> 的注释才明白：<code>EntryOptions.acquireCount</code> 是批量动作执行次数。如有的一次 RPC 请求中调用了服务端的一个服务接口，则取值 1【也是 <code>EntryOptions.acquireCount</code> 的默认取值】，如果调用了服务端的 3 个服务接口，则取值 3。所以建议改名为 <code>EntryOptions.batchCount</code> 比较好，考虑到最小改动原则，可以在保留 <code>core/api.go:WithAcquireCount()</code> 的同时增加一个同样功能的 <code>core/api.go:WithBatchCount()</code> 接口。 </p>
+<p><strong><em>吐槽</em></strong>：sentinel 一些变量和函数命名的可读性极差，如 <code>EntryOptions.acquireCount</code> 实在无法让人望文生义，看过函数 <code>core/api.go:WithAcquireCount()</code> 的注释才明白：<code>EntryOptions.acquireCount</code> 是批量动作执行次数。如有的一次 RPC 请求中调用了服务端的一个服务接口，则取值 1【也是 <code>EntryOptions.acquireCount</code> 的默认取值】，如果调用了服务端的 3 个服务接口，则取值 3。所以建议改名为 <code>EntryOptions.batchCount</code> 比较好，考虑到最小改动原则，可以在保留 <code>core/api.go:WithAcquireCount()</code> 的同时增加一个同样功能的 <code>core/api.go:WithBatchCount()</code> 接口。相关改进已经提交到  <a href="https://github.com/alibaba/sentinel-golang/pull/263">pr 263</a>。</p>
 
 <h3 id="toc_4">1.3 Rule</h3>
 
@@ -1099,7 +1099,7 @@ kbd {
         // relieve the context here
     }   </code></pre></div>
 
-<p><strong><em>吐槽</em></strong>：Sentinel 包针对某个 Resource 无法确知其使用了那个组件，在运行时会针对某个 Resource 的 EntryContext 依次执行所有的组件的 Rule。Sentinel-golang 为何不给用户相关用户提供一个接口让其设置使用的流控组件集合，以减少下面函数 <code>SlotChain.Entry()</code> 中执行 <code>RuleCheckSlot.Check()</code> 执行次数？</p>
+<p><strong><em>吐槽</em></strong>：Sentinel 包针对某个 Resource 无法确知其使用了那个组件，在运行时会针对某个 Resource 的 EntryContext 依次执行所有的组件的 Rule。Sentinel-golang 为何不给用户相关用户提供一个接口让其设置使用的流控组件集合，以减少下面函数 <code>SlotChain.Entry()</code> 中执行 <code>RuleCheckSlot.Check()</code> 执行次数？相关改进已经提交到  <a href="https://github.com/alibaba/sentinel-golang/pull/264">pr 264</a>。</p>
 
 <blockquote>
 <p>globalSlotChain</p>

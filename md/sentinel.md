@@ -82,7 +82,7 @@ Entry 实体 SentinelEntry 关联了 Resource(ResourceWrapper) 以及其流控�
 至于何为 `SlotChain`，就是 sentinel 提供的所有的流控组件的集合，可以简单地认为每个流控组件就是一个 Slot，其详细分析见
 <a href="#3.5">[3.5 SlotChain]</a>。
 
-***吐槽***：sentinel 一些变量和函数命名的可读性极差，如 `EntryOptions.acquireCount` 实在无法让人望文生义，看过函数 `core/api.go:WithAcquireCount()` 的注释才明白：`EntryOptions.acquireCount` 是批量动作执行次数。如有的一次 RPC 请求中调用了服务端的一个服务接口，则取值 1【也是 `EntryOptions.acquireCount` 的默认取值】，如果调用了服务端的 3 个服务接口，则取值 3。所以建议改名为 `EntryOptions.batchCount` 比较好，考虑到最小改动原则，可以在保留 `core/api.go:WithAcquireCount()` 的同时增加一个同样功能的 `core/api.go:WithBatchCount()` 接口。
+***吐槽***：sentinel 一些变量和函数命名的可读性极差，如 `EntryOptions.acquireCount` 实在无法让人望文生义，看过函数 `core/api.go:WithAcquireCount()` 的注释才明白：`EntryOptions.acquireCount` 是批量动作执行次数。如有的一次 RPC 请求中调用了服务端的一个服务接口，则取值 1【也是 `EntryOptions.acquireCount` 的默认取值】，如果调用了服务端的 3 个服务接口，则取值 3。所以建议改名为 `EntryOptions.batchCount` 比较好，考虑到最小改动原则，可以在保留 `core/api.go:WithAcquireCount()` 的同时增加一个同样功能的 `core/api.go:WithBatchCount()` 接口。相关改进已经提交到  [pr 263](https://github.com/alibaba/sentinel-golang/pull/263)。
 
 ### 1.3 Rule
 
@@ -776,7 +776,7 @@ Sentinel 本质是一个流控包，不仅提供了限流功能，还提供了�
 	}
 ```
 
-***吐槽***：Sentinel 包针对某个 Resource 无法确知其使用了那个组件，在运行时会针对某个 Resource 的 EntryContext 依次执行所有的组件的 Rule。Sentinel-golang 为何不给用户相关用户提供一个接口让其设置使用的流控组件集合，以减少下面函数 `SlotChain.Entry()` 中执行 `RuleCheckSlot.Check()` 执行次数？
+***吐槽***：Sentinel 包针对某个 Resource 无法确知其使用了那个组件，在运行时会针对某个 Resource 的 EntryContext 依次执行所有的组件的 Rule。Sentinel-golang 为何不给用户相关用户提供一个接口让其设置使用的流控组件集合，以减少下面函数 `SlotChain.Entry()` 中执行 `RuleCheckSlot.Check()` 执行次数？相关改进已经提交到  [pr 264](https://github.com/alibaba/sentinel-golang/pull/264)。
 
 > globalSlotChain
 
