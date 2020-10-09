@@ -148,7 +148,6 @@ Rule 记录了某 Resource 的限流判定阈值 Threshold、限流时间窗口�
 
 `TrafficShapingCalculator` 接口用于计算限流的上限，如果不使用 warm-up 功能，可以不去深究其实现，其实体之一 DirectTrafficShapingCalculator 返回 `Rule.Threshold`【用户设定的限流上限】。
 
-
 ```Go
 	// TrafficShapingChecker performs checking according to current metrics and the traffic
 	// shaping strategy, then yield the token result.
@@ -173,7 +172,13 @@ Rule 记录了某 Resource 的限流判定阈值 Threshold、限流时间窗口�
 	}
 ```
 
-`TrafficShapingChecker` 依据 `Rule.Threshold` 判定 Resource 在当前时间窗口是否超限。
+`RejectTrafficShapingChecker` 依据 `Rule.Threshold` 判定 Resource 在当前时间窗口是否超限，其限流结果 `TokenResultStatus` 只可能是 Pass 或者 Blocked。
+
+sentinel flow 还有一个匀速限流 `ThrottlingChecker`，它的目的是让请求匀速被执行，把一个时间窗口【譬如 1s】根据 threshold 再细分为更细的微时间窗口，在每个微时间窗口最多执行一次请求，其限流结果 `TokenResultStatus` 只可能是 Pass 或者 Blocked 或者 Wait，其相关意义分别为：
+
+* Pass：在微时间窗口内无超限，请求通过；
+* Wait：在微时间窗口内超限，被滞后若干时间窗口执行，在这段时间内请求需要等待；
+* Blocked：在微时间窗口内超限，且等待时间超过用户设定的最大愿意等待时间长度【Rule.MaxQueueingTimeMs】，请求被拒绝。
 
 ```Go
 	type TrafficShapingController struct {
@@ -191,7 +196,7 @@ Rule 记录了某 Resource 的限流判定阈值 Threshold、限流时间窗口�
 	}
 ```
 
-在限流的场景下，这三个接口其实并无多大意义，其核心函数 `TrafficShapingController. PerformChecking()` 的主要流程是：
+在 `Direct + Reject` 限流的场景下，这三个接口其实并无多大意义，其核心函数 `TrafficShapingController.PerformChecking()` 的主要流程是：
 
 * 1  从 TrafficShapingController.boundStat 中获取当前 Resource 的 metrics 值【curCount】；
 * 2 如果 curCount + batchNum(acquireCount) > Rule.Threshold，则 pass，否则就 reject。

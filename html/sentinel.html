@@ -497,7 +497,15 @@ kbd {
         return nil
     }</code></pre></div>
 
-<p><code>TrafficShapingChecker</code> 依据 <code>Rule.Threshold</code> 判定 Resource 在当前时间窗口是否超限。</p>
+<p><code>RejectTrafficShapingChecker</code> 依据 <code>Rule.Threshold</code> 判定 Resource 在当前时间窗口是否超限，其限流结果 <code>TokenResultStatus</code> 只可能是 Pass 或者 Blocked。</p>
+
+<p>sentinel flow 还有一个匀速限流 <code>ThrottlingChecker</code>，它的目的是让请求匀速被执行，把一个时间窗口【譬如 1s】根据 threshold 再细分为更细的微时间窗口，在每个微时间窗口最多执行一次请求，其限流结果 <code>TokenResultStatus</code> 只可能是 Pass 或者 Blocked 或者 Wait，其相关意义分别为：</p>
+
+<ul>
+<li>Pass：在微时间窗口内无超限，请求通过；</li>
+<li>Wait：在微时间窗口内超限，被滞后若干时间窗口执行，在这段时间内请求需要等待；</li>
+<li>Blocked：在微时间窗口内超限，且等待时间超过用户设定的最大愿意等待时间长度【Rule.MaxQueueingTimeMs】，请求被拒绝。</li>
+</ul>
 
 <div><pre><code class="language-Go">    type TrafficShapingController struct {
         flowCalculator TrafficShapingCalculator
@@ -513,7 +521,7 @@ kbd {
         return t.flowChecker.DoCheck(resStat, acquireCount, allowedTokens)
     }</code></pre></div>
 
-<p>在限流的场景下，这三个接口其实并无多大意义，其核心函数 <code>TrafficShapingController. PerformChecking()</code> 的主要流程是：</p>
+<p>在 <code>Direct + Reject</code> 限流的场景下，这三个接口其实并无多大意义，其核心函数 <code>TrafficShapingController.PerformChecking()</code> 的主要流程是：</p>
 
 <ul>
 <li>1  从 TrafficShapingController.boundStat 中获取当前 Resource 的 metrics 值【curCount】；</li>
@@ -811,7 +819,7 @@ kbd {
 <li>2 依据 Resource 的限流算法判定其是否应该进行限流，并给出限流判定结果，Sentinel 称之为 RuleCheckSlot；
 
 <ul>
-<li>补充：这个限流算法是一系列判断方法的合集（SlotChain）；<br></li>
+<li>补充：这个限流算法是一系列判断方法的合集（SlotChain）；</li>
 </ul></li>
 <li>3 判定之后，除了用户自身根据判定结果执行相应的 action，Sentinel 也需要根据判定结果执行自身的 Action，以及把整个判定流程所使用的的时间 RT 等指标存储下来，Sentinel 称之为 StatSlot。</li>
 </ul>
