@@ -593,6 +593,27 @@ kbd {
         Value atomic.Value
     }</code></pre></div>
 
+<p><strong><em>补充</em></strong>：这里之所以用指针，是因为以 <code>BucketWrap</code> 为基础的 <code>AtomicBucketWrapArray</code> 会被多个 <code>sentinel</code> 流控组件使用，每个组件的流控参数不一，例如：</p>
+
+<ul>
+<li><p>1 <code>core/circuitbreaker/circuit_breaker.go:slowRtCircuitBreaker</code> 使用的 <code>slowRequestLeapArray</code> 的底层参数 <code>slowRequestCounter</code>
+<code>Go
+  // core/circuitbreaker/circuit_breaker.go
+type slowRequestCounter struct {
+    slowCount  uint64
+    totalCount uint64
+}
+</code></p></li>
+<li><p>2 <code>core/circuitbreaker/circuit_breaker.go:errorRatioCircuitBreaker</code> 使用的 <code>errorCounterLeapArray</code> 的底层参数 <code>errorCounter</code>
+<code>Go
+// core/circuitbreaker/circuit_breaker.go
+type errorCounter struct {
+    errorCount uint64
+    totalCount uint64
+}
+</code></p></li>
+</ul>
+
 <blockquote>
 <blockquote>
 <p>1.1 MetricBucket</p>

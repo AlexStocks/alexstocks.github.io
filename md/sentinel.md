@@ -268,6 +268,26 @@ Sentinel 库功能丰富，但无论是限流还是熔断，其存储基础都�
 	}
 ```
 
+***补充***：这里之所以用指针，是因为以 `BucketWrap` 为基础的 `AtomicBucketWrapArray` 会被多个 `sentinel` 流控组件使用，每个组件的流控参数不一，例如：
+
+* 1 `core/circuitbreaker/circuit_breaker.go:slowRtCircuitBreaker` 使用的 `slowRequestLeapArray` 的底层参数 `slowRequestCounter`
+```Go
+      // core/circuitbreaker/circuit_breaker.go
+	type slowRequestCounter struct {
+		slowCount  uint64
+		totalCount uint64
+	}
+```
+
+* 2 `core/circuitbreaker/circuit_breaker.go:errorRatioCircuitBreaker` 使用的 `errorCounterLeapArray` 的底层参数 `errorCounter`
+```Go
+    // core/circuitbreaker/circuit_breaker.go
+	type errorCounter struct {
+		errorCount uint64
+		totalCount uint64
+	}
+```
+
 >> 1.1 MetricBucket
 
 BucketWrap 可以认作是一种 时间桶模板，具体的桶的实体是 MetricsBucket，其定义如下：
