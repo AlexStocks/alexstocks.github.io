@@ -1129,7 +1129,7 @@ kbd {
         // relieve the context here
     }   </code></pre></div>
 
-<p><strong><em>吐槽</em></strong>：Sentinel 包针对某个 Resource 无法确知其使用了那个组件，在运行时会针对某个 Resource 的 EntryContext 依次执行所有的组件的 Rule。Sentinel-golang 为何不给用户相关用户提供一个接口让其设置使用的流控组件集合，以减少下面函数 <code>SlotChain.Entry()</code> 中执行 <code>RuleCheckSlot.Check()</code> 执行次数？相关改进已经提交到  <a href="https://github.com/alibaba/sentinel-golang/pull/264">pr 264</a>。</p>
+<p><strong><em>吐槽</em></strong>：Sentinel 包针对某个 Resource 无法确知其使用了那个组件，在运行时会针对某个 Resource 的 EntryContext 依次执行所有的组件的 Rule。Sentinel-golang 为何不给用户相关用户提供一个接口让其设置使用的流控组件集合，以减少下面函数 <code>SlotChain.Entry()</code> 中执行 <code>RuleCheckSlot.Check()</code> 执行次数？相关改进已经提交到 <a href="https://github.com/alibaba/sentinel-golang/pull/264">pr 264</a>【补充，代码已合并，据负责人压测后回复 sentinel-go 效率整体提升 15%】。</p>
 
 <blockquote>
 <p>globalSlotChain</p>
