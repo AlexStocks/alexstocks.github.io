@@ -37,18 +37,26 @@
 
 前两条规则是于某写西渣渣事后的编程实践，在此不做解释，对第三条实践规则的解释是：加锁只锁住它的目标对象，至于对象的相关动作或者对象【容器】内的对象的动作一定放在锁外。
 
-## 参考文档
+## <a name="2">2 sync.Pool </a>
+---
 
->- 1 [Effective Go](https://golang.google.cn/doc/effective_go.html)  
+sync.Pool 的本质是用来减轻 gc 负担 [2]，将它当做一个对象缓冲池并不合适：对象何时释放，用户是无法释放的。
+
+虽然 sync.Pool 把对象存入其缓冲池时可以做到无锁，但是取值的时候可能碰到锁竞争的问题 [3]，所以可能对性能提升并没有多大帮助。
+
+
+[^参考文档]:
 
 [1]:https://golang.google.cn/doc/effective_go.html "Effective Go"
+[2]:https://www.haohongfan.com/post/2019-05-26-sync-pool/
+[3]:https://mlog.club/article/1724433
 
 ## Payment
 
 <center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
 
-
 ## Timeline ##
 
 >- 2020/01/12，于雨氏，于丰台初写此文 <a href="#1">[1 死锁与 goroutine 泄露]</a>。
+>- 2020/10/18，于雨氏，于朝阳添加 <a href="#2">[2 sync.Pool]</a>。
 

@@ -503,18 +503,18 @@ pre[class*="language-"] {
 <p>事后总结教训，得出如下编程实践规则：</p>
 
 <div><pre><code class="language-none">1 严禁在一行代码内对同一个变量产生两次写行为；
-2 严禁在一行代码内对同一个变量产生既写又读的行为；
+2 严禁在一行代码内对同一个变量产生既写又读的行为； 
 3 严禁在锁内执行被锁对象的行为函数。</code></pre></div>
 
 <p>前两条规则是于某写西渣渣事后的编程实践，在此不做解释，对第三条实践规则的解释是：加锁只锁住它的目标对象，至于对象的相关动作或者对象【容器】内的对象的动作一定放在锁外。</p>
 
-<h2 id="toc_2">参考文档</h2>
+<h2 id="toc_2"><a name="2">2 sync.Pool </a></h2>
 
-<blockquote>
-<ul>
-<li>1 <a href="https://golang.google.cn/doc/effective_go.html">Effective Go</a><br></li>
-</ul>
-</blockquote>
+<hr>
+
+<p>sync.Pool 的本质是用来减轻 gc 负担 <a href="https://www.haohongfan.com/post/2019-05-26-sync-pool/">2</a>，将它当做一个对象缓冲池并不合适：对象何时释放，用户是无法释放的。</p>
+
+<p>虽然 sync.Pool 把对象存入其缓冲池时可以做到无锁，但是取值的时候可能碰到锁竞争的问题 <a href="https://mlog.club/article/1724433">3</a>，所以可能对性能提升并没有多大帮助。</p>
 
 <h2 id="toc_3">Payment</h2>
 
@@ -525,6 +525,7 @@ pre[class*="language-"] {
 <blockquote>
 <ul>
 <li>2020/01/12，于雨氏，于丰台初写此文 <a href="#1">[1 死锁与 goroutine 泄露]</a>。</li>
+<li>2020/10/18，于雨氏，于朝阳添加 <a href="#2">[2 sync.Pool]</a>。</li>
 </ul>
 </blockquote>
 
