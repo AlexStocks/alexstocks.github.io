@@ -320,146 +320,9 @@ kbd {
 	pre {
 		word-wrap: break-word;
 	}
-}
-</style>
-
-<style type="text/css">
-/**
- * prism.js default theme for JavaScript, CSS and HTML
- * Based on dabblet (http://dabblet.com)
- * @author Lea Verou
- */
-
-code[class*="language-"],
-pre[class*="language-"] {
-	color: black;
-	background: none;
-	text-shadow: 0 1px white;
-	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-	text-align: left;
-	white-space: pre;
-	word-spacing: normal;
-	word-break: normal;
-	word-wrap: normal;
-	line-height: 1.5;
-
-	-moz-tab-size: 4;
-	-o-tab-size: 4;
-	tab-size: 4;
-
-	-webkit-hyphens: none;
-	-moz-hyphens: none;
-	-ms-hyphens: none;
-	hyphens: none;
-}
-
-pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
-code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
-	text-shadow: none;
-	background: #b3d4fc;
-}
-
-pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
-code[class*="language-"]::selection, code[class*="language-"] ::selection {
-	text-shadow: none;
-	background: #b3d4fc;
-}
-
-@media print {
-	code[class*="language-"],
-	pre[class*="language-"] {
-		text-shadow: none;
-	}
-}
-
-/* Code blocks */
-pre[class*="language-"] {
-	padding: 1em;
-	margin: .5em 0;
-	overflow: auto;
-}
-
-:not(pre) > code[class*="language-"],
-pre[class*="language-"] {
-	background: #f5f2f0;
-}
-
-/* Inline code */
-:not(pre) > code[class*="language-"] {
-	padding: .1em;
-	border-radius: .3em;
-	white-space: normal;
-}
-
-.token.comment,
-.token.prolog,
-.token.doctype,
-.token.cdata {
-	color: slategray;
-}
-
-.token.punctuation {
-	color: #999;
-}
-
-.namespace {
-	opacity: .7;
-}
-
-.token.property,
-.token.tag,
-.token.boolean,
-.token.number,
-.token.constant,
-.token.symbol,
-.token.deleted {
-	color: #905;
-}
-
-.token.selector,
-.token.attr-name,
-.token.string,
-.token.char,
-.token.builtin,
-.token.inserted {
-	color: #690;
-}
-
-.token.operator,
-.token.entity,
-.token.url,
-.language-css .token.string,
-.style .token.string {
-	color: #a67f59;
-	background: hsla(0, 0%, 100%, .5);
-}
-
-.token.atrule,
-.token.attr-value,
-.token.keyword {
-	color: #07a;
-}
-
-.token.function {
-	color: #DD4A68;
-}
-
-.token.regex,
-.token.important,
-.token.variable {
-	color: #e90;
-}
-
-.token.important,
-.token.bold {
-	font-weight: bold;
-}
-.token.italic {
-	font-style: italic;
-}
-
-.token.entity {
-	cursor: help;
+  body {
+    padding: 2cm; 
+  }
 }
 </style>
 
@@ -498,41 +361,47 @@ pre[class*="language-"] {
 
 <p>golang中通过传递变量值能够起到引用效果的变量类型有slice &amp; map &amp; channel，其本质是这三种var type不是那种类似于int等可以让CPU直接访问的原子变量类型，而是一种C中的类似于struct的复合数据结构，其结构体中存储的值又指向的更大的一块内存地址，这个大内存区域才是真正的“值域”，结构体本身类似域大内存域的proxy。如果能够理解C++的shared_ptr的实现，就能够理解这种变量类型的本质。</p>
 
-<p>因为closure与其所在的函数共享函数栈，所以也能实现类似于引用的效果。如下程序：<br>
-​<br><br>
-    // output: 5<br><br>
-    func main() {<br><br>
-        var v int = 3<br><br>
-        func() {<br><br>
-            v = 5<br><br>
-        }()<br><br>
-        println(v)<br><br>
-    }     </p>
+<p>因为closure与其所在的函数共享函数栈，所以也能实现类似于引用的效果。如下程序：
+​
+​<code>Go                                                                                                       
+    // output: 5                                                                                           
+    func main() {                                                                                          
+        var v int = 3                                                                                      
+        func() {                                                                                           
+            v = 5                                                                                          
+        }()                                                                                                
+        println(v)                                                                                         
+    }     
+​</code>
+​
+上面的例子中，main函数内部的closure修改了变量v的值，因为是函数内部调用，其结论可能不能为人信服，又有如下示例：</p>
 
-<p>上面的例子中，main函数内部的closure修改了变量v的值，因为是函数内部调用，其结论可能不能为人信服，又有如下示例：</p>
+<p>​```Go
+    // output: 5<br>
+    func test() (func(), func()) {<br>
+        var v int = 3<br>
+        return func() { v = 5 }, func() { println(&quot;v:&quot;, v) }<br>
+    }                                                                                                      </p>
 
-<div><pre><code class="language-none">// output: 5
-func test() (func(), func()) {
-    var v int = 3
-    return func() { v = 5 }, func() { println(&quot;v:&quot;, v) }
-}
-
-func main() {
-    f1, f2 := test()
-    f1()
-    f2()
+<div><pre><code class="language-none">func main() {                                                                                          
+    f1, f2 := test()                                                                                   
+    f1()                                                                                               
+    f2()                                                                                               
 }  </code></pre></div>
 
-<p>代码示例中f1和f2访问的变量v，其实v在使用时被runtime定义在了heap上。</p>
+<p>​```
+​
+代码示例中f1和f2访问的变量v，其实v在使用时被runtime定义在了heap上。</p>
 
-<p>参考文档1的代码示例也比较经典，一并补录如下：<br>
-​<br><br>
-    func intSeq() func() int {<br>
-        i := 0<br>
-        return func() int {<br>
-            i += 1<br>
-            return i<br>
-        }<br>
+<p>参考文档1的代码示例也比较经典，一并补录如下：
+​
+​​```Go 
+    func intSeq() func() int {
+        i := 0
+        return func() int {
+            i += 1
+            return i
+        }
     }</p>
 
 <div><pre><code class="language-none">func main() {
@@ -546,7 +415,9 @@ func main() {
     println(newInts()) // 1
 }</code></pre></div>
 
-<p>注意上面示例中最后一行的输出，当closure所在函数重新调用时，其closure是新的，其context引用的变量也是重新在heap定义过的。</p>
+<p>​```
+​
+注意上面示例中最后一行的输出，当closure所在函数重新调用时，其closure是新的，其context引用的变量也是重新在heap定义过的。</p>
 
 <h3 id="toc_3">3 closure与context</h3>
 
@@ -554,9 +425,10 @@ func main() {
 
 <p>context是我见过的golang标准库(go1.7)中最优雅的库之一，对context的分析详见参考文档3，其cancel相关代码如下：</p>
 
-<div><pre><code class="language-none">type CancelFunc func()
+<p>​```Go
+    type CancelFunc func()</p>
 
-// WithCancel方法返回一个继承自parent的Context对象，同时返回的cancel方法可以用来关闭返回的Context当中的Done channel
+<div><pre><code class="language-none">// WithCancel方法返回一个继承自parent的Context对象，同时返回的cancel方法可以用来关闭返回的Context当中的Done channel
 // 其将新建立的节点挂载在最近的可以被cancel的父节点下（向下方向）
 // 如果传入的parent是不可被cancel的节点，则直接只保留向上关系
 func WithCancel(parent Context) (ctx Context, cancel CancelFunc) {
@@ -572,17 +444,20 @@ func newCancelCtx(parent Context) cancelCtx {
     }
 }</code></pre></div>
 
-<p>从上可见cancel context也用到了closure，WithCancel返回了一个context对象和一个closure。cancel context的使用示例(参考文档4)如下：</p>
+<p>​```
+​
+从上可见cancel context也用到了closure，WithCancel返回了一个context对象和一个closure。cancel context的使用示例(参考文档4)如下：</p>
 
-<div><pre><code class="language-none">// 模拟一个最小执行时间的阻塞函数
-func inc(a int) int {
-    res := a + 1                // 虽然我只做了一次简单的 +1 的运算,
-    time.Sleep(1 * time.Second) // 但是由于我的机器指令集中没有这条指令,
-    // 所以在我执行了 1000000000 条机器指令, 续了 1s 之后, 我才终于得到结果。B)
-    return res
-}
+<p>​```Go
+    // 模拟一个最小执行时间的阻塞函数
+    func inc(a int) int {
+        res := a + 1                // 虽然我只做了一次简单的 +1 的运算,
+        time.Sleep(1 * time.Second) // 但是由于我的机器指令集中没有这条指令,
+        // 所以在我执行了 1000000000 条机器指令, 续了 1s 之后, 我才终于得到结果。B)
+        return res
+    }</p>
 
-// 向外部提供的阻塞接口
+<div><pre><code class="language-none">// 向外部提供的阻塞接口
 // 计算 a + b, 注意 a, b 均不能为负
 // 如果计算被中断, 则返回 -1
 func Add(ctx context.Context, a, b int) int {
@@ -622,53 +497,61 @@ func main() {
     res := Add(ctx, 1, 2)
 }</code></pre></div>
 
+<p>​```
+​</p>
+
 <h3 id="toc_4">4 closure与error</h3>
 
 <hr>
 
-<p>golang中错误处理是一件令人头疼的事情：需要不断的写<q>if err != nil {}</q>这样的代码<sup>_<sup>。</sup></sup></p>
+<p>golang中错误处理是一件令人头疼的事情：需要不断的写&quot;if err != nil {}&quot;这样的代码^_^。</p>
 
-<p>golang官方的《Errors are values》(参考文档5)一文中给出了如下一段错误处理示例：<br>
-​<br><br>
-    _, err = fd.Write(p0[a:b])<br>
-    if err != nil {<br>
-        return err<br>
-    }<br>
-    _, err = fd.Write(p1[c:d])<br>
-    if err != nil {<br>
-        return err<br>
-    }<br>
-    _, err = fd.Write(p2[e:f])<br>
-    if err != nil {<br>
-        return err<br>
-    }<br>
-    // and so on</p>
-
-<p>这段代码示例的机巧之处在于:三个错误处理针对同一个函数fd.Write，这便能通过closure上下其手了，官方给出的第一个改进就是：</p>
-
-<div><pre><code class="language-none">var err error
-write := func(buf []byte) {
+<p>golang官方的《Errors are values》(参考文档5)一文中给出了如下一段错误处理示例：
+​<br>
+​​<code>Go 
+    _, err = fd.Write(p0[a:b])
     if err != nil {
-        return
+        return err
     }
-    _, err = w.Write(buf)
-}
-write(p0[a:b])
-write(p1[c:d])
-write(p2[e:f])
-// and so on
-if err != nil {
-    return err
-}</code></pre></div>
+    _, err = fd.Write(p1[c:d])
+    if err != nil {
+        return err
+    }
+    _, err = fd.Write(p2[e:f])
+    if err != nil {
+        return err
+    }
+    // and so on
+​</code>
+​
+这段代码示例的机巧之处在于:三个错误处理针对同一个函数fd.Write，这便能通过closure上下其手了，官方给出的第一个改进就是：</p>
 
-<p>上面write closure虽然没有减少代码量，但使得代码优雅了不少。后面官方又给出了第二个优化：</p>
+<p>​<code>Go
+    var err error
+    write := func(buf []byte) {
+        if err != nil {
+            return
+        }
+        _, err = w.Write(buf)
+    }
+    write(p0[a:b])
+    write(p1[c:d])
+    write(p2[e:f])
+    // and so on
+    if err != nil {
+        return err
+    }
+​</code>
+​
+上面write closure虽然没有减少代码量，但使得代码优雅了不少。后面官方又给出了第二个优化：</p>
 
-<div><pre><code class="language-none">type errWriter struct {
-    w   io.Writer
-    err error
-}
+<p>​```Go
+    type errWriter struct {
+        w   io.Writer
+        err error
+    }</p>
 
-func (ew *errWriter) write(buf []byte) {
+<div><pre><code class="language-none">func (ew *errWriter) write(buf []byte) {
     if ew.err != nil {
         return
     }
@@ -684,20 +567,24 @@ if ew.err != nil {
     return ew.err
 }</code></pre></div>
 
-<p>这个代码示例把closure中的error放入了struct errWriter之中，使得代码更加精妙。</p>
+<p>​```
+​
+这个代码示例把closure中的error放入了struct errWriter之中，使得代码更加精妙。</p>
 
 <p>上面代码段中这个技巧被用到了bufio.Writer的实现上，所以调用(bufio.Writer)Write函数时候，不用不断检查其返回值error，其代码示例如下：</p>
 
-<div><pre><code class="language-none">b := bufio.NewWriter(fd)
-b.Write(p0[a:b])
-b.Write(p1[c:d])
-b.Write(p2[e:f])
-// and so on
-if b.Flush() != nil {
-    return b.Flush()
-}</code></pre></div>
-
-<p>本节的技巧只有在同一个函数接口以及同一个处理对象error这样的情况下才可使用。</p>
+<p>​<code>Go
+    b := bufio.NewWriter(fd)
+    b.Write(p0[a:b])
+    b.Write(p1[c:d])
+    b.Write(p2[e:f])
+    // and so on
+    if b.Flush() != nil {
+        return b.Flush()
+    }
+​</code>
+​
+本节的技巧只有在同一个函数接口以及同一个处理对象error这样的情况下才可使用。</p>
 
 <h3 id="toc_5">6 总结</h3>
 

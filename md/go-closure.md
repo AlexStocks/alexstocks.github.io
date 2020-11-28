@@ -22,7 +22,8 @@
 golang中通过传递变量值能够起到引用效果的变量类型有slice & map & channel，其本质是这三种var type不是那种类似于int等可以让CPU直接访问的原子变量类型，而是一种C中的类似于struct的复合数据结构，其结构体中存储的值又指向的更大的一块内存地址，这个大内存区域才是真正的“值域”，结构体本身类似域大内存域的proxy。如果能够理解C++的shared_ptr的实现，就能够理解这种变量类型的本质。
 
 因为closure与其所在的函数共享函数栈，所以也能实现类似于引用的效果。如下程序：
-​	                                                                                                     
+​
+​```Go	                                                                                                     
 	// output: 5                                                                                           
 	func main() {                                                                                          
 	    var v int = 3                                                                                      
@@ -31,9 +32,11 @@ golang中通过传递变量值能够起到引用效果的变量类型有slice & 
 	    }()                                                                                                
 	    println(v)                                                                                         
 	}     
-
+​```
+​
 上面的例子中，main函数内部的closure修改了变量v的值，因为是函数内部调用，其结论可能不能为人信服，又有如下示例：
 
+​```Go
 	// output: 5                                                                                           
 	func test() (func(), func()) {                                                                         
 	    var v int = 3                                                                                      
@@ -45,11 +48,13 @@ golang中通过传递变量值能够起到引用效果的变量类型有slice & 
 	    f1()                                                                                               
 	    f2()                                                                                               
 	}  
-
+​```
+​
 代码示例中f1和f2访问的变量v，其实v在使用时被runtime定义在了heap上。
 
 参考文档1的代码示例也比较经典，一并补录如下：
-​	
+​
+​​```Go	
 	func intSeq() func() int {
 	    i := 0
 	    return func() int {
@@ -68,7 +73,8 @@ golang中通过传递变量值能够起到引用效果的变量类型有slice & 
 	    newInts := intSeq()
 	    println(newInts()) // 1
 	}
-
+​```
+​
 注意上面示例中最后一行的输出，当closure所在函数重新调用时，其closure是新的，其context引用的变量也是重新在heap定义过的。
 
 ### 3 closure与context ###
@@ -76,6 +82,7 @@ golang中通过传递变量值能够起到引用效果的变量类型有slice & 
 
 context是我见过的golang标准库(go1.7)中最优雅的库之一，对context的分析详见参考文档3，其cancel相关代码如下：
 
+​```Go
 	type CancelFunc func()
 	
 	// WithCancel方法返回一个继承自parent的Context对象，同时返回的cancel方法可以用来关闭返回的Context当中的Done channel
@@ -93,9 +100,11 @@ context是我见过的golang标准库(go1.7)中最优雅的库之一，对contex
 	        done:    make(chan struct{}),
 	    }
 	}
-
+​```
+​
 从上可见cancel context也用到了closure，WithCancel返回了一个context对象和一个closure。cancel context的使用示例(参考文档4)如下：
 
+​```Go
 	// 模拟一个最小执行时间的阻塞函数
 	func inc(a int) int {
 		res := a + 1                // 虽然我只做了一次简单的 +1 的运算,
@@ -143,7 +152,8 @@ context是我见过的golang标准库(go1.7)中最优雅的库之一，对contex
 		}()
 		res := Add(ctx, 1, 2)
 	}
-
+​```
+​
 ### 4 closure与error ###
 ---
 
@@ -151,6 +161,7 @@ golang中错误处理是一件令人头疼的事情：需要不断的写"if err 
 
 golang官方的《Errors are values》(参考文档5)一文中给出了如下一段错误处理示例：
 ​	
+​​```Go	
 	_, err = fd.Write(p0[a:b])
 	if err != nil {
 	    return err
@@ -164,9 +175,11 @@ golang官方的《Errors are values》(参考文档5)一文中给出了如下一
 	    return err
 	}
 	// and so on
-
+​```
+​
 这段代码示例的机巧之处在于:三个错误处理针对同一个函数fd.Write，这便能通过closure上下其手了，官方给出的第一个改进就是：
 
+​```Go
 	var err error
 	write := func(buf []byte) {
 	    if err != nil {
@@ -181,9 +194,11 @@ golang官方的《Errors are values》(参考文档5)一文中给出了如下一
 	if err != nil {
 	    return err
 	}
-
+​```
+​
 上面write closure虽然没有减少代码量，但使得代码优雅了不少。后面官方又给出了第二个优化：
 
+​```Go
 	type errWriter struct {
 	    w   io.Writer
 	    err error
@@ -204,11 +219,13 @@ golang官方的《Errors are values》(参考文档5)一文中给出了如下一
 	if ew.err != nil {
 	    return ew.err
 	}
-
+​```
+​
 这个代码示例把closure中的error放入了struct errWriter之中，使得代码更加精妙。
 
 上面代码段中这个技巧被用到了bufio.Writer的实现上，所以调用(bufio.Writer)Write函数时候，不用不断检查其返回值error，其代码示例如下：
 
+​```Go
 	b := bufio.NewWriter(fd)
 	b.Write(p0[a:b])
 	b.Write(p1[c:d])
@@ -217,7 +234,8 @@ golang官方的《Errors are values》(参考文档5)一文中给出了如下一
 	if b.Flush() != nil {
 	    return b.Flush()
 	}
-
+​```
+​
 本节的技巧只有在同一个函数接口以及同一个处理对象error这样的情况下才可使用。
 
 ### 6 总结 ###
