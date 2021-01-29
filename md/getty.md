@@ -186,6 +186,25 @@ Gr Pool 成员有任务队列【其数目为 M】和 Gr 数组【其数目为 N�
 
 [dubbogo/getty][1] 目前采用了 M:N 模型版本的 [gr pool][11]，每个 task queue 被 N/M 个 gr 消费，这种模型的优点是兼顾处理效率和锁压力平衡，可以做到总体层面的任务处理均衡。此版本下 Task 派发采用 RoundRobin 方式。
 
+### <a name="4.2">4.2 无限制 Gr Pool</a>
+
+<a href="#4.1">[4.1 固定大小 Gr Pool]</a> 一节定义了一个使用固定量资源的 gr pool，可能在请求量加大的情况下无法保证吞吐和 RT，有些场景下用户希望使用尽可能用尽所有的资源保证吞吐和 RT。
+
+后来借鉴 [A Million WebSockets and Go][13] 一文中的 “Goroutine pool” 实现了一个 [可无限扩容的 gr pool](https://github.com/dubbogo/gost/pull/35/files)。
+
+### <a name="5">5 大包问题</a>
+
+本周三【20210127】收到集团 [展图](https://github.com/cvictory) 同学反馈，getty 同时向同一个 Server 发送 size 为 8M 的包时，服务端收不到完整包，测试结果如下：
+
+![](../pic/getty/getty-8m-pkg.png)
+
+排除完毕可能的原因后，结论是：session.WritePkg(pkg) 发包过程中发生了 write timeout 错误。或者说，发送大量大包过程中，session 连接的 write timeout 超时，导致完整包的字节流没有发送完毕。
+
+最后商定的改进结论是：
+
+* 1  getty session.WritePkg(pkg) 返回发送出去的字节流的 size，相关改进见 [pr 58](https://github.com/apache/dubbo-getty/pull/58/)；
+* 2 上层调用者自己判断字节流发送是否完整，如果发送不完整就关闭连接然后重新建立连接进行重发。
+
 ## 总结
 ---
 
@@ -213,6 +232,7 @@ Gr Pool 成员有任务队列【其数目为 M】和 Gr 数组【其数目为 N�
 [10]:https://github.com/wongoo
 [11]:https://github.com/dubbogo/getty/pull/6/commits/1991056b300ba9804de0554dbb49b5eb04560c4b
 [12]:https://github.com/wenweihu86
+[13]:https://www.freecodecamp.org/news/million-websockets-and-go-cc58418460bb/
 
 ## Payment
 
@@ -224,3 +244,4 @@ Gr Pool 成员有任务队列【其数目为 M】和 Gr 数组【其数目为 N�
 >- 于雨氏，2018/03/19，初作此文于帝都海淀西二旗。
 >- 于雨氏，2018/07/19，于海淀西二旗， 补充 <a href=#3>[3 unix socket]</a> 一节。
 >- 于雨氏，2019/06/09，于帝都丰台， 补充 <a href=#4>[4 Goroutine Pool]</a> 一节。
+>-  于雨氏，2020/01/29，于帝都 wfc， 补充 <a href=#5>[5 大包问题]</a> 一节。

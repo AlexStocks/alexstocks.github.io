@@ -320,146 +320,9 @@ kbd {
 	pre {
 		word-wrap: break-word;
 	}
-}
-</style>
-
-<style type="text/css">
-/**
- * prism.js default theme for JavaScript, CSS and HTML
- * Based on dabblet (http://dabblet.com)
- * @author Lea Verou
- */
-
-code[class*="language-"],
-pre[class*="language-"] {
-	color: black;
-	background: none;
-	text-shadow: 0 1px white;
-	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-	text-align: left;
-	white-space: pre;
-	word-spacing: normal;
-	word-break: normal;
-	word-wrap: normal;
-	line-height: 1.5;
-
-	-moz-tab-size: 4;
-	-o-tab-size: 4;
-	tab-size: 4;
-
-	-webkit-hyphens: none;
-	-moz-hyphens: none;
-	-ms-hyphens: none;
-	hyphens: none;
-}
-
-pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
-code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
-	text-shadow: none;
-	background: #b3d4fc;
-}
-
-pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
-code[class*="language-"]::selection, code[class*="language-"] ::selection {
-	text-shadow: none;
-	background: #b3d4fc;
-}
-
-@media print {
-	code[class*="language-"],
-	pre[class*="language-"] {
-		text-shadow: none;
-	}
-}
-
-/* Code blocks */
-pre[class*="language-"] {
-	padding: 1em;
-	margin: .5em 0;
-	overflow: auto;
-}
-
-:not(pre) > code[class*="language-"],
-pre[class*="language-"] {
-	background: #f5f2f0;
-}
-
-/* Inline code */
-:not(pre) > code[class*="language-"] {
-	padding: .1em;
-	border-radius: .3em;
-	white-space: normal;
-}
-
-.token.comment,
-.token.prolog,
-.token.doctype,
-.token.cdata {
-	color: slategray;
-}
-
-.token.punctuation {
-	color: #999;
-}
-
-.namespace {
-	opacity: .7;
-}
-
-.token.property,
-.token.tag,
-.token.boolean,
-.token.number,
-.token.constant,
-.token.symbol,
-.token.deleted {
-	color: #905;
-}
-
-.token.selector,
-.token.attr-name,
-.token.string,
-.token.char,
-.token.builtin,
-.token.inserted {
-	color: #690;
-}
-
-.token.operator,
-.token.entity,
-.token.url,
-.language-css .token.string,
-.style .token.string {
-	color: #a67f59;
-	background: hsla(0, 0%, 100%, .5);
-}
-
-.token.atrule,
-.token.attr-value,
-.token.keyword {
-	color: #07a;
-}
-
-.token.function {
-	color: #DD4A68;
-}
-
-.token.regex,
-.token.important,
-.token.variable {
-	color: #e90;
-}
-
-.token.important,
-.token.bold {
-	font-weight: bold;
-}
-.token.italic {
-	font-style: italic;
-}
-
-.token.entity {
-	cursor: help;
+  body {
+    padding: 2cm; 
+  }
 }
 </style>
 
@@ -654,14 +517,35 @@ echo_clie 31729 alex    9u  IPv4 0xa5d288135c97569d      0t0  UDP localhost:6341
 
 <p>向 <a href="https://github.com/dubbogo/getty">dubbogo/getty</a> 中添加 gr pool 时也曾实现过这个版本的 <a href="https://github.com/dubbogo/getty/pull/6/commits/4b32c61e65858b3eea9d88d8f1c154ab730c32f1">gr pool</a>。这种模型的 gr pool 整个 pool 只创建一个 chan， 所有 gr 去读取这一个 chan，其缺点是：队列读写模型是 一写多读，因为 go channel 的低效率【整体使用一个 mutex lock】造成竞争激烈，当然其网络包处理顺序更无从保证。</p>
 
-<p><a href="https://github.com/dubbogo/getty">dubbogo/getty</a> 初始版本的 <a href="https://github.com/dubbogo/getty/pull/6/files/c4d06e2a329758a6c65c46abe464a90a3002e428#diff-9922b38d89e2ff9f820f2ce62f254162">gr pool</a> 模型为 1:1，每个 gr 多有自己的 chan，其读写模型是一写一读，其优点是可保证网络包处理顺序性，<br>
+<p><a href="https://github.com/dubbogo/getty">dubbogo/getty</a> 初始版本的 <a href="https://github.com/dubbogo/getty/pull/6/files/c4d06e2a329758a6c65c46abe464a90a3002e428#diff-9922b38d89e2ff9f820f2ce62f254162">gr pool</a> 模型为 1:1，每个 gr 多有自己的 chan，其读写模型是一写一读，其优点是可保证网络包处理顺序性，
 如读取 kafka 消息时候，按照 kafka message 的 key 的 hash 值以取余方式【hash(message key) % N】将其投递到某个 task queue，则同一 key 的消息都可以保证处理有序。但 <a href="10">望哥</a> 指出了这种模型的缺陷：每个task处理要有时间，此方案会造成某个 gr 的 chan 里面有 task 堵塞，就算其他 gr 闲着，也没办法处理之【任务处理“饥饿”】。</p>
 
 <p><a href="https://github.com/wenweihu86">wenwei86</a> 给出了更进一步的 1:1 模型的改进方案：每个 gr 一个 chan，如果 gr 发现自己的 chan 没有请求，就去找别的 chan，发送方也尽量发往消费快的协程。这个方案类似于 go runtime 内部的 MPG 调度算法，但是对我个人来说算法和实现均太复杂，故而没有采用。</p>
 
 <p><a href="https://github.com/dubbogo/getty">dubbogo/getty</a> 目前采用了 M:N 模型版本的 <a href="https://github.com/dubbogo/getty/pull/6/commits/1991056b300ba9804de0554dbb49b5eb04560c4b">gr pool</a>，每个 task queue 被 N/M 个 gr 消费，这种模型的优点是兼顾处理效率和锁压力平衡，可以做到总体层面的任务处理均衡。此版本下 Task 派发采用 RoundRobin 方式。</p>
 
-<h2 id="toc_15">总结</h2>
+<h3 id="toc_15"><a name="4.2">4.2 无限制 Gr Pool</a></h3>
+
+<p><a href="#4.1">[4.1 固定大小 Gr Pool]</a> 一节定义了一个使用固定量资源的 gr pool，可能在请求量加大的情况下无法保证吞吐和 RT，有些场景下用户希望使用尽可能用尽所有的资源保证吞吐和 RT。</p>
+
+<p>后来借鉴 <a href="https://www.freecodecamp.org/news/million-websockets-and-go-cc58418460bb/">A Million WebSockets and Go</a> 一文中的 “Goroutine pool” 实现了一个 <a href="https://github.com/dubbogo/gost/pull/35/files">可无限扩容的 gr pool</a>。</p>
+
+<h3 id="toc_16"><a name="5">5 大包问题</a></h3>
+
+<p>本周三【20210127】收到集团 <a href="https://github.com/cvictory">展图</a> 同学反馈，getty 同时向同一个 Server 发送 size 为 8M 的包时，服务端收不到完整包，测试结果如下：</p>
+
+<p><img src="../pic/getty/getty-8m-pkg.png" alt=""></p>
+
+<p>排除完毕可能的原因后，结论是：session.WritePkg(pkg) 发包过程中发生了 write timeout 错误。或者说，发送大量大包过程中，session 连接的 write timeout 超时，导致完整包的字节流没有发送完毕。</p>
+
+<p>最后商定的改进结论是：</p>
+
+<ul>
+<li>1  getty session.WritePkg(pkg) 返回发送出去的字节流的 size，相关改进见 <a href="https://github.com/apache/dubbo-getty/pull/58/">pr 58</a>；</li>
+<li>2 上层调用者自己判断字节流发送是否完整，如果发送不完整就关闭连接然后重新建立连接进行重发。</li>
+</ul>
+
+<h2 id="toc_17">总结</h2>
 
 <hr>
 
@@ -671,7 +555,7 @@ echo_clie 31729 alex    9u  IPv4 0xa5d288135c97569d      0t0  UDP localhost:6341
 
 <p>此记。</p>
 
-<h2 id="toc_16">参考文档</h2>
+<h2 id="toc_18">参考文档</h2>
 
 <hr>
 
@@ -680,17 +564,18 @@ echo_clie 31729 alex    9u  IPv4 0xa5d288135c97569d      0t0  UDP localhost:6341
 <li>2 <a href="http://colobu.com/2016/10/19/Go-UDP-Programming/">深入Go UDP编程</a></li>
 </ul>
 
-<h2 id="toc_17">Payment</h2>
+<h2 id="toc_19">Payment</h2>
 
 <p><center> <img src="../pic/pay/wepay.jpg" alt="阿弥托福，于雨谢过" title="阿弥托福，于雨谢过"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img src="../pic/pay/alipay.jpg" alt="无量天尊，于雨奉献" title="无量天尊，于雨奉献"> </center></p>
 
-<h2 id="toc_18">Timeline</h2>
+<h2 id="toc_20">Timeline</h2>
 
 <blockquote>
 <ul>
 <li>于雨氏，2018/03/19，初作此文于帝都海淀西二旗。</li>
 <li>于雨氏，2018/07/19，于海淀西二旗， 补充 <a href=#3>[3 unix socket]</a> 一节。</li>
 <li>于雨氏，2019/06/09，于帝都丰台， 补充 <a href=#4>[4 Goroutine Pool]</a> 一节。</li>
+<li> 于雨氏，2020/01/29，于帝都 wfc， 补充 <a href=#5>[5 大包问题]</a> 一节。</li>
 </ul>
 </blockquote>
 
@@ -748,7 +633,6 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
-
 </body>
 
 </html>
