@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>dubbo-go-kaikela</title>
+
+
+<style type="text/css">
+body {
+  font-family: Helvetica, arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: white;
+  padding: 30px; }
+
+body > *:first-child {
+  margin-top: 0 !important; }
+body > *:last-child {
+  margin-bottom: 0 !important; }
+
+a {
+  color: #4183C4; }
+a.absent {
+  color: #cc0000; }
+a.anchor {
+  display: block;
+  padding-left: 30px;
+  margin-left: -30px;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0; }
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+  cursor: text;
+  position: relative; }
+
+h1:hover a.anchor, h2:hover a.anchor, h3:hover a.anchor, h4:hover a.anchor, h5:hover a.anchor, h6:hover a.anchor {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA09pVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoMTMuMCAyMDEyMDMwNS5tLjQxNSAyMDEyLzAzLzA1OjIxOjAwOjAwKSAgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OUM2NjlDQjI4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OUM2NjlDQjM4ODBGMTFFMTg1ODlEODNERDJBRjUwQTQiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5QzY2OUNCMDg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5QzY2OUNCMTg4MEYxMUUxODU4OUQ4M0REMkFGNTBBNCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PsQhXeAAAABfSURBVHjaYvz//z8DJYCRUgMYQAbAMBQIAvEqkBQWXI6sHqwHiwG70TTBxGaiWwjCTGgOUgJiF1J8wMRAIUA34B4Q76HUBelAfJYSA0CuMIEaRP8wGIkGMA54bgQIMACAmkXJi0hKJQAAAABJRU5ErkJggg==) no-repeat 10px center;
+  text-decoration: none; }
+
+h1 tt, h1 code {
+  font-size: inherit; }
+
+h2 tt, h2 code {
+  font-size: inherit; }
+
+h3 tt, h3 code {
+  font-size: inherit; }
+
+h4 tt, h4 code {
+  font-size: inherit; }
+
+h5 tt, h5 code {
+  font-size: inherit; }
+
+h6 tt, h6 code {
+  font-size: inherit; }
+
+h1 {
+  font-size: 28px;
+  color: black; }
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #cccccc;
+  color: black; }
+
+h3 {
+  font-size: 18px; }
+
+h4 {
+  font-size: 16px; }
+
+h5 {
+  font-size: 14px; }
+
+h6 {
+  color: #777777;
+  font-size: 14px; }
+
+p, blockquote, ul, ol, dl, li, table, pre {
+  margin: 15px 0; }
+
+hr {
+  background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAECAYAAACtBE5DAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OENDRjNBN0E2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OENDRjNBN0I2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo4Q0NGM0E3ODY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo4Q0NGM0E3OTY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqqezsUAAAAfSURBVHjaYmRABcYwBiM2QSA4y4hNEKYDQxAEAAIMAHNGAzhkPOlYAAAAAElFTkSuQmCC) repeat-x 0 0;
+  border: 0 none;
+  color: #cccccc;
+  height: 4px;
+  padding: 0;
+}
+
+body > h2:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+body > h1:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+  body > h1:first-child + h2 {
+    margin-top: 0;
+    padding-top: 0; }
+body > h3:first-child, body > h4:first-child, body > h5:first-child, body > h6:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0; }
+
+h1 p, h2 p, h3 p, h4 p, h5 p, h6 p {
+  margin-top: 0; }
+
+li p.first {
+  display: inline-block; }
+li {
+  margin: 0; }
+ul, ol {
+  padding-left: 30px; }
+
+ul :first-child, ol :first-child {
+  margin-top: 0; }
+
+dl {
+  padding: 0; }
+  dl dt {
+    font-size: 14px;
+    font-weight: bold;
+    font-style: italic;
+    padding: 0;
+    margin: 15px 0 5px; }
+    dl dt:first-child {
+      padding: 0; }
+    dl dt > :first-child {
+      margin-top: 0; }
+    dl dt > :last-child {
+      margin-bottom: 0; }
+  dl dd {
+    margin: 0 0 15px;
+    padding: 0 15px; }
+    dl dd > :first-child {
+      margin-top: 0; }
+    dl dd > :last-child {
+      margin-bottom: 0; }
+
+blockquote {
+  border-left: 4px solid #dddddd;
+  padding: 0 15px;
+  color: #777777; }
+  blockquote > :first-child {
+    margin-top: 0; }
+  blockquote > :last-child {
+    margin-bottom: 0; }
+
+table {
+  padding: 0;border-collapse: collapse; }
+  table tr {
+    border-top: 1px solid #cccccc;
+    background-color: white;
+    margin: 0;
+    padding: 0; }
+    table tr:nth-child(2n) {
+      background-color: #f8f8f8; }
+    table tr th {
+      font-weight: bold;
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr td {
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr th :first-child, table tr td :first-child {
+      margin-top: 0; }
+    table tr th :last-child, table tr td :last-child {
+      margin-bottom: 0; }
+
+img {
+  max-width: 100%; }
+
+span.frame {
+  display: block;
+  overflow: hidden; }
+  span.frame > span {
+    border: 1px solid #dddddd;
+    display: block;
+    float: left;
+    overflow: hidden;
+    margin: 13px 0 0;
+    padding: 7px;
+    width: auto; }
+  span.frame span img {
+    display: block;
+    float: left; }
+  span.frame span span {
+    clear: both;
+    color: #333333;
+    display: block;
+    padding: 5px 0 0; }
+span.align-center {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-center > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: center; }
+  span.align-center span img {
+    margin: 0 auto;
+    text-align: center; }
+span.align-right {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px 0 0;
+    text-align: right; }
+  span.align-right span img {
+    margin: 0;
+    text-align: right; }
+span.float-left {
+  display: block;
+  margin-right: 13px;
+  overflow: hidden;
+  float: left; }
+  span.float-left span {
+    margin: 13px 0 0; }
+span.float-right {
+  display: block;
+  margin-left: 13px;
+  overflow: hidden;
+  float: right; }
+  span.float-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: right; }
+
+code, tt {
+  margin: 0 2px;
+  padding: 0 5px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px; }
+
+pre code {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent; }
+
+.highlight pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+  pre code, pre tt {
+    background-color: transparent;
+    border: none; }
+
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
+}
+
+kbd {
+  display: inline-block;
+  padding: 3px 5px;
+  font-size: 11px;
+  line-height: 10px;
+  color: #555;
+  vertical-align: middle;
+  background-color: #fcfcfc;
+  border: solid 1px #ccc;
+  border-bottom-color: #bbb;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 #bbb
+}
+
+* {
+	-webkit-print-color-adjust: exact;
+}
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:0 auto;
+    }
+}
+@media print {
+	table, pre {
+		page-break-inside: avoid;
+	}
+	pre {
+		word-wrap: break-word;
+	}
+  body {
+    padding: 2cm;
+  }
+}
+</style>
+
+
+</head>
+
+<body>
+
+<h1 id="toc_0">dubbogo 在云原生时代</h1>
+
+<hr>
+
+<p><em>written by Alex Stocks on 2021/04/11，版权所有，无授权不得转载</em></p>
+
+<p>周六【20210410】正在和社区同学忙着 dubbogo 3.0 发版，某互联网教育公司的曾同学报来一个问题，随后和相关同学展开了多轮讨论。因为个人觉得这是 dubbogo 在云原生进击图中一次比较有意义的讨论，觉得有必要花费一点时间记录下来，算是 dubbogo 在云原生时代突击过程中的一个见证。</p>
+
+<p>后面如果有更多有意义的讨论，个人将继续补加此文。</p>
+
+<h2 id="toc_1">1 新服务上线后 consumer 无法调用</h2>
+
+<hr>
+
+<p>2021-04-07T19:39+08:00 pm 曾同学报出来一个 <a href="https://github.com/apache/dubbo-go/pull/1137/files">dubbo-go pr 1137</a> ，当时囿于忙于工作，没有分析其背景，且代码改动不甚合理，就没理会让其继续追踪下根因。</p>
+
+<p>2021-04-10T17:51+08:00 pm，曾同学发来如下消息：</p>
+
+<p><img src="../pic/dubbogo/dubbogo-kaikela-k8s.png" alt=""></p>
+
+<p>这次预感其分析过程比较靠谱，遂组织社区五个同学对其问题进行分析。</p>
+
+<h3 id="toc_2">1.1 问题描述</h3>
+
+<p>根据与曾同学的沟通，其整体环境是在一个 k8s 环境下，使用注册中心 zk，其出问题的过程如下：</p>
+
+<ul>
+<li>1 service A【以下简称sA】 在物理主机 host X【以下简称 hX】上有一个服务节点 provider M【以下简称 pM】；</li>
+<li>2 pM 向注册中心注册使用的 ip:port 不是其所在的 pod 的 ip:port，使用了 hX 的 IP:port，原因是为了让 k8s 集群外部的 consumer 也能调用到 pM 提供的 sA 服务；</li>
+<li>3 在 hX 上新启动一个 sA 的节点 provider N【以下简称 pN】，pN 向 注册中心注册的 IP:Port 也使用了 hX 的 IP:Port；</li>
+</ul>
+
+<p>如下图：
+ <img src="../pic/dubbogo/dubbogo-kaikela-same-provider.png" alt=""></p>
+
+<ul>
+<li>4 待 pN 稳定运行一段时间后，下线 pM；</li>
+<li>5 consumer 收到 pM 下线事件后，本地缓存中，由于 pM 和 pN 的 service key 一样，把 pM 和 pN 都下线了。</li>
+</ul>
+
+<p>分析其过程，根因是其 devops 部署的问题，但是希望能在 dubbo/dubbogo 层把这个问题吃掉。使用方希望能根据通知下线中一些可靠字段【譬如 timestamp？】确认下线服务的准确性。</p>
+
+<h3 id="toc_3">1.2 解决方案</h3>
+
+<p>曾同学给出了一个解决方案，对 consumer 端的本地 service map 缓存进行改造，在原来的 key 维度中加入 provider 启动时上报注册中心的 metadata 中使用的注册时间戳这个维度。但被社区否决了：加入时间戳维度并不能解决问题，因为时间戳精度只能达到 秒 级别，并不能从根本上解决问题。</p>
+
+<p>dubbogo 有一个 health check 机制：consumer 对注册中心下发的 provider 列表定时发送心跳 check 逻辑，进行 alive 二次验证。结合 health check 机制，社区给出的解决方案是：</p>
+
+<ul>
+<li>1 收到下线事件时，先检测 service key 对应的 provider 最近【一个心跳周期内】是否还在被调用，如果还在被调用，则不下线，最终下线与否取决于 healthCheck 的结果；</li>
+<li>2 如果在最近没有被调用，然后再比对注册中心下线事件通知里的timestamp字段，如果相同则下线。</li>
+</ul>
+
+<p>通过这个双保险把误下线的概率降到最低。</p>
+
+<p>详细内容已经整理到 <a href="https://github.com/apache/dubbo-go/issues/1141">dubbo-go issue 1141</a>，欢迎关注后续讨论。</p>
+
+<h3 id="toc_4">1.3 隐含前提</h3>
+
+<p>社区方案，有个前提是：注册中心通知事件的有序性。</p>
+
+<p>梳理下我们支持的注册中心对这个特性的支持特点:</p>
+
+<ul>
+<li>1 etcd 有 revision 的概念， 这个是数据的全局版本号，是可以保证有序的；</li>
+<li>2 基于 etcd 的 k8s 也是可以保证的；</li>
+<li>3 类似于 etcd 的 consul是可以保证的；</li>
+<li>4 zk 也可以保证通知有序性，只不过可能丢事件，这个可以通过 dubbo/dubbogo health check 进行补偿；</li>
+<li>5 经 nacos 同学李志鹏确认，nacos 可以确保事件通知的有序性，原话是 “同一个节点只要保证客户端服务上线和下线操作是有序的，通知也是有序的”。</li>
+</ul>
+
+<h2 id="toc_5">2 多余的话</h2>
+
+<p>有人说 dubbogo 的架子太过于庞大，维护成本和学习成本很高，不如可插拔机制优雅，其实任何框架都是有历史的，都是有现实意义的。无意义的口水争论无法是无法推动产品进步的。</p>
+
+<p>诚如 linus 与恩师 Andrew Tanenbaum 就 linux 的宏内核与 minix 的微内核的争论，并不能因此就动摇 linux 第一大 OS 的地位。dubbogo 重构前的版本直接借鉴了 go-micro，是可插拔的，但后来随着版权原因，经鄙人和一些 Javaer 借鉴 dubbogo v1 、getty rpc 以及 dubbo 重构后【重构过程中鄙人的代码提交被彻底打乱，提交历史也没有了，所以有些人觉得鄙人没写多少代码】，彻底变成了 Dubbo 的翻版，被人戏称为一个类似于宏内核的 “怪物”。</p>
+
+<p>站在事后的角度来看，其实庞大的 dubbogo 也铸就了 dubbogo 强大的功能，对各种注册中心的支持正是基于它可插拔的灵魂，否则也不可能支持这么多第三方组件和如此多的第三方协议。目前 dubbogo 的各项功能几乎都被生产环境验证过，譬如 芒果TV 使用了基于 nacos 注册中心的 HTTP + JSONRPC、TCP + hessian2 通信协议，而 得物 则 使用了基于 nacos 注册中心的 gRPC 通信方式。况且 dubbogo 并不是如一些喷子所谓的没有代码生成工具，其 v1.5 中 gRPC 和 dubbogo 3.0 都提供了各种工具，并不比竞品差多少，或者说 dubbogo 的一角都都足以覆盖竞品的功能。</p>
+
+<p>dubbogo 未来也会秉承 “bridging the gap between Java and Go”，在 多语言和多框架【gRPC】和 Spring Cloud 之间架起桥梁，继续进化。</p>
+
+<h2 id="toc_6">Payment</h2>
+
+<p><center> <img src="../pic/pay/wepay.jpg" alt="阿弥托福，于雨谢过" title="阿弥托福，于雨谢过"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img src="../pic/pay/alipay.jpg" alt="无量天尊，于雨奉献" title="无量天尊，于雨奉献"> </center></p>
+
+<h2 id="toc_7">Timeline</h2>
+
+<blockquote>
+<ul>
+<li>2021/04/11，于雨氏，初作此文于帝都五环。</li>
+</ul>
+</blockquote>
+
+<!-- baidu statistic start -->
+<script>
+var _hmt = _hmt || [];
+(function() {
+	  var hm = document.createElement("script");
+	    hm.src = "https://hm.baidu.com/hm.js?170a8df8802fbc47c7acc272d270979c";
+		  var s = document.getElementsByTagName("script")[0];
+		    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+<!-- baidu statistic end -->
+
+<!-- Gitalk start -->
+<link rel="stylesheet" href="https://unpkg.com/gitalk@latest/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk@latest/dist/gitalk.min.js"></script>
+<div id="gitalk-container"></div>
+<script type="text/javascript">
+var gitalk = new Gitalk({
+	clientID: '6211d8b94a8106bed6b0',
+	clientSecret: 'bf77ca26c237eabbd45169e01bf03a5e96a1b26f',
+	repo: 'alexstocks.github.io',
+	owner: 'AlexStocks',
+	admin: ['AlexStocks'],
+	id: window.location.pathname,
+	distractionFreeMode: true
+});
+gitalk.render('gitalk-container');
+</script>
+<!-- Gitalk end -->
+
+
+
+</body>
+
+</html>
