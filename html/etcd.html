@@ -320,146 +320,9 @@ kbd {
 	pre {
 		word-wrap: break-word;
 	}
-}
-</style>
-
-<style type="text/css">
-/**
- * prism.js default theme for JavaScript, CSS and HTML
- * Based on dabblet (http://dabblet.com)
- * @author Lea Verou
- */
-
-code[class*="language-"],
-pre[class*="language-"] {
-	color: black;
-	background: none;
-	text-shadow: 0 1px white;
-	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-	text-align: left;
-	white-space: pre;
-	word-spacing: normal;
-	word-break: normal;
-	word-wrap: normal;
-	line-height: 1.5;
-
-	-moz-tab-size: 4;
-	-o-tab-size: 4;
-	tab-size: 4;
-
-	-webkit-hyphens: none;
-	-moz-hyphens: none;
-	-ms-hyphens: none;
-	hyphens: none;
-}
-
-pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
-code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
-	text-shadow: none;
-	background: #b3d4fc;
-}
-
-pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
-code[class*="language-"]::selection, code[class*="language-"] ::selection {
-	text-shadow: none;
-	background: #b3d4fc;
-}
-
-@media print {
-	code[class*="language-"],
-	pre[class*="language-"] {
-		text-shadow: none;
-	}
-}
-
-/* Code blocks */
-pre[class*="language-"] {
-	padding: 1em;
-	margin: .5em 0;
-	overflow: auto;
-}
-
-:not(pre) > code[class*="language-"],
-pre[class*="language-"] {
-	background: #f5f2f0;
-}
-
-/* Inline code */
-:not(pre) > code[class*="language-"] {
-	padding: .1em;
-	border-radius: .3em;
-	white-space: normal;
-}
-
-.token.comment,
-.token.prolog,
-.token.doctype,
-.token.cdata {
-	color: slategray;
-}
-
-.token.punctuation {
-	color: #999;
-}
-
-.namespace {
-	opacity: .7;
-}
-
-.token.property,
-.token.tag,
-.token.boolean,
-.token.number,
-.token.constant,
-.token.symbol,
-.token.deleted {
-	color: #905;
-}
-
-.token.selector,
-.token.attr-name,
-.token.string,
-.token.char,
-.token.builtin,
-.token.inserted {
-	color: #690;
-}
-
-.token.operator,
-.token.entity,
-.token.url,
-.language-css .token.string,
-.style .token.string {
-	color: #a67f59;
-	background: hsla(0, 0%, 100%, .5);
-}
-
-.token.atrule,
-.token.attr-value,
-.token.keyword {
-	color: #07a;
-}
-
-.token.function {
-	color: #DD4A68;
-}
-
-.token.regex,
-.token.important,
-.token.variable {
-	color: #e90;
-}
-
-.token.important,
-.token.bold {
-	font-weight: bold;
-}
-.token.italic {
-	font-style: italic;
-}
-
-.token.entity {
-	cursor: help;
+  body {
+    padding: 2cm;
+  }
 }
 </style>
 
@@ -500,29 +363,29 @@ pre[class*="language-"] {
 
 <p>etcd单节点启动命令如下：</p>
 
-<div><pre><code class="language-none">etcd --name=${name} \
-    --data-dir=${data_dir} \
-    --wal-dir=${wal_dir} \
-    --auto-compaction-retention=1 \
-    --snapshot-count=5000  \
-    --quota-backend-bytes=$((160*1024*1024*1024)) \
-    --heartbeat-interval=100 \
-    --election-timeout=500 \
-    --max-request-bytes 1536 \
-    --initial-advertise-peer-urls http://${ip}:${peer_port} \
-    --listen-peer-urls http://${ip}:${peer_port} \
-    --listen-client-urls http://${ip}:${client_port},http://127.0.0.1:${client_port} \
-    --advertise-client-urls http://${ip}:${client_port} \
-    --initial-cluster-token ${cluster_name} \
-    --initial-cluster etcd_node0=http://${ip}:${peer_port},etcd_node1=http://${peer1_ip}:${peer1_peer_port},etcd_node2=http://${peer2_ip}:${peer2_peer_port} \
-    --initial-cluster-state new  &gt;&gt; ${log_dir}/${name}.log 2&gt;&amp;1 &amp;</code></pre></div>
+<div><pre><code class="language-bash">    etcd --name=${name} \
+        --data-dir=${data_dir} \
+        --wal-dir=${wal_dir} \
+        --auto-compaction-retention=1 \
+        --snapshot-count=5000  \
+        --quota-backend-bytes=$((160*1024*1024*1024)) \
+        --heartbeat-interval=100 \
+        --election-timeout=500 \
+        --max-request-bytes 1536 \
+        --initial-advertise-peer-urls http://${ip}:${peer_port} \
+        --listen-peer-urls http://${ip}:${peer_port} \
+        --listen-client-urls http://${ip}:${client_port},http://127.0.0.1:${client_port} \
+        --advertise-client-urls http://${ip}:${client_port} \
+        --initial-cluster-token ${cluster_name} \
+        --initial-cluster etcd_node0=http://${ip}:${peer_port},etcd_node1=http://${peer1_ip}:${peer1_peer_port},etcd_node2=http://${peer2_ip}:${peer2_peer_port} \
+        --initial-cluster-state new  &gt;&gt; ${log_dir}/${name}.log 2&gt;&amp;1 &amp;</code></pre></div>
 
 <p>各个参数的详细意义见参考文档17，下面列出一些主要参数的含义如下：</p>
 
 <ul>
 <li>1 name 是 node 的名称，用于在集群中标识当前节点，etcd 单节点允许迁移，迁移后名称不变即可被其他节点识别；</li>
 <li>2 etcd 底层使用的 kv 数据库 coreos/bbolt 是类似于 Rocksdb 的一个 LSM 数据库实现，与Rocksdb 一样数据有 wal 和 data 两种，建议两种数据分别存储到不同的存储系统上，以保证数据安全和系统性能；</li>
-<li>3 etcd 底层使用的 coreos/bbolt 类似于 rocksdb 会定期做 compaction 以清除过期数据，上面的  auto-compaction-retention 指定的时间单位是小时，当然也可以借助工具 etcdctl 强行进行 compaction，使用方法详见参考文档9#History compaction#一节；</li>
+<li>3 etcd 底层使用的 coreos/bbolt, 类似于 rocksdb 会定期做 compaction 以清除过期数据，上面的  auto-compaction-retention 指定的时间单位是小时，当然也可以借助工具 etcdctl 强行进行 compaction，使用方法详见参考文档9#History compaction#一节；</li>
 <li>4 参考文档9#Space quota#一节建议给etcd限定磁盘使用量，以防止etcd无限度的使用磁盘导致磁盘爆满后再去做compaction导致系统响应速度下降进而导致系统不稳定，当etcd使用的磁盘额度到达限定额度的时候会发出cluster级别的alarm使集群进入maintenance模式，只接收读和删除请求，当进行compaction和defragmenting(碎片化整理)完毕留出足够空间的时候才会回到正常工作状态；</li>
 <li>5 max-request-bytes可以限制key的最大长度，此处限制长度为15KiB；</li>
 <li>5 initial-cluster-token用于标识集群的名称，initial-cluster则给出了静态cluster的各个成员的名称以及地址；</li>
@@ -533,11 +396,11 @@ pre[class*="language-"] {
 
 <p>集群部署完毕后，可以借助etcdctl查看集群的成员列表以及集群运行状态。etcdctl自身也分为v2和v3两个版本，集群状态的查看可借助其v2版本，使用方式如下：</p>
 
-<div><pre><code class="language-none">export ETCDCTL_API=2
-echo &quot;-----------------member list----------------&quot;
-etcdctl --endpoints=“http://localhost:2379” member list
-echo &quot;-----------------cluster health-------------&quot;
-etcdctl --endpoints=“http://localhost:2379“ cluster-health</code></pre></div>
+<div><pre><code class="language-bash">    export ETCDCTL_API=2
+    echo &quot;-----------------member list----------------&quot;
+    etcdctl --endpoints=“http://localhost:2379” member list
+    echo &quot;-----------------cluster health-------------&quot;
+    etcdctl --endpoints=“http://localhost:2379“ cluster-health</code></pre></div>
 
 <p>静态集群自身也是可以扩容的，具体扩容方法见参考文档6和参考文档7。</p>
 
@@ -554,7 +417,7 @@ etcdctl --endpoints=“http://localhost:2379“ cluster-health</code></pre></div
 <p>参考文档7#Update advertise peer URLs#给出了更改这个参数的方法：</p>
 
 <ul>
-<li>1 执行命令 <strong>etcdctl member update a8266ecf031671f3 <a href="http://10.0.1.10:2380">http://10.0.1.10:2380</a></strong> 以告知cluster内其他成员这个节点的新地址；</li>
+<li>1 执行命令 <strong>etcdctl member update a8266ecf031671f3 http://10.0.1.10:2380</strong> 以告知cluster内其他成员这个节点的新地址；</li>
 <li>2 更改节点配置，重启节点，以恢复节点的quorum。</li>
 </ul>
 
@@ -565,36 +428,39 @@ etcdctl --endpoints=“http://localhost:2379“ cluster-health</code></pre></div
 <p>具体详细步骤见参考文档7#Add a New Member#一节，下面给出操作过程：</p>
 
 <ul>
-<li><p>1 ETCDCTL<u>API=3 etcdctl --endpoints=<a href="http://192.168.11.1:2379,http://192.168.11.1:12379,http://192.168.11.1:22379">http://192.168.11.1:2379,http://192.168.11.1:12379,http://192.168.11.1:22379</a> member add etcd</u>node3 --peer-urls=<a href="http://192.168.11.1:32379">http://192.168.11.1:32379</a></p>
+<li>1 查看 ETCDCTL<em>API=3 etcdctl --endpoints=http://192.168.11.1:2379,http://192.168.11.1:12379,http://192.168.11.1:22379 member add etcd</em>node3 --peer-urls=http://192.168.11.1:32379</li>
+</ul>
 
-<p>ETCD<u>NAME=&quot;etcd</u>node3<q><br>
- ETCD<u>INITIAL</u>CLUSTER=</q>etcd<u>node1=<a href="http://192.168.11.1:12380,etcd">http://192.168.11.1:12380,etcd</a></u>node2=<a href="http://192.168.11.1:22380,etcd_node0=http://192.168.11.1:2380,etcd_node3=http://192.168.11.1:32379">http://192.168.11.1:22380,etcd_node0=http://192.168.11.1:2380,etcd_node3=http://192.168.11.1:32379</a><q><br>
- ETCD<u>INITIAL</u>CLUSTER_STATE=</q>existing&quot;</p></li>
-<li><p>2 etcd --name=etcd<u>node3 \<br><br>
---data-dir=/tmp/etcd/etcd</u>node3/./data/ \<br><br>
---wal-dir=/tmp/etcd/etcd<u>node3/./wal/ \<br><br>
---listen-peer-urls=<a href="http://192.168.11.100:32380">http://192.168.11.100:32380</a> \<br><br>
---initial-advertise-peer-urls=<a href="http://192.168.11.100:32380">http://192.168.11.100:32380</a> \<br><br>
---listen-client-urls=<a href="http://192.168.11.100:32379,http://127.0.0.1:32379">http://192.168.11.100:32379,http://127.0.0.1:32379</a> \<br><br>
---advertise-client-urls=<a href="http://192.168.11.100:32379">http://192.168.11.100:32379</a> \<br><br>
---initial-cluster-state=existing \<br><br>
---initial-cluster=&quot;etcd</u>node2=<a href="http://192.168.11.100:22380,etcd_node1=http://192.168.11.100:12380,etcd_node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380">http://192.168.11.100:22380,etcd_node1=http://192.168.11.100:12380,etcd_node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380</a>&quot;</p></li>
+<div><pre><code class="language-bash">     ETCD_NAME=&quot;etcd_node3&quot;
+     ETCD_INITIAL_CLUSTER=&quot;etcd_node1=http://192.168.11.1:12380,etcd_node2=http://192.168.11.1:22380,etcd_node0=http://192.168.11.1:2380,etcd_node3=http://192.168.11.1:32379&quot;
+     ETCD_INITIAL_CLUSTER_STATE=&quot;existing&quot;</code></pre></div>
+
+<ul>
+<li>2 etcd --name=etcd<em>node3 \<br>
+--data-dir=/tmp/etcd/etcd</em>node3/./data/ \<br>
+--wal-dir=/tmp/etcd/etcd<em>node3/./wal/ \<br>
+--listen-peer-urls=http://192.168.11.100:32380 \<br>
+--initial-advertise-peer-urls=http://192.168.11.100:32380 \<br>
+--listen-client-urls=http://192.168.11.100:32379,http://127.0.0.1:32379 \<br>
+--advertise-client-urls=http://192.168.11.100:32379 \<br>
+--initial-cluster-state=existing \<br>
+--initial-cluster=&quot;etcd</em>node2=http://192.168.11.100:22380,etcd<em>node1=http://192.168.11.100:12380,etcd</em>node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380&quot;</li>
 </ul>
 
 <p>一定要注意，”initial-cluster”里面一定要有新成员的peer地址。参考文档7#Strict Reconfiguration Check Mode#提到：etcdctl执行完毕”etcdctl member add“后，etcd cluster就把这个还未存在的node算进quorum了，<strong>第二步必须准确完成</strong>。</p>
 
-<div><pre><code class="language-none">如果仅仅通过命令”etcdctl member add“添加一个节点，但是不添加实际节点，然后就通过”etcdctl member remove“删除，则会得到如下结果：
+<div><pre><code class="language-none">如果仅仅通过命令”etcdctl member add“添加一个节点，但是不添加实际节点，然后就通过”etcdctl member remove“删除，则会得到如下结果：</code></pre></div>
 
-$ ETCDCTL_API=3 etcdctl --endpoints=http://192.168.11.100:2379,http://192.168.11.100:12379,http://192.168.11.100:22379 member add    etcd_node3 --peer-urls=http://192.168.11.100:32380
-Member e9cfc62cee5f30d1 added to cluster 63e8b43e8a1af9bc
+<div><pre><code class="language-bash">    $ ETCDCTL_API=3 etcdctl --endpoints=http://192.168.11.100:2379,http://192.168.11.100:12379,http://192.168.11.100:22379 member add    etcd_node3 --peer-urls=http://192.168.11.100:32380
+    Member e9cfc62cee5f30d1 added to cluster 63e8b43e8a1af9bc
 
-ETCD_NAME=“etcd_node3”
-ETCD_INITIAL_CLUSTER=“etcd_node2=http://192.168.11.100:22380,etcd_node1=http://192.168.11.100:12380,etcd_node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380”
-ETCD_INITIAL_ADVERTISE_PEER_URLS=“http://192.168.11.100:32380”
-ETCD_INITIAL_CLUSTER_STATE=“existing”
+    ETCD_NAME=“etcd_node3”
+    ETCD_INITIAL_CLUSTER=“etcd_node2=http://192.168.11.100:22380,etcd_node1=http://192.168.11.100:12380,etcd_node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380”
+    ETCD_INITIAL_ADVERTISE_PEER_URLS=“http://192.168.11.100:32380”
+    ETCD_INITIAL_CLUSTER_STATE=“existing”
 
-$ etcdctl member remove 63e8b43e8a1af9bc
-Couldn&#39;t find a member in the cluster with an ID of 63e8b43e8a1af9bc.</code></pre></div>
+    $ etcdctl member remove 63e8b43e8a1af9bc
+    Couldn&#39;t find a member in the cluster with an ID of 63e8b43e8a1af9bc.</code></pre></div>
 
 <p>可见如果不添加节点，这个理论上存在但是实际上不存在的node是不可能从quorum中剔除掉的。</p>
 
@@ -604,14 +470,14 @@ Couldn&#39;t find a member in the cluster with an ID of 63e8b43e8a1af9bc.</code>
 
 <p>具体详细步骤见参考文档7#Remove a New Member#一节，一个命令即可完成任务：</p>
 
-<div><pre><code class="language-none">$ etcdctl member remove a8266ecf031671f3
-Removed member a8266ecf031671f3 from cluster</code></pre></div>
+<div><pre><code class="language-bash">    $ etcdctl member remove a8266ecf031671f3
+    Removed member a8266ecf031671f3 from cluster</code></pre></div>
 
 <p>在参考文档7#Error Cases When Adding Members#一小节中，提到一个node被remove后，如果再次重新启动，则会得到如下错误提示：</p>
 
-<div><pre><code class="language-none">$ etcd
-etcd: this member has been permanently removed from the cluster. Exiting.
-exit 1</code></pre></div>
+<div><pre><code class="language-bash">    $ etcd
+    etcd: this member has been permanently removed from the cluster. Exiting.
+    exit 1</code></pre></div>
 
 <h2 id="toc_7">2 动态集群</h2>
 
@@ -625,25 +491,25 @@ exit 1</code></pre></div>
 
 <p>在一个静态集群上创建channel如下：</p>
 
-<div><pre><code class="language-none">curl -X PUT &quot;http://${registry_url}/v2/keys/discovery/testdiscoverycluster/_config/size&quot; -d value=3</code></pre></div>
+<div><pre><code class="language-bash">    curl -X PUT &quot;http://${registry_url}/v2/keys/discovery/testdiscoverycluster/_config/size&quot; -d value=3</code></pre></div>
 
 <p>动态集群etcd单节点启动命令如下：</p>
 
-<div><pre><code class="language-none">etcd --name=${name} \
-    --data-dir=${data_dir} \
-    --wal-dir=${wal_dir} \
-    --auto-compaction-retention=1 \
-    --snapshot-count=5000  \
-    --quota-backend-bytes=$((160*1024*1024*1024)) \
-    --heartbeat-interval=100 \
-    --election-timeout=500 \
-    --max-request-bytes 1536 \
-    --initial-advertise-peer-urls http://${ip}:${peer_port} \
-    --listen-peer-urls http://${ip}:${peer_port} \
-    --listen-client-urls http://${ip}:${client_port},http://127.0.0.1:${client_port} \
-    --advertise-client-urls http://${ip}:${client_port} \
-    --discovery http://localhost:2379/v2/keys/discovery/testdiscoverycluster \
-    --initial-cluster-token ${cluster_name} &gt;&gt; ${log_dir}/${name}.log 2&gt;&amp;1 &amp;</code></pre></div>
+<div><pre><code class="language-bash">    etcd --name=${name} \
+        --data-dir=${data_dir} \
+        --wal-dir=${wal_dir} \
+        --auto-compaction-retention=1 \
+        --snapshot-count=5000  \
+        --quota-backend-bytes=$((160*1024*1024*1024)) \
+        --heartbeat-interval=100 \
+        --election-timeout=500 \
+        --max-request-bytes 1536 \
+        --initial-advertise-peer-urls http://${ip}:${peer_port} \
+        --listen-peer-urls http://${ip}:${peer_port} \
+        --listen-client-urls http://${ip}:${client_port},http://127.0.0.1:${client_port} \
+        --advertise-client-urls http://${ip}:${client_port} \
+        --discovery http://localhost:2379/v2/keys/discovery/testdiscoverycluster \
+        --initial-cluster-token ${cluster_name} &gt;&gt; ${log_dir}/${name}.log 2&gt;&amp;1 &amp;</code></pre></div>
 
 <p>可见不需要再指定集群内的各个成员，只需要指定discovery channel即可。</p>
 
@@ -675,7 +541,7 @@ exit 1</code></pre></div>
 <li>2 以kill方式杀死一个成员，然后给成员一个新名称，重启失败；</li>
 </ul>
 
-<p>此时etcd的log给出critical级别错误log“etcdmain: couldn&#39;t find local name <q>etcd_node3</q> in the initial cluster configuration”。</p>
+<p>此时etcd的log给出critical级别错误log“etcdmain: couldn&#39;t find local name &quot;etcd_node3&quot; in the initial cluster configuration”。</p>
 
 <p>修改名称等同于扩充集群，正确的操作步骤参见#1.3#节。</p>
 
@@ -692,7 +558,7 @@ exit 1</code></pre></div>
 <li>4 通过etcdctl查看动态集群成员列表以及集群状态，成员不变，集群状态是healthy；</li>
 <li>5 向动态集群添加新成员失败；</li>
 <li>6 杀掉一个动态集群成员，再重新启动后成功加入动态集群；</li>
-<li>7 杀掉一个动态集群成员，清空其data<u>dir和wal</u>dir下数据，再重新启动后加入动态集群失败；</li>
+<li>7 杀掉一个动态集群成员，清空其data<em>dir和wal</em>dir下数据，再重新启动后加入动态集群失败；</li>
 </ul>
 
 <p>只要动态集群现有成员的数据还在，就能保证动态集群自身的稳定运行【参考文档6#Do not use public discovery service for runtime reconfiguration#也证实了这点】。又有作证明的测试过程如下：</p>
@@ -883,10 +749,10 @@ receives msgAppResp(rej=true)
 
 <p>在这个btree中，整个k-v存储大概就是这样：</p>
 
-<div><pre><code class="language-none">type treeIndex struct {
-    sync.RWMutex
-    tree *btree.BTree
-}</code></pre></div>
+<div><pre><code class="language-go">    type treeIndex struct {
+        sync.RWMutex
+        tree *btree.BTree
+    }</code></pre></div>
 
 <p>当存储大量的K-V时，因为用户的value一般比较大，全部放在内存btree里内存耗费过大，所以etcd将用户value保存在磁盘中。</p>
 
@@ -903,32 +769,32 @@ receives msgAppResp(rej=true)
 
 <p>revision 定义如下：</p>
 
-<div><pre><code class="language-none">// A revision indicates modification of the key-value space.
-// The set of changes that share same main revision changes the key-value space atomically.
-type revision struct {
-    // main is the main revision of a set of changes that happen atomically.
-    main int64
+<div><pre><code class="language-go">    // A revision indicates modification of the key-value space.
+    // The set of changes that share same main revision changes the key-value space atomically.
+    type revision struct {
+        // main is the main revision of a set of changes that happen atomically.
+        main int64
 
-    // sub is the the sub revision of a change in a set of changes that happen
-    // atomically. Each change has different increasing sub revision in that
-    // set.
-    sub int64
-}</code></pre></div>
+        // sub is the the sub revision of a change in a set of changes that happen
+        // atomically. Each change has different increasing sub revision in that
+        // set.
+        sub int64
+    }</code></pre></div>
 
 <p>内存索引中，每个原始key会关联一个key_index结构，里面维护了多版本信息：</p>
 
-<div><pre><code class="language-none">type keyIndex struct {
-    key         []byte   // key字段就是用户的原始key
-    modified    revision // modified字段记录这个key的最后一次修改对应的revision信息
-    generations []generation // 多版本（历史修改）
-}
+<div><pre><code class="language-go">    type keyIndex struct {
+        key         []byte   // key字段就是用户的原始key
+        modified    revision // modified字段记录这个key的最后一次修改对应的revision信息
+        generations []generation // 多版本（历史修改）
+    }
 
-// generation contains multiple revisions of a key.
-type generation struct {
-    ver     int64
-    created revision // 记录了引起本次key创建的revision信息
-    revs    []revision
-}</code></pre></div>
+    // generation contains multiple revisions of a key.
+    type generation struct {
+        ver     int64
+        created revision // 记录了引起本次key创建的revision信息
+        revs    []revision
+    }</code></pre></div>
 
 <p>key 初始创建的时候，generations[0]会被创建，当用户继续更新这个key的时候，generations[0].revs数组会不断追加记录本次的revision信息（main，sub）。在bbolt中，每个revision将作为key，即序列化（revision.main+revision.sub）作为key。因此，我们先通过内存btree在keyIndex.generations[0].revs中找到最后一条revision，即可去bbolt中读取对应的数据。如果我们持续更新同一个key，那么generations[0].revs就会一直变大，这怎么办呢？在多版本中的，一般采用compact来压缩历史版本，即当历史版本到达一定数量时，会删除一些历史版本，只保存最近的一些版本。</p>
 
@@ -936,45 +802,39 @@ type generation struct {
 
 <p>put操作的 bboltdb 的key由 main+sub 构成：</p>
 
-<!--- golang --->
-
-<p>​   ibytes := newRevBytes()<br>
-​   idxRev := revision{main: rev, sub: int64(len(tw.changes))}<br>
-​   revToBytes(idxRev, ibytes)</p>
+<div><pre><code class="language-go">​   ibytes := newRevBytes()
+​   idxRev := revision{main: rev, sub: int64(len(tw.changes))}
+​   revToBytes(idxRev, ibytes)</code></pre></div>
 
 <p>delete 操作的 key 由 main+sub+”t” 构成：</p>
 
-<!--- golang --->
+<div><pre><code class="language-go">​   idxRev := revision{main: tw.beginRev + 1, sub: int64(len(tw.changes))}
+​   revToBytes(idxRev, ibytes)
+​   ibytes = appendMarkTombstone(ibytes)
+​   ​
+​   // appendMarkTombstone appends tombstone mark to normal revision bytes.
+​   func appendMarkTombstone(b []byte) []byte {
+​       if len(b) != revBytesLen {
+​           plog.Panicf(“cannot append mark to non normal revision bytes”)
+​       }
+​       return append(b, markTombstone)
+​   }
 
-<p>​   idxRev := revision{main: tw.beginRev + 1, sub: int64(len(tw.changes))}<br>
-​   revToBytes(idxRev, ibytes)<br>
-​   ibytes = appendMarkTombstone(ibytes)<br>
-​   ​<br>
-​   // appendMarkTombstone appends tombstone mark to normal revision bytes.<br>
-​   func appendMarkTombstone(b []byte) []byte {<br>
-​       if len(b) != revBytesLen {<br>
-​           plog.Panicf(“cannot append mark to non normal revision bytes”)<br>
-​       }<br>
-​       return append(b, markTombstone)<br>
-​   }</p>
-
-<div><pre><code class="language-none">// isTombstone checks whether the revision bytes is a tombstone.
-func isTombstone(b []byte) bool {
-    return len(b) == markedRevBytesLen &amp;&amp; b[markBytePosition] == markTombstone
-}</code></pre></div>
+    // isTombstone checks whether the revision bytes is a tombstone.
+    func isTombstone(b []byte) bool {
+        return len(b) == markedRevBytesLen &amp;&amp; b[markBytePosition] == markTombstone
+    }</code></pre></div>
 
 <p>bbolt中存储的value是这样一个json序列化后的结构，包括key创建时的revision（对应某一代generation的created），本次更新版本，sub ID（Version ver），Lease ID（租约ID）：</p>
 
-<!--- golang --->
-
-<p>​   kv := mvccpb.KeyValue{<br>
-​       Key:            key,<br>
-​       Value:          value,<br>
-​       CreateRevision: c,<br>
-​       ModRevision:    rev,<br>
-​       Version:        ver,  // version is the version of the key. A deletion resets the version to zero and any modification of the key increases its version.<br>
-​       Lease:          int64(leaseID),<br>
-​   }</p>
+<div><pre><code class="language-go">​   kv := mvccpb.KeyValue{
+​       Key:            key,
+​       Value:          value,
+​       CreateRevision: c,
+​       ModRevision:    rev,
+​       Version:        ver,  // version is the version of the key. A deletion resets the version to zero and any modification of the key increases its version.
+​       Lease:          int64(leaseID),
+​   }</code></pre></div>
 
 <p>总结来说：内存btree维护的是用户key =&gt; keyIndex的映射，keyIndex内维护多版本的revision信息，而revision可以映射到磁盘bbolt中的用户value。</p>
 
@@ -1008,7 +868,7 @@ func isTombstone(b []byte) bool {
 
 <hr>
 
-<p>etcd集群接受一个写请求后，每个etcd成员都需要把写请求数据固化到cores/bbolt之中，整个过程不要超过50ms。如果超过100ms，则etcd就会打印此条log进行警告。通常情况下是因为磁盘慢，比如磁盘竞争或者譬如虚拟块磁盘这种烂设备。etcd暴露给Prometheus的metrics指标backend<u>commit</u>duration_seconds就显示了commit的瓶颈时间，这个指标低于25ms即可认为服务正常，如果磁盘本身确实慢则设置一个etcd专用磁盘或者更换成SSD通常就能解决问题。</p>
+<p>etcd集群接受一个写请求后，每个etcd成员都需要把写请求数据固化到cores/bbolt之中，整个过程不要超过50ms。如果超过100ms，则etcd就会打印此条log进行警告。通常情况下是因为磁盘慢，比如磁盘竞争或者譬如虚拟块磁盘这种烂设备。etcd暴露给Prometheus的metrics指标backend<em>commit</em>duration_seconds就显示了commit的瓶颈时间，这个指标低于25ms即可认为服务正常，如果磁盘本身确实慢则设置一个etcd专用磁盘或者更换成SSD通常就能解决问题。</p>
 
 <p>第二个原因是CPU计算力不足。如果是通过监控系统发现CPU利用率确实很高，就应该把etcd移到更好的机器上，然后通过cgroups保证etcd进程独享某些核的计算能力，或者提高etcd的priority。</p>
 
@@ -1018,7 +878,7 @@ func isTombstone(b []byte) bool {
 
 <hr>
 
-<p>etcd使用了raft算法，leader会定时地给每个follower发送心跳，如果leader连续两个心跳时间没有给follower发送心跳，etcd会打印这个log以给出告警。通常情况下这个issue是disk运行过慢导致的，leader一般会在心跳包里附带一些metadata，leader需要先把这些数据固化到磁盘上，然后才能发送。写磁盘过程可能要与其他应用竞争，或者因为磁盘是一个虚拟的或者是SATA类型的导致运行过慢，此时只有更好更快磁盘硬件才能解决问题。etcd暴露给Prometheus的metrics指标wal<u>fsync</u>duration_seconds就显示了wal日志的平均花费时间，通常这个指标应低于10ms。</p>
+<p>etcd使用了raft算法，leader会定时地给每个follower发送心跳，如果leader连续两个心跳时间没有给follower发送心跳，etcd会打印这个log以给出告警。通常情况下这个issue是disk运行过慢导致的，leader一般会在心跳包里附带一些metadata，leader需要先把这些数据固化到磁盘上，然后才能发送。写磁盘过程可能要与其他应用竞争，或者因为磁盘是一个虚拟的或者是SATA类型的导致运行过慢，此时只有更好更快磁盘硬件才能解决问题。etcd暴露给Prometheus的metrics指标wal<em>fsync</em>duration_seconds就显示了wal日志的平均花费时间，通常这个指标应低于10ms。</p>
 
 <p>第二种原因就是CPU计算能力不足。如果是通过监控系统发现CPU利用率确实很高，就应该把etcd移到更好的机器上，然后通过cgroups保证etcd进程独享某些核的计算能力，或者提高etcd的priority。</p>
 
@@ -1050,37 +910,37 @@ func isTombstone(b []byte) bool {
 
 <p>整个集群内所有peer的这两个值都应该取同样的值，否则会引起混乱。命令行修改这两个值的方法如下：</p>
 
-<div><pre><code class="language-none"># Command line arguments:
-$ etcd —heartbeat-interval=100 —election-timeout=500
+<div><pre><code class="language-bash">    # Command line arguments:
+    $ etcd —heartbeat-interval=100 —election-timeout=500
 
-# Environment variables:
-$ ETCD_HEARTBEAT_INTERVAL=100 ETCD_ELECTION_TIMEOUT=500 etcd</code></pre></div>
+    # Environment variables:
+    $ ETCD_HEARTBEAT_INTERVAL=100 ETCD_ELECTION_TIMEOUT=500 etcd</code></pre></div>
 
 <p>etcd底层的存储引擎boltdb采用了MVCC机制，会把一个key的所有update历史都存储下来，所以相关数据文件会线性增长，这会加重etcd的数据加载负担并降低集群的性能，在v2版本下etcd创建snapshot的成本也很高，所以默认情况下没10,000个update后etcd才会创建一个snapshot，如果这个参数下单机的内存和磁盘占用率还是很高，则可以通过命令调整如下：</p>
 
-<div><pre><code class="language-none"># Command line arguments:
-$ etcd —snapshot-count=5000
+<div><pre><code class="language-bash">    # Command line arguments:
+    $ etcd —snapshot-count=5000
 
-# Environment variables:
-$ ETCD_SNAPSHOT_COUNT=5000 etcd</code></pre></div>
+    # Environment variables:
+    $ ETCD_SNAPSHOT_COUNT=5000 etcd</code></pre></div>
 
 <p>上面也提到，etcd需要把log实时写入磁盘，所以其他通过fsync方式写入磁盘的进程会提高etcd进程的写过程的latency，后果是心跳超时、处理请求超时、跟集群内其他成员失联。可以通过如下命令提高etcd进程的磁盘操作优先级：</p>
 
-<div><pre><code class="language-none"># best effort, highest priority
-$ sudo ionice -c2 -n0 -p `pgrep etcd`</code></pre></div>
+<div><pre><code class="language-bash">    # best effort, highest priority
+    $ sudo ionice -c2 -n0 -p `pgrep etcd`</code></pre></div>
 
 <p>如果etcd的leader需要处理大量的客户端高并发请求，则etcd可能由于网络拥塞导致每个请求处理延迟过高，下面日志会对这种情况有所提示：</p>
 
-<div><pre><code class="language-none">dropped MsgProp to 247ae21ff9436b2d since streamMsg’s sending buffer is full
-dropped MsgAppResp to 247ae21ff9436b2d since streamMsg’s sending buffer is full</code></pre></div>
+<div><pre><code class="language-bash">    dropped MsgProp to 247ae21ff9436b2d since streamMsg’s sending buffer is full
+    dropped MsgAppResp to 247ae21ff9436b2d since streamMsg’s sending buffer is full</code></pre></div>
 
 <p>此时可以通过提供etcd的发送缓冲器的优先级解决问题：</p>
 
-<div><pre><code class="language-none">tc qdisc add dev eth0 root handle 1: prio bands 3
-tc filter add dev eth0 parent 1: protocol ip prio 1 u32 match ip sport 2380 0xffff flowid 1:1
-tc filter add dev eth0 parent 1: protocol ip prio 1 u32 match ip dport 2380 0xffff flowid 1:1
-tc filter add dev eth0 parent 1: protocol ip prio 2 u32 match ip sport 2739 0xffff flowid 1:1
-tc filter add dev eth0 parent 1: protocol ip prio 2 u32 match ip dport 2739 0xffff flowid 1:1</code></pre></div>
+<div><pre><code class="language-none">    tc qdisc add dev eth0 root handle 1: prio bands 3
+    tc filter add dev eth0 parent 1: protocol ip prio 1 u32 match ip sport 2380 0xffff flowid 1:1
+    tc filter add dev eth0 parent 1: protocol ip prio 1 u32 match ip dport 2380 0xffff flowid 1:1
+    tc filter add dev eth0 parent 1: protocol ip prio 2 u32 match ip sport 2739 0xffff flowid 1:1
+    tc filter add dev eth0 parent 1: protocol ip prio 2 u32 match ip dport 2739 0xffff flowid 1:1</code></pre></div>
 
 <h2 id="toc_24">6 etcd op</h2>
 
@@ -1094,99 +954,95 @@ tc filter add dev eth0 parent 1: protocol ip prio 2 u32 match ip dport 2739 0xff
 
 <p>etcd v3兼容v2，所以进行数据操作前，需要检查数据的版本，参考文档13给出了一种查看etcd的数据的版本是否是v3的验证方式：</p>
 
-<div><pre><code class="language-none">ETCDCTL_API=3 etcdctl get &quot;&quot; --from-key --keys-only --limit 1 | wc -l</code></pre></div>
+<div><pre><code class="language-bash">    ETCDCTL_API=3 etcdctl get &quot;&quot; --from-key --keys-only --limit 1 | wc -l</code></pre></div>
 
 <p>如果输出为0，则数据版本是v2。</p>
 
 <p>参考文档9建议定期对etcd数据进行冷备，其#Snapshot backup#一节给出了冷备的用法：</p>
 
-<div><pre><code class="language-none">$ etcdctl snapshot save backup.db</code></pre></div>
+<div><pre><code class="language-bash">    $ etcdctl snapshot save backup.db
+​   $ etcdctl  --endpoints $ENDPOINT —write-out=table snapshot status backup.db
+​   +———————————+———————————+—————————————+————————————+
+​   |   HASH    | REVISION  | TOTAL KEYS  | TOTAL SIZE |
+​   +———————————+———————————+—————————————+————————————+
+​   | fe01cf57  |   10      |       7     |   2.1 MB   |
+​   +———————————+———————————+—————————————+————————————+
+​```
+​
+参考文档10#Snapshotting the keyspace#一节中提到了另一种方法：直接把数据目录member/snap/db下的数据拷贝备份。
 
-<p>​   \( etcdctl  --endpoints \)ENDPOINT —write-out=table snapshot status backup.db<br>
-​   +———————————+———————————+—————————————+————————————+<br>
-​   |   HASH    | REVISION  | TOTAL KEYS  | TOTAL SIZE |<br>
-​   +———————————+———————————+—————————————+————————————+<br>
-​   | fe01cf57  |   10      |       7     |   2.1 MB   |<br>
-​   +———————————+———————————+—————————————+————————————+<br>
-​<br>
-​<br>
-参考文档10#Snapshotting the keyspace#一节中提到了另一种方法：直接把数据目录member/snap/db下的数据拷贝备份。</p>
+至于用冷备数据如何恢复一个cluster，请参见参考文档10#Restoring a cluster#。
 
-<p>至于用冷备数据如何恢复一个cluster，请参见参考文档10#Restoring a cluster#。</p>
+snapshot颇类似于Redis的rdb文件，是某个时刻所以kv数据各自最后revision的最新值，所有历史数据都被compact掉。第5节提到etcd通过相关参数控制下默认每10,000次update后会对制作一个snapshot。
 
-<p>snapshot颇类似于Redis的rdb文件，是某个时刻所以kv数据各自最后revision的最新值，所有历史数据都被compact掉。第5节提到etcd通过相关参数控制下默认每10,000次update后会对制作一个snapshot。</p>
+### 6.2 data migration ###
+---
 
-<h3 id="toc_26">6.2 data migration</h3>
+etcd集群的数据还可以进行数据迁移[migration]，可以采用离线或者在线两种方式，当数据量超过一定量的时候，参考文档13不建议进行在线恢复，建议直接把etcd cluster关停，备份数据然后拷贝到目的地，以离线方式重新启动etcd cluster。
 
-<hr>
+#### 6.2.1 离线迁移 ####
+---
 
-<p>etcd集群的数据还可以进行数据迁移[migration]，可以采用离线或者在线两种方式，当数据量超过一定量的时候，参考文档13不建议进行在线恢复，建议直接把etcd cluster关停，备份数据然后拷贝到目的地，以离线方式重新启动etcd cluster。</p>
+首先把集群停服，然后变换etcd每个member的client服务端口再次重启，确保cluster各个成员的raft状态机达到同样的状态，这个可以通过命令 **ETCDCTL_API=3 etcdctl endpoint status** 确认，当所有member的raft index相等或者相差不超过1（raft内部的命令导致）时认为数据一致。
 
-<h4 id="toc_27">6.2.1 离线迁移</h4>
+通过命令 **ETCDCTL_API=3 etcdctl migrate** 即可完成数据v2到v3的迁移，v3的数据格式是mvcc格式。数据迁移完毕可以通过命令 **ETCDCTL_API=3 etcdctl endpoint hashkv --cluster** 验证数据的一致性【注意这个命令只能在v3.3以上才可使用】。
 
-<hr>
+但是对于v2中的TTL数据，如果数据commited时所在的member的raft index比leader的的index小，则数据迁移后可能导致数据不一致。
 
-<p>首先把集群停服，然后变换etcd每个member的client服务端口再次重启，确保cluster各个成员的raft状态机达到同样的状态，这个可以通过命令 <strong>ETCDCTL_API=3 etcdctl endpoint status</strong> 确认，当所有member的raft index相等或者相差不超过1（raft内部的命令导致）时认为数据一致。</p>
+#### 6.2.2 在线迁移 ####
+---
 
-<p>通过命令 <strong>ETCDCTL_API=3 etcdctl migrate</strong> 即可完成数据v2到v3的迁移，v3的数据格式是mvcc格式。数据迁移完毕可以通过命令 <strong>ETCDCTL_API=3 etcdctl endpoint hashkv --cluster</strong> 验证数据的一致性【注意这个命令只能在v3.3以上才可使用】。</p>
+在线迁移的好处当然是不停服，但是前提是要求客户端使用v3版本的API。应用支持etcd cluster的migration mode和normal mode，etcd cluster运行在migration cluster期间，应用读取数据先使用v3 API，失败后再尝试v2 API。而在normal mode下应用只能使用v3 API。两种mode下写API只能使用v3。
 
-<p>但是对于v2中的TTL数据，如果数据commited时所在的member的raft index比leader的的index小，则数据迁移后可能导致数据不一致。</p>
+migration mode下客户端会watch一个swtich mode key，当migration mode切换到normal mode后，这个key的value是true。服务端在migration mode下则会启动一个后台任务，使用v2 API读取数据然后调用v3 API写入mvcc存储引擎中。
 
-<h4 id="toc_28">6.2.2 在线迁移</h4>
+参考文档13在文章末尾不建议采用online migration方式，因为这会导致客户端和etcd cluster之间的网络开销外，还会导致etcd自身冗余数据过多。
 
-<hr>
+参考文档14#Limitations#提到：当一个集群有超过50MB的v2数据时，数据升级过程可能花费两分钟，如果超过100MB则可能花费更多时间。
 
-<p>在线迁移的好处当然是不停服，但是前提是要求客户端使用v3版本的API。应用支持etcd cluster的migration mode和normal mode，etcd cluster运行在migration cluster期间，应用读取数据先使用v3 API，失败后再尝试v2 API。而在normal mode下应用只能使用v3 API。两种mode下写API只能使用v3。</p>
+### 6.3 data compaction和data defragment ###
+---
 
-<p>migration mode下客户端会watch一个swtich mode key，当migration mode切换到normal mode后，这个key的value是true。服务端在migration mode下则会启动一个后台任务，使用v2 API读取数据然后调用v3 API写入mvcc存储引擎中。</p>
+etcd的compaction仅仅是合并一些文件并进行过去数据的删除，但是文件占用的磁盘可能有很多碎片，可以使用etcdctl完成碎片整理工作。
 
-<p>参考文档13在文章末尾不建议采用online migration方式，因为这会导致客户端和etcd cluster之间的网络开销外，还会导致etcd自身冗余数据过多。</p>
+参考文档9#History compaction#给出了相关compaction使用方法：
 
-<p>参考文档14#Limitations#提到：当一个集群有超过50MB的v2数据时，数据升级过程可能花费两分钟，如果超过100MB则可能花费更多时间。</p>
-
-<h3 id="toc_29">6.3 data compaction和data defragment</h3>
-
-<hr>
-
-<p>etcd的compaction仅仅是合并一些文件并进行过去数据的删除，但是文件占用的磁盘可能有很多碎片，可以使用etcdctl完成碎片整理工作。</p>
-
-<p>参考文档9#History compaction#给出了相关compaction使用方法：</p>
-
-<div><pre><code class="language-none"># keep one hour of history
-$ etcd --auto-compaction-retention=1</code></pre></div>
+```bash
+    # keep one hour of history
+    $ etcd --auto-compaction-retention=1</code></pre></div>
 
 <p>上面这种操作方法是通过时间窗口的策略让etcd自动压缩数据，还可以通过etcdctl命令手工进行数据压缩：</p>
 
-<div><pre><code class="language-none"># compact up to revision 3
-$ etcdctl compact 3</code></pre></div>
+<div><pre><code class="language-bash">    # compact up to revision 3
+    $ etcdctl compact 3</code></pre></div>
 
 <p>通过上面的命令手工压缩数据之后，revision 3之前的数据就被清理掉了，譬如：</p>
 
-<div><pre><code class="language-none">$ etcdctl get --rev=2 somekey
-Error:  rpc error: code = 11 desc = etcdserver: mvcc: required revision has been compacted</code></pre></div>
+<div><pre><code class="language-bash">    $ etcdctl get --rev=2 somekey
+    Error:  rpc error: code = 11 desc = etcdserver: mvcc: required revision has been compacted</code></pre></div>
 
 <p>参考文档9#Defragmentation#给出了碎片整理相关使用方法：</p>
 
-<div><pre><code class="language-none">$ etcdctl defrag
-Finished defragmenting etcd member[127.0.0.1:2379]</code></pre></div>
+<div><pre><code class="language-bash">    $ etcdctl defrag
+    Finished defragmenting etcd member[127.0.0.1:2379]</code></pre></div>
 
 <p>如果etcd没有运行，可以直接作用于data目录：</p>
 
-<div><pre><code class="language-none">$ etcdctl defrag --data-dir &lt;path-to-etcd-data-dir&gt;</code></pre></div>
+<div><pre><code class="language-bash">    $ etcdctl defrag --data-dir &lt;path-to-etcd-data-dir&gt;</code></pre></div>
 
-<h3 id="toc_30">6.4 角色控制</h3>
+<h3 id="toc_26">6.4 角色控制</h3>
 
 <hr>
 
 <p>如果etcd被当初一个配置中心，此时角色控制就有必要了。参考文档11详细描述了如何借助etcdctl进行角色控制，不过还有一个更好用的带有UI界面的工具<a href="https://github.com/soyking/e3w">e3w</a>，这个工具的界面是js实现的，通过它就可方便地进行角色创建。</p>
 
-<h2 id="toc_31">7 API</h2>
+<h2 id="toc_27">7 API</h2>
 
 <hr>
 
 <p>参考文档11#Request Size Limitation#提到etcd为了防止一个大包请求把连接通道阻塞住，限制一个请求包大小在1MB以内。</p>
 
-<h3 id="toc_32">7.1 Client Request Timeout</h3>
+<h3 id="toc_28">7.1 Client Request Timeout</h3>
 
 <hr>
 
@@ -1204,21 +1060,20 @@ Finished defragmenting etcd member[127.0.0.1:2379]</code></pre></div>
 
 <p>github.com/coreos/etcd/clientv3/config.go:Config::DialTimeout 意为创建client的首次连接超时，Client 创建成功后就不用关心其底层连接状态了，其底层会不断检查链接状态，失败则尝试重连。</p>
 
-<h3 id="toc_33">7.2 KV</h3>
+<h3 id="toc_29">7.2 KV</h3>
 
 <hr>
 
 <p>参考文档18提到etcd大部分API都是对KV对的请求和操作。etcd kv的protobuf定义如下：</p>
 
-<div><pre><code class="language-none">message KeyValue {
-    bytes key = 1;
-    int64 create_revision = 2;
-    int64 mod_revision = 3;
-    int64 version = 4;
-    bytes value = 5;
-    int64 lease = 6;</code></pre></div>
-
-<p>​   }</p>
+<div><pre><code class="language-go">    message KeyValue {
+        bytes key = 1;
+        int64 create_revision = 2;
+        int64 mod_revision = 3;
+        int64 version = 4;
+        bytes value = 5;
+        int64 lease = 6;
+​   }</code></pre></div>
 
 <p>各个字段意义如下：</p>
 
@@ -1231,46 +1086,46 @@ Finished defragmenting etcd member[127.0.0.1:2379]</code></pre></div>
 <li>Lease 与key关联的Lease，如果其值为0则说明没有关联的Lease；</li>
 </ul>
 
-<p>revision是MVCC中的概念，是etcd中cluster级别的计数器，每次修改操作都会让其自增，可以认为是全局逻辑时钟(global logical clock)，对所有修改操作进行排序：revision越大说明其值越新，etcd对key索引使用B+树方式进行组织。etcd每个key都有很多revision（修订版本），每次事务操作都会创建一个revision，老的revision在etcd进行compaction操作的时候会被清除。create<u>revision会在使用<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/mutex.go">mutex lock</a>的时候使用，Mod</u>Revision与<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/stm.go">事务</a>操作和<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/election.go">leader选举</a>有关。</p>
+<p>revision是MVCC中的概念，是etcd中cluster级别的计数器，每次修改操作都会让其自增，可以认为是全局逻辑时钟(global logical clock)，对所有修改操作进行排序：revision越大说明其值越新，etcd对key索引使用B+树方式进行组织。etcd每个key都有很多revision（修订版本），每次事务操作都会创建一个revision，老的revision在etcd进行compaction操作的时候会被清除。create<em>revision会在使用<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/mutex.go">mutex lock</a>的时候使用，Mod</em>Revision与<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/stm.go">事务</a>操作和<a href="https://github.com/coreos/etcd/blob/master/clientv3/concurrency/election.go">leader选举</a>有关。</p>
 
 <p>revision也与watch有关，当watch的client与server闪断重连后，etcd根据client上次watch相关的revision，把其后的修改再通知给client。</p>
 
-<h3 id="toc_34">7.3 Range</h3>
+<h3 id="toc_30">7.3 Range</h3>
 
 <hr>
 
-<p>etcd允许一次以range形式操作多个key。etcd对数据的组织不像zookeeper那样以目录层次结构的方式进行，而只有一个层级，range的形式是[a, b)，即[key, key<u>end)。如果key</u>end为空则请求只有key；如果range是[key, key+0x1)则是请求以key为前缀的所有key；如果key_end是’\0’，则请求所有大于等于key的所有key。</p>
+<p>etcd允许一次以range形式操作多个key。etcd对数据的组织不像zookeeper那样以目录层次结构的方式进行，而只有一个层级，range的形式是[a, b)，即[key, key<em>end)。如果key</em>end为空则请求只有key；如果range是[key, key+0x1)则是请求以key为前缀的所有key；如果key_end是’\0’，则请求所有大于等于key的所有key。</p>
 
 <p>Range请求定义如下：</p>
 
-<div><pre><code class="language-none">message RangeRequest {
-  enum SortOrder {
-    NONE = 0; // default, no sorting
-    ASCEND = 1; // lowest target value first
-    DESCEND = 2; // highest target value first
-  }
-  enum SortTarget {
-    KEY = 0;
-    VERSION = 1;
-    CREATE = 2;
-    MOD = 3;
-    VALUE = 4;
-  }
+<div><pre><code class="language-go">    message RangeRequest {
+      enum SortOrder {
+        NONE = 0; // default, no sorting
+        ASCEND = 1; // lowest target value first
+        DESCEND = 2; // highest target value first
+      }
+      enum SortTarget {
+        KEY = 0;
+        VERSION = 1;
+        CREATE = 2;
+        MOD = 3;
+        VALUE = 4;
+      }
 
-  bytes key = 1;
-  bytes range_end = 2;
-  int64 limit = 3;
-  int64 revision = 4;
-  SortOrder sort_order = 5;
-  SortTarget sort_target = 6;
-  bool serializable = 7;
-  bool keys_only = 8;
-  bool count_only = 9;
-  int64 min_mod_revision = 10;
-  int64 max_mod_revision = 11;
-  int64 min_create_revision = 12;
-  int64 max_create_revision = 13;
-}</code></pre></div>
+      bytes key = 1;
+      bytes range_end = 2;
+      int64 limit = 3;
+      int64 revision = 4;
+      SortOrder sort_order = 5;
+      SortTarget sort_target = 6;
+      bool serializable = 7;
+      bool keys_only = 8;
+      bool count_only = 9;
+      int64 min_mod_revision = 10;
+      int64 max_mod_revision = 11;
+      int64 min_create_revision = 12;
+      int64 max_create_revision = 13;
+    }</code></pre></div>
 
 <p>各个字段含义如下：</p>
 
@@ -1291,19 +1146,19 @@ Finished defragmenting etcd member[127.0.0.1:2379]</code></pre></div>
 
 <p>Range请求的响应定义如下：</p>
 
-<div><pre><code class="language-none">message ResponseHeader {
-  uint64 cluster_id = 1;
-  uint64 member_id = 2;
-  int64 revision = 3;
-  uint64 raft_term = 4;
-}
+<div><pre><code class="language-go">    message ResponseHeader {
+      uint64 cluster_id = 1;
+      uint64 member_id = 2;
+      int64 revision = 3;
+      uint64 raft_term = 4;
+    }
 
-message RangeResponse {
-  ResponseHeader header = 1;
-  repeated mvccpb.KeyValue kvs = 2;
-  bool more = 3;
-  int64 count = 4;
-}</code></pre></div>
+    message RangeResponse {
+      ResponseHeader header = 1;
+      repeated mvccpb.KeyValue kvs = 2;
+      bool more = 3;
+      int64 count = 4;
+    }</code></pre></div>
 
 <p>各个字段含义如下：</p>
 
@@ -1330,20 +1185,20 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 在之前，我Put了一个/testxxx干扰项，因为不符合/test/前缀（注意末尾的/），所以就不会被这次Get获取到。但是，如果我查询的前缀是/test，那么/testxxx也会被扫描到，这就是etcd k-v模型导致的，编程时一定要特别注意。</code></pre></div>
 
-<h3 id="toc_35">7.4 Put</h3>
+<h3 id="toc_31">7.4 Put</h3>
 
 <hr>
 
 <p>PutReqeust定义如下：</p>
 
-<div><pre><code class="language-none">message PutRequest {
-  bytes key = 1;
-  bytes value = 2;
-  int64 lease = 3;
-  bool prev_kv = 4;
-  bool ignore_value = 5;
-  bool ignore_lease = 6;
-}</code></pre></div>
+<div><pre><code class="language-go">    message PutRequest {
+      bytes key = 1;
+      bytes value = 2;
+      int64 lease = 3;
+      bool prev_kv = 4;
+      bool ignore_value = 5;
+      bool ignore_lease = 6;
+    }</code></pre></div>
 
 <p>各个字段含义如下：</p>
 
@@ -1358,26 +1213,26 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>响应定义如下：</p>
 
-<div><pre><code class="language-none">message PutResponse {
-  ResponseHeader header = 1;
-  mvccpb.KeyValue prev_kv = 2;
-}</code></pre></div>
+<div><pre><code class="language-go">    message PutResponse {
+      ResponseHeader header = 1;
+      mvccpb.KeyValue prev_kv = 2;
+    }</code></pre></div>
 
 <ul>
 <li>prev_kv：Reqeuest中的 prev_kv 被设置为true的时候，这个结果就是update前的kv值；</li>
 </ul>
 
-<h3 id="toc_36">7.5 Delete Range</h3>
+<h3 id="toc_32">7.5 Delete Range</h3>
 
 <hr>
 
 <p>删除则可以删除一定范围内的kv对，请求定义如下：</p>
 
-<div><pre><code class="language-none">message DeleteRangeRequest {
-  bytes key = 1;
-  bytes range_end = 2;
-  bool prev_kv = 3;
-}</code></pre></div>
+<div><pre><code class="language-go">    message DeleteRangeRequest {
+      bytes key = 1;
+      bytes range_end = 2;
+      bool prev_kv = 3;
+    }</code></pre></div>
 
 <ul>
 <li>Key, Range_End - key range；</li>
@@ -1386,18 +1241,18 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>响应定义如下：</p>
 
-<div><pre><code class="language-none">message DeleteRangeResponse {
-  ResponseHeader header = 1;
-  int64 deleted = 2;
-  repeated mvccpb.KeyValue prev_kvs = 3;
-}</code></pre></div>
+<div><pre><code class="language-go">    message DeleteRangeResponse {
+      ResponseHeader header = 1;
+      int64 deleted = 2;
+      repeated mvccpb.KeyValue prev_kvs = 3;
+    }</code></pre></div>
 
 <ul>
 <li>Deleted - 被删除的kv数目；</li>
 <li>Prev_kv - 如果请求中的prev_kv被设为true，则响应中就返回被删除的kv值数组；</li>
 </ul>
 
-<h3 id="toc_37">7.6 Transaction</h3>
+<h3 id="toc_33">7.6 Transaction</h3>
 
 <hr>
 
@@ -1415,31 +1270,31 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>事务操作可以认为是一个比较操作链，每个比较动作定义如下：</p>
 
-<div><pre><code class="language-none">message Compare {
-  enum CompareResult {
-    EQUAL = 0;
-    GREATER = 1;
-    LESS = 2;
-    NOT_EQUAL = 3;
-  }
-  enum CompareTarget {
-    VERSION = 0;
-    CREATE = 1;
-    MOD = 2;
-    VALUE= 3;
-  }
-  CompareResult result = 1;
-  // target is the key-value field to inspect for the comparison.
-  CompareTarget target = 2;
-  // key is the subject key for the comparison operation.
-  bytes key = 3;
-  oneof target_union {
-    int64 version = 4;
-    int64 create_revision = 5;
-    int64 mod_revision = 6;
-    bytes value = 7;
-  }
-}</code></pre></div>
+<div><pre><code class="language-go">    message Compare {
+      enum CompareResult {
+        EQUAL = 0;
+        GREATER = 1;
+        LESS = 2;
+        NOT_EQUAL = 3;
+      }
+      enum CompareTarget {
+        VERSION = 0;
+        CREATE = 1;
+        MOD = 2;
+        VALUE= 3;
+      }
+      CompareResult result = 1;
+      // target is the key-value field to inspect for the comparison.
+      CompareTarget target = 2;
+      // key is the subject key for the comparison operation.
+      bytes key = 3;
+      oneof target_union {
+        int64 version = 4;
+        int64 create_revision = 5;
+        int64 mod_revision = 6;
+        bytes value = 7;
+      }
+    }</code></pre></div>
 
 <ul>
 <li>Result - 逻辑比较类型，如相等、小于或者大于；</li>
@@ -1450,14 +1305,14 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>定义了比较算子后，事务请求还需要一连串的子请求操作，定义如下：</p>
 
-<div><pre><code class="language-none">message RequestOp {
-  // request is a union of request types accepted by a transaction.
-  oneof request {
-    RangeRequest request_range = 1;
-    PutRequest request_put = 2;
-    DeleteRangeRequest request_delete_range = 3;
-  }
-}</code></pre></div>
+<div><pre><code class="language-go">    message RequestOp {
+      // request is a union of request types accepted by a transaction.
+      oneof request {
+        RangeRequest request_range = 1;
+        PutRequest request_put = 2;
+        DeleteRangeRequest request_delete_range = 3;
+      }
+    }</code></pre></div>
 
 <ul>
 <li>Request_Range - 一个RangeRequest；</li>
@@ -1467,11 +1322,11 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>最终事务请求定义如下：</p>
 
-<div><pre><code class="language-none">message TxnRequest {
-  repeated Compare compare = 1;
-  repeated RequestOp success = 2;
-  repeated RequestOp failure = 3;
-}</code></pre></div>
+<div><pre><code class="language-go">    message TxnRequest {
+      repeated Compare compare = 1;
+      repeated RequestOp success = 2;
+      repeated RequestOp failure = 3;
+    }</code></pre></div>
 
 <ul>
 <li>Compare - 一个比较算子序列；</li>
@@ -1481,11 +1336,11 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>事务响应定义如下：</p>
 
-<div><pre><code class="language-none">message TxnResponse {
-  ResponseHeader header = 1;
-  bool succeeded = 2;
-  repeated ResponseOp responses = 3;
-}</code></pre></div>
+<div><pre><code class="language-go">    message TxnResponse {
+      ResponseHeader header = 1;
+      bool succeeded = 2;
+      repeated ResponseOp responses = 3;
+    }</code></pre></div>
 
 <ul>
 <li>Succeeded - 算子比较的结果，success则为true，fail则为false；</li>
@@ -1494,17 +1349,17 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>ResponseOp定义如下:</p>
 
-<div><pre><code class="language-none">message ResponseOp {
-  oneof response {
-    RangeResponse response_range = 1;
-    PutResponse response_put = 2;
-    DeleteRangeResponse response_delete_range = 3;
-  }
-}</code></pre></div>
+<div><pre><code class="language-go">    message ResponseOp {
+      oneof response {
+        RangeResponse response_range = 1;
+        PutResponse response_put = 2;
+        DeleteRangeResponse response_delete_range = 3;
+      }
+    }</code></pre></div>
 
 <p>ResponseOp的成员与RequestOp对应，此处就不再一一列举解释了。</p>
 
-<h3 id="toc_38">7.7 Watch</h3>
+<h3 id="toc_34">7.7 Watch</h3>
 
 <hr>
 
@@ -1512,15 +1367,15 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>Event代表了key的一次update，包括update的类型和变化前后的数据，定义如下:</p>
 
-<div><pre><code class="language-none">message Event {
-  enum EventType {
-    PUT = 0;
-    DELETE = 1;
-  }
-  EventType type = 1;
-  KeyValue kv = 2;
-  KeyValue prev_kv = 3;
-}</code></pre></div>
+<div><pre><code class="language-go">    message Event {
+      enum EventType {
+        PUT = 0;
+        DELETE = 1;
+      }
+      EventType type = 1;
+      KeyValue kv = 2;
+      KeyValue prev_kv = 3;
+    }</code></pre></div>
 
 <ul>
 <li>Type - event type，PUT则下面会给出新增加的value，DELETE则指出key已被删除；</li>
@@ -1540,19 +1395,19 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>基于一次gRPC stream连接，可以发出如下watch创建请求：</p>
 
-<div><pre><code class="language-none">message WatchCreateRequest {
-  bytes key = 1;
-  bytes range_end = 2;
-  int64 start_revision = 3;
-  bool progress_notify = 4;
+<div><pre><code class="language-go">    message WatchCreateRequest {
+      bytes key = 1;
+      bytes range_end = 2;
+      int64 start_revision = 3;
+      bool progress_notify = 4;
 
-  enum FilterType {
-    NOPUT = 0;
-    NODELETE = 1;
-  }
-  repeated FilterType filters = 5;
-  bool prev_kv = 6;
-}</code></pre></div>
+      enum FilterType {
+        NOPUT = 0;
+        NODELETE = 1;
+      }
+      repeated FilterType filters = 5;
+      bool prev_kv = 6;
+    }</code></pre></div>
 
 <ul>
 <li>Key, Range_End - 被观察的key的range[key, range_end)，如果 range_end 没有设置，则只有参数key被观察，如果 range_end 等同于&#39;\0&#39;， 则大于等于参数 key 的所有 key 都将被观察；</li>
@@ -1564,15 +1419,15 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>watch的响应内容定义如下：</p>
 
-<div><pre><code class="language-none">message WatchResponse {
-  ResponseHeader header = 1;
-  int64 watch_id = 2;
-  bool created = 3;
-  bool canceled = 4;
-  int64 compact_revision = 5;
+<div><pre><code class="language-go">    message WatchResponse {
+      ResponseHeader header = 1;
+      int64 watch_id = 2;
+      bool created = 3;
+      bool canceled = 4;
+      int64 compact_revision = 5;
 
-  repeated mvccpb.Event events = 11;
-}</code></pre></div>
+      repeated mvccpb.Event events = 11;
+    }</code></pre></div>
 
 <ul>
 <li>Watch_ID - 和watch相关的watcher ID；</li>
@@ -1584,15 +1439,15 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>如果一个watcher想停止watch，则可以发出如下请求：</p>
 
-<div><pre><code class="language-none">message WatchCancelRequest {
-   int64 watch_id = 1;
-}</code></pre></div>
+<div><pre><code class="language-go">    message WatchCancelRequest {
+       int64 watch_id = 1;
+    }</code></pre></div>
 
 <ul>
 <li>Watch_ID - 要取消的watcher的ID，server后面就不会再更多的event。</li>
 </ul>
 
-<h3 id="toc_39">7.8 Lease</h3>
+<h3 id="toc_35">7.8 Lease</h3>
 
 <hr>
 
@@ -1600,10 +1455,10 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>创建一个lease请求体如下：</p>
 
-<div><pre><code class="language-none">message LeaseGrantRequest {
-  int64 TTL = 1;
-  int64 ID = 2;
-}</code></pre></div>
+<div><pre><code class="language-go">    message LeaseGrantRequest {
+      int64 TTL = 1;
+      int64 ID = 2;
+    }</code></pre></div>
 
 <ul>
 <li>TTL - 一个以秒为单位的超时时间；</li>
@@ -1612,11 +1467,11 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>server创建lease成功后，会返回如下的响应：</p>
 
-<div><pre><code class="language-none">message LeaseGrantResponse {
-  ResponseHeader header = 1;
-  int64 ID = 2;
-  int64 TTL = 3;
-}</code></pre></div>
+<div><pre><code class="language-go">    message LeaseGrantResponse {
+      ResponseHeader header = 1;
+      int64 ID = 2;
+      int64 TTL = 3;
+    }</code></pre></div>
 
 <ul>
 <li>ID - etcd为lease分配的ID；</li>
@@ -1625,9 +1480,9 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>撤销租约请求如下：</p>
 
-<div><pre><code class="language-none">message LeaseRevokeRequest {
-  int64 ID = 1;
-}</code></pre></div>
+<div><pre><code class="language-go">    message LeaseRevokeRequest {
+      int64 ID = 1;
+    }</code></pre></div>
 
 <ul>
 <li>ID - 将要撤销的lease ID，请求成功后，所有ID相关的key都会被删除。</li>
@@ -1635,9 +1490,9 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>如果客户端想要对一个lease进行续约，可以发出如下请求：</p>
 
-<div><pre><code class="language-none">message LeaseKeepAliveRequest {
-  int64 ID = 1;
-}</code></pre></div>
+<div><pre><code class="language-go">    message LeaseKeepAliveRequest {
+      int64 ID = 1;
+    }</code></pre></div>
 
 <ul>
 <li>ID - 续约的lease ID。</li>
@@ -1645,11 +1500,11 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>应答消息体定义如下：</p>
 
-<div><pre><code class="language-none">message LeaseKeepAliveResponse {
-  ResponseHeader header = 1;
-  int64 ID = 2;
-  int64 TTL = 3;
-}</code></pre></div>
+<div><pre><code class="language-go">    message LeaseKeepAliveResponse {
+      ResponseHeader header = 1;
+      int64 ID = 2;
+      int64 TTL = 3;
+    }</code></pre></div>
 
 <ul>
 <li>ID - 续约的ID；</li>
@@ -1670,16 +1525,16 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>Put 函数和 KeepAlive 函数都有一个 Lease 对象，如果在进行 Put 或者 KeepAlive 之前 Lease 已经过期，则 etcd 会返回 error。</p>
 
-<h3 id="toc_40">7.9 Compact</h3>
+<h3 id="toc_36">7.9 Compact</h3>
 
 <hr>
 
 <p>可以通过api进行过往数据（历史数据）的整理（compaction），否则一直增长下午磁盘会被沾满且影响etcd性能和集群的稳定性，请求消息体定义如下：</p>
 
-<div><pre><code class="language-none">message CompactionRequest {
-  int64 revision = 1;
-  bool physical = 2;
-}</code></pre></div>
+<div><pre><code class="language-go">    message CompactionRequest {
+      int64 revision = 1;
+      bool physical = 2;
+    }</code></pre></div>
 
 <ul>
 <li>revision: 小于revision值的历史数据都会被清理；</li>
@@ -1688,11 +1543,11 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>响应消息体定义如下：</p>
 
-<div><pre><code class="language-none">message CompactionResponse {
-  ResponseHeader header = 1;
-}</code></pre></div>
+<div><pre><code class="language-go">    message CompactionResponse {
+      ResponseHeader header = 1;
+    }</code></pre></div>
 
-<h2 id="toc_41">参考文档</h2>
+<h2 id="toc_37">参考文档</h2>
 
 <hr>
 
@@ -1730,11 +1585,11 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 <li>31 <a href="http://www.sohu.com/a/202861958_736949">深入浅出 Raft - Optimization</a></li>
 </ul>
 
-<h2 id="toc_42">Payment</h2>
+<h2 id="toc_38">Payment</h2>
 
 <p><center> <img src="../pic/pay/wepay.jpg" alt="阿弥托福，于雨谢过" title="阿弥托福，于雨谢过"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img src="../pic/pay/alipay.jpg" alt="无量天尊，于雨奉献" title="无量天尊，于雨奉献"> </center></p>
 
-<h2 id="toc_43">Timeline</h2>
+<h2 id="toc_39">Timeline</h2>
 
 <blockquote>
 <p>2018/01/09，于雨氏，初作此文于海淀。</p>
@@ -1749,31 +1604,6 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 
 <p>2018/06/22，于雨氏，与海淀给 <code>Raft</code> 小节补充 <code>learner 以及 Pipeline &amp; Batch &amp; leader Append</code>  相关内容。</p>
 </blockquote>
-
-
-
-<script type="text/javascript">
-var _self="undefined"!=typeof window?window:"undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?self:{},Prism=function(){var e=/\blang(?:uage)?-(\w+)\b/i,t=0,n=_self.Prism={util:{encode:function(e){return e instanceof a?new a(e.type,n.util.encode(e.content),e.alias):"Array"===n.util.type(e)?e.map(n.util.encode):e.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\u00a0/g," ")},type:function(e){return Object.prototype.toString.call(e).match(/\[object (\w+)\]/)[1]},objId:function(e){return e.__id||Object.defineProperty(e,"__id",{value:++t}),e.__id},clone:function(e){var t=n.util.type(e);switch(t){case"Object":var a={};for(var r in e)e.hasOwnProperty(r)&&(a[r]=n.util.clone(e[r]));return a;case"Array":return e.map&&e.map(function(e){return n.util.clone(e)})}return e}},languages:{extend:function(e,t){var a=n.util.clone(n.languages[e]);for(var r in t)a[r]=t[r];return a},insertBefore:function(e,t,a,r){r=r||n.languages;var l=r[e];if(2==arguments.length){a=arguments[1];for(var i in a)a.hasOwnProperty(i)&&(l[i]=a[i]);return l}var o={};for(var s in l)if(l.hasOwnProperty(s)){if(s==t)for(var i in a)a.hasOwnProperty(i)&&(o[i]=a[i]);o[s]=l[s]}return n.languages.DFS(n.languages,function(t,n){n===r[e]&&t!=e&&(this[t]=o)}),r[e]=o},DFS:function(e,t,a,r){r=r||{};for(var l in e)e.hasOwnProperty(l)&&(t.call(e,l,e[l],a||l),"Object"!==n.util.type(e[l])||r[n.util.objId(e[l])]?"Array"!==n.util.type(e[l])||r[n.util.objId(e[l])]||(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,l,r)):(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,null,r)))}},plugins:{},highlightAll:function(e,t){var a={callback:t,selector:'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'};n.hooks.run("before-highlightall",a);for(var r,l=a.elements||document.querySelectorAll(a.selector),i=0;r=l[i++];)n.highlightElement(r,e===!0,a.callback)},highlightElement:function(t,a,r){for(var l,i,o=t;o&&!e.test(o.className);)o=o.parentNode;o&&(l=(o.className.match(e)||[,""])[1],i=n.languages[l]),t.className=t.className.replace(e,"").replace(/\s+/g," ")+" language-"+l,o=t.parentNode,/pre/i.test(o.nodeName)&&(o.className=o.className.replace(e,"").replace(/\s+/g," ")+" language-"+l);var s=t.textContent,u={element:t,language:l,grammar:i,code:s};if(!s||!i)return n.hooks.run("complete",u),void 0;if(n.hooks.run("before-highlight",u),a&&_self.Worker){var c=new Worker(n.filename);c.onmessage=function(e){u.highlightedCode=e.data,n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(u.element),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},c.postMessage(JSON.stringify({language:u.language,code:u.code,immediateClose:!0}))}else u.highlightedCode=n.highlight(u.code,u.grammar,u.language),n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(t),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},highlight:function(e,t,r){var l=n.tokenize(e,t);return a.stringify(n.util.encode(l),r)},tokenize:function(e,t){var a=n.Token,r=[e],l=t.rest;if(l){for(var i in l)t[i]=l[i];delete t.rest}e:for(var i in t)if(t.hasOwnProperty(i)&&t[i]){var o=t[i];o="Array"===n.util.type(o)?o:[o];for(var s=0;s<o.length;++s){var u=o[s],c=u.inside,g=!!u.lookbehind,h=!!u.greedy,f=0,d=u.alias;u=u.pattern||u;for(var p=0;p<r.length;p++){var m=r[p];if(r.length>e.length)break e;if(!(m instanceof a)){u.lastIndex=0;var y=u.exec(m),v=1;if(!y&&h&&p!=r.length-1){var b=r[p+1].matchedStr||r[p+1],k=m+b;if(p<r.length-2&&(k+=r[p+2].matchedStr||r[p+2]),u.lastIndex=0,y=u.exec(k),!y)continue;var w=y.index+(g?y[1].length:0);if(w>=m.length)continue;var _=y.index+y[0].length,P=m.length+b.length;if(v=3,P>=_){if(r[p+1].greedy)continue;v=2,k=k.slice(0,P)}m=k}if(y){g&&(f=y[1].length);var w=y.index+f,y=y[0].slice(f),_=w+y.length,S=m.slice(0,w),O=m.slice(_),j=[p,v];S&&j.push(S);var A=new a(i,c?n.tokenize(y,c):y,d,y,h);j.push(A),O&&j.push(O),Array.prototype.splice.apply(r,j)}}}}}return r},hooks:{all:{},add:function(e,t){var a=n.hooks.all;a[e]=a[e]||[],a[e].push(t)},run:function(e,t){var a=n.hooks.all[e];if(a&&a.length)for(var r,l=0;r=a[l++];)r(t)}}},a=n.Token=function(e,t,n,a,r){this.type=e,this.content=t,this.alias=n,this.matchedStr=a||null,this.greedy=!!r};if(a.stringify=function(e,t,r){if("string"==typeof e)return e;if("Array"===n.util.type(e))return e.map(function(n){return a.stringify(n,t,e)}).join("");var l={type:e.type,content:a.stringify(e.content,t,r),tag:"span",classes:["token",e.type],attributes:{},language:t,parent:r};if("comment"==l.type&&(l.attributes.spellcheck="true"),e.alias){var i="Array"===n.util.type(e.alias)?e.alias:[e.alias];Array.prototype.push.apply(l.classes,i)}n.hooks.run("wrap",l);var o="";for(var s in l.attributes)o+=(o?" ":"")+s+'="'+(l.attributes[s]||"")+'"';return"<"+l.tag+' class="'+l.classes.join(" ")+'" '+o+">"+l.content+"</"+l.tag+">"},!_self.document)return _self.addEventListener?(_self.addEventListener("message",function(e){var t=JSON.parse(e.data),a=t.language,r=t.code,l=t.immediateClose;_self.postMessage(n.highlight(r,n.languages[a],a)),l&&_self.close()},!1),_self.Prism):_self.Prism;var r=document.currentScript||[].slice.call(document.getElementsByTagName("script")).pop();return r&&(n.filename=r.src,document.addEventListener&&!r.hasAttribute("data-manual")&&document.addEventListener("DOMContentLoaded",n.highlightAll)),_self.Prism}();"undefined"!=typeof module&&module.exports&&(module.exports=Prism),"undefined"!=typeof global&&(global.Prism=Prism);
-</script>
-
-<script type="text/x-mathjax-config">
-(function () {
-
-MathJax.Hub.Config({
-	'showProcessingMessages': false,
-	'messageStyle': 'none'
-});
-
-if (typeof MathJaxListener !== 'undefined') {
-	MathJax.Hub.Register.StartupHook('End', function () {
-		MathJaxListener.invokeCallbackForKey_('End');
-	});
-}
-
-})();
-</script>
-
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 <!-- baidu statistic start -->
 <script>
@@ -1804,6 +1634,8 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
+
 
 </body>
 

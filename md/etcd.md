@@ -27,6 +27,7 @@ etcd 还提供了一个客户端工具 [etcdctl](https://github.com/coreos/etcd/
 
 etcd单节点启动命令如下：
 
+```bash
 	etcd --name=${name} \
 	    --data-dir=${data_dir} \
 	    --wal-dir=${wal_dir} \
@@ -43,12 +44,13 @@ etcd单节点启动命令如下：
 	    --initial-cluster-token ${cluster_name} \
 	    --initial-cluster etcd_node0=http://${ip}:${peer_port},etcd_node1=http://${peer1_ip}:${peer1_peer_port},etcd_node2=http://${peer2_ip}:${peer2_peer_port} \
 	    --initial-cluster-state new  >> ${log_dir}/${name}.log 2>&1 &
+```
 
 各个参数的详细意义见参考文档17，下面列出一些主要参数的含义如下：
 
 - 1 name 是 node 的名称，用于在集群中标识当前节点，etcd 单节点允许迁移，迁移后名称不变即可被其他节点识别；
 - 2 etcd 底层使用的 kv 数据库 coreos/bbolt 是类似于 Rocksdb 的一个 LSM 数据库实现，与Rocksdb 一样数据有 wal 和 data 两种，建议两种数据分别存储到不同的存储系统上，以保证数据安全和系统性能；
-- 3 etcd 底层使用的 coreos/bbolt 类似于 rocksdb 会定期做 compaction 以清除过期数据，上面的  auto-compaction-retention 指定的时间单位是小时，当然也可以借助工具 etcdctl 强行进行 compaction，使用方法详见参考文档9#History compaction#一节；
+- 3 etcd 底层使用的 coreos/bbolt, 类似于 rocksdb 会定期做 compaction 以清除过期数据，上面的  auto-compaction-retention 指定的时间单位是小时，当然也可以借助工具 etcdctl 强行进行 compaction，使用方法详见参考文档9#History compaction#一节；
 - 4 参考文档9#Space quota#一节建议给etcd限定磁盘使用量，以防止etcd无限度的使用磁盘导致磁盘爆满后再去做compaction导致系统响应速度下降进而导致系统不稳定，当etcd使用的磁盘额度到达限定额度的时候会发出cluster级别的alarm使集群进入maintenance模式，只接收读和删除请求，当进行compaction和defragmenting(碎片化整理)完毕留出足够空间的时候才会回到正常工作状态；
 - 5 max-request-bytes可以限制key的最大长度，此处限制长度为15KiB；
 - 5 initial-cluster-token用于标识集群的名称，initial-cluster则给出了静态cluster的各个成员的名称以及地址；
@@ -58,11 +60,13 @@ etcd单节点启动命令如下：
 
 集群部署完毕后，可以借助etcdctl查看集群的成员列表以及集群运行状态。etcdctl自身也分为v2和v3两个版本，集群状态的查看可借助其v2版本，使用方式如下：
 
+```bash
 	export ETCDCTL_API=2
 	echo "-----------------member list----------------"
 	etcdctl --endpoints=“http://localhost:2379” member list
 	echo "-----------------cluster health-------------"
 	etcdctl --endpoints=“http://localhost:2379“ cluster-health
+```
 
 静态集群自身也是可以扩容的，具体扩容方法见参考文档6和参考文档7。
 
@@ -84,11 +88,14 @@ etcd单节点启动命令如下：
 
 具体详细步骤见参考文档7#Add a New Member#一节，下面给出操作过程：
 
-* 1 ETCDCTL_API=3 etcdctl --endpoints=http://192.168.11.1:2379,http://192.168.11.1:12379,http://192.168.11.1:22379 member add etcd_node3 --peer-urls=http://192.168.11.1:32379
 
+* 1 查看 ETCDCTL_API=3 etcdctl --endpoints=http://192.168.11.1:2379,http://192.168.11.1:12379,http://192.168.11.1:22379 member add etcd_node3 --peer-urls=http://192.168.11.1:32379
+
+```bash
      ETCD_NAME="etcd_node3"
      ETCD_INITIAL_CLUSTER="etcd_node1=http://192.168.11.1:12380,etcd_node2=http://192.168.11.1:22380,etcd_node0=http://192.168.11.1:2380,etcd_node3=http://192.168.11.1:32379"
      ETCD_INITIAL_CLUSTER_STATE="existing"
+```
 
 * 2 etcd --name=etcd_node3 \   
 	--data-dir=/tmp/etcd/etcd_node3/./data/ \     
@@ -103,7 +110,8 @@ etcd单节点启动命令如下：
 一定要注意，”initial-cluster”里面一定要有新成员的peer地址。参考文档7#Strict Reconfiguration Check Mode#提到：etcdctl执行完毕”etcdctl member add“后，etcd cluster就把这个还未存在的node算进quorum了，**第二步必须准确完成**。
 
 	如果仅仅通过命令”etcdctl member add“添加一个节点，但是不添加实际节点，然后就通过”etcdctl member remove“删除，则会得到如下结果：
-	
+
+```bash	
 	$ ETCDCTL_API=3 etcdctl --endpoints=http://192.168.11.100:2379,http://192.168.11.100:12379,http://192.168.11.100:22379 member add    etcd_node3 --peer-urls=http://192.168.11.100:32380
 	Member e9cfc62cee5f30d1 added to cluster 63e8b43e8a1af9bc
 	
@@ -114,6 +122,7 @@ etcd单节点启动命令如下：
 	
 	$ etcdctl member remove 63e8b43e8a1af9bc
 	Couldn't find a member in the cluster with an ID of 63e8b43e8a1af9bc.
+```
 
 可见如果不添加节点，这个理论上存在但是实际上不存在的node是不可能从quorum中剔除掉的。
 
@@ -122,15 +131,18 @@ etcd单节点启动命令如下：
 
 具体详细步骤见参考文档7#Remove a New Member#一节，一个命令即可完成任务：
 
+```bash
 	$ etcdctl member remove a8266ecf031671f3
 	Removed member a8266ecf031671f3 from cluster
+```
 
 在参考文档7#Error Cases When Adding Members#一小节中，提到一个node被remove后，如果再次重新启动，则会得到如下错误提示：
 
+```bash
 	$ etcd
 	etcd: this member has been permanently removed from the cluster. Exiting.
 	exit 1
-
+```
 
 ## 2 动态集群 ##
 ---
@@ -143,11 +155,13 @@ etcd单节点启动命令如下：
 
 在一个静态集群上创建channel如下：
 
+```bash
 	curl -X PUT "http://${registry_url}/v2/keys/discovery/testdiscoverycluster/_config/size" -d value=3
-
+```
 
 动态集群etcd单节点启动命令如下：
 
+```bash
     etcd --name=${name} \
         --data-dir=${data_dir} \
         --wal-dir=${wal_dir} \
@@ -163,6 +177,7 @@ etcd单节点启动命令如下：
         --advertise-client-urls http://${ip}:${client_port} \
         --discovery http://localhost:2379/v2/keys/discovery/testdiscoverycluster \
         --initial-cluster-token ${cluster_name} >> ${log_dir}/${name}.log 2>&1 &
+```
 
 可见不需要再指定集群内的各个成员，只需要指定discovery channel即可。
 
@@ -386,10 +401,12 @@ etcd 在内存中维护了一个 btree（B树）纯内存索引，就和 MySQL �
 
 在这个btree中，整个k-v存储大概就是这样：
 
+```go
 	type treeIndex struct {
 		sync.RWMutex
 		tree *btree.BTree
 	}
+```
 
 当存储大量的K-V时，因为用户的value一般比较大，全部放在内存btree里内存耗费过大，所以etcd将用户value保存在磁盘中。
 
@@ -404,6 +421,7 @@ MVCC 下面是几条预备知识：
 
 revision 定义如下：
 
+```go
 	// A revision indicates modification of the key-value space.
 	// The set of changes that share same main revision changes the key-value space atomically.
 	type revision struct {
@@ -415,9 +433,11 @@ revision 定义如下：
 		// set.
 		sub int64
 	}
+```
 
 内存索引中，每个原始key会关联一个key_index结构，里面维护了多版本信息：
 
+```go
 	type keyIndex struct {
 		key         []byte   // key字段就是用户的原始key
 		modified    revision // modified字段记录这个key的最后一次修改对应的revision信息
@@ -430,6 +450,7 @@ revision 定义如下：
 		created revision // 记录了引起本次key创建的revision信息
 		revs    []revision
 	}
+```
 
 key 初始创建的时候，generations[0]会被创建，当用户继续更新这个key的时候，generations[0].revs数组会不断追加记录本次的revision信息（main，sub）。在bbolt中，每个revision将作为key，即序列化（revision.main+revision.sub）作为key。因此，我们先通过内存btree在keyIndex.generations[0].revs中找到最后一条revision，即可去bbolt中读取对应的数据。如果我们持续更新同一个key，那么generations[0].revs就会一直变大，这怎么办呢？在多版本中的，一般采用compact来压缩历史版本，即当历史版本到达一定数量时，会删除一些历史版本，只保存最近的一些版本。
 
@@ -437,14 +458,15 @@ key 初始创建的时候，generations[0]会被创建，当用户继续更新�
 
 put操作的 bboltdb 的key由 main+sub 构成：
 
-<!--- golang --->
+```go
 ​	ibytes := newRevBytes()
 ​	idxRev := revision{main: rev, sub: int64(len(tw.changes))}
 ​	revToBytes(idxRev, ibytes)
+```
 
 delete 操作的 key 由 main+sub+”t” 构成：
 
-<!--- golang --->
+```go
 ​	idxRev := revision{main: tw.beginRev + 1, sub: int64(len(tw.changes))}
 ​	revToBytes(idxRev, ibytes)
 ​	ibytes = appendMarkTombstone(ibytes)
@@ -461,10 +483,11 @@ delete 操作的 key 由 main+sub+”t” 构成：
 	func isTombstone(b []byte) bool {
 		return len(b) == markedRevBytesLen && b[markBytePosition] == markTombstone
 	}
+```
 
 bbolt中存储的value是这样一个json序列化后的结构，包括key创建时的revision（对应某一代generation的created），本次更新版本，sub ID（Version ver），Lease ID（租约ID）：
 
-<!--- golang --->
+```go
 ​	kv := mvccpb.KeyValue{
 ​	    Key:            key,
 ​	    Value:          value,
@@ -473,6 +496,7 @@ bbolt中存储的value是这样一个json序列化后的结构，包括key创建
 ​	    Version:        ver,  // version is the version of the key. A deletion resets the version to zero and any modification of the key increases its version.
 ​	    Lease:          int64(leaseID),
 ​	}
+```
 
 总结来说：内存btree维护的是用户key => keyIndex的映射，keyIndex内维护多版本的revision信息，而revision可以映射到磁盘bbolt中的用户value。
 
@@ -540,37 +564,47 @@ Heartbeat Interval一般取值集群中两个peer之间RTT最大值，取值范�
 
 整个集群内所有peer的这两个值都应该取同样的值，否则会引起混乱。命令行修改这两个值的方法如下：
 
+```bash
 	# Command line arguments:
 	$ etcd —heartbeat-interval=100 —election-timeout=500
 	
 	# Environment variables:
 	$ ETCD_HEARTBEAT_INTERVAL=100 ETCD_ELECTION_TIMEOUT=500 etcd
+```
 
 etcd底层的存储引擎boltdb采用了MVCC机制，会把一个key的所有update历史都存储下来，所以相关数据文件会线性增长，这会加重etcd的数据加载负担并降低集群的性能，在v2版本下etcd创建snapshot的成本也很高，所以默认情况下没10,000个update后etcd才会创建一个snapshot，如果这个参数下单机的内存和磁盘占用率还是很高，则可以通过命令调整如下：
 
+```bash
 	# Command line arguments:
 	$ etcd —snapshot-count=5000
 	
 	# Environment variables:
 	$ ETCD_SNAPSHOT_COUNT=5000 etcd
+```
 
 上面也提到，etcd需要把log实时写入磁盘，所以其他通过fsync方式写入磁盘的进程会提高etcd进程的写过程的latency，后果是心跳超时、处理请求超时、跟集群内其他成员失联。可以通过如下命令提高etcd进程的磁盘操作优先级：
 
+```bash
 	# best effort, highest priority
 	$ sudo ionice -c2 -n0 -p `pgrep etcd`
+```
 
 如果etcd的leader需要处理大量的客户端高并发请求，则etcd可能由于网络拥塞导致每个请求处理延迟过高，下面日志会对这种情况有所提示：
 
+```bash
 	dropped MsgProp to 247ae21ff9436b2d since streamMsg’s sending buffer is full
 	dropped MsgAppResp to 247ae21ff9436b2d since streamMsg’s sending buffer is full
+```
 
 此时可以通过提供etcd的发送缓冲器的优先级解决问题：
 
+```
 	tc qdisc add dev eth0 root handle 1: prio bands 3
 	tc filter add dev eth0 parent 1: protocol ip prio 1 u32 match ip sport 2380 0xffff flowid 1:1
 	tc filter add dev eth0 parent 1: protocol ip prio 1 u32 match ip dport 2380 0xffff flowid 1:1
 	tc filter add dev eth0 parent 1: protocol ip prio 2 u32 match ip sport 2739 0xffff flowid 1:1
 	tc filter add dev eth0 parent 1: protocol ip prio 2 u32 match ip dport 2739 0xffff flowid 1:1
+```
 
 ## 6 etcd op ##
 ---
@@ -582,12 +616,15 @@ etcd官方提供了一个万能的工具etcdctl，etcd的op工具都可以借助
 
 etcd v3兼容v2，所以进行数据操作前，需要检查数据的版本，参考文档13给出了一种查看etcd的数据的版本是否是v3的验证方式：
 
+```bash
 	ETCDCTL_API=3 etcdctl get "" --from-key --keys-only --limit 1 | wc -l
+```
 
 如果输出为0，则数据版本是v2。
 
 参考文档9建议定期对etcd数据进行冷备，其#Snapshot backup#一节给出了冷备的用法：
 
+```bash
  	$ etcdctl snapshot save backup.db
 ​	$ etcdctl  --endpoints $ENDPOINT —write-out=table snapshot status backup.db
 ​	+———————————+———————————+—————————————+————————————+
@@ -595,7 +632,7 @@ etcd v3兼容v2，所以进行数据操作前，需要检查数据的版本，�
 ​	+———————————+———————————+—————————————+————————————+
 ​	| fe01cf57  |   10      |       7     |   2.1 MB   |
 ​	+———————————+———————————+—————————————+————————————+
-​
+​```
 ​
 参考文档10#Snapshotting the keyspace#一节中提到了另一种方法：直接把数据目录member/snap/db下的数据拷贝备份。
 
@@ -635,27 +672,37 @@ etcd的compaction仅仅是合并一些文件并进行过去数据的删除，但
 
 参考文档9#History compaction#给出了相关compaction使用方法：
 
+```bash
 	# keep one hour of history
 	$ etcd --auto-compaction-retention=1
+```
 
 上面这种操作方法是通过时间窗口的策略让etcd自动压缩数据，还可以通过etcdctl命令手工进行数据压缩：
 
+```bash
 	# compact up to revision 3
 	$ etcdctl compact 3
+```
 
 通过上面的命令手工压缩数据之后，revision 3之前的数据就被清理掉了，譬如：
 
+```bash
 	$ etcdctl get --rev=2 somekey
 	Error:  rpc error: code = 11 desc = etcdserver: mvcc: required revision has been compacted
+```
 
 参考文档9#Defragmentation#给出了碎片整理相关使用方法：
 
+```bash
 	$ etcdctl defrag
 	Finished defragmenting etcd member[127.0.0.1:2379]
+```
 
 如果etcd没有运行，可以直接作用于data目录：
 
+```bash
 	$ etcdctl defrag --data-dir <path-to-etcd-data-dir>
+```
 
 ### 6.4 角色控制 ###
 ---
@@ -687,6 +734,7 @@ github.com/coreos/etcd/clientv3/config.go:Config::DialTimeout 意为创建client
 
 参考文档18提到etcd大部分API都是对KV对的请求和操作。etcd kv的protobuf定义如下：
 
+```go
 	message KeyValue {
   		bytes key = 1;
   		int64 create_revision = 2;
@@ -695,6 +743,7 @@ github.com/coreos/etcd/clientv3/config.go:Config::DialTimeout 意为创建client
   		bytes value = 5;
   		int64 lease = 6;
 ​	}
+```
 
 各个字段意义如下：
 
@@ -716,6 +765,7 @@ etcd允许一次以range形式操作多个key。etcd对数据的组织不像zook
 
 Range请求定义如下：
 
+```go
 	message RangeRequest {
 	  enum SortOrder {
 		NONE = 0; // default, no sorting
@@ -744,6 +794,7 @@ Range请求定义如下：
 	  int64 min_create_revision = 12;
 	  int64 max_create_revision = 13;
 	}
+```
 
 各个字段含义如下：
 
@@ -762,6 +813,7 @@ Range请求定义如下：
 
 Range请求的响应定义如下：
 
+```go
 	message ResponseHeader {
 	  uint64 cluster_id = 1;
 	  uint64 member_id = 2;
@@ -775,6 +827,7 @@ Range请求的响应定义如下：
 	  bool more = 3;
 	  int64 count = 4;
 	}
+```
 
 各个字段含义如下：
 
@@ -804,6 +857,7 @@ Range请求的响应定义如下：
 
 PutReqeust定义如下：
 
+```go
 	message PutRequest {
 	  bytes key = 1;
 	  bytes value = 2;
@@ -812,6 +866,7 @@ PutReqeust定义如下：
 	  bool ignore_value = 5;
 	  bool ignore_lease = 6;
 	}
+```
 
 各个字段含义如下：
 
@@ -824,10 +879,12 @@ PutReqeust定义如下：
 
 响应定义如下：
 
+```go
 	message PutResponse {
 	  ResponseHeader header = 1;
 	  mvccpb.KeyValue prev_kv = 2;
 	}
+```
 
 - prev_kv：Reqeuest中的 prev\_kv 被设置为true的时候，这个结果就是update前的kv值；
 
@@ -836,22 +893,26 @@ PutReqeust定义如下：
 
 删除则可以删除一定范围内的kv对，请求定义如下：
 
+```go
 	message DeleteRangeRequest {
 	  bytes key = 1;
 	  bytes range_end = 2;
 	  bool prev_kv = 3;
 	}
+```
 
 - Key, Range_End - key range；
 - Prev_kv - 如果设置为true，则返回删除前的kv结果；
 
 响应定义如下：
 
+```go
 	message DeleteRangeResponse {
 	  ResponseHeader header = 1;
 	  int64 deleted = 2;
 	  repeated mvccpb.KeyValue prev_kvs = 3;
 	}
+```
 
 - Deleted - 被删除的kv数目；
 - Prev\_kv - 如果请求中的prev\_kv被设为true，则响应中就返回被删除的kv值数组；
@@ -874,6 +935,7 @@ PutReqeust定义如下：
 
 事务操作可以认为是一个比较操作链，每个比较动作定义如下：
 
+```go
 	message Compare {
 	  enum CompareResult {
 	    EQUAL = 0;
@@ -899,6 +961,7 @@ PutReqeust定义如下：
 	    bytes value = 7;
 	  }
 	}
+```
 
 - Result - 逻辑比较类型，如相等、小于或者大于；
 - Target - 有待被比较的kv的某个字段，如key的version、创建 revision、修改revision或者value；
@@ -907,6 +970,7 @@ PutReqeust定义如下：
 
 定义了比较算子后，事务请求还需要一连串的子请求操作，定义如下：
 
+```go
 	message RequestOp {
 	  // request is a union of request types accepted by a transaction.
 	  oneof request {
@@ -915,6 +979,7 @@ PutReqeust定义如下：
 	    DeleteRangeRequest request_delete_range = 3;
 	  }
 	}
+```
 
 - Request\_Range - 一个RangeRequest；
 - Request\_Put - 一个PutRequest，keys中每个key都必须唯一不能重复；
@@ -922,11 +987,13 @@ PutReqeust定义如下：
 
 最终事务请求定义如下：
 
+```go
 	message TxnRequest {
 	  repeated Compare compare = 1;
 	  repeated RequestOp success = 2;
 	  repeated RequestOp failure = 3;
 	}
+```
 
 - Compare - 一个比较算子序列；
 - Success - 如果比较成功，则处理这个请求对象序列，响应的结果就是对这些子请求处理的结果；
@@ -934,17 +1001,20 @@ PutReqeust定义如下：
 
 事务响应定义如下：
 
+```go
 	message TxnResponse {
 	  ResponseHeader header = 1;
 	  bool succeeded = 2;
 	  repeated ResponseOp responses = 3;
 	}
+```
 
 - Succeeded - 算子比较的结果，success则为true，fail则为false；
 - Responses - 对所有子请求的处理结果。
 
 ResponseOp定义如下:
 
+```go
 	message ResponseOp {
 	  oneof response {
 	    RangeResponse response_range = 1;
@@ -952,6 +1022,7 @@ ResponseOp定义如下:
 	    DeleteRangeResponse response_delete_range = 3;
 	  }
 	}
+```
 
 ResponseOp的成员与RequestOp对应，此处就不再一一列举解释了。
 
@@ -962,6 +1033,7 @@ Watch API提供了一组基于事件的接口，用于异步获取key的变化�
 
 Event代表了key的一次update，包括update的类型和变化前后的数据，定义如下:
 
+```go
 	message Event {
 	  enum EventType {
 	    PUT = 0;
@@ -971,6 +1043,7 @@ Event代表了key的一次update，包括update的类型和变化前后的数据
 	  KeyValue kv = 2;
 	  KeyValue prev_kv = 3;
 	}
+```
 
 - Type - event type，PUT则下面会给出新增加的value，DELETE则指出key已被删除；
 - KV - KeyValue是event相关的value，如果type是PUT则KV是当前更新后的kv对，如果kv.Version值为1则说明kv是新创建的。如果type是DELETE，则KV的revision就是delete动作发生时的revision；
@@ -986,6 +1059,7 @@ Watch对event作出了如下三项保证:
 
 基于一次gRPC stream连接，可以发出如下watch创建请求：
 
+```go
 	message WatchCreateRequest {
 	  bytes key = 1;
 	  bytes range_end = 2;
@@ -999,6 +1073,7 @@ Watch对event作出了如下三项保证:
 	  repeated FilterType filters = 5;
 	  bool prev_kv = 6;
 	}
+```
 
 - Key, Range\_End - 被观察的key的range[key, range\_end)，如果 range\_end 没有设置，则只有参数key被观察，如果 range\_end 等同于'\0'， 则大于等于参数 key 的所有 key 都将被观察；
 - Start_Revision - 观察的起始的revision，如果不设置则是最新的revision；
@@ -1008,6 +1083,7 @@ Watch对event作出了如下三项保证:
 
 watch的响应内容定义如下：
 
+```go
 	message WatchResponse {
 	  ResponseHeader header = 1;
 	  int64 watch_id = 2;
@@ -1017,6 +1093,7 @@ watch的响应内容定义如下：
 	
 	  repeated mvccpb.Event events = 11;
 	}
+```
 
 - Watch_ID - 和watch相关的watcher ID；
 - Created - 如果请求是WatchCreateRequest，则这个值为true，所有发送给同一个watch的event都带有同样的watch_id；
@@ -1026,9 +1103,11 @@ watch的响应内容定义如下：
 
 如果一个watcher想停止watch，则可以发出如下请求：
 
+```go
 	message WatchCancelRequest {
 	   int64 watch_id = 1;
 	}
+```
 
 - Watch_ID - 要取消的watcher的ID，server后面就不会再更多的event。
 
@@ -1039,48 +1118,58 @@ Lease提供了对租约的支持。cluster保证了lease时间内kv的有效性�
 
 创建一个lease请求体如下：
 
+```go
 	message LeaseGrantRequest {
 	  int64 TTL = 1;
 	  int64 ID = 2;
 	}
+```
 
 - TTL - 一个以秒为单位的超时时间；
 - ID - Lease ID，如果值为0，则etcd会进行赋值。
 
 server创建lease成功后，会返回如下的响应：
 
+```go
 	message LeaseGrantResponse {
 	  ResponseHeader header = 1;
 	  int64 ID = 2;
 	  int64 TTL = 3;
 	}
+```
 
 - ID - etcd为lease分配的ID；
 - TTL - 以秒为单位的lease时间；
 
 撤销租约请求如下：
 
+```go
 	message LeaseRevokeRequest {
 	  int64 ID = 1;
 	}
+```
 
 - ID - 将要撤销的lease ID，请求成功后，所有ID相关的key都会被删除。
 
 如果客户端想要对一个lease进行续约，可以发出如下请求：
 
+```go
 	message LeaseKeepAliveRequest {
 	  int64 ID = 1;
 	}
+```
 
 - ID - 续约的lease ID。
 
 应答消息体定义如下：
 
+```go
 	message LeaseKeepAliveResponse {
 	  ResponseHeader header = 1;
 	  int64 ID = 2;
 	  int64 TTL = 3;
 	}
+```
 
 - ID - 续约的ID；
 - TTL - 剩余的TTL，以秒为单位。
@@ -1102,19 +1191,23 @@ Put 函数和 KeepAlive 函数都有一个 Lease 对象，如果在进行 Put �
 
 可以通过api进行过往数据（历史数据）的整理（compaction），否则一直增长下午磁盘会被沾满且影响etcd性能和集群的稳定性，请求消息体定义如下：
 
+```go
 	message CompactionRequest {
 	  int64 revision = 1;
 	  bool physical = 2;
 	}
+```
 
 - revision: 小于revision值的历史数据都会被清理；
 - physical: 这个标记为true的时候，RPC server端会等待直到物理磁盘的历史数据被整理完毕再给客户端响应。
 
 响应消息体定义如下：
 
+```go
 	message CompactionResponse {
 	  ResponseHeader header = 1;
 	}
+```
 
 ## 参考文档 ##
 ---
