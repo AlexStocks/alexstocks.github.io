@@ -622,19 +622,11 @@ etcd v3兼容v2，所以进行数据操作前，需要检查数据的版本，�
 
 如果输出为0，则数据版本是v2。
 
-参考文档9建议定期对etcd数据进行冷备，其#Snapshot backup#一节给出了冷备的用法：
+参考文档9建议定期对etcd数据进行冷备，其 #Snapshot backup# 一节给出了冷备的用法：
 
-```bash
- 	$ etcdctl snapshot save backup.db
-​	$ etcdctl  --endpoints $ENDPOINT —write-out=table snapshot status backup.db
-​	+———————————+———————————+—————————————+————————————+
-​	|   HASH    | REVISION  | TOTAL KEYS  | TOTAL SIZE |
-​	+———————————+———————————+—————————————+————————————+
-​	| fe01cf57  |   10      |       7     |   2.1 MB   |
-​	+———————————+———————————+—————————————+————————————+
-​```
+![](../pic/etcd/data_backup.png)
 ​
-参考文档10#Snapshotting the keyspace#一节中提到了另一种方法：直接把数据目录member/snap/db下的数据拷贝备份。
+​参考文档10 #Snapshotting the keyspace# 一节中提到了另一种方法：直接把数据目录member/snap/db下的数据拷贝备份。
 
 至于用冷备数据如何恢复一个cluster，请参见参考文档10#Restoring a cluster#。
 
