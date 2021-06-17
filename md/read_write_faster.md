@@ -86,29 +86,37 @@ linux ext3 在 ext2 之上引入了 Journal 日志功能，以保证文件系统
 
     dd if=/dev/zero of=./vdisk.img bs=4k count=524288
     
+    如果是现有的虚拟磁盘或者物理磁盘，需要先停止使用相关目录的进程：
+    sudo lsof /home/t4 # 查看目录的访问者，也可以使用命令 sudo fuser -mv /home/t4
+    sudo fuser -kv /home/t4 # 停掉目录的访问进程，如果杀不干净，就强制 kill -9 杀掉
+    sudo systemctl stop docker # 如果目录有 docker 访问，可以关掉 docker daemon
+
 - 2 格式化为 ext4 文件系统
 
     mkfs.ext4 ./vdisk.img
     
-- 3 把虚拟文件系统挂载到目录 `/mnt/vfs` 
-
-    mkdir -p /mnt/vfs && mount -o loop ./vdisk.img /mnt/vfs
-    
-- 4 查看挂载结果   
-
-    df -T -h
-
-- 5 打开 Journal
+- 3 打开 Journal
 
     tune2fs -O has_journal ./vdisk.img
     
-- 6 查看文件的 Journal 信息
+- 4 查看文件的 Journal 信息
 
     dumpe2fs ./vdisk.img | grep 'Filesystem features' | grep 'has_journal'
     
-- 7 关闭 Journal
+- 5 关闭 Journal
 
     tune2fs -O ^has_journal ./vdisk.img
+    关闭 journal 时如果遇到报错 “The needs_recovery flag is set. Please run e2fsck before clearing.”，可以执行如下命令 ` sudo e2fsck -f /dev/nvme0n1 `，以擦除 needs_recovery flag
+
+- 6 把虚拟文件系统挂载到目录 `/mnt/vfs` 
+
+    mkdir -p /mnt/vfs && mount ./vdisk.img /mnt/vfs
+    mkdir -p /mnt/vfs && mount -o loop,datamode=writeback ./vdisk.img /mnt/vfs
+    
+- 7 查看挂载结果   
+
+    df -T -h
+    df -TH
 
 - 8 卸载虚拟文件系统
     
