@@ -86,18 +86,25 @@ etcd单节点启动命令如下：
 ### 1.3 添加一个节点 ###
 ---
 
-具体详细步骤见参考文档7#Add a New Member#一节，下面给出操作过程：
+具体详细步骤见参考文档7 #Add a New Member# 一节，下面给出操作过程：
 
 
-* 1 查看 ETCDCTL_API=3 etcdctl --endpoints=http://192.168.11.1:2379,http://192.168.11.1:12379,http://192.168.11.1:22379 member add etcd_node3 --peer-urls=http://192.168.11.1:32379
-
+* 1 通过命令 `ETCDCTL_API=3 etcdctl --endpoints=http://192.168.11.1:2379,http://192.168.11.1:12379,http://192.168.11.1:22379 member add etcd_node3 --peer-urls=http://192.168.11.1:32379` 更改集群配置
+ 
+同时执行如下命令修改环境变量。
+ 
 ```bash
      ETCD_NAME="etcd_node3"
      ETCD_INITIAL_CLUSTER="etcd_node1=http://192.168.11.1:12380,etcd_node2=http://192.168.11.1:22380,etcd_node0=http://192.168.11.1:2380,etcd_node3=http://192.168.11.1:32379"
      ETCD_INITIAL_CLUSTER_STATE="existing"
 ```
 
-* 2 etcd --name=etcd_node3 \   
+需要注意的是，命令 `etcdctl member add` 会创建一个新的 member id，所以需要在第二步添加成员之前确保 `--data-dir` 为空，否则 etcd 启动时会使用 boltdb 中存储的旧的 ID [ https://github.com/etcd-io/etcd/issues/3710 ]。另外，需要确保 `--initial-cluster-state existing` 配置项正确。
+
+* 2 添加成员
+
+```bash
+etcd --name=etcd_node3 \   
 	--data-dir=/tmp/etcd/etcd_node3/./data/ \     
 	--wal-dir=/tmp/etcd/etcd_node3/./wal/ \  
 	--listen-peer-urls=http://192.168.11.100:32380 \  
@@ -106,8 +113,9 @@ etcd单节点启动命令如下：
 	--advertise-client-urls=http://192.168.11.100:32379 \   
 	--initial-cluster-state=existing \   
 	--initial-cluster="etcd_node2=http://192.168.11.100:22380,etcd_node1=http://192.168.11.100:12380,etcd_node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380"
+```
 
-一定要注意，”initial-cluster”里面一定要有新成员的peer地址。参考文档7#Strict Reconfiguration Check Mode#提到：etcdctl执行完毕”etcdctl member add“后，etcd cluster就把这个还未存在的node算进quorum了，**第二步必须准确完成**。
+一定要注意，”initial-cluster” 里面一定要有新成员的peer地址。参考文档7 #Strict Reconfiguration Check Mode# 提到：etcdctl执行完毕 ”etcdctl member add“ 后，etcd cluster就把这个还未存在的node算进quorum了，**第二步必须准确完成**。
 
 	如果仅仅通过命令”etcdctl member add“添加一个节点，但是不添加实际节点，然后就通过”etcdctl member remove“删除，则会得到如下结果：
 
@@ -125,6 +133,8 @@ etcd单节点启动命令如下：
 ```
 
 可见如果不添加节点，这个理论上存在但是实际上不存在的node是不可能从quorum中剔除掉的。
+
+这两个添加 node 的步骤不能错乱，否则会导致集群中的 node ID 错乱，etcd log 中会有大量这种错误 "rafthttp: request sent was ignored (cluster ID mismatch: remote[db30be88917b6839]=ac5f3aa02066b598, local=9b09b40f488fe304)" [ https://github.com/etcd-io/etcd/issues/3710 ]。
 
 ### 1.4 删除一个节点 ###
 ---

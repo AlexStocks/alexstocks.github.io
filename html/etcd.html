@@ -425,29 +425,35 @@ kbd {
 
 <hr>
 
-<p>具体详细步骤见参考文档7#Add a New Member#一节，下面给出操作过程：</p>
+<p>具体详细步骤见参考文档7 #Add a New Member# 一节，下面给出操作过程：</p>
 
 <ul>
-<li>1 查看 ETCDCTL<em>API=3 etcdctl --endpoints=http://192.168.11.1:2379,http://192.168.11.1:12379,http://192.168.11.1:22379 member add etcd</em>node3 --peer-urls=http://192.168.11.1:32379</li>
+<li>1 通过命令 <code>ETCDCTL_API=3 etcdctl --endpoints=http://192.168.11.1:2379,http://192.168.11.1:12379,http://192.168.11.1:22379 member add etcd_node3 --peer-urls=http://192.168.11.1:32379</code> 更改集群配置</li>
 </ul>
+
+<p>同时执行如下命令修改环境变量。</p>
 
 <div><pre><code class="language-bash">     ETCD_NAME=&quot;etcd_node3&quot;
      ETCD_INITIAL_CLUSTER=&quot;etcd_node1=http://192.168.11.1:12380,etcd_node2=http://192.168.11.1:22380,etcd_node0=http://192.168.11.1:2380,etcd_node3=http://192.168.11.1:32379&quot;
      ETCD_INITIAL_CLUSTER_STATE=&quot;existing&quot;</code></pre></div>
 
+<p>需要注意的是，命令 <code>etcdctl member add</code> 会创建一个新的 member id，所以需要在第二步添加成员之前确保 <code>--data-dir</code> 为空，否则 etcd 启动时会使用 boltdb 中存储的旧的 ID [ https://github.com/etcd-io/etcd/issues/3710 ]。另外，需要确保 <code>--initial-cluster-state existing</code> 配置项正确。</p>
+
 <ul>
-<li>2 etcd --name=etcd<em>node3 \<br>
---data-dir=/tmp/etcd/etcd</em>node3/./data/ \<br>
---wal-dir=/tmp/etcd/etcd<em>node3/./wal/ \<br>
---listen-peer-urls=http://192.168.11.100:32380 \<br>
---initial-advertise-peer-urls=http://192.168.11.100:32380 \<br>
---listen-client-urls=http://192.168.11.100:32379,http://127.0.0.1:32379 \<br>
---advertise-client-urls=http://192.168.11.100:32379 \<br>
---initial-cluster-state=existing \<br>
---initial-cluster=&quot;etcd</em>node2=http://192.168.11.100:22380,etcd<em>node1=http://192.168.11.100:12380,etcd</em>node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380&quot;</li>
+<li>2 添加成员</li>
 </ul>
 
-<p>一定要注意，”initial-cluster”里面一定要有新成员的peer地址。参考文档7#Strict Reconfiguration Check Mode#提到：etcdctl执行完毕”etcdctl member add“后，etcd cluster就把这个还未存在的node算进quorum了，<strong>第二步必须准确完成</strong>。</p>
+<div><pre><code class="language-bash">etcd --name=etcd_node3 \
+    --data-dir=/tmp/etcd/etcd_node3/./data/ \
+    --wal-dir=/tmp/etcd/etcd_node3/./wal/ \
+    --listen-peer-urls=http://192.168.11.100:32380 \
+    --initial-advertise-peer-urls=http://192.168.11.100:32380 \
+    --listen-client-urls=http://192.168.11.100:32379,http://127.0.0.1:32379 \
+    --advertise-client-urls=http://192.168.11.100:32379 \
+    --initial-cluster-state=existing \
+    --initial-cluster=&quot;etcd_node2=http://192.168.11.100:22380,etcd_node1=http://192.168.11.100:12380,etcd_node0=http://192.168.11.100:2380,etcd_node3=http://192.168.11.100:32380&quot;</code></pre></div>
+
+<p>一定要注意，”initial-cluster” 里面一定要有新成员的peer地址。参考文档7 #Strict Reconfiguration Check Mode# 提到：etcdctl执行完毕 ”etcdctl member add“ 后，etcd cluster就把这个还未存在的node算进quorum了，<strong>第二步必须准确完成</strong>。</p>
 
 <div><pre><code class="language-none">如果仅仅通过命令”etcdctl member add“添加一个节点，但是不添加实际节点，然后就通过”etcdctl member remove“删除，则会得到如下结果：</code></pre></div>
 
@@ -463,6 +469,8 @@ kbd {
     Couldn&#39;t find a member in the cluster with an ID of 63e8b43e8a1af9bc.</code></pre></div>
 
 <p>可见如果不添加节点，这个理论上存在但是实际上不存在的node是不可能从quorum中剔除掉的。</p>
+
+<p>这两个添加 node 的步骤不能错乱，否则会导致集群中的 node ID 错乱，etcd log 中会有大量这种错误 &quot;rafthttp: request sent was ignored (cluster ID mismatch: remote[db30be88917b6839]=ac5f3aa02066b598, local=9b09b40f488fe304)&quot; [ https://github.com/etcd-io/etcd/issues/3710 ]。</p>
 
 <h3 id="toc_6">1.4 删除一个节点</h3>
 
@@ -1601,7 +1609,6 @@ withPrefix实际上会转化为范围查询，它根据前缀/test/生成了一�
 <p>2018/06/22，于雨氏，与海淀给 <code>Raft</code> 小节补充 <code>learner 以及 Pipeline &amp; Batch &amp; leader Append</code>  相关内容。</p>
 </blockquote>
 
-
 <!-- baidu statistic start -->
 <script>
 var _hmt = _hmt || [];
@@ -1631,6 +1638,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 
 
