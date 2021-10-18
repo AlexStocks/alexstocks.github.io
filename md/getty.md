@@ -203,7 +203,67 @@ Gr Pool 成员有任务队列【其数目为 M】和 Gr 数组【其数目为 N�
 最后商定的改进结论是：
 
 * 1  getty session.WritePkg(pkg) 返回发送出去的字节流的 size，相关改进见 [pr 58](https://github.com/apache/dubbo-getty/pull/58/)；
-* 2 上层调用者自己判断字节流发送是否完整，如果发送不完整就关闭连接然后重新建立连接进行重发。
+* 2 上层调用者自己判断字节流发送是否完整，如果发送不完整就关闭连接然后重新建立连接进行重发；
+*  3  把超过16k的包，拆成多个小于等于 16k 的包，然后分批发送，即所谓的 “小包合并发送，大包拆包发送”。
+
+### <a name="6">6 sync.Pool </a>
+
+Getty 每个链接的网络字节流接收函数 handleTCPPackage 使用了 bytes.Buffer 缓存每次收到的字节流。为了提高bytes.Buffer 的复用效率，就基于 sync.Pool 封装了一个  bytes.Buffer 缓存池，代码如下：
+
+```Go
+// https://github.com/dubbogo/gost/blob/v1.11.16/bytes/bytes_buffer_pool.go
+var defaultPool *ObjectPool
+
+func init() {
+	defaultPool = NewObjectPool(func() PoolObject {
+		return new(bytes.Buffer)
+	})
+}
+
+// GetBytesBuffer returns bytes.Buffer from pool
+func GetBytesBuffer() *bytes.Buffer {
+	return defaultPool.Get().(*bytes.Buffer)
+}
+
+// PutIoBuffer returns IoBuffer to pool
+func PutBytesBuffer(buf *bytes.Buffer) {
+	defaultPool.Put(buf)
+}
+
+// https://github.com/apache/dubbo-getty/blob/v1.4.5/session.go
+func (s *session) handleTCPPackage() error {
+    ...
+	pktBuf = gxbytes.GetBytesBuffer()
+	defer func() {
+		gxbytes.PutBytesBuffer(pktBuf)
+	}()
+    ...
+}
+```
+
+Getty 使用这段代码安稳运行了很久。但 9 月 11 日【真是一个好日子】集团相关同学反馈 getty “在一个大量使用短链接的场景，XX 发现造成内存大量占用，因为大块的buffer被收集起来了，没有被释放”。
+
+通过定位，发现原因是 sync.Pool 把大量的 bytes.Buffer 对象缓存起来后没有释放。集团的同学简单粗暴地去掉了 sync.Pool 后，问题得以解决。上面的代码块被简化到如下形式：
+
+```Go
+// https://github.com/apache/dubbo-getty session.go
+func (s *session) handleTCPPackage() error {
+    ...
+	pktBuf = pktBuf = new(bytes.Buffer)
+    ...
+}
+```
+
+复盘整个问题，我才想起来 Go 1.13 对 sync.Pool 进行了优化：在 1.13 之前 pool 中每个对象的生命周期是两次 gc 之间的时间间隔，每次 gc 后 pool 中的对象会被释放掉，1.13 之后可以做到 pool 中每个对象在每次 gc 后不会一次将 pool 内对象全部回收。
+
+根据 Go 1.13 的这个改进，我对 bytes.Buffer 做出了如下改进：
+
+* 1 放入 bytes pool 中的 buf 的 size 在 [1kiB, 20kiB] 之间，防止因为过小导致内存碎片过多，也防止过大内存被缓存导致系统内存使用紧张；
+* 2 限制缓存对象数目，防止内存缓存过多导致内存使用紧张。
+
+相关代码见 pr https://github.com/dubbogo/gost/pull/70。理论上，这个改进使得 bytes.Buffer最多缓存 80MiB 的内存。
+
+或者干脆不使用 sync.Pool，直接使用 new 分配 buffer 即可。sync.Pool 的本质是用来减轻 gc 负担，将它当做一个对象缓冲池并不合适：对象何时释放，用户是无法释放的。虽然 sync.Pool 把对象存入其缓冲池时可以做到无锁，但是取值的时候可能碰到锁竞争的问题，所以可能对性能提升并没有多大帮助。
 
 ## 总结
 ---
