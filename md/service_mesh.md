@@ -177,7 +177,7 @@ Sidecar 在 "Client-Server" 服务通信形态中就是一个 <u>**Client-side**
 
 上图详细地描述了 gRPC 的 野心：通过 Service Mesh 进化称为一整套跨语言的服务治理框架，其最终形态是：一个无 Sidecar 的 Service Mesh。
 
-采用 gRPC 技术栈便能回答上一小节[4.2.1]的问题。gRPC 自身由于协议的向前先后兼容性，基于其上的应用能够做到升级过程中服务的兼容性不存在问题，则通过滚动升级可以做到升级过程中 “服务不中断”，所以没有 Sidecar 的 Service Mesh 形态随出乎意料但并不令人意外。
+采用 gRPC 技术栈便能回答上一小节[4.2.1]的问题。gRPC 自身由于协议的向前先后兼容性，基于其上的应用能够做到升级过程中服务的兼容性不存在问题，则通过滚动升级可以做到升级过程中 “服务不中断”，所以没有 Sidecar 的 Service Mesh 形态虽出乎意料但并不令人意外。
 
 ![](../pic/service_mesh/grpc_proxyless_rpc_mesh.jpg)
 
