@@ -320,146 +320,9 @@ kbd {
 	pre {
 		word-wrap: break-word;
 	}
-}
-</style>
-
-<style type="text/css">
-/**
- * prism.js default theme for JavaScript, CSS and HTML
- * Based on dabblet (http://dabblet.com)
- * @author Lea Verou
- */
-
-code[class*="language-"],
-pre[class*="language-"] {
-	color: black;
-	background: none;
-	text-shadow: 0 1px white;
-	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-	text-align: left;
-	white-space: pre;
-	word-spacing: normal;
-	word-break: normal;
-	word-wrap: normal;
-	line-height: 1.5;
-
-	-moz-tab-size: 4;
-	-o-tab-size: 4;
-	tab-size: 4;
-
-	-webkit-hyphens: none;
-	-moz-hyphens: none;
-	-ms-hyphens: none;
-	hyphens: none;
-}
-
-pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
-code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
-	text-shadow: none;
-	background: #b3d4fc;
-}
-
-pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
-code[class*="language-"]::selection, code[class*="language-"] ::selection {
-	text-shadow: none;
-	background: #b3d4fc;
-}
-
-@media print {
-	code[class*="language-"],
-	pre[class*="language-"] {
-		text-shadow: none;
-	}
-}
-
-/* Code blocks */
-pre[class*="language-"] {
-	padding: 1em;
-	margin: .5em 0;
-	overflow: auto;
-}
-
-:not(pre) > code[class*="language-"],
-pre[class*="language-"] {
-	background: #f5f2f0;
-}
-
-/* Inline code */
-:not(pre) > code[class*="language-"] {
-	padding: .1em;
-	border-radius: .3em;
-	white-space: normal;
-}
-
-.token.comment,
-.token.prolog,
-.token.doctype,
-.token.cdata {
-	color: slategray;
-}
-
-.token.punctuation {
-	color: #999;
-}
-
-.namespace {
-	opacity: .7;
-}
-
-.token.property,
-.token.tag,
-.token.boolean,
-.token.number,
-.token.constant,
-.token.symbol,
-.token.deleted {
-	color: #905;
-}
-
-.token.selector,
-.token.attr-name,
-.token.string,
-.token.char,
-.token.builtin,
-.token.inserted {
-	color: #690;
-}
-
-.token.operator,
-.token.entity,
-.token.url,
-.language-css .token.string,
-.style .token.string {
-	color: #a67f59;
-	background: hsla(0, 0%, 100%, .5);
-}
-
-.token.atrule,
-.token.attr-value,
-.token.keyword {
-	color: #07a;
-}
-
-.token.function {
-	color: #DD4A68;
-}
-
-.token.regex,
-.token.important,
-.token.variable {
-	color: #e90;
-}
-
-.token.important,
-.token.bold {
-	font-weight: bold;
-}
-.token.italic {
-	font-style: italic;
-}
-
-.token.entity {
-	cursor: help;
+  body {
+    padding: 2cm;
+  }
 }
 </style>
 
@@ -476,7 +339,7 @@ pre[class*="language-"] {
 
 <p>愚人曾对 Service Mesh 有成见：以为其不过是一些西方商业公司的 “概念党” 们基于利益包装出来的又一个所谓的 “新概念”，然后国内一帮 “布道师” 们便开始锣鼓喧天地抬轿子迎进来。</p>
 
-<p>基于这种认知愚人去年一年躲开了一些机会，但 <q>躲得了初一躲不过十五</q>，今年刚进公司第一天，便被同事告知工作内容之一便是某系统的 Service Mesh 改造工作......</p>
+<p>基于这种认知愚人去年一年躲开了一些机会，但 &quot;躲得了初一躲不过十五&quot;，今年刚进公司第一天，便被同事告知工作内容之一便是某系统的 Service Mesh 改造工作......</p>
 
 <p>考虑到饭碗，愚人还是很愉快无节操地拥抱项目开干了。随着工作展开逐步了解 Service Mesh 的内容之后，对这项技术有了兴趣，进而有了自己的一些看法。</p>
 
@@ -498,7 +361,7 @@ pre[class*="language-"] {
 
 <p>以 2015 年出现的 k8s 的为例，其每个 Worker Node 需要同 Master Node 之间通信以上报容器状态并接收控制信息，Master Node 便成为整个系统的单点。有了单点，上帝需要对其拆分，于是便有了 Istio。愚人以为 Istio 其实也不过是从十年发展历史的 envoy 某些概念的拆分组合后形成的。</p>
 
-<p>淡然，本文无意向深处阐述 k8s 的各种概念【那是因为目前我还没入门<sup>_<sup>】，只能从一些虚处入手，结合个人以往的粗浅项目经验来谈谈自己的</sup></sup> Service Mesh 愚见。</p>
+<p>淡然，本文无意向深处阐述 k8s 的各种概念【那是因为目前我还没入门^_^】，只能从一些虚处入手，结合个人以往的粗浅项目经验来谈谈自己的 Service Mesh 愚见。</p>
 
 <h3 id="toc_2">2 “经典” 框架</h3>
 
@@ -508,7 +371,7 @@ pre[class*="language-"] {
 
 <p>Sidecar 接管容器应用的所有网络流，负责流量管理（服务发现、服务治理、流量控制）、安全管理、健康检查和监控上报。某容器出现故障便会被系统网络隔离，而后会被新容器替换之，并不影响整体网络健康度。整体网络弹性可伸缩，且流量会被精细调度，系统整体不存在单点。</p>
 
-<p>Istio 官方给出了如下一个基于 Envoy 作为 Sidecar 的 <q>经典</q> Servidce Mesh 宏观视图：</p>
+<p>Istio 官方给出了如下一个基于 Envoy 作为 Sidecar 的 &quot;经典&quot; Servidce Mesh 宏观视图：</p>
 
 <p><img src="../pic/service_mesh/istio_envoy.png" alt=""></p>
 
@@ -580,11 +443,11 @@ pre[class*="language-"] {
 
 <h4 id="toc_8">4.1.1 Server-side Load Balancing</h4>
 
-<p>服务端形式的负载均衡是通过服务端代理层实现的，对服务端而言，其是一个 <q>dumb client</q>。目前很多常见的系统都是通过这一形式实现负载均衡功能，如 Pulsar 系统的 Broker、Codis 中的 Proxy 以及某以前实现的一个<a href="https://alexstocks.github.io/html/pubsub.html">即时通信系统</a>中的 Proxy/Relay/Router 等。</p>
+<p>服务端形式的负载均衡是通过服务端代理层实现的，对服务端而言，其是一个 &quot;dumb client&quot;。目前很多常见的系统都是通过这一形式实现负载均衡功能，如 Pulsar 系统的 Broker、Codis 中的 Proxy 以及某以前实现的一个<a href="https://alexstocks.github.io/html/pubsub.html">即时通信系统</a>中的 Proxy/Relay/Router 等。</p>
 
 <p>Server-side Proxy 优点是对客户端屏蔽的服务端的复杂性。中间件服务系统的客户端使用数据量是服务系统自身无法控制的，客户端伸缩性极强，而 Proxy 是服务端系统的一部分，其可伸缩性远不如客户端层频繁，如果系统内部需要进行数据负载均衡，则在 Proxy 层面对客户端的读写流量进行控制即可。</p>
 
-<p>其缺点也很明显：在 client 和 server 之间多了两次 <q>extra hop</q>，一个经验值是：一个好的 Proxy 会使得 client-server 之间的网络吞吐量仅降低到原来的八成。</p>
+<p>其缺点也很明显：在 client 和 server 之间多了两次 &quot;extra hop&quot;，一个经验值是：一个好的 Proxy 会使得 client-server 之间的网络吞吐量仅降低到原来的八成。</p>
 
 <h4 id="toc_9">4.1.2 Client-side Load Balancing</h4>
 
@@ -619,21 +482,21 @@ pre[class*="language-"] {
 
 <p>某在翌年【2017年】又与一个热爱开源的小伙伴（大概是某业余时间带出来的第一个徒弟）一起用 Go 语言合作向其中添加了 Redis Metaserver 的组件，实现集群的管理工作：实现 Redis Instance 添加和删除，真正实现了集群的治理。</p>
 
-<p>某而后打算再加入数据迁移功能，实现一套 Client-side 形式的数据平缓迁移系统，然缓存系统无需考虑数据一致性（明显是给自己水平不足找借口<sup>_<sup>），迁移后把老数据标识为无效即可。系统完成后，就躺在了我的</sup></sup> github repo 里，不再进一步改进，然小伙伴而后以这套系统成功面试入职美团，也算得其所了。</p>
+<p>某而后打算再加入数据迁移功能，实现一套 Client-side 形式的数据平缓迁移系统，然缓存系统无需考虑数据一致性（明显是给自己水平不足找借口^_^），迁移后把老数据标识为无效即可。系统完成后，就躺在了我的 github repo 里，不再进一步改进，然小伙伴而后以这套系统成功面试入职美团，也算得其所了。</p>
 
 <h4 id="toc_10">4.1.3 Lookaside Load Balancing</h4>
 
 <p>本节【4.1】开始引用的图片中描述了一个 lookaside 形式 LB 组件。把 LB 等服务治理功能单独为一个中心组件，既能保证 “thin client&quot;，又能保证低延时。</p>
 
-<p>图中列明其中一个好处是 <q>No proxy”。然在某看来，其也是一种形式的</q>Thin Proxy&quot;，工作职责比较单薄。</p>
+<p>图中列明其中一个好处是 &quot;No proxy”。然在某看来，其也是一种形式的 &quot;Thin Proxy&quot;，工作职责比较单薄。</p>
 
 <p><img src="../pic/service_mesh/grpc_lookaside_balancer.jpg" alt=""></p>
 
-<p>上图【源自<a href="https://www.youtube.com/watch?v=fMq3IpPE3TU">参考文档2</a>】给出了一个 Lookaside 形态的 <q>Client-Server</q> 架构图，望图即可明了其工作流程。</p>
+<p>上图【源自<a href="https://www.youtube.com/watch?v=fMq3IpPE3TU">参考文档2</a>】给出了一个 Lookaside 形态的 &quot;Client-Server&quot; 架构图，望图即可明了其工作流程。</p>
 
 <h3 id="toc_11"><a name="4.2">4.2 Proxyless RPC Mesh</a></h3>
 
-<p>4.1 节兜兜转转地讨论了各种形式的 <q>Client-Server</q> 以及其相关形态的负载均衡，其目的就是引出一个话题：Sidecar 这个组件是必不可少的吗？</p>
+<p>4.1 节兜兜转转地讨论了各种形式的 &quot;Client-Server&quot; 以及其相关形态的负载均衡，其目的就是引出一个话题：Sidecar 这个组件是必不可少的吗？</p>
 
 <h4 id="toc_12">4.2.1 无 Proxy 的意义</h4>
 
@@ -641,13 +504,13 @@ pre[class*="language-"] {
 
 <p><img src="../pic/service_mesh/alignment-n-autonomy.png" alt=""></p>
 
-<p>就算是微服务转型，也不是谁都玩得起的，不仅牵涉到各个服务拆分，还设计到开发、测试、部署与服务迁移各个环节。上图【源自<a href="https://paulhammant.com/2017/07/09/alignment-and-autonomy-and-quorums/">参考文档3</a>】详细描述了 Spotify 在进行微服务化改造过程中相关人员的组织问题，并得出结论：若要进行技术升级，必须在 dev leader 和 team members 之间达成 <q>alignment autonomy</q>。</p>
+<p>就算是微服务转型，也不是谁都玩得起的，不仅牵涉到各个服务拆分，还设计到开发、测试、部署与服务迁移各个环节。上图【源自<a href="https://paulhammant.com/2017/07/09/alignment-and-autonomy-and-quorums/">参考文档3</a>】详细描述了 Spotify 在进行微服务化改造过程中相关人员的组织问题，并得出结论：若要进行技术升级，必须在 dev leader 和 team members 之间达成 &quot;alignment autonomy&quot;。</p>
 
 <p>如果有种技术可以让这种公司技术一步完成从原【微】始【服】社【务】会【化】跨入社【网】会【格】主【结】义【构】，岂不美哉？</p>
 
 <h4 id="toc_13">4.2.2 gRPC</h4>
 
-<p>Sidecar 在 <q>Client-Server</q> 服务通信形态中就是一个 <u><strong>Client-side</strong></u> 态的 Proxy(Local Proxy)：每个 Client 都有一个伴生的 sidecar，其作用类似于 <u><strong>“反向代理”</strong></u>，实现 client 端网络层任务解耦。服务应用层无论以各种跨进程访问方式或者通过本机 tcp/uds 协议栈形式以 local 形式连接 Sidecar，但毕竟多了一个 “hop”，对整理系统的吞吐、延迟都有影响，且多了这么一个组件必然会增加硬件资源地消耗。</p>
+<p>Sidecar 在 &quot;Client-Server&quot; 服务通信形态中就是一个 <u><strong>Client-side</strong></u> 态的 Proxy(Local Proxy)：每个 Client 都有一个伴生的 sidecar，其作用类似于 <u><strong>“反向代理”</strong></u>，实现 client 端网络层任务解耦。服务应用层无论以各种跨进程访问方式或者通过本机 tcp/uds 协议栈形式以 local 形式连接 Sidecar，但毕竟多了一个 “hop”，对整理系统的吞吐、延迟都有影响，且多了这么一个组件必然会增加硬件资源地消耗。</p>
 
 <p>在 Service Mesh 概念出来之前，服务通信主要以 RPC 形式完成，相关框架有谷歌的 gRPC、鹅厂的 Tars、猫厂的 Dubbo【内部有一个 HSF】等，其本质是以 SDK 形式嵌入服务应用的网络层实现整体系统的可靠通信。在 Service Mesh 概念出现后，这些组件当然还是会以各种形式进化下去，gRPC 的进化应该会最引人注目。</p>
 
@@ -659,54 +522,62 @@ pre[class*="language-"] {
 
 <p><img src="../pic/service_mesh/grpc_proxyless_rpc_mesh.jpg" alt=""></p>
 
-<p>上图【源自<a href="https://www.youtube.com/watch?v=fMq3IpPE3TU">参考文档2</a>】中，Spotify 公司把无 Sidecar 形态的 Mesh 称之为 “Proxyless RPC Mesh<q>。谷歌创造了 k8s，谷歌创造了 istio，谷歌也创造了 gRPC。谷歌未来的</q>Service(RPC) Mesh&quot; 框架具体会以何种形态面世，愚人无从预测，然其生态中应该少不了自家的 k8s 和 istio，但是没有 Sidecar。</p>
+<p>上图【源自<a href="https://www.youtube.com/watch?v=fMq3IpPE3TU">参考文档2</a>】中，Spotify 公司把无 Sidecar 形态的 Mesh 称之为 “Proxyless RPC Mesh&quot;。谷歌创造了 k8s，谷歌创造了 istio，谷歌也创造了 gRPC。谷歌未来的 &quot;Service(RPC) Mesh&quot; 框架具体会以何种形态面世，愚人无从预测，然其生态中应该少不了自家的 k8s 和 istio，但是没有 Sidecar。</p>
 
-<h2 id="toc_14">参考文档</h2>
+<h2 id="toc_14"><a name="5">5 2021 年的 Proxyless Service Mesh</a></h2>
+
+<p>本周【20211129 ~ 20211205】周四，有两篇 Proxyless Service Mesh 方向的文章，分别是腾讯 Polaris 团队发表的 <a href="https://mp.weixin.qq.com/s/51YinSysPtWWxhlZJfxPRQ">开源项目PolarisMesh月报：发布V 1.3.0 ，完美支持 proxyless 和 proxy 两种服务网格模式</a> 与百度基础架构部云原生团队的 <a href="https://mp.weixin.qq.com/s/G8vmlJyaimux_K-548kFbA">殊途同归，Proxyless Service Mesh在百度的实践与思考</a>，觉得这个方向最近火热起来。回头一看，便觉得有必要对此方面展开进行一些论述。</p>
+
+<p>有大佬认为 &quot;Proxyless Service Mesh 和之前的 「RPC + 服务发现治理」区别是啥？感觉这个名词营销味道略重，实际内涵太少&quot;。其实不能简单的 &quot;Proxyless Service Mesh&quot; 理解为 “一个简单的RPC框架，暴露了几个超时参数到配置中心来控制”，不统一协议，不统一 API，如果是这样，它当然跟微服务技术体系没啥区别，是技术营销。其实谷歌 gRPC 体系提出的这个概念，与 &quot;Proxy Service Mesh&quot; 的区别是数据面不使用 sidecar，其他层面无差。这个概念的背景是：</p>
+
+<ul>
+<li>1 gRPC 自身解决了多语言问题，可观测等其他方面也做的不错。
+<img src="../pic/service_mesh/grpc_envoy_p99.png" alt=""></li>
+<li>2 gPRC 的性能常被人诟病，如果再使用 sidecar 则会放大这个问题，这个方面我与腾讯光子实验室的一个大佬交流过，游戏场景中的延迟增加是他们不能接受的。<a href="https://cloudnative.to/blog/grpc-proxyless-service-mesh/">基于 GRPC 和 Istio 的无 Sidecar 代理的服务网格</a> 一文给出了 gRPC 使用 sidecar 后的 P99 延迟增加的对比图，使用 sidecar 后 gRPC 性能恶化很明显。</li>
+<li>3 gRPC 生态有很多中小厂家，他们没有像升级 Java jar 版本难升级的痛点，但如果使用 Proxy Service Mesh 带来的链路增加导致的开发调试成本、sidecar 部署维护成本、延迟损失是他们承担不起的。</li>
+<li>4 即使是像快手这样的大厂家，由于 Proxy Service Mesh 技术的受益方是基础架构体系而非业务体系，在没有公司顶层人士支持的情况下，他们在推进 Proxy Service Mesh 技术时举步维艰。详见笔者拙文 <a href="https://ata.alibaba-inc.com/articles/211629?msgid=5141625">2021 年云原生技术发展现状及未来趋势</a></li>
+</ul>
+
+<p>而使用 Proxyless Service Mesh 后，就是可以做到在付出几乎零成本的情况下让他们的微服务技术体系在一些场景中快速升级接入 Service Mesh 的一些控制面技术体系如 Istio，对他们无论是做技术验证还是后期维护升级都是有很好的收益的。</p>
+
+<p><img src="../pic/service_mesh/baidu_proxyless_service_mesh.png" alt=""></p>
+
+<p>如上图，百度那篇文章列出了一些二者的异同点，但二者更多地是相辅相成互为补充，都有各自的使用场景，共同丰富了 Service Mesh 的形态。</p>
+
+<p>这里其实还有一个技术背景线。2008 年 google 先开源了他家的跨语言编码协议 protobuf，其中的 RPC 相关的 service 只有接口，没有实现，于是国内各个厂子基于 这个接口搞了各种 RPC 轮子。</p>
+
+<p>2015 年谷歌开源了基于 protobuf 的跨语言通信框架 gRPC，这个只有只有简单的 RPC 通信功能，没有服务治理功能，于是各种组织粉墨登场搞了各种基于 gRPC 的服务治理框架。</p>
+
+<p>2018 年开始谷歌开始计划给 gRPC 接入 istio 实现服务治理功能。到了 2021 年，终于把稳定版本放出来了，这个时候 gRPC 才算是一个比较完备的具有不错服务治理能力的跨语言通信框架。</p>
+
+<p>我是 2011 年开始用 protobuf v2，后面这十年一直关注它，从 protobuf v2 到2014 年的 protobuf v3，期间 2014 年谷歌还开源了 flatbuffer，到 2015 年关注 gogo protobuf。所以梳理下这个时代背景，我能体会到 google 家做技术的沉稳度和技术进化的厚重感，所以也在一直关注 Proxyless Service Mesh 这方面的进展。</p>
+
+<p>如果给 Proxyless Service Mesh 一个营销噱头，少了一个 sidecar，冠之以 ”绿色减碳的 Service Mesh“，倒也不错 ^_^</p>
+
+<h2 id="toc_15">参考文档</h2>
 
 <ul>
 <li>1 <a href="https://mp.weixin.qq.com/s/7bwBCdDEVeYMhL242Xo6Cg">唯品会的Service Mesh三年进化史</a></li>
 <li>2 <a href="https://www.youtube.com/watch?v=fMq3IpPE3TU">The Story of Why We Migrate to gRPC and How We Go About It</a></li>
 <li>3 <a href="https://paulhammant.com/2017/07/09/alignment-and-autonomy-and-quorums/">Alignment and Autonomy and Quorums</a></li>
 <li>4 <a href="https://servicemesh.io/">The Service Mesh: What Every Software Engineer Needs to Know about the World&#39;s Most Over-Hyped Technology</a></li>
+<li>5 <a href="https://cloudnative.to/blog/grpc-proxyless-service-mesh/">基于 GRPC 和 Istio 的无 Sidecar 代理的服务网格</a></li>
 </ul>
 
-<h2 id="toc_15">Payment</h2>
+<h2 id="toc_16">Payment</h2>
 
 <p><center> <img src="../pic/pay/wepay.jpg" alt="阿弥托福，于雨谢过" title="阿弥托福，于雨谢过"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img src="../pic/pay/alipay.jpg" alt="无量天尊，于雨奉献" title="无量天尊，于雨奉献"> </center></p>
 
-<h2 id="toc_16">Timeline</h2>
+<h2 id="toc_17">Timeline</h2>
 
 <blockquote>
 <ul>
 <li>2019/05/21，于雨氏，于 G4x，初作此文。</li>
 <li>2019/06/02，于雨氏，于 G3x，添加 <a href=#4.1>[4.1 各种形式的服务治理]</a> 并补充 <a href=#4.2>[4.2 Proxyless RPC Mesh]</a> 节。</li>
+<li>2021/12/05，于雨氏，于帝都朝阳五环添加 <a href=#5>[5 2021 年的 Proxyless Service Mesh]</a> 一章。</li>
 </ul>
 </blockquote>
 
-
-
-<script type="text/javascript">
-var _self="undefined"!=typeof window?window:"undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?self:{},Prism=function(){var e=/\blang(?:uage)?-(\w+)\b/i,t=0,n=_self.Prism={util:{encode:function(e){return e instanceof a?new a(e.type,n.util.encode(e.content),e.alias):"Array"===n.util.type(e)?e.map(n.util.encode):e.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\u00a0/g," ")},type:function(e){return Object.prototype.toString.call(e).match(/\[object (\w+)\]/)[1]},objId:function(e){return e.__id||Object.defineProperty(e,"__id",{value:++t}),e.__id},clone:function(e){var t=n.util.type(e);switch(t){case"Object":var a={};for(var r in e)e.hasOwnProperty(r)&&(a[r]=n.util.clone(e[r]));return a;case"Array":return e.map&&e.map(function(e){return n.util.clone(e)})}return e}},languages:{extend:function(e,t){var a=n.util.clone(n.languages[e]);for(var r in t)a[r]=t[r];return a},insertBefore:function(e,t,a,r){r=r||n.languages;var l=r[e];if(2==arguments.length){a=arguments[1];for(var i in a)a.hasOwnProperty(i)&&(l[i]=a[i]);return l}var o={};for(var s in l)if(l.hasOwnProperty(s)){if(s==t)for(var i in a)a.hasOwnProperty(i)&&(o[i]=a[i]);o[s]=l[s]}return n.languages.DFS(n.languages,function(t,n){n===r[e]&&t!=e&&(this[t]=o)}),r[e]=o},DFS:function(e,t,a,r){r=r||{};for(var l in e)e.hasOwnProperty(l)&&(t.call(e,l,e[l],a||l),"Object"!==n.util.type(e[l])||r[n.util.objId(e[l])]?"Array"!==n.util.type(e[l])||r[n.util.objId(e[l])]||(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,l,r)):(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,null,r)))}},plugins:{},highlightAll:function(e,t){var a={callback:t,selector:'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'};n.hooks.run("before-highlightall",a);for(var r,l=a.elements||document.querySelectorAll(a.selector),i=0;r=l[i++];)n.highlightElement(r,e===!0,a.callback)},highlightElement:function(t,a,r){for(var l,i,o=t;o&&!e.test(o.className);)o=o.parentNode;o&&(l=(o.className.match(e)||[,""])[1],i=n.languages[l]),t.className=t.className.replace(e,"").replace(/\s+/g," ")+" language-"+l,o=t.parentNode,/pre/i.test(o.nodeName)&&(o.className=o.className.replace(e,"").replace(/\s+/g," ")+" language-"+l);var s=t.textContent,u={element:t,language:l,grammar:i,code:s};if(!s||!i)return n.hooks.run("complete",u),void 0;if(n.hooks.run("before-highlight",u),a&&_self.Worker){var c=new Worker(n.filename);c.onmessage=function(e){u.highlightedCode=e.data,n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(u.element),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},c.postMessage(JSON.stringify({language:u.language,code:u.code,immediateClose:!0}))}else u.highlightedCode=n.highlight(u.code,u.grammar,u.language),n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(t),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},highlight:function(e,t,r){var l=n.tokenize(e,t);return a.stringify(n.util.encode(l),r)},tokenize:function(e,t){var a=n.Token,r=[e],l=t.rest;if(l){for(var i in l)t[i]=l[i];delete t.rest}e:for(var i in t)if(t.hasOwnProperty(i)&&t[i]){var o=t[i];o="Array"===n.util.type(o)?o:[o];for(var s=0;s<o.length;++s){var u=o[s],c=u.inside,g=!!u.lookbehind,h=!!u.greedy,f=0,d=u.alias;u=u.pattern||u;for(var p=0;p<r.length;p++){var m=r[p];if(r.length>e.length)break e;if(!(m instanceof a)){u.lastIndex=0;var y=u.exec(m),v=1;if(!y&&h&&p!=r.length-1){var b=r[p+1].matchedStr||r[p+1],k=m+b;if(p<r.length-2&&(k+=r[p+2].matchedStr||r[p+2]),u.lastIndex=0,y=u.exec(k),!y)continue;var w=y.index+(g?y[1].length:0);if(w>=m.length)continue;var _=y.index+y[0].length,P=m.length+b.length;if(v=3,P>=_){if(r[p+1].greedy)continue;v=2,k=k.slice(0,P)}m=k}if(y){g&&(f=y[1].length);var w=y.index+f,y=y[0].slice(f),_=w+y.length,S=m.slice(0,w),O=m.slice(_),j=[p,v];S&&j.push(S);var A=new a(i,c?n.tokenize(y,c):y,d,y,h);j.push(A),O&&j.push(O),Array.prototype.splice.apply(r,j)}}}}}return r},hooks:{all:{},add:function(e,t){var a=n.hooks.all;a[e]=a[e]||[],a[e].push(t)},run:function(e,t){var a=n.hooks.all[e];if(a&&a.length)for(var r,l=0;r=a[l++];)r(t)}}},a=n.Token=function(e,t,n,a,r){this.type=e,this.content=t,this.alias=n,this.matchedStr=a||null,this.greedy=!!r};if(a.stringify=function(e,t,r){if("string"==typeof e)return e;if("Array"===n.util.type(e))return e.map(function(n){return a.stringify(n,t,e)}).join("");var l={type:e.type,content:a.stringify(e.content,t,r),tag:"span",classes:["token",e.type],attributes:{},language:t,parent:r};if("comment"==l.type&&(l.attributes.spellcheck="true"),e.alias){var i="Array"===n.util.type(e.alias)?e.alias:[e.alias];Array.prototype.push.apply(l.classes,i)}n.hooks.run("wrap",l);var o="";for(var s in l.attributes)o+=(o?" ":"")+s+'="'+(l.attributes[s]||"")+'"';return"<"+l.tag+' class="'+l.classes.join(" ")+'" '+o+">"+l.content+"</"+l.tag+">"},!_self.document)return _self.addEventListener?(_self.addEventListener("message",function(e){var t=JSON.parse(e.data),a=t.language,r=t.code,l=t.immediateClose;_self.postMessage(n.highlight(r,n.languages[a],a)),l&&_self.close()},!1),_self.Prism):_self.Prism;var r=document.currentScript||[].slice.call(document.getElementsByTagName("script")).pop();return r&&(n.filename=r.src,document.addEventListener&&!r.hasAttribute("data-manual")&&document.addEventListener("DOMContentLoaded",n.highlightAll)),_self.Prism}();"undefined"!=typeof module&&module.exports&&(module.exports=Prism),"undefined"!=typeof global&&(global.Prism=Prism);
-</script>
-
-<script type="text/x-mathjax-config">
-(function () {
-
-MathJax.Hub.Config({
-	'showProcessingMessages': false,
-	'messageStyle': 'none'
-});
-
-if (typeof MathJaxListener !== 'undefined') {
-	MathJax.Hub.Register.StartupHook('End', function () {
-		MathJaxListener.invokeCallbackForKey_('End');
-	});
-}
-
-})();
-</script>
-
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 <!-- baidu statistic start -->
 <script>
@@ -741,3 +612,4 @@ gitalk.render('gitalk-container');
 </body>
 
 </html>
+

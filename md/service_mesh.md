@@ -183,6 +183,33 @@ Sidecar 在 "Client-Server" 服务通信形态中就是一个 <u>**Client-side**
 
 上图【源自[参考文档2](https://www.youtube.com/watch?v=fMq3IpPE3TU)】中，Spotify 公司把无 Sidecar 形态的 Mesh 称之为 “Proxyless RPC Mesh"。谷歌创造了 k8s，谷歌创造了 istio，谷歌也创造了 gRPC。谷歌未来的 "Service(RPC) Mesh" 框架具体会以何种形态面世，愚人无从预测，然其生态中应该少不了自家的 k8s 和 istio，但是没有 Sidecar。
 
+## <a name="5">5 2021 年的 Proxyless Service Mesh</a>
+
+本周【20211129 ~ 20211205】周四，有两篇 Proxyless Service Mesh 方向的文章，分别是腾讯 Polaris 团队发表的 [开源项目PolarisMesh月报：发布V 1.3.0 ，完美支持 proxyless 和 proxy 两种服务网格模式](https://mp.weixin.qq.com/s/51YinSysPtWWxhlZJfxPRQ) 与百度基础架构部云原生团队的 [殊途同归，Proxyless Service Mesh在百度的实践与思考](https://mp.weixin.qq.com/s/G8vmlJyaimux_K-548kFbA)，觉得这个方向最近火热起来。回头一看，便觉得有必要对此方面展开进行一些论述。
+
+有大佬认为 "Proxyless Service Mesh 和之前的 「RPC + 服务发现治理」区别是啥？感觉这个名词营销味道略重，实际内涵太少"。其实不能简单的 "Proxyless Service Mesh" 理解为 “一个简单的RPC框架，暴露了几个超时参数到配置中心来控制”，不统一协议，不统一 API，如果是这样，它当然跟微服务技术体系没啥区别，是技术营销。其实谷歌 gRPC 体系提出的这个概念，与 "Proxy Service Mesh" 的区别是数据面不使用 sidecar，其他层面无差。这个概念的背景是：
+ 
+* 1 gRPC 自身解决了多语言问题，可观测等其他方面也做的不错。
+ ![](../pic/service_mesh/grpc_envoy_p99.png)
+* 2 gPRC 的性能常被人诟病，如果再使用 sidecar 则会放大这个问题，这个方面我与腾讯光子实验室的一个大佬交流过，游戏场景中的延迟增加是他们不能接受的。[基于 GRPC 和 Istio 的无 Sidecar 代理的服务网格](https://cloudnative.to/blog/grpc-proxyless-service-mesh/) 一文给出了 gRPC 使用 sidecar 后的 P99 延迟增加的对比图，使用 sidecar 后 gRPC 性能恶化很明显。
+* 3 gRPC 生态有很多中小厂家，他们没有像升级 Java jar 版本难升级的痛点，但如果使用 Proxy Service Mesh 带来的链路增加导致的开发调试成本、sidecar 部署维护成本、延迟损失是他们承担不起的。
+* 4 即使是像快手这样的大厂家，由于 Proxy Service Mesh 技术的受益方是基础架构体系而非业务体系，在没有公司顶层人士支持的情况下，他们在推进 Proxy Service Mesh 技术时举步维艰。详见笔者拙文 [2021 年云原生技术发展现状及未来趋势](https://ata.alibaba-inc.com/articles/211629?msgid=5141625)
+ 
+而使用 Proxyless Service Mesh 后，就是可以做到在付出几乎零成本的情况下让他们的微服务技术体系在一些场景中快速升级接入 Service Mesh 的一些控制面技术体系如 Istio，对他们无论是做技术验证还是后期维护升级都是有很好的收益的。
+ 
+ ![](../pic/service_mesh/baidu_proxyless_service_mesh.png)
+ 
+如上图，百度那篇文章列出了一些二者的异同点，但二者更多地是相辅相成互为补充，都有各自的使用场景，共同丰富了 Service Mesh 的形态。
+
+这里其实还有一个技术背景线。2008 年 google 先开源了他家的跨语言编码协议 protobuf，其中的 RPC 相关的 service 只有接口，没有实现，于是国内各个厂子基于 这个接口搞了各种 RPC 轮子。
+ 
+2015 年谷歌开源了基于 protobuf 的跨语言通信框架 gRPC，这个只有只有简单的 RPC 通信功能，没有服务治理功能，于是各种组织粉墨登场搞了各种基于 gRPC 的服务治理框架。
+ 
+2018 年开始谷歌开始计划给 gRPC 接入 istio 实现服务治理功能。到了 2021 年，终于把稳定版本放出来了，这个时候 gRPC 才算是一个比较完备的具有不错服务治理能力的跨语言通信框架。
+ 
+我是 2011 年开始用 protobuf v2，后面这十年一直关注它，从 protobuf v2 到2014 年的 protobuf v3，期间 2014 年谷歌还开源了 flatbuffer，到 2015 年关注 gogo protobuf。所以梳理下这个时代背景，我能体会到 google 家做技术的沉稳度和技术进化的厚重感，所以也在一直关注 Proxyless Service Mesh 这方面的进展。
+ 
+如果给 Proxyless Service Mesh 一个营销噱头，少了一个 sidecar，冠之以 ”绿色减碳的 Service Mesh“，倒也不错 ^_^
 
 ## 参考文档
 
@@ -190,6 +217,7 @@ Sidecar 在 "Client-Server" 服务通信形态中就是一个 <u>**Client-side**
 - 2 [The Story of Why We Migrate to gRPC and How We Go About It](https://www.youtube.com/watch?v=fMq3IpPE3TU)
 - 3 [Alignment and Autonomy and Quorums](https://paulhammant.com/2017/07/09/alignment-and-autonomy-and-quorums/)
 - 4 [The Service Mesh: What Every Software Engineer Needs to Know about the World's Most Over-Hyped Technology](https://servicemesh.io/)
+- 5 [基于 GRPC 和 Istio 的无 Sidecar 代理的服务网格](https://cloudnative.to/blog/grpc-proxyless-service-mesh/)
 
 ## Payment
 
@@ -200,3 +228,4 @@ Sidecar 在 "Client-Server" 服务通信形态中就是一个 <u>**Client-side**
 
 >- 2019/05/21，于雨氏，于 G4x，初作此文。
 >- 2019/06/02，于雨氏，于 G3x，添加 <a href=#4.1>[4.1 各种形式的服务治理]</a> 并补充 <a href=#4.2>[4.2 Proxyless RPC Mesh]</a> 节。
+>- 2021/12/05，于雨氏，于帝都朝阳五环添加 <a href=#5>[5 2021 年的 Proxyless Service Mesh]</a> 一章。
