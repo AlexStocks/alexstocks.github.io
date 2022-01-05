@@ -289,7 +289,7 @@ Gateway详细流程如下：
 	Router Partition Number；
 	新的Router Partition（此时发生了扩容）；
 	Partition内新的replica（Partition内发生了replica扩容）；
-	Parition内某replica挂掉的信息；
+	Partition内某replica挂掉的信息；
 ```
 
 - 4 定时向各个 Partition replica 发送心跳，异步等待 Router 返回的心跳响应包，以探测其活性，以保证不向超时的 replica 转发 Gateway Message；
@@ -303,7 +303,7 @@ Gateway详细流程如下：
 >
 > 如果 Router Partition 内某 replia 满足 condition `replicaPartitionID = RoomID % ReplicaNumber`，则把消息转发到此replica。
 >
-> >> replica 向 Registry 注册的时候得到的 ID 称之为 replicaID，Router Parition 内所有 replica 按照 replicaID 递增排序组成 replica 数组 RouterPartitionReplicaArray，replicaPartitionID 即为 replica 在数组中的下标。
+> >> replica 向 Registry 注册的时候得到的 ID 称之为 replicaID，Router Partition 内所有 replica 按照 replicaID 递增排序组成 replica 数组 RouterPartitionReplicaArray，replicaPartitionID 即为 replica 在数组中的下标。
 
 ##### 5.1.1 Gateway Message 数据一致性
 ---
