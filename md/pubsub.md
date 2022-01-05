@@ -111,8 +111,8 @@ Proxy详细流程如下：
 ```
 	Broker Partition Number；
 	​新的Broker Partition（此时发生了扩容）；
-	Broker Partition内新的broker replica（Partition内发生了replica扩容）；
-	Broker Parition内某replica挂掉的信息；
+	Broker Partition 内新的 broker replica（Partition 内发生了 replica 扩容）；
+	Broker Partition 内某 replica 挂掉的信息；
 ```
 
 - 6 定时向各个 Broker replica 发送心跳，异步等待 Broker 返回的心跳响应包，以探测其活性，以保证不向超时的 replica 转发 Room Message；
@@ -134,7 +134,7 @@ Proxy 转发某个 Room 消息时候，只发送给处于 Running 状态的 Brok
 
 初始系统这三步流程如果均放在一个线程内处理，proxy 的整体吞吐率只有 50 000 Msg/s，最后的实现方式是按照消息处理的三个步骤以 pipeline 方式做如下流程处理：
 
-+ 1 启动 1 个消息接收线程和 N【N == Broker Parition 数目】个多写一读形式的无锁队列【称之为消息协议转换队列】，消息接收线程分别启动一个 epoll 循环流程收取消息，然后把消息以相应的 hash 算法【队列ID =  UIN % N】写入对应的消息协议转换队列；
++ 1 启动 1 个消息接收线程和 N【N == Broker Partition 数目】个多写一读形式的无锁队列【称之为消息协议转换队列】，消息接收线程分别启动一个 epoll 循环流程收取消息，然后把消息以相应的 hash 算法【队列ID =  UIN % N】写入对应的消息协议转换队列；
 + 2 启动 N 个线程 和 N * 3 个一写一读的无锁队列【称之为消息发送队列】，每个消息协议专家线程从消息协议转换队列接收到消息并进行协议转换后，根据相应的 hash 算法【队列ID =  UIN % 3N】写入消息发送队列；
 + 3 启动 3N 个消息发送线程，分别创建与之对应的 Broker 的连接，每个线程单独从对应的某个消息发送队列接收消息然后发送出去。
 
@@ -191,8 +191,8 @@ Router详细流程如下：
 ```
 	Broker Partition Number；
 	​新的Broker Partition（此时发生了扩容）；
-	Broker Partition内新的broker replica（Partition内发生了replica扩容）；
-	Broker Parition内某replica挂掉的信息；
+	Broker Partition 内新的 broker replica（Partition 内发生了 replica 扩容）；
+	Broker Partition 内某 replica 挂掉的信息；
 ```
 
 - 6 定时向各个 Broker replica 发送心跳，异步等待 Broker 返回的心跳响应包，以探测其活性，以保证不向超时的 replica 转发 Gateway Message；
@@ -287,9 +287,9 @@ Gateway详细流程如下：
 
 ```
 	Router Partition Number；
-	新的Router Partition（此时发生了扩容）；
-	Partition内新的replica（Partition内发生了replica扩容）；
-	Partition内某replica挂掉的信息；
+	新的 Router Partition（此时发生了扩容）；
+	Partition 内新的 replica（Partition 内发生了 replica 扩容）；
+	Partition 内某 replica 挂掉的信息；
 ```
 
 - 4 定时向各个 Partition replica 发送心跳，异步等待 Router 返回的心跳响应包，以探测其活性，以保证不向超时的 replica 转发 Gateway Message；
@@ -335,8 +335,8 @@ Router 详细流程如下：
 
 ```
 	Router Partition Number；
-	Partition内新的replica（Partition内发生了replica扩容）；
-	Parition内某replica挂掉的信息；
+	Partition 内新的 replica（Partition 内发生了 replica扩容）；
+	Partition 内某 replica 挂掉的信息；
 ```
 
 - 7 从 Database 加载数据；
@@ -366,13 +366,13 @@ Broker 详细流程如下：
 ```
 	Router Partition Number；
 	新的Router Partition（此时发生了扩容）；
-	Partition内新的replica（Partition内发生了replica扩容）；
-	Parition内某replica挂掉的信息；
+	Partition 内新的 replica（Partition 内发生了 replica 扩容）；
+	Partition 内某 replica 挂掉的信息；
 ```
 
 - 6 依据规则【RouterPartitionID % BrokerPartitionNum == BrokerPartitionID % BrokerPartitionNum，RouterReplicaID = BrokerReplicaID % BrokerPartitionNum】选定目标 Router Partition 下某个 Router replica，向其发送心跳消息，包含 BrokerPartitionNum、BrokerPartitionID、BrokerHostAddr 和精确到秒级的 Timestamp ，并异步等待所有 Router replica 的回复，所有 Router 转发来的 Gateway Message 放入 GatewayMessageQueue；
-- 7 依据规则【BrokerPartitionID == RoomID % BrokerParitionNum】从 Database 加载数据；
-- 8 依据规则【BrokerPartitionID % BrokerParitionNum == RoomID % BrokerParitionNum】异步处理 GatewayMessageQueue 内的 Gateway Message，只留下合乎规则的消息的数据；
+- 7 依据规则【BrokerPartitionID == RoomID % BrokerPartitionNum】从 Database 加载数据；
+- 8 依据规则【BrokerPartitionID % BrokerPartitionNum == RoomID % BrokerPartitionNum】异步处理 GatewayMessageQueue 内的 Gateway Message，只留下合乎规则的消息的数据；
 - 9 修改 Registry 路径 `/pubsub/broker/partition3` 下自身节点的状态为 Running；
 - 10 启动一个线程定时读取 Registry 路径 `/pubsub/router` 下各个子路径的值，以定时轮询的策略观察 Router 各 Partition 的变动情况，作为实时策略的补充；定时检查超时的 Router，某 Router 超时后更换其所在的 Partition 内其他 Router 替换之，定时发送心跳包；
 - 11 当 Registry 路径 `/pubsub/broker/partition_num` 的值 BrokerPartitionNum 发生改变的时候，依据规则【PartitionID == RoomID % PartitionNum】清洗本地路由信息缓存中每条数据；
@@ -508,7 +508,7 @@ Pi有专门的日志记录线程，给每个日志操作分配一个 LogID，每
 ##### 6.2.3 主从数据同步
 ---
 
-同 Xiu 模块，暂定 Pi 的同 Parition 副本只有一个。
+同 Xiu 模块，暂定 Pi 的同 Partition 副本只有一个。
 
 Pi 节点启动的时候根据自身配置文件中分配的 Pi\_Partition\_ID 到Registry路径 /pubsub/pi/partition\_id 下进行注册一个临时有序节点，注册成功则 Registry 会返回 Pi 的节点 ID。
 
@@ -529,7 +529,7 @@ Pi 集群扩容采用翻倍法。则节点启动后工作流程如下：
 
 - 1 向 Registry 注册，获取 Registry 路径 /pubsub/xiu/partition\_num 的值 PartitionNumber；
 - 2 如果发现自己 PartitionID 满足条件 `PartitionID >= PartitionNumber` 时，则意味着当前 Partition 是扩容后的新集群，更新 Registry 中自己状态为start；
-- 3 读取 Registry 路径 /pubsub/xiu 下所有 Parition 的 leader，根据条件 `自身PartitionID % PartitionNumber == PartitionID % PartitionNumber` 寻找对应的老 Partition 的 leader，称之为 parent_leader；
+- 3 读取 Registry 路径 /pubsub/xiu 下所有 Partition 的 leader，根据条件 `自身PartitionID % PartitionNumber == PartitionID % PartitionNumber` 寻找对应的老 Partition 的 leader，称之为 parent_leader；
 - 4 缓存收到 Proxy 转发来的用户请求；
 - 5 向 parent_leader 获取log；
 - 6 向 parent_leader 同步内存数据；
@@ -649,7 +649,7 @@ Gateway 不再存储 Router Data 和 Relay Data，几乎成了 APP 的透明代�
 
 Relay 是一个新模块，但其组织方式类似于 Router，亦是分 Partition 分 Replica，处理 Relay Message。
 
-Relay 模块依据用户的 UIN 进行把不同用户的 Relay Data 放入不同的 Parition，同 Partition 内的 所有 Relay Replica 数据一致。 
+Relay 模块依据用户的 UIN 进行把不同用户的 Relay Data 放入不同的 Partition，同 Partition 内的 所有 Relay Replica 数据一致。 
 
 Relay 功能列表如下：
 
