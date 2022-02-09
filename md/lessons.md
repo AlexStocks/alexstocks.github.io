@@ -44,19 +44,91 @@ sync.Pool 的本质是用来减轻 gc 负担 [2]，将它当做一个对象缓�
 
 虽然 sync.Pool 把对象存入其缓冲池时可以做到无锁，但是取值的时候可能碰到锁竞争的问题 [3]，所以可能对性能提升并没有多大帮助。
 
+## <a name="3">3 字符串拼接 </a>
+---
+
+今日【20220209】读到 pixiu 团队以往成员 张其 同学的一篇文章[《了解一下Go中的"sb"代码？》][4]，其中有这么一段：
+
+```go
+// https://play.studygolang.com/p/EC8uZQAIFsN
+func BenchmarkTestStrPlus(b *testing.B) {
+	var result string
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		result = strconv.Itoa(i) + result
+	}
+}
+
+func BenchmarkTestStrSprintf(b *testing.B) {
+	var result string
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		result = fmt.Sprintf("%s%s", result, strconv.Itoa(i))
+	}
+}
+
+func BenchmarkTestJoin(b *testing.B) {
+	var result string
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		result = strings.Join([]string{result, strconv.Itoa(i)}, "")
+	}
+}
+
+func BenchmarkTestBuffer(b *testing.B) {
+	var result bytes.Buffer
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		if _, err := result.WriteString(strconv.Itoa(i)); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func BenchmarkTestBuilder(b *testing.B) {
+	var result strings.Builder
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		result.WriteString(strconv.Itoa(i))
+	}
+}
+```
+
+文中通过测试，结论是使用 `strings.Builder.WriteString()` 进行字符串拼接性能最好。其实吧，我觉得这是 “回字有四种写法”，个人推荐尽量使用 `+` 这种原始方式进行字符串拼接，因为性能并不是唯一。`+`  这种字符串拼接方式，在老的 java 代码中，性能不行，现在已经优化的很好，不比 StringBuilder 或者 StringBuffer 差劲，我相信未来 Go 也如此。另外一个例子，Go 中所谓的 string 和 slice 的巧妙转化，在 go 1.6 之前，确实性能高，go 1.6 之后就很废柴了。
+
+再举个例子，有些人写 goroutine pool，在 Go 1.10 之后也废柴了，因为 Go v1.10 之后应用层释放掉的 goroutine 会被 Go runtime 缓存起来。所有，大巧若拙，大工不作，尽量使用原始的方式，我们是语言的使用者，把优化留给语言开发者以及编译器，外加时间。
+
+程序方法论 `make it run, make it right, make it fast` ，把优化工作放在最后。dubbogo 网络库 getty 一直坚持用原生的 go 网络接口，一直有人觉得用下 epoll 可能更好，但在目前为止尚未发现瓶颈所在。
 
 [^参考文档]:
 
 [1]:https://golang.google.cn/doc/effective_go.html "Effective Go"
 [2]:https://www.haohongfan.com/post/2019-05-26-sync-pool/
 [3]:https://mlog.club/article/1724433
+[4]:https://blog.funnycode.org.cn/zh-cn/2021/06/21/go-sourcecode-string-builder/
 
 ## Payment
 
-<center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
+<div>
+<table>
+  <tbody>
+  <tr></tr>
+    <tr>
+      <td align="center"  valign="middle">
+        <a href="" target="_blank">
+          <img width="100px"  src="../pic/pay/wepay.jpg">
+        </a>
+      </td>
+      <td align="center"  valign="middle">
+        <a href="" target="_blank">
+          <img width="100px"  src="../pic/pay/alipay.jpg">
+        </a>
+   </tbody>
+</table>
+</div>
 
 ## Timeline ##
 
 >- 2020/01/12，于雨氏，于丰台初写此文 <a href="#1">[1 死锁与 goroutine 泄露]</a>。
 >- 2020/10/18，于雨氏，于朝阳添加 <a href="#2">[2 sync.Pool]</a>。
-
+>- 2022/02/09，于雨氏，于朝阳添加 <a href="#3">[3 字符串拼接]</a>。
