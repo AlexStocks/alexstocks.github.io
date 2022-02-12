@@ -150,6 +150,27 @@ dubbogo 自身还有很多缺点，如：
 
 dubbogo 社区与 dubbogo 同在。
 
+## Payment
+
+
+<div>
+<table>
+  <tbody>
+  <tr></tr>
+    <tr>
+      <td align="center"  valign="middle">
+        <a href="" target="_blank">
+          <img width="100px"  src="../pic/pay/wepay.jpg">
+        </a>
+      </td>
+      <td align="center"  valign="middle">
+        <a href="" target="_blank">
+          <img width="100px"  src="../pic/pay/alipay.jpg">
+        </a>
+   </tbody>
+</table>
+</div>
+
 ## 于雨氏 ##
 
 * 2020/08/02，于雨氏，于帝都朝阳金箱堂。

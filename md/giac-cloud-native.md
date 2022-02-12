@@ -139,6 +139,23 @@ dubbo 与 dubbogo 之所以要做柔性服务，其背景是在云原生时代�
 
 很有幸生活在这个时代，见证了云原生技术大潮的起起伏伏。亦很有幸工作在阿里这个平台，见证了 dubbogo 3.0 在阿里云钉钉内的各个场景地逐步落地。
 
+## Payment
 
 
-
+<div>
+<table>
+  <tbody>
+  <tr></tr>
+    <tr>
+      <td align="center"  valign="middle">
+        <a href="" target="_blank">
+          <img width="100px"  src="../pic/pay/wepay.jpg">
+        </a>
+      </td>
+      <td align="center"  valign="middle">
+        <a href="" target="_blank">
+          <img width="100px"  src="../pic/pay/alipay.jpg">
+        </a>
+   </tbody>
+</table>
+</div>

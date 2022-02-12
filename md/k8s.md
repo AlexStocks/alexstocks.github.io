@@ -247,6 +247,26 @@ k8s 相关组件采用基于源码编译方式获取，编译过程如下；
 	172.27.137.11   Ready      13h
 	172.27.137.12   Ready      12h
 	
+## Payment
+
+
+<div>
+<table>
+  <tbody>
+  <tr></tr>
+    <tr>
+      <td align="center"  valign="middle">
+        <a href="" target="_blank">
+          <img width="100px"  src="../pic/pay/wepay.jpg">
+        </a>
+      </td>
+      <td align="center"  valign="middle">
+        <a href="" target="_blank">
+          <img width="100px"  src="../pic/pay/alipay.jpg">
+        </a>
+   </tbody>
+</table>
+</div>
 	
 ## 参考文档 ##
 

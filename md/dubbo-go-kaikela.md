@@ -77,8 +77,24 @@ dubbogo 不仅仅是一个 RPC 微服务治理框架，而应该成为云原生�
 
 ## Payment
 
-<center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
 
+<div>
+<table>
+  <tbody>
+  <tr></tr>
+    <tr>
+      <td align="center"  valign="middle">
+        <a href="" target="_blank">
+          <img width="100px"  src="../pic/pay/wepay.jpg">
+        </a>
+      </td>
+      <td align="center"  valign="middle">
+        <a href="" target="_blank">
+          <img width="100px"  src="../pic/pay/alipay.jpg">
+        </a>
+   </tbody>
+</table>
+</div>
 
 ## Timeline
 

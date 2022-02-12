@@ -33,20 +33,34 @@
 
 2017年金山wps大数据那边就曾用老版本的dubbogo开发dubbo服务。本来说是要继续帮忙开发，结果相关人离职了。因为当时我还在写hessian2，我当时恰好在西二旗附近干活，qq群里金山开发过程中相关人把我喊去过，一块讨论有个hessian2技术细节，只是想感慨下，dubbogo 开源路上遇到过很多过客。
  
- 
-
-百花齐放不如一枝独秀 十鸟在林不如一鸟在手。跟着项目走下去，往深处，人的思想也会变化很多。去年上半年我担心没人，下半年我担心没方向，现在这些我都不care了，因为是杞人忧天。
+百花齐放不如一枝独秀，十鸟在林不如一鸟在手。跟着项目走下去，往深处，人的思想也会变化很多。去年上半年我担心没人，下半年我担心没方向，现在这些我都不care了，因为是杞人忧天。
 
 今年主要两个任务，一个是往云原生方向走，一个是往外推广。
 
-1 不是设计出来的，是涌出来的，实践出真知，实践出方向。
-2 念念不忘，必有回响。
-3 有规律的发版本，定好每个版本的核心 feature，然后去吸引开发者，通过团队作战实现之；
+* 1 产品不是设计出来的，是用出来的，实践出真知，实践出方向。
+* 2 念念不忘，必有回响。
+* 3 有规律的发版本，定好每个版本的核心 feature，然后去吸引开发者，通过团队作战实现之；
 
 ## Payment
 
-<center> ![阿弥托福，于雨谢过](../pic/pay/wepay.jpg "阿弥托福，于雨谢过") &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ![无量天尊，于雨奉献](../pic/pay/alipay.jpg "无量天尊，于雨奉献") </center>
 
+<div>
+<table>
+  <tbody>
+  <tr></tr>
+    <tr>
+      <td align="center"  valign="middle">
+        <a href="" target="_blank">
+          <img width="100px"  src="../pic/pay/wepay.jpg">
+        </a>
+      </td>
+      <td align="center"  valign="middle">
+        <a href="" target="_blank">
+          <img width="100px"  src="../pic/pay/alipay.jpg">
+        </a>
+   </tbody>
+</table>
+</div>
 
 ## Timeline ##
 

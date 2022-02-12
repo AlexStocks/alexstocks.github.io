@@ -52,6 +52,27 @@ Go 语言 另外一个比较著名的例子便是 `godebug=madvdontneed=1`。Go 
 
 现代的数字世界就是在这套看似 ”不可靠“ 的软硬件体系之上构建出来的。换言之，我们需要做的是，如何在有 bug 的软硬件体系上，构建出一个可稳定运转且最终数据一致的数字世界。即便后退一步，如果做不到数据严格一致，如何把资损控制在最小范围， 控制到我们可接受的范围内。
 
+## Payment
+
+
+<div>
+<table>
+  <tbody>
+  <tr></tr>
+    <tr>
+      <td align="center"  valign="middle">
+        <a href="" target="_blank">
+          <img width="100px"  src="../pic/pay/wepay.jpg">
+        </a>
+      </td>
+      <td align="center"  valign="middle">
+        <a href="" target="_blank">
+          <img width="100px"  src="../pic/pay/alipay.jpg">
+        </a>
+   </tbody>
+</table>
+</div>
+
 ## Timeline ##
 
 >- 2021/12/05，于雨氏，初作此文于帝都朝阳五环。

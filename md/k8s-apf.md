@@ -324,6 +324,27 @@ kubectl get prioritylevelconfigurations -o custom-columns="uid:{metadata.uid},na
 [2]:https://cloud.tencent.com/developer/article/1613890
 [3]:https://mp.weixin.qq.com/s/q0ehyR6oNgyWmR57D_eZOA
 
+## Payment
+
+
+<div>
+<table>
+  <tbody>
+  <tr></tr>
+    <tr>
+      <td align="center"  valign="middle">
+        <a href="" target="_blank">
+          <img width="100px"  src="../pic/pay/wepay.jpg">
+        </a>
+      </td>
+      <td align="center"  valign="middle">
+        <a href="" target="_blank">
+          <img width="100px"  src="../pic/pay/alipay.jpg">
+        </a>
+   </tbody>
+</table>
+</div>
+
 ## 于雨氏 ##
 
 * 2020/08/31，于雨氏，于帝都金融中心。
