@@ -320,146 +320,9 @@ kbd {
 	pre {
 		word-wrap: break-word;
 	}
-}
-</style>
-
-<style type="text/css">
-/**
- * prism.js default theme for JavaScript, CSS and HTML
- * Based on dabblet (http://dabblet.com)
- * @author Lea Verou
- */
-
-code[class*="language-"],
-pre[class*="language-"] {
-	color: black;
-	background: none;
-	text-shadow: 0 1px white;
-	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-	text-align: left;
-	white-space: pre;
-	word-spacing: normal;
-	word-break: normal;
-	word-wrap: normal;
-	line-height: 1.5;
-
-	-moz-tab-size: 4;
-	-o-tab-size: 4;
-	tab-size: 4;
-
-	-webkit-hyphens: none;
-	-moz-hyphens: none;
-	-ms-hyphens: none;
-	hyphens: none;
-}
-
-pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
-code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
-	text-shadow: none;
-	background: #b3d4fc;
-}
-
-pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
-code[class*="language-"]::selection, code[class*="language-"] ::selection {
-	text-shadow: none;
-	background: #b3d4fc;
-}
-
-@media print {
-	code[class*="language-"],
-	pre[class*="language-"] {
-		text-shadow: none;
-	}
-}
-
-/* Code blocks */
-pre[class*="language-"] {
-	padding: 1em;
-	margin: .5em 0;
-	overflow: auto;
-}
-
-:not(pre) > code[class*="language-"],
-pre[class*="language-"] {
-	background: #f5f2f0;
-}
-
-/* Inline code */
-:not(pre) > code[class*="language-"] {
-	padding: .1em;
-	border-radius: .3em;
-	white-space: normal;
-}
-
-.token.comment,
-.token.prolog,
-.token.doctype,
-.token.cdata {
-	color: slategray;
-}
-
-.token.punctuation {
-	color: #999;
-}
-
-.namespace {
-	opacity: .7;
-}
-
-.token.property,
-.token.tag,
-.token.boolean,
-.token.number,
-.token.constant,
-.token.symbol,
-.token.deleted {
-	color: #905;
-}
-
-.token.selector,
-.token.attr-name,
-.token.string,
-.token.char,
-.token.builtin,
-.token.inserted {
-	color: #690;
-}
-
-.token.operator,
-.token.entity,
-.token.url,
-.language-css .token.string,
-.style .token.string {
-	color: #a67f59;
-	background: hsla(0, 0%, 100%, .5);
-}
-
-.token.atrule,
-.token.attr-value,
-.token.keyword {
-	color: #07a;
-}
-
-.token.function {
-	color: #DD4A68;
-}
-
-.token.regex,
-.token.important,
-.token.variable {
-	color: #e90;
-}
-
-.token.important,
-.token.bold {
-	font-weight: bold;
-}
-.token.italic {
-	font-style: italic;
-}
-
-.token.entity {
-	cursor: help;
+  body {
+    padding: 2cm;
+  }
 }
 </style>
 
@@ -486,7 +349,7 @@ pre[class*="language-"] {
 
 <p>参考文档 <a href="(github.com/apache/dubbo)">蚂蚁金服 Service Mesh 落地实践与挑战</a> 文中述及了蚂蚁金服当前的 Service Mesh 进展情况，不同于开源的 Istio 体系，蚂蚁金服内部版 Service Mesh 落地优先考虑数据面的实现与落地，控制面在逐步建设中，整体的架构上看，我们使用数据面直接和内部的各种中间件服务端对接，来完成 RPC、消息等能力的下沉，给业务应用减负。SOFAMosn 便是数据平面落地的产物。</p>
 
-<p>SOFAMosn 在 Service Mesh 充当 sidecar 角色，可以粗浅地理解为 Go 语言版本的 Envoy，目前其形态如下： </p>
+<p>SOFAMosn 在 Service Mesh 充当 sidecar 角色，可以粗浅地理解为 Go 语言版本的 Envoy，目前其形态如下：</p>
 
 <p><img src="../pic/mosn/mosn_ant_arch.jpg" alt=""></p>
 
@@ -536,17 +399,17 @@ pre[class*="language-"] {
 
 <p>上面内容源自开源版本 SOFAMosn 的配置文件 <a href="(https://github.com/sofastack/sofa-mosn/blob/master/configs/mosn_config.json)">mosn_config.json</a>，经愚人裁剪和合并，以利于阅读。</p>
 
-<p>配置分为 <q>servers</q> 和 <q>cluster_manager</q> 两块。<q>servers</q> 主要存储了 SOFAMosn 对 <q>host A</q> 的监听端口。</p>
+<p>配置分为 &quot;servers&quot; 和 &quot;cluster_manager&quot; 两块。&quot;servers&quot; 主要存储了 SOFAMosn 对 &quot;host A&quot; 的监听端口。</p>
 
-<p><q>cluster_manager</q> 则用于描述其后端 upstream 提供 service 的 hosts 集合。</p>
+<p>&quot;cluster_manager&quot; 则用于描述其后端 upstream 提供 service 的 hosts 集合。</p>
 
-<p><q>servers</q> 和 <q>cluster_manager</q> 衔接的关键之处是 <q>servers.listeners.filter<u>chains.filters.config.virtual</u>hosts.routers.route.cluster_name</q>。</p>
+<p>&quot;servers&quot; 和 &quot;cluster<em>manager&quot; 衔接的关键之处是 &quot;servers.listeners.filter</em>chains.filters.config.virtual<em>hosts.routers.route.cluster</em>name&quot;。</p>
 
 <p>SOFAMosn 本质是一个 Local(Client-Side) Proxy，downstream 通过它把请求路由到 upstream。</p>
 
 <h4 id="toc_4">2.1.1 SOFAMosn Servers</h4>
 
-<p>套用宋老师的话，SOFAMosn 有多个 Listener 组成了 <q>listeners</q> ，每个 Listener 中有多个 Filters 组成了 <q>filter_chains</q>。</p>
+<p>套用宋老师的话，SOFAMosn 有多个 Listener 组成了 &quot;listeners&quot; ，每个 Listener 中有多个 Filters 组成了 &quot;filter_chains&quot;。</p>
 
 <blockquote>
 <p>Listener 是处于 downstream 位置的 “host A&quot; 可以访问的网络地址，一般为一个 tcp port。</p>
@@ -556,9 +419,9 @@ pre[class*="language-"] {
 
 <p>一般地，出于效率考虑，listen filter 不会完整解析 downstream 发来的完整协议，而是只解析部分头部，获取必要的路由相关的字段即可。</p>
 
-<p>配置文件中 <q>servers.listeners.filter_chains.filters.type</q> 字段的值 <q>proxy</q> 完美地点出了 SOFAMosn 的 Local Prxoy 角色。</p>
+<p>配置文件中 &quot;servers.listeners.filter_chains.filters.type&quot; 字段的值 &quot;proxy&quot; 完美地点出了 SOFAMosn 的 Local Prxoy 角色。</p>
 
-<p>配置文件中的 <q>servers.listeners.filter_chains.filters.config</q> 中的 <q>downstream</q> 与 <q>upstream</q> 表明了其上下游使用的 filter(codec) 协议。</p>
+<p>配置文件中的 &quot;servers.listeners.filter_chains.filters.config&quot; 中的 &quot;downstream&quot; 与 &quot;upstream&quot; 表明了其上下游使用的 filter(codec) 协议。</p>
 
 <blockquote>
 <p>Router 作为就是路由，用于选择 downstream 请求目的地 upstream cluster，是 MOSN 的核心模块，支持的功能包括：</p>
@@ -570,7 +433,7 @@ pre[class*="language-"] {
 <li>路由重试以及重定向功能</li>
 </ul>
 
-<p>配置文件中的 Router 是一种 VirtualHost 形式的路由，字段 <q>servers.listeners.filter<u>chains.filters.config.virtual</u>hosts.routers.route.cluster_name</q> 的值 <q>test_cpp</q>，表明其使用 ”cluster<u>manager.clusters.name“:&quot;test</u>cpp&quot; 的相关 cluster。</p>
+<p>配置文件中的 Router 是一种 VirtualHost 形式的路由，字段 &quot;servers.listeners.filter<em>chains.filters.config.virtual</em>hosts.routers.route.cluster<em>name&quot; 的值 &quot;test</em>cpp&quot;，表明其使用 ”cluster<em>manager.clusters.name“:&quot;test</em>cpp&quot; 的相关 cluster。</p>
 
 <h4 id="toc_5">2.1.2 SOFAMosn cluster manager</h4>
 
@@ -630,7 +493,7 @@ pre[class*="language-"] {
 <li>一个专门的 event gr pool 负责逻辑处理。</li>
 </ul>
 
-<p>这种网络模型适合在连接数不满 1k 时处理吞吐比较高的长连接场景，但是在连接达 10k 的短链接场景就不合适了。最简单的道理，gr 数目达 20k 时 go 的 gr 调度器的调度处理效率极低。 </p>
+<p>这种网络模型适合在连接数不满 1k 时处理吞吐比较高的长连接场景，但是在连接达 10k 的短链接场景就不合适了。最简单的道理，gr 数目达 20k 时 go 的 gr 调度器的调度处理效率极低。</p>
 
 <p><img src="../pic/mosn/mosn_io_thread2.jpg" alt=""></p>
 
@@ -726,8 +589,8 @@ type MOSNConfig struct {
 
 <ul>
 <li><a href="https://github.com/sofastack/sofa-mosn/blob/master/pkg/server/types.go">types.go</a> 定义了一个 Server 接口</li>
-<li><a href="https://github.com/sofastack/sofa-mosn/blob/master/pkg/server/types.go">server.go</a> 定义了接口 Server 的实现 sever struct</li>
-<li><a href="https://github.com/sofastack/sofa-mosn/blob/master/pkg/server/types.go">handler.go</a> 则定义了对 listener 各种事件的处理</li>
+<li><a href="https://github.com/sofastack/sofa-mosn/blob/master/pkg/server/server.go">server.go</a> 定义了接口 Server 的实现 sever struct</li>
+<li><a href="https://github.com/sofastack/sofa-mosn/blob/master/pkg/server/handler.go">handler.go</a> 则定义了对 listener 各种事件的处理</li>
 </ul>
 
 <p>pkg/network 目录则定义了网络连接、监听与读写处理流程。</p>
@@ -778,8 +641,8 @@ type MOSNConfig struct {
 
 <p><img src="../pic/mosn/listener_write.png" alt=""></p>
 
-<p>关于写，SOFAMosn 对写采用了合并写优化。<a href="(https://blog.csdn.net/sofastack/article/details/93558620)">蚂蚁金服 Service Mesh 落地实践与挑战</a> 一文写道，<br>
-通过 golang 的 writev 我们把多笔请求合并成一次写，降低 sys.call 的调用，提升整体的性能与吞吐，同时在使用 writev 的过程中，有发现 golang 对 writev 的实现有 bug，会导致部分内存无法回收，我们给 golang 提交 PR 修复此问题，已被接受：<a href="https://github.com/golang/go/pull/32138%E3%80%82">https://github.com/golang/go/pull/32138。</a></p>
+<p>关于写，SOFAMosn 对写采用了合并写优化。<a href="(https://blog.csdn.net/sofastack/article/details/93558620)">蚂蚁金服 Service Mesh 落地实践与挑战</a> 一文写道，
+通过 golang 的 writev 我们把多笔请求合并成一次写，降低 sys.call 的调用，提升整体的性能与吞吐，同时在使用 writev 的过程中，有发现 golang 对 writev 的实现有 bug，会导致部分内存无法回收，我们给 golang 提交 PR 修复此问题，已被接受：https://github.com/golang/go/pull/32138。</p>
 
 <p>这个 bug 是同事元总【原 tengine 总负责人】发现并解决掉的，但是最新的 Go 语言尚未发版【Go 1.13】，实际处理方法则是把多次写的内容先在内存中合并，然后再调用一次写 sys.call 发送，相关代码如下：</p>
 
@@ -804,7 +667,7 @@ type MOSNConfig struct {
 <li>4 <a href="https://jimmysong.io/posts/envoy-archiecture-and-terminology/">Envoy 的架构与基本术语</a></li>
 </ul>
 
-<h2 id="toc_4">Payment</h2>
+<h2 id="toc_14">Payment</h2>
 
 <div>
 <table>
@@ -824,7 +687,6 @@ type MOSNConfig struct {
 </table>
 </div>
 
-
 <h2 id="toc_15">Timeline</h2>
 
 <blockquote>
@@ -833,32 +695,6 @@ type MOSNConfig struct {
 </ul>
 </blockquote>
 
-
-
-<script type="text/javascript">
-var _self="undefined"!=typeof window?window:"undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?self:{},Prism=function(){var e=/\blang(?:uage)?-(\w+)\b/i,t=0,n=_self.Prism={util:{encode:function(e){return e instanceof a?new a(e.type,n.util.encode(e.content),e.alias):"Array"===n.util.type(e)?e.map(n.util.encode):e.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\u00a0/g," ")},type:function(e){return Object.prototype.toString.call(e).match(/\[object (\w+)\]/)[1]},objId:function(e){return e.__id||Object.defineProperty(e,"__id",{value:++t}),e.__id},clone:function(e){var t=n.util.type(e);switch(t){case"Object":var a={};for(var r in e)e.hasOwnProperty(r)&&(a[r]=n.util.clone(e[r]));return a;case"Array":return e.map&&e.map(function(e){return n.util.clone(e)})}return e}},languages:{extend:function(e,t){var a=n.util.clone(n.languages[e]);for(var r in t)a[r]=t[r];return a},insertBefore:function(e,t,a,r){r=r||n.languages;var l=r[e];if(2==arguments.length){a=arguments[1];for(var i in a)a.hasOwnProperty(i)&&(l[i]=a[i]);return l}var o={};for(var s in l)if(l.hasOwnProperty(s)){if(s==t)for(var i in a)a.hasOwnProperty(i)&&(o[i]=a[i]);o[s]=l[s]}return n.languages.DFS(n.languages,function(t,n){n===r[e]&&t!=e&&(this[t]=o)}),r[e]=o},DFS:function(e,t,a,r){r=r||{};for(var l in e)e.hasOwnProperty(l)&&(t.call(e,l,e[l],a||l),"Object"!==n.util.type(e[l])||r[n.util.objId(e[l])]?"Array"!==n.util.type(e[l])||r[n.util.objId(e[l])]||(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,l,r)):(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,null,r)))}},plugins:{},highlightAll:function(e,t){var a={callback:t,selector:'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'};n.hooks.run("before-highlightall",a);for(var r,l=a.elements||document.querySelectorAll(a.selector),i=0;r=l[i++];)n.highlightElement(r,e===!0,a.callback)},highlightElement:function(t,a,r){for(var l,i,o=t;o&&!e.test(o.className);)o=o.parentNode;o&&(l=(o.className.match(e)||[,""])[1],i=n.languages[l]),t.className=t.className.replace(e,"").replace(/\s+/g," ")+" language-"+l,o=t.parentNode,/pre/i.test(o.nodeName)&&(o.className=o.className.replace(e,"").replace(/\s+/g," ")+" language-"+l);var s=t.textContent,u={element:t,language:l,grammar:i,code:s};if(!s||!i)return n.hooks.run("complete",u),void 0;if(n.hooks.run("before-highlight",u),a&&_self.Worker){var c=new Worker(n.filename);c.onmessage=function(e){u.highlightedCode=e.data,n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(u.element),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},c.postMessage(JSON.stringify({language:u.language,code:u.code,immediateClose:!0}))}else u.highlightedCode=n.highlight(u.code,u.grammar,u.language),n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(t),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},highlight:function(e,t,r){var l=n.tokenize(e,t);return a.stringify(n.util.encode(l),r)},tokenize:function(e,t){var a=n.Token,r=[e],l=t.rest;if(l){for(var i in l)t[i]=l[i];delete t.rest}e:for(var i in t)if(t.hasOwnProperty(i)&&t[i]){var o=t[i];o="Array"===n.util.type(o)?o:[o];for(var s=0;s<o.length;++s){var u=o[s],c=u.inside,g=!!u.lookbehind,h=!!u.greedy,f=0,d=u.alias;u=u.pattern||u;for(var p=0;p<r.length;p++){var m=r[p];if(r.length>e.length)break e;if(!(m instanceof a)){u.lastIndex=0;var y=u.exec(m),v=1;if(!y&&h&&p!=r.length-1){var b=r[p+1].matchedStr||r[p+1],k=m+b;if(p<r.length-2&&(k+=r[p+2].matchedStr||r[p+2]),u.lastIndex=0,y=u.exec(k),!y)continue;var w=y.index+(g?y[1].length:0);if(w>=m.length)continue;var _=y.index+y[0].length,P=m.length+b.length;if(v=3,P>=_){if(r[p+1].greedy)continue;v=2,k=k.slice(0,P)}m=k}if(y){g&&(f=y[1].length);var w=y.index+f,y=y[0].slice(f),_=w+y.length,S=m.slice(0,w),O=m.slice(_),j=[p,v];S&&j.push(S);var A=new a(i,c?n.tokenize(y,c):y,d,y,h);j.push(A),O&&j.push(O),Array.prototype.splice.apply(r,j)}}}}}return r},hooks:{all:{},add:function(e,t){var a=n.hooks.all;a[e]=a[e]||[],a[e].push(t)},run:function(e,t){var a=n.hooks.all[e];if(a&&a.length)for(var r,l=0;r=a[l++];)r(t)}}},a=n.Token=function(e,t,n,a,r){this.type=e,this.content=t,this.alias=n,this.matchedStr=a||null,this.greedy=!!r};if(a.stringify=function(e,t,r){if("string"==typeof e)return e;if("Array"===n.util.type(e))return e.map(function(n){return a.stringify(n,t,e)}).join("");var l={type:e.type,content:a.stringify(e.content,t,r),tag:"span",classes:["token",e.type],attributes:{},language:t,parent:r};if("comment"==l.type&&(l.attributes.spellcheck="true"),e.alias){var i="Array"===n.util.type(e.alias)?e.alias:[e.alias];Array.prototype.push.apply(l.classes,i)}n.hooks.run("wrap",l);var o="";for(var s in l.attributes)o+=(o?" ":"")+s+'="'+(l.attributes[s]||"")+'"';return"<"+l.tag+' class="'+l.classes.join(" ")+'" '+o+">"+l.content+"</"+l.tag+">"},!_self.document)return _self.addEventListener?(_self.addEventListener("message",function(e){var t=JSON.parse(e.data),a=t.language,r=t.code,l=t.immediateClose;_self.postMessage(n.highlight(r,n.languages[a],a)),l&&_self.close()},!1),_self.Prism):_self.Prism;var r=document.currentScript||[].slice.call(document.getElementsByTagName("script")).pop();return r&&(n.filename=r.src,document.addEventListener&&!r.hasAttribute("data-manual")&&document.addEventListener("DOMContentLoaded",n.highlightAll)),_self.Prism}();"undefined"!=typeof module&&module.exports&&(module.exports=Prism),"undefined"!=typeof global&&(global.Prism=Prism);
-</script>
-
-<script type="text/javascript">
-Prism.languages.go=Prism.languages.extend("clike",{keyword:/\b(break|case|chan|const|continue|default|defer|else|fallthrough|for|func|go(to)?|if|import|interface|map|package|range|return|select|struct|switch|type|var)\b/,builtin:/\b(bool|byte|complex(64|128)|error|float(32|64)|rune|string|u?int(8|16|32|64|)|uintptr|append|cap|close|complex|copy|delete|imag|len|make|new|panic|print(ln)?|real|recover)\b/,"boolean":/\b(_|iota|nil|true|false)\b/,operator:/[*\/%^!=]=?|\+[=+]?|-[=-]?|\|[=|]?|&(?:=|&|\^=?)?|>(?:>=?|=)?|<(?:<=?|=|-)?|:=|\.\.\./,number:/\b(-?(0x[a-f\d]+|(\d+\.?\d*|\.\d+)(e[-+]?\d+)?)i?)\b/i,string:/("|'|`)(\\?.|\r|\n)*?\1/}),delete Prism.languages.go["class-name"];
-</script>
-
-<script type="text/x-mathjax-config">
-(function () {
-
-MathJax.Hub.Config({
-	'showProcessingMessages': false,
-	'messageStyle': 'none'
-});
-
-if (typeof MathJaxListener !== 'undefined') {
-	MathJax.Hub.Register.StartupHook('End', function () {
-		MathJaxListener.invokeCallbackForKey_('End');
-	});
-}
-
-})();
-</script>
 
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 <!-- baidu statistic start -->
@@ -890,6 +726,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 
 </body>

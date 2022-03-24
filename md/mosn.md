@@ -14,7 +14,7 @@ SOFAMosn 是蚂蚁金服 Service Mesh 整体实践中最基础的组件。
 
 参考文档 [蚂蚁金服 Service Mesh 落地实践与挑战][2] 文中述及了蚂蚁金服当前的 Service Mesh 进展情况，不同于开源的 Istio 体系，蚂蚁金服内部版 Service Mesh 落地优先考虑数据面的实现与落地，控制面在逐步建设中，整体的架构上看，我们使用数据面直接和内部的各种中间件服务端对接，来完成 RPC、消息等能力的下沉，给业务应用减负。SOFAMosn 便是数据平面落地的产物。
 
-SOFAMosn 在 Service Mesh 充当 sidecar 角色，可以粗浅地理解为 Go 语言版本的 Envoy，目前其形态如下： 
+SOFAMosn 在 Service Mesh 充当 sidecar 角色，可以粗浅地理解为 Go 语言版本的 Envoy，目前其形态如下：
 
 ![](../pic/mosn/mosn_ant_arch.jpg)
 
@@ -128,7 +128,7 @@ upstream cluster 集合除了可在配置中获取外，也可以通过 XDS 方�
 NET/IO 在代码层映射为 Listener 和 Connection，Listener 用来监听端口，并接收新连接。Connection 用来管理 Listener 上 accept 来的 tcp 连接，包括从 tcp conn 上读写数据等，接口定义在 `sofamosn/pkg/types/network.go`。
 
 Protocol 收到 downstream 发来的二进制流后，根据配置文件中的协议名称选择相应的 decoder，解码后的报文整体包分为 header、body 和 tailer 三部分，接口定义在 `sofamosn/pkg/types/protocol.go`。
- 
+
 SOFAMosn 的 Stream 概念非常类似网络编程的 multiplexing 概念：通过全局唯一的 stream id 实现 request 和 response 报文关联，实现在一个连接上实现多路流传输。Stream 具有方向性，区分 upStream 和 downStream，且与协议强相关，不同格式的协议使用不同的 Stream。
 
 Proxy 则是 SOFAMosn 角色的体现，在 upStream 和 downStream 之间进行路由选择，在 SOFAMosn 中其还管理连接池、service 集群。
@@ -146,7 +146,7 @@ SOFAMosn 网络层采用了两种网络模型，分别针对不同的使用场�
 * 写 gr 负责把 package 编码为二进制流，并发送出去；
 * 一个专门的 event gr pool 负责逻辑处理。
 
-这种网络模型适合在连接数不满 1k 时处理吞吐比较高的长连接场景，但是在连接达 10k 的短链接场景就不合适了。最简单的道理，gr 数目达 20k 时 go 的 gr 调度器的调度处理效率极低。 
+这种网络模型适合在连接数不满 1k 时处理吞吐比较高的长连接场景，但是在连接达 10k 的短链接场景就不合适了。最简单的道理，gr 数目达 20k 时 go 的 gr 调度器的调度处理效率极低。
 
 ![](../pic/mosn/mosn_io_thread2.jpg)
 
@@ -155,7 +155,7 @@ SOFAMosn 网络层采用了两种网络模型，分别针对不同的使用场�
 这种网络模型适用于短链接较多但是网络吞吐不高的场景，如 Gateway。
 
 SOFAMosn 默认情况下适用第一种网络模型。
- 
+
 ## 4 SOFAMosn 代码分析
 
 SOFAMosn 整体代码可读性不友好，估计其初始作者并没有很长时间的 Go 使用经验。
@@ -184,10 +184,10 @@ SOFAMosn 使用了第三方库封装了一个 APP 代表整体程序，并能够
 			return nil
 		},
 	}
-``` 
+```
 
 Stop 命令和 Reload 命令的 Action 函数为空，不知道这样的封装意义何在，涉嫌过度封装。实际使用命令仅仅 Start 而已。
- 
+
 整体 cmd/mosn/main 目录下有用的代码仅如下一行：
 
 ```Go
@@ -212,7 +212,7 @@ type Mosn struct {
 Mosn 总体启动过程如下：
 
 ![](../pic/mosn/mosn_start.png)
- 
+
 ### 4.2 读取并分析配置文件
 
 前面 <a name="#2.1">2.1 SOFAMosn 配置</a> 一节中给出了 SOFAMosn 的标准配置文件，其对应的代码在 [config/config.go](https://github.com/sofastack/sofa-mosn/blob/master/pkg/config/config.go)，主要结构体定义如下：
@@ -249,8 +249,8 @@ NewMosn 函数中启动了一个 `config.DumpConfigHandler` 的 goroutine，定�
 SOFAMosn 的 servers 相关对象【server 和 listener】主要定义在 pkg/server 目录下，其主要文件内容如下：
 
 * [types.go](https://github.com/sofastack/sofa-mosn/blob/master/pkg/server/types.go) 定义了一个 Server 接口
-* [server.go](https://github.com/sofastack/sofa-mosn/blob/master/pkg/server/types.go) 定义了接口 Server 的实现 sever struct
-* [handler.go](https://github.com/sofastack/sofa-mosn/blob/master/pkg/server/types.go) 则定义了对 listener 各种事件的处理
+* [server.go](https://github.com/sofastack/sofa-mosn/blob/master/pkg/server/server.go) 定义了接口 Server 的实现 sever struct
+* [handler.go](https://github.com/sofastack/sofa-mosn/blob/master/pkg/server/handler.go) 则定义了对 listener 各种事件的处理
 
 pkg/network 目录则定义了网络连接、监听与读写处理流程。
 
@@ -259,7 +259,7 @@ listener 启动流程如下：
 * 1 构建 server.activeListener 对象
 
 ![](../pic/mosn/build_listener.png)
- 
+
 * 2 所有的 listener 对象构建完毕后，listener:Start() 开始监听各自的端口
 
 ![](../pic/mosn/listener_start.png)
