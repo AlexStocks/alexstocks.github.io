@@ -5,7 +5,27 @@
 ### 0 about me ###
 ---
 - email     : alexstocks at foxmail.com
-- wechat    : alexanderstocks
+- wechat    : Alex_Stocks
+
+好多人以为我名字是于雨，其实是 2012 年使用微信时用的微信名字，后来入职阿里时也用作花名，现在已经成了我的常用名了。<br/><br/>从业十二年来一直在服务端基础架构研发一线，工作内容广泛，涵盖 RPC、NoSQL 存储、实时监控告警、即时通信、消息推送等方面。研究内容也挺广泛，2018 年到 2019 年在 Google 内搜索 RocksDB，个人的技术博客一直在 first page，我大概也是国内最早的 gogo protobuf 和 pulsar 研究和鼓吹者。<br/><br/>起家工作语言是 C/C++，2013 年在 chinaunix 上接触到 Go 语言，跟着 Go 官方博客开始学习，所以在 Go 语言方面我算是野路子出身，没有人正式带过我。个人热爱开源，从 2015 年为 Redis 贡献代码开始，2015 年使用 C++11 重构 Muduo，2016 年构建 dubbogo，2018 年接触 Pika。当时除了给 pika 修复 bug，主要构建 Pika 和 Redis 之间数据代理 PikaPort，PikaPort 先后在 360、新浪、脉脉、全民快乐、顺丰、快手、好未来等公司投入使用，直到今年为止不少新浪、好未来和快手等公司不少 DBA 还因为这个工具找我交流。<br/><br/>目前业余主要精力在 dubbogo 社区推动 dubbogo 项目。业余时间，除了 dubbogo 社区，还在即时通讯圈子与从业者进行技术交流，IM 方面个人有七八年实战项目经验积累。<br/><br/>
+
+> lectures
+
+|  时间段  |  会议  |  身份  |  相关连接  |
+| :---- | :---- | :--- | :----- | 
+| 202212 | GopherChina 2022 大会 | “dubbogo 2022年 service mesh 方向新进展”讲师  |  [GopherChina 2022 大会](https://www.bagevent.com/event/8057917)<br/><br/>[2022 GopherChina 出品人及演讲内容揭晓（四）](https://jishuin.proginn.com/p/763bfbd7db91) |
+| 202210 | QCon 全球软件开发大会（北京站）开源专场 | 讲师  |  [“做开源如同创业”，九死一生](https://view.inews.qq.com/k/20220308A01S8500)<br/><br/>[一边在大厂一线搬砖、一边操着CTO的心搞开源：一位普通中年程序员的开源十年路](https://view.inews.qq.com/k/20220414A05AVG00) |
+| 20220108 | CSDN&字节跳动 云原生 Meetup 北京站 | 讲师 | [解构dubbogo(文章末尾有 PPT)](https://bbs.csdn.net/topics/604228897) |
+| 20210808 | ApacheCon 2021 | webserver专题讲师 | [云原生高性能网关dubbo-go pixiu 介绍](https://apachecon.com/acasia2021/zh/sessions/1012.html) |
+| 20210731 | GIAC 2021 | 云原生专场出品人兼讲师 |  [专题出品人： 于雨](http://giac-history.msup.com.cn/Giac2020/schedule/subject?lid=8151) <br/><br/>[dubbogo 是如何炼成的？](https://mp.weixin.qq.com/s/attVemCAHybGm9xli9JlUw)<br/><br/> [dubbogo 3.0：dubbo 在云原生时代的基石](https://giac.msup.com.cn/teacher?id=8151) | 
+| 20210531 | 涛思科技第一次技术专题会议  | 讲师 |  秒级实时监控系统 |
+|  20201220 |  msup 2020壹佰大会 | 讲师 |  [更低成本的跨服务语言调用：Apache Dubbo-Go实践](https://www.top100summit.com/detail?id=14904)  |
+|  20201220 | 云原生社区 meetup 第二期北京站 | 讲师 |  [Apache/Dubbo-go 在云原生时代的实践与探索](https://www.bilibili.com/video/BV1Jv411t7tn/) 相关视频 B 站可见 |
+|  202012 |  coscon 2020 |  讲师 |  [云原生时代的 dubbo go 进化之道](https://open.gitcode.host/coscon-2020/track-b/14/) |  
+|  20191228  |  Dubbo 开发者日杭州站 |  大会出品人 |  [Dubbo 开发者日杭州站](https://www.pianshen.com/article/46961464630/) |
+| 20191224 |  2019 Gopher Meetup 上海  |  讲师 |  [dubbogo 的现状与未来](https://gocn.vip/topics/9878) |
+| 20171223 |  2017 OSC 源创会 |  讲师 |  [同心开源，共建标准——2017 OSC 源创会年终盛典精彩回顾](https://mulanos.oschina.net/question/2686220_2271951) | 
+
 
 ### 1 以往博客说明:###
 ---
