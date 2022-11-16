@@ -21,6 +21,7 @@
 | :---- | :---- | :--- | :----- | 
 | 202212 | GopherChina 2022 大会 | “dubbogo 2022年 service mesh 方向新进展”讲师  |  [GopherChina 2022 大会](https://www.bagevent.com/event/8057917)<br/><br/>[2022 GopherChina 出品人及演讲内容揭晓（四）](https://jishuin.proginn.com/p/763bfbd7db91) |
 | 202210 | QCon 全球软件开发大会（北京站）开源专场 | 讲师  |  [“做开源如同创业”，九死一生](https://view.inews.qq.com/k/20220308A01S8500)<br/><br/>[一边在大厂一线搬砖、一边操着CTO的心搞开源：一位普通中年程序员的开源十年路](https://view.inews.qq.com/k/20220414A05AVG00) |
+| 20221026 | Bilibili 技术琐话频道 | dubbogo社区负责人 | [于雨：我的开源之道](https://www.bilibili.com/video/BV1bV4y1G7Zt) |
 | 20220406 | CSDN云原生大会 | 讲师 | [让你的微服务在k8s上跑起来](https://blog.csdn.net/m0_46700908/article/details/123578855) |
 | 20220108 | CSDN&字节跳动 云原生 Meetup 北京站 | 讲师 | [解构dubbogo(文章末尾有 PPT)](https://bbs.csdn.net/topics/604228897) |
 | 20210808 | ApacheCon 2021 | webserver专题讲师 | [云原生高性能网关dubbo-go pixiu 介绍](https://apachecon.com/acasia2021/zh/sessions/1012.html) |
