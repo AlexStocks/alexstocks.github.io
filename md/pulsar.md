@@ -101,7 +101,7 @@ Kafka 的所有 Broker 会选出一个 Leader，作为 Broker Leader 决定 Brok
 
 ![](..pic/pulsar/pulsar_bookie_resume.webp)
 
-当 Broker 发生宕机事故后，其 Failover 过程几乎瞬间完成。如上图，当 Broker 2 宕机后，其负责的 Topic-Part2 的读写职责会被 Boker 3 接替，不管就的 Fragment（Segment X）中数据完整性以及文件容量是否使用完毕，Broker 3会立即为 Topic1-Part2 创建行的 Fragment：Segment x + 1，新来的写请求的数据会被写入其中。
+当 Broker 发生宕机事故后，其 Failover 过程几乎瞬间完成。以 2.1 节的第 2 幅图为例，当 Broker 2 宕机后，其负责的 Topic-Part2 的读写职责会被 Boker 3 接替，不管旧的 Fragment（Segment X）中数据完整性以及文件容量是否使用完毕，Broker 3会立即为 Topic1-Part2 创建行的 Fragment：Segment x + 1，新来的写请求的数据会被写入其中。
 
 #### 2.3 Pulsar Bookie
 ---

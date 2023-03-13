@@ -320,146 +320,9 @@ kbd {
 	pre {
 		word-wrap: break-word;
 	}
-}
-</style>
-
-<style type="text/css">
-/**
- * prism.js default theme for JavaScript, CSS and HTML
- * Based on dabblet (http://dabblet.com)
- * @author Lea Verou
- */
-
-code[class*="language-"],
-pre[class*="language-"] {
-	color: black;
-	background: none;
-	text-shadow: 0 1px white;
-	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-	text-align: left;
-	white-space: pre;
-	word-spacing: normal;
-	word-break: normal;
-	word-wrap: normal;
-	line-height: 1.5;
-
-	-moz-tab-size: 4;
-	-o-tab-size: 4;
-	tab-size: 4;
-
-	-webkit-hyphens: none;
-	-moz-hyphens: none;
-	-ms-hyphens: none;
-	hyphens: none;
-}
-
-pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
-code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
-	text-shadow: none;
-	background: #b3d4fc;
-}
-
-pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
-code[class*="language-"]::selection, code[class*="language-"] ::selection {
-	text-shadow: none;
-	background: #b3d4fc;
-}
-
-@media print {
-	code[class*="language-"],
-	pre[class*="language-"] {
-		text-shadow: none;
-	}
-}
-
-/* Code blocks */
-pre[class*="language-"] {
-	padding: 1em;
-	margin: .5em 0;
-	overflow: auto;
-}
-
-:not(pre) > code[class*="language-"],
-pre[class*="language-"] {
-	background: #f5f2f0;
-}
-
-/* Inline code */
-:not(pre) > code[class*="language-"] {
-	padding: .1em;
-	border-radius: .3em;
-	white-space: normal;
-}
-
-.token.comment,
-.token.prolog,
-.token.doctype,
-.token.cdata {
-	color: slategray;
-}
-
-.token.punctuation {
-	color: #999;
-}
-
-.namespace {
-	opacity: .7;
-}
-
-.token.property,
-.token.tag,
-.token.boolean,
-.token.number,
-.token.constant,
-.token.symbol,
-.token.deleted {
-	color: #905;
-}
-
-.token.selector,
-.token.attr-name,
-.token.string,
-.token.char,
-.token.builtin,
-.token.inserted {
-	color: #690;
-}
-
-.token.operator,
-.token.entity,
-.token.url,
-.language-css .token.string,
-.style .token.string {
-	color: #a67f59;
-	background: hsla(0, 0%, 100%, .5);
-}
-
-.token.atrule,
-.token.attr-value,
-.token.keyword {
-	color: #07a;
-}
-
-.token.function {
-	color: #DD4A68;
-}
-
-.token.regex,
-.token.important,
-.token.variable {
-	color: #e90;
-}
-
-.token.important,
-.token.bold {
-	font-weight: bold;
-}
-.token.italic {
-	font-style: italic;
-}
-
-.token.entity {
-	cursor: help;
+  body {
+    padding: 2cm; 
+  }
 }
 </style>
 
@@ -616,7 +479,7 @@ pre[class*="language-"] {
 
 <p><img src="..pic/pulsar/pulsar_bookie_resume.webp" alt=""></p>
 
-<p>当 Broker 发生宕机事故后，其 Failover 过程几乎瞬间完成。如上图，当 Broker 2 宕机后，其负责的 Topic-Part2 的读写职责会被 Boker 3 接替，不管就的 Fragment（Segment X）中数据完整性以及文件容量是否使用完毕，Broker 3会立即为 Topic1-Part2 创建行的 Fragment：Segment x + 1，新来的写请求的数据会被写入其中。</p>
+<p>当 Broker 发生宕机事故后，其 Failover 过程几乎瞬间完成。以 2.1 节的第 2 幅图为例，当 Broker 2 宕机后，其负责的 Topic-Part2 的读写职责会被 Boker 3 接替，不管旧的 Fragment（Segment X）中数据完整性以及文件容量是否使用完毕，Broker 3会立即为 Topic1-Part2 创建行的 Fragment：Segment x + 1，新来的写请求的数据会被写入其中。</p>
 
 <h4 id="toc_7">2.3 Pulsar Bookie</h4>
 
@@ -744,15 +607,15 @@ pre[class*="language-"] {
 <li><p>4 将 &lt;(LedgerID, EntryID), EntryLogID&gt; 写入 RocksDB。</p>
 
 <blockquote>
-<p>LedgerID 相当于 kafka 的 ParitionID，EntryID 即是 Log Message 的逻辑 ID，EntryLogId 就是 Log消息在 Pulsar Fragment文件的物理 Offset。<br><br>
+<p>LedgerID 相当于 kafka 的 ParitionID，EntryID 即是 Log Message 的逻辑 ID，EntryLogId 就是 Log消息在 Pulsar Fragment文件的物理 Offset。<br>
 这里把这个映射关系存储 RocksDB 只是为了加快写入速度，其自身并不是 Pulsar Bookie 的关键组件。</p>
 </blockquote></li>
 </ul>
 
 <p><img src="../pic/pulsar/pulsar_bk_read_write_isolation.png" alt="">   </p>
 
-<p>结合上图，可以对上述流程有更清晰的认识。若与对 Elasticsearch 的写入刷盘流程进行比较，会发现二者流程比较相似。其实其与 RocksDB 写流程也有相似之处，使用了 Log-Structured Hash Table 数据结构的 Pulsar 不需要对数据进行计算或者整理，使用了 Log-Structured Merge Tree 的 RocksDB 则需要维持数据的状态机，故 RocksDB 还有 Bookkeeper 没有的基于 LSM 的对数据进行 compaction 的整理流程，或者也可以说 Pulsar 把对数据的重新整理交个 Consumer 自己进行处理，自身只负责按照提交先后顺序维持 Entry 的有序存储即可。<br>
-​<br><br>
+<p>结合上图，可以对上述流程有更清晰的认识。若与对 Elasticsearch 的写入刷盘流程进行比较，会发现二者流程比较相似。其实其与 RocksDB 写流程也有相似之处，使用了 Log-Structured Hash Table 数据结构的 Pulsar 不需要对数据进行计算或者整理，使用了 Log-Structured Merge Tree 的 RocksDB 则需要维持数据的状态机，故 RocksDB 还有 Bookkeeper 没有的基于 LSM 的对数据进行 compaction 的整理流程，或者也可以说 Pulsar 把对数据的重新整理交个 Consumer 自己进行处理，自身只负责按照提交先后顺序维持 Entry 的有序存储即可。
+​<br>
 Bookie 的整个写入流程除了自身把内存缓存数据批量刷盘一步外，整个流程几乎不需要跟磁盘进行IO，所以速度也是极快。</p>
 
 <p>其读取流程如下：</p>
@@ -774,21 +637,21 @@ Bookie 的整个写入流程除了自身把内存缓存数据批量刷盘一步�
 <h2 id="toc_13">参考文档</h2>
 
 <blockquote>
-<p>1 <a href="https://mp.weixin.qq.com/s/CIpCLCxqpLoQVUKz6QeDJQ">理解Apache Pulsar工作原理</a><br><br>
-2 <a href="https://mp.weixin.qq.com/s/0dkgA8swNPkpcY5H6CU62w">Twitter高性能分布式日志系统架构解析</a><br><br>
-3 <a href="https://jack-vanlightly.com/sketches/2018/10/2/kafka-vs-pulsar-rebalancing-sketch">Kafka vs Pulsar - Rebalancing (Sketch)</a><br><br>
-4 <a href="https://www.csdn.net/article/2015-02-02/2823796-spark-codis-crazyjvm-goroutine/2"><br>
-Spark生态系统解析及基于Redis的开源分布式服务Codis</a><br><br>
-5 <a href="https://mp.weixin.qq.com/s/4UMz2REmn7rMYHwLjGE2RQ">Apache Pulsar的多租户</a><br><br>
-6 <a href="http://www.cnblogs.com/hzmark/p/pulsar-consumer.html">Pulsar Consumer实现介绍</a><br><br>
-7 <a href="https://mp.weixin.qq.com/s/uwmLR-1Jo_VNXRFA0yYWlg">简介Apache Pulsar-下一代分布式消息系统</a><br><br>
-8 <a href="https://mp.weixin.qq.com/s/qWgLsDYYL2G1V6O2XHVxbw">Apache Pulsar中的多地互备，第1篇：概念和功能</a><br><br>
-9 <a href="https://mp.weixin.qq.com/s/3cfs7pXQDmMWGJRB8criRg">Apache Pulsar中的多地互备，第2篇：模式和实践</a><br><br>
-10 <a href="https://mp.weixin.qq.com/s/XJ3vj9xeDpdqZr-um8wBug">Pulsar VS. Kafka（1）: 统一的消息消费模型（Queue + Stream）</a><br><br>
+<p>1 <a href="https://mp.weixin.qq.com/s/CIpCLCxqpLoQVUKz6QeDJQ">理解Apache Pulsar工作原理</a><br>
+2 <a href="https://mp.weixin.qq.com/s/0dkgA8swNPkpcY5H6CU62w">Twitter高性能分布式日志系统架构解析</a><br>
+3 <a href="https://jack-vanlightly.com/sketches/2018/10/2/kafka-vs-pulsar-rebalancing-sketch">Kafka vs Pulsar - Rebalancing (Sketch)</a><br>
+4 <a href="https://www.csdn.net/article/2015-02-02/2823796-spark-codis-crazyjvm-goroutine/2">
+Spark生态系统解析及基于Redis的开源分布式服务Codis</a><br>
+5 <a href="https://mp.weixin.qq.com/s/4UMz2REmn7rMYHwLjGE2RQ">Apache Pulsar的多租户</a><br>
+6 <a href="http://www.cnblogs.com/hzmark/p/pulsar-consumer.html">Pulsar Consumer实现介绍</a><br>
+7 <a href="https://mp.weixin.qq.com/s/uwmLR-1Jo_VNXRFA0yYWlg">简介Apache Pulsar-下一代分布式消息系统</a><br>
+8 <a href="https://mp.weixin.qq.com/s/qWgLsDYYL2G1V6O2XHVxbw">Apache Pulsar中的多地互备，第1篇：概念和功能</a><br>
+9 <a href="https://mp.weixin.qq.com/s/3cfs7pXQDmMWGJRB8criRg">Apache Pulsar中的多地互备，第2篇：模式和实践</a><br>
+10 <a href="https://mp.weixin.qq.com/s/XJ3vj9xeDpdqZr-um8wBug">Pulsar VS. Kafka（1）: 统一的消息消费模型（Queue + Stream）</a><br>
 11 <a href="https://mp.weixin.qq.com/s/zcole6BuAzP9durwAbrUpg">Pulsar VS. Kafka（2）: 以Segment为中心的架构</a>  </p>
 </blockquote>
 
-<h2 id="toc_4">Payment</h2>
+<h2 id="toc_14">Payment</h2>
 
 <div>
 <table>
@@ -808,14 +671,14 @@ Spark生态系统解析及基于Redis的开源分布式服务Codis</a><br><br>
 </table>
 </div>
 
-
 <h2 id="toc_15">Timeline</h2>
 
 <blockquote>
-<p>2018/10/18，于雨氏，初作此文于西二旗。<br><br>
-2018/10/20，于雨氏，于丰台完成 #3 Pulsar 读写过程#。<br><br>
+<p>2018/10/18，于雨氏，初作此文于西二旗。<br>
+2018/10/20，于雨氏，于丰台完成 #3 Pulsar 读写过程#。<br>
 2018/10/22，于雨氏，于丰台完成 #2 Pulsar 组件#、# 3.4 小节中 “Raft 和 BK 之间比较” 部分内容。</p>
 </blockquote>
+
 
 
 
@@ -870,7 +733,6 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
-
 
 </body>
 
