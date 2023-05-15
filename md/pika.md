@@ -13,7 +13,7 @@
 
 最终这个“光荣任务”落在了愚人肩上。本文用来记录我阅读代码并在改进 Pika 【到 2018/09/07 为止主要是开发相关工具】过程中遇到的一些问题。
 
-Ardb 作者在[参考文档5](http://yinqiwen.github.io/)文中对 Pika 的评价是  “直接修改了rocksdb代码实现某些功能。这种做法也是双刃剑，改动太多的话，社区的一些修改是很难merge进来的”。与几个比较主流的基于 RocksDB 实现的 KV 存储引擎（如 TiKV/SSDB/ARDB/CockroachDB）作比较，Pika 确实对 RocksDB 的代码侵入比较严重。至于为何修改这么大，最终的一个原因就是效率考虑，如[参考文档13](http://baotiao.github.io/2016/05/18/pika-introduction/)提到秒删功能时，说道 `需要改动下层rocksdb，一定程度破坏了rocksdb的封装，各个模块之间耦合起来`。另一个原因可能就是架构设计使然了，譬如 **#2 数据备份#** 一节中详述的 Nemo 自己实现的独立的备份引擎，而 RocksDB 自身是有备份机制的，之所以修改是因为 Pika 自身独立设计了一套独立于 RocksDB 的 binlog 存储机制。
+Ardb 作者在[参考文档5](http://yinqiwen.github.io/)文中对 Pika 的评价是  “直接修改了rocksdb代码实现某些功能。这种做法也是双刃剑，改动太多的话，社区的一些修改是很难merge进来的”。与几个比较主流的基于 RocksDB 实现的 KV 存储引擎（如 TiKV/SSDB/ARDB/CockroachDB）作比较，Pika 确实对 RocksDB 的代码侵入比较严重。至于为何修改这么大，最终的一个原因就是效率考虑，如[参考文档13](http://baotiao.github.io/2016/05/18/pika-introduction.html)提到秒删功能时，说道 `需要改动下层rocksdb，一定程度破坏了rocksdb的封装，各个模块之间耦合起来`。另一个原因可能就是架构设计使然了，譬如 **#2 数据备份#** 一节中详述的 Nemo 自己实现的独立的备份引擎，而 RocksDB 自身是有备份机制的，之所以修改是因为 Pika 自身独立设计了一套独立于 RocksDB 的 binlog 存储机制。
 
 ### 1 数据迁移
 ---
@@ -132,7 +132,7 @@ Pika-port 调用了上图[第一个构造函数](https://github.com/pikalabs/pin
 
 恰当的处理方法当然是重构两个构造函数，让其行为一致，然而作为著名项目的已有代码，相关改动牵一发而动全身，最终处理方法是我在 [pr](https://github.com/PikaLabs/pink/pull/31)【对网络fd进行读写须用 recv，如果用 pread 则会收到 ESPIPE 错误】 中对相关函数所在的头文件中加上注释以进行[调用提醒](https://github.com/divebomb/pink/blob/master/pink/include/server_thread.h#L195)。
 
-至于为何要依赖 tcp 自身的 keepalive 机制而不是在逻辑层对 tcp 连接进行超时判断，pika 开发者陈宗志给出了一个 [blog](http://baotiao.github.io/tech/2015/09/25/tcp-keepalive/) 进行解释，仁者见仁智者见智，这个就不再次探讨了。
+至于为何要依赖 tcp 自身的 keepalive 机制而不是在逻辑层对 tcp 连接进行超时判断，pika 开发者陈宗志给出了一个 [blog](http://baotiao.github.io/tech/2015/09/25/tcp-keepalive.html) 进行解释，仁者见仁智者见智，这个就不再次探讨了。
 
 在处理这个问题时，与胡伟、[郑树新](https://github.com/zhengshuxin)、[bert](https://github.com/loveyacper)、[hulk](https://github.com/git-hulk)等一帮老友进行了相关探讨，受益匪浅，在此一并致谢！
 
@@ -314,7 +314,7 @@ Pika 存储系统中另外一个比较重要的概念是 timestamp 和 version�
 
 version 则与 del 命令删除 key 相关，参照 [**base\_meta\_value\_format.h:ParsedBaseMetaValue::UpdateVersion**](https://github.com/Qihoo360/blackwidow/blob/2490ebd29d95fcbed5356b2113938f3e414a46e7/src/base_meta_value_format.h#L123), 可知 key 的初始 version值为执行添加/删除/更新指令时的当前系统时间【第一次添加 key】 或者 当前值自增【第二次以及后续多次对同一个 key 执行添加/删除/更新指令】。
 
-除了 strings 之外的其他数据结构【string 没有 version】，其 field/member 也有 version 值，field/member version 大于 key 的 version 时才会被认为是有效的 field/member，其初始值等于 key version。[参考文档13](http://baotiao.github.io/2016/05/18/pika-introduction/) 通过 version 实现了在 “秒删大量的key” 的场景下 “不删除, <font color=red>只做标记</font>, 时间复杂度O(1)”，“效率就够了”。
+除了 strings 之外的其他数据结构【string 没有 version】，其 field/member 也有 version 值，field/member version 大于 key 的 version 时才会被认为是有效的 field/member，其初始值等于 key version。[参考文档13](http://baotiao.github.io/2016/05/18/pika-introduction.html) 通过 version 实现了在 “秒删大量的key” 的场景下 “不删除, <font color=red>只做标记</font>, 时间复杂度O(1)”，“效率就够了”。
 
 秒删操作可以认为是只做标记，把 key version 设置为当前时间，集合中 field/member version 小于 key version 的都是过时的，因为当前所有的 field/member 被添加/删除/更新时其 version 值为写入时的 key version，其值一定小于最新的 key version 值。执行删除 set/zset/list/hashtable 时，[**base\_meta\_value\_format.h:ParsedBaseMetaValue::InitialMetaValue**](https://github.com/Qihoo360/blackwidow/blob/2490ebd29d95fcbed5356b2113938f3e414a46e7/src/base_meta_value_format.h#L97) 函数会被调用，其操作为：
 
@@ -322,7 +322,7 @@ version 则与 del 命令删除 key 相关，参照 [**base\_meta\_value\_format
 - 2 把 timestamp 置零；
 - 3 调用 [**base\_meta\_value\_format.h:ParsedBaseMetaValue::UpdateVersion**](https://github.com/Qihoo360/blackwidow/blob/2490ebd29d95fcbed5356b2113938f3e414a46e7/src/base_meta_value_format.h#L123) 更新 version。
 
-Pika 后续执行 get 指令时，会依据 timestamp 和 version 判断数据是否过时。Rocksdb 进行 compaction 时，也会调用各个 Filter 接口依据  timestamp 和 version 判定数据是否已经超时，若超时则进行物理删除。[参考文档13](http://baotiao.github.io/2016/05/18/pika-introduction/) 给出了各个操作过程中 version 的处理：
+Pika 后续执行 get 指令时，会依据 timestamp 和 version 判断数据是否过时。Rocksdb 进行 compaction 时，也会调用各个 Filter 接口依据  timestamp 和 version 判定数据是否已经超时，若超时则进行物理删除。[参考文档13](http://baotiao.github.io/2016/05/18/pika-introduction.html) 给出了各个操作过程中 version 的处理：
 
 ```
 Put：查询key的最新版本，后缀到val；
@@ -1271,7 +1271,7 @@ RocksDB 通过提供常用场景的 API 之外，还提供了一些适用于特�
 - 10 [RocksDB in TiKV](https://pingcap.com/blog/2017-09-15-rocksdbintikv/)
 - 11 [RocksDB MemTable源码分析](https://www.jianshu.com/p/9e385682ed4e)
 - 12 [How we Hunted a Data Corruption bug in RocksDB](https://pingcap.com/blog/2017-09-08-rocksdbbug/)
-- 13 [pika introduction](http://baotiao.github.io/2016/05/18/pika-introduction/)
+- 13 [pika introduction](http://baotiao.github.io/2016/05/18/pika-introduction.html)
 - 14 [锁的应用](https://github.com/Qihoo360/pika/wiki/pika-%E9%94%81%E7%9A%84%E5%BA%94%E7%94%A8)
 - 15 [RocksDB上锁机制](http://www.cnblogs.com/cchust/p/7107392.html)
 - 16 [pika-config](https://github.com/Qihoo360/pika/wiki/pika-config)
