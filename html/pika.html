@@ -349,7 +349,7 @@ kbd {
 
 <p>最终这个“光荣任务”落在了愚人肩上。本文用来记录我阅读代码并在改进 Pika 【到 2018/09/07 为止主要是开发相关工具】过程中遇到的一些问题。</p>
 
-<p>Ardb 作者在<a href="http://yinqiwen.github.io/">参考文档5</a>文中对 Pika 的评价是  “直接修改了rocksdb代码实现某些功能。这种做法也是双刃剑，改动太多的话，社区的一些修改是很难merge进来的”。与几个比较主流的基于 RocksDB 实现的 KV 存储引擎（如 TiKV/SSDB/ARDB/CockroachDB）作比较，Pika 确实对 RocksDB 的代码侵入比较严重。至于为何修改这么大，最终的一个原因就是效率考虑，如<a href="http://baotiao.github.io/2016/05/18/pika-introduction.html">参考文档13</a>提到秒删功能时，说道 <code>需要改动下层rocksdb，一定程度破坏了rocksdb的封装，各个模块之间耦合起来</code>。另一个原因可能就是架构设计使然了，譬如 <strong>#2 数据备份#</strong> 一节中详述的 Nemo 自己实现的独立的备份引擎，而 RocksDB 自身是有备份机制的，之所以修改是因为 Pika 自身独立设计了一套独立于 RocksDB 的 binlog 存储机制。</p>
+<p>Ardb 作者在<a href="http://yinqiwen.github.io/">参考文档5</a>文中对 Pika 的评价是  “直接修改了rocksdb代码实现某些功能。这种做法也是双刃剑，改动太多的话，社区的一些修改是很难merge进来的”。与几个比较主流的基于 RocksDB 实现的 KV 存储引擎（如 TiKV/SSDB/ARDB/CockroachDB）作比较，Pika 确实对 RocksDB 的代码侵入比较严重。至于为何修改这么大，最终的一个原因就是效率考虑，如<a href="http://baotiao.github.io/2016/05/18/pika-introduction.html">参考文档13</a>提到秒删功能时，说道 <strong>需要改动下层rocksdb，一定程度破坏了rocksdb的封装，各个模块之间耦合起来</strong>。另一个原因可能就是架构设计使然了，譬如 <strong>#2 数据备份#</strong> 一节中详述的 Nemo 自己实现的独立的备份引擎，而 RocksDB 自身是有备份机制的，之所以修改是因为 Pika 自身独立设计了一套独立于 RocksDB 的 binlog 存储机制。</p>
 
 <h3 id="toc_2">1 数据迁移</h3>
 
@@ -376,7 +376,7 @@ kbd {
 <li><p>pika 的 binlog record 在每个 redis 写命令后面追加了四个额外信息，分别是：Pika Magic [kPikaBinlogMagic]、server_id【用于双 master 同步时做去重】、binlog info【主要是执行命令的时间】以及 send hub 信息，需要过滤掉；</p>
 
 <blockquote>
-<p>代码详见 include/pika_command.h:Cmd::AppendAffiliatedInfo，修改后的 redis 命令 <code>set A 1</code> 格式为 <code>*7\r\n$3\r\nset\r\n$1\r\nA\r\n$1\r\n1\r\n$14\r\n__PIKA_X#$SKGI\r\n$1\r\n1\r\n$16\r\nj[m\r\n$1\r\n1\r\n</code></p>
+<p>代码详见 include/pika<em>command.h:Cmd::AppendAffiliatedInfo，修改后的 redis 命令 <code>set A 1</code> 格式为 &quot;*7\r\n$3\r\nset\r\n$1\r\nA\r\n$1\r\n1\r\n$14\r\n</em><em>PIKA</em>X#$SKGI\r\n$1\r\n1\r\n$16\r\nj[m\r\n$1\r\n1\r\n&quot;</p>
 
 <p>这些补充信息在跨机房数据同步的情况下也很有用，详细内容见<a href="http://kernelmaker.github.io/pika-muli-idc">参考文档7</a></p>
 </blockquote></li>
@@ -1648,7 +1648,7 @@ Redis::Redis()
 <li>BackupEngine::VerifyBackups 用于对备份数据进行校验，但是仅仅根据 meta 目录下各个 ID 文件记录的文件 size 与 相应的 private 目录下的文件的 size 是否相等，并不会进行 checksum 校验，校验 checksum 需要读取数据文件，比较费时，<a href="https://pingcap.com/blog/2017-09-08-rocksdbbug/">参考文档12</a>中提到 TiKV 的数据一致性校验方法就是查验一个 Region 中各个 replica 文件的 checksum 是否一致；</li>
 </ul>
 
-<p>补：<a href="https://pingcap.com/blog/2017-09-08-rocksdbbug/">参考文档12</a> 中有句话 <code>After a few days, we got some suspicious places but still nothing solid, except to realize that the DeleteRange implementation was more complicated than we expected</code> 比较有意思，说明 RocksDB 确实不是很容读懂的嘛，术业有专攻，某某同行不能因为自己读了一些 RocksDB 的代码就鄙视那些没有读过的人。</p>
+<p>补：<a href="https://pingcap.com/blog/2017-09-08-rocksdbbug/">参考文档12</a> 中有句话 <strong>After a few days, we got some suspicious places but still nothing solid, except to realize that the DeleteRange implementation was more complicated than we expected</strong> 比较有意思，说明 RocksDB 确实不是很容读懂的嘛，术业有专攻，某某同行不能因为自己读了一些 RocksDB 的代码就鄙视那些没有读过的人。</p>
 
 <h2 id="toc_45">参考文档</h2>
 
@@ -1710,7 +1710,6 @@ Redis::Redis()
 <li>2018/11/13，于雨氏，于西二旗结合 参考文档19 在 #Pika 主从 Binlog 处理机制# 小节中补充<code>心跳与逻辑</code>部分内容。 </li>
 </ul>
 </blockquote>
-
 
 
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
