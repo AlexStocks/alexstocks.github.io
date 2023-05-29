@@ -520,7 +520,7 @@ If the process either catches the signal and returns from the signal handler, or
 
 <p><code>CreateCheckpoint</code> 接口可以认为是同步操作，它通过调用 <code>GetCheckpointFiles</code> 和 <code>CreateCheckpointWithFiles</code> 实现数据备份。</p>
 
-<p><code>DBNemoCheckpointImpl::GetCheckpointFiles</code> 先执行 “组织文件删除”，然后再获取快照内容。</p>
+<p><code>DBNemoCheckpointImpl::GetCheckpointFiles</code> 先执行 “阻止文件删除”，然后再获取快照内容。</p>
 
 <p><code>DBNemoCheckpointImpl::CreateCheckpointWithFiles(checkpoint_dir, BackupContent)</code> 详细流程:</p>
 
@@ -1712,6 +1712,7 @@ Redis::Redis()
 </blockquote>
 
 
+
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 <!-- baidu statistic start -->
 <script>
@@ -1742,6 +1743,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 
 

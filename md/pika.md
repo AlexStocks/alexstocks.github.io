@@ -174,7 +174,7 @@ class DBNemoCheckpointImpl : public DBNemoCheckpoint {
 
 `CreateCheckpoint` 接口可以认为是同步操作，它通过调用 `GetCheckpointFiles` 和 `CreateCheckpointWithFiles` 实现数据备份。
 
-`DBNemoCheckpointImpl::GetCheckpointFiles` 先执行 “组织文件删除”，然后再获取快照内容。
+`DBNemoCheckpointImpl::GetCheckpointFiles` 先执行 “阻止文件删除”，然后再获取快照内容。
 
 `DBNemoCheckpointImpl::CreateCheckpointWithFiles(checkpoint_dir, BackupContent)` 详细流程:
 
