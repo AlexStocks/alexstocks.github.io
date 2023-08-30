@@ -42,7 +42,6 @@ RocksDB的三种基本文件格式是 memtable/sstfile/logfile，memtable 是一
 
 基于 RocksDB 设计存储系统，要考虑到应用场景进行各种 tradeoff 设置相关参数。譬如，如果 RocksDB 进行 compaction 比较频繁，虽然有利于空间和读，但是会造成读放大；compaction 过低则会造成读放大和空间放大；增大每个 level 的 comparession 难度可以减小空间放大，但是会增加 cpu 负担，是运算时间增加换取使用空间减小；增大 SSTfile 的 data block size，则是增大内存使用量来加快读取数据的速度，减小读放大。
 
-
 单独的 Get/Put/Delete 是原子操作，要么成功要么失败，不存在中间状态。
 
 如果需要进行批量的 Get/Put/Delete 操作且需要操作保持原子属性，则可以使用 WriteBatch。
@@ -130,7 +129,7 @@ virtual Status Get(const ReadOptions& options,
 
 这里的 PinnableSlice 如同 Slice 一样可以减少内存拷贝，提高读性能，但是 PinnableSlice 内部有一个引用计数功能，可以实现数据内存的延迟释放，延长相关数据的生命周期，相关详细分析详见 [参考文档15](https://zhuanlan.zhihu.com/p/30807728)。
 
-[参考文档16](https://rocksdb.org/blog/2017/08/24/pinnableslice.html) 提到 `PinnableSlice, as its name suggests, has the data pinned in memory. The pinned data are released when PinnableSlice object is destructed or when ::Reset is invoked explicitly on it.`。所谓的 **pinned in memory** 即为引用计数之意，文中提到内存数据释放是在 PinnableSlice 析构或者调用 ::Reset 之后。
+[参考文档16](https://rocksdb.org/blog/2017/08/24/pinnableslice.html) 提到 **"PinnableSlice, as its name suggests, has the data pinned in memory. The pinned data are released when PinnableSlice object is destructed or when ::Reset is invoked explicitly on it"**。所谓的 **pinned in memory** 即为引用计数之意，文中提到内存数据释放是在 PinnableSlice 析构或者调用 ::Reset 之后。
 
 用户也可以把一个 std::string 对象作为 PinnableSlice 构造函数的参数， 把这个 std::string 指定为 PinnableSlice 的初始内部 buffer [ rocksdb/slice.h:PinnableSlice::buf_ ]，使用方法可以参考 [用新 Get 实现的旧版本的 Get](https://github.com/facebook/rocksdb/blob/9e583711144f580390ce21a49a8ceacca338fcd5/include/rocksdb/db.h#L314)：
 
@@ -159,7 +158,7 @@ virtual Status Get(const ReadOptions& options,
 
 当使用 TransactionDB 或者 OptimisticTransactionDB 的时候，可以使用 RocksDB 的 BEGIN/COMMIT/ROLLBACK 等事务 API。RocksDB 支持活锁或者死等两种事务。
 
-WriteBatch 默认使用了事务，确保批量写成功。
+WriteBatch 默认使用了事务，确保跨 column families 的写操作为原子级操作。
 
 当打开一个 TransactionDB 的时候，如果 RocksDB 检测到某个 key 已经被别的事务锁住，则 RocksDB 会返回一个 error。如果打开成功，则所有相关 key 都会被 lock 住，直到事务结束。TransactionDB 的并发特性表现要比 OptimisticTransactionDB 好，但是 TransactionDB 的一个小问题就是不管写发生在事务里或者事务外，他都会进行写冲突检测。TransactionDB 使用示例代码如下：
 
@@ -222,7 +221,7 @@ RocksDB 把相邻的 key 放到同一个 block 中，block 是数据存储和传
 
 RocksDB 控制写内存 buffer 数目的参数是 `Options::max_write_buffer_number`。这个值默认是 2，当一个 buffer 的数据被 flush 到磁盘上的时候，RocksDB 就用另一个 buffer 作为数据读写缓冲区。
 
-‘Options::min_write_buffer_number_to_merge’ 设定了把写 buffer 的数据固化到磁盘上时对多少个 buffer 的数据进行合并然后再固化到磁盘上。这个值如果为 1，则 L0 层文件只有一个，这会导致读放大，这个值太小会导致数据固化到磁盘上之前数据去重效果太差劲。
+`Options::min_write_buffer_number_to_merge` 设定了把写 buffer 的数据固化到磁盘上时对多少个 buffer 的数据进行合并然后再固化到磁盘上。这个值如果为 1，则 L0 层文件只有一个，这会导致读放大，这个值太小会导致数据固化到磁盘上之前数据去重效果太差劲。
 
 这两个值并不是越大越好，太大会延迟一个 DB 被重新打开时的数据加载时间。
 
@@ -373,7 +372,7 @@ RocksDB的内存大致有如下四个区：
 
 Index 由 key、offset 和 size 三部分构成，当 Block Cache 增大 Block Size 时，block 个数必会减小，index 个数也会随之降低，如果减小 key size，index 占用内存空间的量也会随之降低。
 
-filter是 bloom filter 的实现，如果假阳率是 1%，每个key占用 10 bits，则总占用空间就是 `num_of_keys * 10 bits`，如果缩小 bloom 占用的空间，可以设置 `options.optimize_filters_for_hits = true`，则最后一个 level 的 filter 会被关闭，bloom 占用率只会用到原来的 10% 。
+filter 是 bloom filter 的实现，如果假阳率是 1%，每个key占用 10 bits，则总占用空间就是 `num_of_keys * 10 bits`，如果缩小 bloom 占用的空间，可以设置 `options.optimize_filters_for_hits = true`，则最后一个 level 的 filter 会被关闭，bloom 占用率只会用到原来的 10% 。
 
 结合 block cache 所述，index & filter 有如下优化选项：
 
@@ -403,7 +402,7 @@ block cache、index & filter 都是读 buffer，而 memtable 则是写 buffer，
 #### 2.4 Blocks pinned by iterators
 ---
 
-这部分内存空间一般占用总量不多，但是如果有 100k 之多的transactions 发生，每个 iterator 与一个 data block 外加一个 L1 的 data block，所以内存使用量大约为 `num_iterators * block_size * ((num_levels-1) + num_l0_files)`。
+这部分内存空间一般占用总量不多，但是如果有 100k 之多的 transactions 发生，每个 iterator 与一个 data block 外加一个 L1 的 data block，所以内存使用量大约为 `num_iterators * block_size * ((num_levels-1) + num_l0_files)`。
 
 可以通过如下代码获取 Pin Blocks 内存量大小：
 ​	
@@ -424,12 +423,11 @@ RocksDB 的读流程分为逻辑读(logical read)和物理读(physical read)。�
 * 在immutable_memtable中查找，查找不中转到下一流程；
 * 在第0层SSTable中查找，无法命中转到下一流程；
   
-  对于L0 的文件，RocksDB 采用遍历的方法查找，所以为了查找效率 RocksDB 会控制 L0 的文件个数。
+  对于 L0 的文件，RocksDB 采用遍历的方法查找，所以为了查找效率 RocksDB 会控制 L0 的文件个数。
 
 * 在剩余SSTable中查找。
 
   对于 L1 层以及 L1 层以上层级的文件，每个 SSTable 没有交叠，可以使用二分查找快速找到 key 所在的 Level 以及 SSTfile。
-
 
 至于写流程，请参阅 ### 5 Flush & Compaction 章节内容。
 
@@ -455,7 +453,7 @@ RocksDB 的读流程分为逻辑读(logical read)和物理读(physical read)。�
 
 Block Cache 是 RocksDB 的数据的缓存，这个缓存可以在多个 RocksDB 的实例下缓存。一般默认的Block Cache 中存储的值是未压缩的，而用户可以再指定一个 Block Cache，里面的数据可以是压缩的。用户访问数据先访问默认的 Block Cache，待无法获取后再访问用户 Cache，用户 Cache 的数据可以直接存入 page cache 中。
 
-Cache 有两种：LRUCache 和 BlockCache。Block 分为很多 Shard，以减小竞争，所以 shard 大小均匀一致相等，默认 Cache 最多有 64 个 shards，每个 shard 的 最小 size 为 512k，总大小是 8M，类别是 LRU。
+Cache 有两种：LRUCache 和 ClockCache。Block 分为很多 Shard，以减小竞争，所以 shard 大小均匀一致相等，默认 Cache 最多有 64 个 shards，每个 shard 的 最小 size 为 512k，总大小是 8M，类别是 LRU。
 
 ```c++
 	std::shared_ptr<Cache> cache = NewLRUCache(capacity);  
@@ -471,15 +469,15 @@ Cache 有两种：LRUCache 和 BlockCache。Block 分为很多 Shard，以减小
 table_options.block_cache_compressed = cache;
 ```
 
-如果 Cache 为 nullptr，则RocksDB会创建一个，如果想禁用 Cache，可以设置如下 Option：
+如果 Cache 为 nullptr，则 RocksDB 会创建一个，如果想禁用 Cache，可以设置如下 Option：
 
 ```c++
 table_options.no_block_cache = true;
 ```
 
-默认情况下RocksDB用的是 LRUCache，大小是 8MB， 每个 shard 单独维护自己的 LRU list 和独立的 hash table，以及自己的 Mutex。
+默认情况下 RocksDB 用的是 LRUCache，大小是 8MB， 每个 shard 单独维护自己的 LRU list 和独立的 hash table，以及自己的 Mutex。
 
- RocksDB还提供了一个 ClockCache，每个 shard 有自己的一个 circular list，有一个 clock handle 会轮询这个 circular list，寻找过时的 kv，如果 entry 中的 kv 已经被访问过则可以继续存留，相对于 LRU 好处是无 mutex lock，circular list 本质是 tbb::concurrent_hash_map，从 benchmark 来看，二者命中率相似，但吞吐率 Clock 比 LRU 稍高。
+ RocksDB 还提供了一个 ClockCache，每个 shard 有自己的一个 circular list，有一个 clock handle 会轮询这个 circular list，寻找过时的 kv，如果 entry 中的 kv 已经被访问过则可以继续存留，相对于 LRU 好处是无 mutex lock，circular list 本质是 tbb::concurrent_hash_map，从 benchmark 来看，二者命中率相似，但吞吐率 Clock 比 LRU 稍高。
 
 Block Cache初始化之时相关参数：
 
@@ -695,7 +693,7 @@ L0 中所有的 sst 文件都可能存在重叠的 key range，假设所有的 s
 
 `Universal Compaction` 主要针对低写放大场景，跟 `Leveled Compaction` 相比一次合并文件较多但因为一次只处理 L0 所以写放大整体较低，但是空间放大效应比较大。
 
-RocksDB 还支持一种 FIFO 的 compaction。FIFO 顾名思义就是先进先出，这种模式周期性地删除旧数据。在 FIFO 模式下，所有文件都在 L0，当 sst 文件总大小超过阀值 max_table_files_size，则删除最老的 sst 文件。[参考文档21](https://www.jianshu.com/p/0fdeed70b36a)中提到可以基于 FIFO compaction 机制把 RocksDB 当做一个时序数据库：`对于 FIFO 来说，它的策略非常的简单，所有的 SST 都在 Level 0，如果超过了阈值，就从最老的 SST 开始删除，其实可以看到，这套机制非常适合于存储时序数据`。
+RocksDB 还支持一种 FIFO 的 compaction。FIFO 顾名思义就是先进先出，这种模式周期性地删除旧数据。在 FIFO 模式下，所有文件都在 L0，当 sst 文件总大小超过阀值 `max_table_files_size`，则删除最老的 sst 文件。[参考文档21](https://www.jianshu.com/p/0fdeed70b36a)中提到可以基于 FIFO compaction 机制把 RocksDB 当做一个时序数据库：**对于 FIFO 来说，它的策略非常的简单，所有的 SST 都在 Level 0，如果超过了阈值，就从最老的 SST 开始删除，其实可以看到，这套机制非常适合于存储时序数据**。
 
 整个 compaction 是 LSM-tree 数据结构的核心，也是rocksDB的核心，详细内容请阅读 [参考文档8](https://github.com/facebook/rocksdb/wiki/Universal-Compaction) 和 [参考文档9](https://github.com/facebook/rocksdb/wiki/Leveled-Compaction)。
 
@@ -710,8 +708,8 @@ RocksDB 自身之提供了 Put/Delete/Get 等接口，若需要在现有值上�
 
 如果希望整个过程是原子操作，就需要借助 RocksDB 的 Merge 接口了。[参考文档14](https://www.jianshu.com/p/e13338a3f161) 给出了 RocksDB Merge 接口定义如下： 
 
-+ 1 封装了read - modify - write语义，对外统一提供简单的抽象接口；
-+ 2 减少用户重复触发Get操作引入的性能损耗；
++ 1 封装了 read - modify - write 语义，对外统一提供简单的抽象接口；
++ 2 减少用户重复触发 Get 操作引入的性能损耗；
 + 3 通过决定合并操作的时间和方式，来优化后端性能，并达到并不改变底层更新的语义；
 + 4 渐进式的更新，来均摊更新带来带来的性能损耗，以得到渐进式的性能提升。
 
@@ -759,7 +757,7 @@ RocksDB AssociativeMergeOperator 被称为关联性 Merge Operator，[参考文�
 + 调用Put接口写入RocksDB的数据的格式和Merge接口是相同的
 + 用用户自定义的merge操作，可以将多个merge操作数合并成一个
 
-` **MergeOperator还可以用于非关联型数据类型的更新。** 例如，在RocksDB中保存json字符串，即Put接口写入data的格式为合法的json字符串。而Merge接口只希望更新json中的某个字段。所以代码可能是这样`：
+` **MergeOperator 还可以用于非关联型数据类型的更新。** 例如，在 RocksDB 中保存 json 字符串，即Put接口写入 data 的格式为合法的 json 字符串。而 Merge 接口只希望更新 json 中的某个字段。所以代码可能是这样`：
 
 ```C++
     // Put/store the json string into to the database
@@ -887,7 +885,7 @@ RocksDB 进程 Crash 后 Reboot 的过程中，会首先读取 Manifest 文件�
 * 其后是删除文件，可能有多个，格式为{kDeletedFile, level, file number}。
 * 最后是新文件，可能有多个，格式为{kNewFile, level, file number, file size, min key, max key}。
 
-RocksDB MANIFEST文件所保存的数据基本是来自于VersionEdit这个结构，MANIFEST包含了两个文件，一个log文件一个包含最新MANIFEST文件名的文件，Manifest的log文件名是这样 MANIFEST-(seqnumber)，这个seq会一直增长，只有当 超过了指定的大小之后，MANIFEST会刷新一个新的文件，当新的文件刷新到磁盘(并且文件名更新)之后，老的文件会被删除掉，这里可以认为每一次MANIFEST的更新都代表一次snapshot，其结构描述如下：
+RocksDB MANIFEST文件所保存的数据基本是来自于VersionEdit这个结构，MANIFEST包含了两个文件，一个log文件一个包含最新MANIFEST文件名的文件，Manifest的log文件名是这样 MANIFEST-(seqnumber)，这个seq会一直增长，只有当 超过了指定的大小之后，MANIFEST会刷新一个新的文件，当新的文件刷新到磁盘(并且文件名更新)之后，老的文件会被删除掉，这里可以认为每一次 MANIFEST 的更新都代表一次 snapshot，其结构描述如下：
 
     MANIFEST = { CURRENT, MANIFEST-<seq-no>* }  
     CURRENT = File pointer to the latest manifest log 
