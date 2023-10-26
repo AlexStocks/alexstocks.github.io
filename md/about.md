@@ -19,6 +19,8 @@
 
 |  时间段  |  会议  |  身份  |  相关连接  |
 | :---- | :---- | :--- | :----- | 
+| 20231024 | OpenAtom & CSDN 1024 程序员 | 讲师 |  [1024 程序员节暨「源聚一堂」开源技术沙龙（北京站）成功举办](https://mp.weixin.qq.com/s/kqt6HuJKszqrag7y8RoJAw) |
+| 20230923 | 2023 Pika Meetup | 发起人 | [一年一度的 Pika meetup，它来了！](https://mp.weixin.qq.com/s/DbYbGE4vSdURvkXdAkxaiw) |
 | 20230818 | [DTCC 2023 第十四届中国数据库技术大会](https://dtcc.it168.com/yicheng.html)  |  [NoSQL 数据库应用] 专场出品人兼讲师  | “一个大容量兼容 Redis 的 KV 数据库 Pika” | 
 | 20230721 | [K+ 2023 全球软件研发行业创新峰会](http://www.2023beijing.keylinkcon.com/) | “gRPC 协议应用开发的最佳选择：Dubbo-go” 讲师 | [云原生应用开发](http://www.2023beijing.keylinkcon.com/col.jsp?id=230) |
 | 20230609 | GopherChina 2023 大会 | “dubbogo 2022年 service mesh 方向新进展”讲师  |  [GopherChina 2022 大会](https://www.bagevent.com/event/8057917)<br/><br/>[2022 GopherChina 出品人及演讲内容揭晓（四）](https://jishuin.proginn.com/p/763bfbd7db91) |
