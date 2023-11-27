@@ -18,10 +18,11 @@
 > lectures
 
 |  时间段  |  会议  |  身份  |  相关连接  |
-| :---- | :---- | :--- | :----- | 
+| :---- | :---- | :--- | :----- |
+| 20231028 | GreptimeDB x KubeBlocks × Pika 联合 Meetup | 讲师 |  [云原生时代下的数据库新趋势](https://www.modb.pro/db/1717389412626161664) |
 | 20231024 | OpenAtom & CSDN 1024 程序员 | 讲师 |  [1024 程序员节暨「源聚一堂」开源技术沙龙（北京站）成功举办](https://mp.weixin.qq.com/s/kqt6HuJKszqrag7y8RoJAw) |
 | 20230923 | 2023 Pika Meetup | 发起人 | [一年一度的 Pika meetup，它来了！](https://mp.weixin.qq.com/s/DbYbGE4vSdURvkXdAkxaiw) |
-| 20230818 | [DTCC 2023 第十四届中国数据库技术大会](https://dtcc.it168.com/yicheng.html)  |  [NoSQL 数据库应用] 专场出品人兼讲师  | “一个大容量兼容 Redis 的 KV 数据库 Pika” | 
+| 20230818 | [DTCC 2023 第十四届中国数据库技术大会](https://dtcc.it168.com/yicheng.html)  |  [NoSQL 数据库应用] 专场出品人兼讲师  | “一个大容量兼容 Redis 的 KV 数据库 Pika” |
 | 20230721 | [K+ 2023 全球软件研发行业创新峰会](http://www.2023beijing.keylinkcon.com/) | “gRPC 协议应用开发的最佳选择：Dubbo-go” 讲师 | [云原生应用开发](http://www.2023beijing.keylinkcon.com/col.jsp?id=230) |
 | 20230609 | GopherChina 2023 大会 | “dubbogo 2022年 service mesh 方向新进展”讲师  |  [GopherChina 2022 大会](https://www.bagevent.com/event/8057917)<br/><br/>[2022 GopherChina 出品人及演讲内容揭晓（四）](https://jishuin.proginn.com/p/763bfbd7db91) |
 | 20230205 | QCon 全球软件开发大会（北京站）开源专场 | 讲师  |  [“做开源如同创业”，九死一生](https://view.inews.qq.com/k/20220308A01S8500)<br/><br/>[一边在大厂一线搬砖、一边操着CTO的心搞开源：一位普通中年程序员的开源十年路](https://view.inews.qq.com/k/20220414A05AVG00) |
@@ -29,23 +30,23 @@
 | 20220406 | CSDN云原生大会 | 讲师 | [让你的微服务在k8s上跑起来](https://blog.csdn.net/m0_46700908/article/details/123578855) |
 | 20220108 | CSDN&字节跳动 云原生 Meetup 北京站 | 讲师 | [解构dubbogo(文章末尾有 PPT)](https://bbs.csdn.net/topics/604228897) |
 | 20210808 | ApacheCon 2021 | webserver专题讲师 | [云原生高性能网关dubbo-go pixiu 介绍](https://apachecon.com/acasia2021/zh/sessions/1012.html) |
-| 20210731 | GIAC 2021 | 云原生专场出品人兼讲师 |  [专题出品人： 于雨](http://giac-history.msup.com.cn/Giac2020/schedule/subject?lid=8151) <br/><br/>[dubbogo 是如何炼成的？](https://mp.weixin.qq.com/s/attVemCAHybGm9xli9JlUw)<br/><br/> [dubbogo 3.0：dubbo 在云原生时代的基石](https://giac.msup.com.cn/teacher?id=8151) | 
+| 20210731 | GIAC 2021 | 云原生专场出品人兼讲师 |  [专题出品人： 于雨](http://giac-history.msup.com.cn/Giac2020/schedule/subject?lid=8151) <br/><br/>[dubbogo 是如何炼成的？](https://mp.weixin.qq.com/s/attVemCAHybGm9xli9JlUw)<br/><br/> [dubbogo 3.0：dubbo 在云原生时代的基石](https://giac.msup.com.cn/teacher?id=8151) |
 | 20210531 | 涛思科技第一次技术专题会议  | 讲师 |  秒级实时监控系统 |
 |  20201220 |  msup 2020壹佰大会 | 讲师 |  [更低成本的跨服务语言调用：Apache Dubbo-Go实践](https://www.top100summit.com/detail?id=14904)  |
 |  20201220 | 云原生社区 meetup 第二期北京站 | 讲师 |  [Apache/Dubbo-go 在云原生时代的实践与探索](https://www.bilibili.com/video/BV1Jv411t7tn/) 相关视频 B 站可见 |
-|  202012 |  coscon 2020 |  讲师 |  [云原生时代的 dubbo go 进化之道](https://open.gitcode.host/coscon-2020/track-b/14/) |  
+|  202012 |  coscon 2020 |  讲师 |  [云原生时代的 dubbo go 进化之道](https://open.gitcode.host/coscon-2020/track-b/14/) |
 |  20191228  |  Dubbo 开发者日杭州站 |  大会出品人 |  [Dubbo 开发者日杭州站](https://www.pianshen.com/article/46961464630/) |
 | 20191224 |  2019 Gopher Meetup 上海  |  讲师 |  [dubbogo 的现状与未来](https://gocn.vip/topics/9878) |
-| 20171223 |  2017 OSC 源创会 |  讲师 |  [同心开源，共建标准——2017 OSC 源创会年终盛典精彩回顾](https://mulanos.oschina.net/question/2686220_2271951) | 
+| 20171223 |  2017 OSC 源创会 |  讲师 |  [同心开源，共建标准——2017 OSC 源创会年终盛典精彩回顾](https://mulanos.oschina.net/question/2686220_2271951) |
 
 
 ### 1 以往博客说明:###
 ---
 - 1 [csdn blog: menggucaoyuan](http://blog.csdn.net/menggucaoyuan/article/category/1269292)
-- 2 [oschina blog: menggucaoyuan](http://my.oschina.net/alexstocks/blog?fromerr=ueepi6wH) 
+- 2 [oschina blog: menggucaoyuan](http://my.oschina.net/alexstocks/blog?fromerr=ueepi6wH)
 - 3 [cnblogs blog: menggucaoyuan](http://www.cnblogs.com/menggucaoyuan/)
 
- 
+
 个人以往写了一些博客，所有的博客林林总总都写在以上三家博客栏里，然而不打算接着在这三家的地盘写了，以后有文章只放在[github博客系统](http://alexstocks.github.io/)。对于以往的博客，在本文作为一番综述，以作一个了结。我以往写博客的历史，分为两个阶段：
 
 - 1 2010年工作至今，以上链接里的所有blog主要是关于个人对后台分布式知识的粗浅理解，几乎都是自己的原创，很少转载的几篇都标明了转载来源，但是不注重格式，所以就不搬到github blog上了，下面分别整理一下列出来，算作是梳理下自己的知识系统。
@@ -60,13 +61,13 @@
 ---
 **由于一些博客在多家的地盘放着，由于用户评论也不同，我就对blog做相应的修改，多版本就造成了数据不一致，故而在此都列出来**
 
-- lisk 
+- lisk
 
      *个人用C语言实现的一套linux基础库，花费三年有余*
      > https://github.com/AlexStocks/lisk
 
 - protobuf & flatbuffer
-    
+
     *大概2014的时候，当时FlatBuffer刚出来一周，个人出于好奇心花费了一个周末将其代码通读了一遍，并做了一些测试，于是就有了下面以一些文章。时移世易，由于个人工作中也不是用FlatBuffer，后来再也没有碰过它，文章中的一些观点到现在是否还能成立，我不保证。*
 	> [protobuf v3测试](http://blog.csdn.net/menggucaoyuan/article/details/43603829)
 
@@ -95,7 +96,7 @@
 
 	*此文发出后，被intel中国社区的人看到，便把拙作稍作改变，又发到了intel技术社区，名字是《介绍一种服务器缓存结构 --- 多级 Hash》，下面有列出*
 	> [多级hash](http://blog.csdn.net/menggucaoyuan/article/details/8856589)
-	
+
 -  后台分布式系统以及linux系统开发
 
 	> [分布式散记](http://blog.csdn.net/menggucaoyuan/article/details/42928559)
@@ -109,7 +110,7 @@
 	> [多线程下写日志](http://blog.csdn.net/menggucaoyuan/article/details/40656941)
 
 	> [Redis Cluster](http://my.oschina.net/alexstocks/blog/397773)
-	> 
+	>
 	> [redis性能提高与Nagel算法](http://my.oschina.net/alexstocks/blog/387715)
 
 	> [redis的一些坑](http://my.oschina.net/alexstocks/blog/378086)
@@ -117,13 +118,13 @@
 	> [docker粗浅理解](http://blog.csdn.net/menggucaoyuan/article/details/40042163)
 
 	> [bloom filter与dawgdic（一种trie树）](http://blog.csdn.net/menggucaoyuan/article/details/39058141)
-	
+
 	> [多个线程如何操作同一个epoll fd](http://blog.csdn.net/menggucaoyuan/article/details/38959725)
-	
+
 	> [高性能web服务器的秘密核武器](http://blog.csdn.net/menggucaoyuan/article/details/38470221)
 
 	> [如何快速的把日志输出到磁盘上](http://my.oschina.net/alexstocks/blog/299619)
-	> 
+	>
 	> [如何快速的把日志输出到磁盘上](http://blog.csdn.net/menggucaoyuan/article/details/38460419)
 
 	> [EINTR错误处理](http://blog.csdn.net/menggucaoyuan/article/details/8904304)
@@ -150,17 +151,17 @@
 	> [编译器内部的秘密--微软的编译器是如何解析Try/Catch/Throw的](http://blog.csdn.net/menggucaoyuan/article/details/6299013)
 
 	> [FAT文件系统格式描述](http://blog.csdn.net/menggucaoyuan/article/details/6109595)
-		
+
 -  计算机语言
-	
+
     > [golang中method的传值与传地址](http://blog.csdn.net/menggucaoyuan/article/details/43056261)
 
 	> [golang中的use-a和has-a](http://blog.csdn.net/menggucaoyuan/article/details/43055559)
 
 	> [golang中MD5值计算问题](http://blog.csdn.net/menggucaoyuan/article/details/42742541)
-	
+
 	> [C++11中lock_guard和unique_lock的区别](http://blog.csdn.net/menggucaoyuan/article/details/40985763)
-	
+
 	> [关于调用函数gettid的错误提示](http://blog.csdn.net/menggucaoyuan/article/details/9054111)
 
 	> [C语言运算时的参数符号自动转换](http://blog.csdn.net/menggucaoyuan/article/details/8554739)
@@ -172,7 +173,7 @@
 	> [怎样安全的使用可变参数宏__VA_ARGS__](http://blog.csdn.net/menggucaoyuan/article/details/8062180)
 
 	> [关于宏的两个bug](http://blog.csdn.net/menggucaoyuan/article/details/7989038)
-	
+
 	> [数组是否应该初始化？](http://blog.csdn.net/menggucaoyuan/article/details/6766432)
 
 	> [某公司的几道面试题](http://blog.csdn.net/menggucaoyuan/article/details/6601934)
@@ -182,7 +183,7 @@
 	> [避免使用goto语句的几种方法](http://blog.csdn.net/menggucaoyuan/article/details/6299625)
 
 	> [const型变量与函数重载](http://blog.csdn.net/menggucaoyuan/article/details/5958238)
-			
+
 - 图形学
 
 	> [用盛金公式求解一元三次方程](http://blog.csdn.net/menggucaoyuan/article/details/6680143)
@@ -190,7 +191,7 @@
 	> [关于颜色的透明度的形象理解](http://blog.csdn.net/menggucaoyuan/article/details/6063216)
 
 	> 下文链接是http://blog.csdn.net/menggucaoyuan/article/details/6365596，记忆中是2011-04-26 23:22(http://www.boyunjian.com/do/article/s.do?keyword=CUDA%20%E5%AE%89%E8%A3%85&pageno=7显示时间)我翻译自codeproject上的一篇教程文章，后来觉得文章实在不入流就删除了，从Wikipedia链接：https://zh.wikipedia.org/wiki/User:Wissning显示最后修改时间是2012年6月13日 (星期三) 07:14，这个时间应该是删除时间。不过既然有网站转载就说明它还有用，下面附上两个转载链接(但是二者都没声明是转载文章更没有指出转载来源^_^)。
-	> 
+	>
 	>  [CUDA: 通过九个步骤实现在VS2010中加载CUDA 3.2](http://www.jeepshoe.org/285540142.htm)
 
 	>  [CUDA: 通过九个步骤实现在VS2010中加载CUDA 3.2](http://www.xuebuyuan.com/2051642.html)
@@ -198,7 +199,7 @@
 - 其他
 
 	> [互联网新贵英雄谱](http://blog.csdn.net/menggucaoyuan/article/details/6873171)
-		
+
 ### 2 tools ###
 ---
 -	:
@@ -212,51 +213,51 @@
 
     *这个没什么好说的，不想多做解释*
 	> https://github.com/AlexStocks/jinbang
-	
+
 	*xorlist，对数据结构研究深入的人应该知道这个玩意的好处*
 	> https://github.com/AlexStocks/test/tree/master/goext/src/container/xorlist
-	
+
 	* python
-	
+
 	*redis数据冷备工具，懂行的人应该知道它会很好用*
 	> https://github.com/AlexStocks/test/tree/master/data_backup/scs-script
 
 	> https://github.com/AlexStocks/test/tree/master/data_backup/bae-script
 
 	* java
-	
+
 	*bloom & ketama algorithm*
 	> https://github.com/AlexStocks/test/tree/master/bloom
 
 	> https://github.com/AlexStocks/test/tree/master/ketama/ketama
 
 	* C
-	
+
 	*状态机fsm*
 	> https://github.com/AlexStocks/test/tree/master/fsm
-	
+
 	*无锁队列*
 	> https://github.com/AlexStocks/test/tree/master/ring-buffer
 	* protobuf
-	
+
 	*对protobuf的测试*
 	> https://github.com/AlexStocks/test/tree/master/pb-test
-	
+
 	* Redis
 
 	*给redis migrate命令提交的一个patch[redis migrate with password，即给migrate命令添加了一个密码验证功能]*
 	> https://github.com/antirez/redis/pull/2507
-	> 
+	>
 	> https://github.com/AlexStocks/redis/commit/30ef3fa99d60e86816f746ae0877f62e1de394df
-	> 
+	>
 	> [redis的一些坑](http://my.oschina.net/alexstocks/blog/378086)
-	> 
+	>
 	> [redis性能提高与Nagel算法](http://my.oschina.net/alexstocks/blog/387715)
 	>
 	> [redis工具集](https://github.com/AlexStocks/redis-tool-set)
-	> 
+	>
 	> [redis server replication 源码分析](http://alexstocks.github.io/html/redis_replication_readme.html)
-	> 
+	>
 	> [一种基于Redis的多租户多粒度分布式内存文件系统](http://alexstocks.github.io/html/redis_cluster.html)
 
 ### 3 跋 ###
