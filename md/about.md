@@ -19,6 +19,7 @@
 
 |  时间段  |  会议  |  身份  |  相关连接  |
 | :---- | :---- | :--- | :----- |
+| 20240705 | SDCON 2024 | 演讲嘉宾 | [AI 时代下 PikiwiDB（Pika）云原生实践与探索](https://sdcon.com.cn/speaker/902?uid=c1037) |
 | 20240518 | TiDB 社区走进 360 | 讲师 |  [降本增效的利器：TiDB+PikiwiDB (Pika) 双剑合璧](https://asktug.com/t/topic/1025779) |
 | 20240412 | DTC 2024 | 讲师 |  [2024 DTC数据技术嘉年华全议程发布：汇聚行业精英，共襄年度盛宴](https://mp.weixin.qq.com/s/xTFGmIWq-VmHdv-Rmjv6iQ) |
 | 20231028 | GreptimeDB x KubeBlocks × Pika 联合 Meetup | 讲师 |  [云原生时代下的数据库新趋势](https://www.modb.pro/db/1717389412626161664) |
