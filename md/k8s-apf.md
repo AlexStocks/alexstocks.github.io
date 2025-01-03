@@ -323,6 +323,7 @@ kubectl get prioritylevelconfigurations -o custom-columns="uid:{metadata.uid},na
 [1]:https://kubernetes.io/docs/concepts/cluster-administration/flow-control/
 [2]:https://cloud.tencent.com/developer/article/1613890
 [3]:https://mp.weixin.qq.com/s/q0ehyR6oNgyWmR57D_eZOA
+[3]:https://www.cnblogs.com/charlieroro/p/17703031.html
 
 ## Payment
 
