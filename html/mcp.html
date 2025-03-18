@@ -625,6 +625,33 @@ functions = [
         onmessage: (message: JSONRPCMessage) =&gt; void;
     }</code></pre></div>
 
+<p>在 MCP 框架内，定义了一系列核心消息类型，这些类型被称为“原语”，它们用于规范客户端和服务器之间的交互 。这些原语可以分为服务器端原语和客户端原语。</p>
+
+<p>客户端原语：</p>
+
+<ul>
+<li><strong>Roots（根）</strong>: 这些代表了宿主机文件系统或环境中的入口点。在获得适当的权限后，MCP 服务器可以访问这些根目录下的资源。虽然根资源（Roots）主要用于文件系统路径，但它们也可以是任何有效的 URI，包括 HTTP URL。</li>
+</ul>
+
+<p>以下是一个典型的 MCP 客户端如何暴露根资源（Roots）的示例：</p>
+
+<div><pre><code class="language-Js">{
+  &quot;roots&quot;: [
+    {
+      &quot;uri&quot;: &quot;file:///home/user/projects/frontend&quot;,
+      &quot;name&quot;: &quot;前端代码库&quot;
+    },
+    {
+      &quot;uri&quot;: &quot;https://api.example.com/v1&quot;,
+      &quot;name&quot;: &quot;API 端点&quot;
+    }
+  ]
+}</code></pre></div>
+
+<p>该配置建议服务器同时关注本地代码库和一个 API 端点，并保持它们在逻辑上的独立性。</p>
+
+<p>Client 通过 Roots 为服务器提供相关资源的边界，当 Roots 发生变化时通知服务器。根资源（Roots）只是提供信息，并无强制性，仅仅是建议 Server 遵守。</p>
+
 <h3 id="toc_9">2.3 <strong>MCP Server（服务器）</strong></h3>
 
 <p><img src="../pic/mcp-agent-server-function-calling.png" alt=""></p>
@@ -637,7 +664,7 @@ functions = [
 
 <p>MCP 协议的核心在于 Server：MCP Server 是为了实现 AI Agent 的自动化而存在的，它是一个中间层，告诉 AI Agent 目前存在哪些服务，哪些 API，哪些数据源，AI Agent 可以根据 Server 提供的信息来决定是否调用某个服务，然后通过 Function Calling 来执行函数。</p>
 
-<p>MCP Server 通过标准化协议公开特定功能，连接外部数据源（如数据库、API、文件系统），提供三类标准化能力： </p>
+<p>MCP Server 通过标准化协议公开特定功能，连接外部数据源（如数据库、API、文件系统），提供如下原语（标准化能力）： </p>
 
 <ul>
 <li><strong>Tools（工具）</strong>：可执行函数（如发送邮件、运行代码、查询数据库）。<br></li>
@@ -646,113 +673,98 @@ functions = [
 ◦ <strong>Local Resources （本地资源）</strong>：MCP 服务器可以安全访问的计算机资源（如数据库、文件、服务）。</p>
 
 <p>◦ <strong>Remote Resources （远程资源）</strong>：MCP 服务器可以连接的通过互联网（如通过 API）可用的资源。  </p></li>
-<li><p><strong>Prompts（提示模板）</strong>：预定义任务模板或流程（如医疗诊断模板、代码审查规则）。</p></li>
+<li><p><strong>Prompts（提示模板）</strong>：预定义任务模板或流程（如医疗诊断模板、代码审查规则），旨在指导 AI 模型完成特定的任务 。</p>
+
+<ul>
+<li><strong>Sampling（采样）</strong>: 这是一种特殊的机制，它允许 MCP 服务器请求宿主 AI 基于给定的提示生成文本完成。这个功能主要用于促进更复杂的多步骤推理过程。Anthropic 建议对任何采样请求都进行人工批准，以确保用户对 AI 的行为保持控制 。</li>
+</ul></li>
 </ul>
 
-<p>示例：一个 MCP 服务器可同时对接 GitHub API 和本地数据库，提供代码仓库查询与数据检索功能。假设我们想让 AI Agent 完成自动搜索 GitHub Repository，接着搜索 Issue，然后再判断是否是一个已知的 bug，最后决定是否需要提交一个新的 Issue 的功能。</p>
+<p>Sampling 的功能，这个如果从字面来理解会让人摸不到头脑，但实际上这个功能就给了我们一个在执行工具的前后的接口，我们可以在工具执行前后来执行一些操作。比如，当调用本地文件的删除的工具的时候，肯定是期望我们确认后再进行删除。那么，此时就可以使用这个功能。</p>
 
-<p>我们需要创建一个 GitHub MCP Server，这个 Server 需要提供查找 Repository、搜索 Issues 和创建 Issue 三种能力。</p>
+<div><pre><code class="language-Js">from mcp.server import FastMCP
+from mcp.types import SamplingMessage, TextContent
 
-<p>我们直接来看看代码：</p>
+app = FastMCP(&#39;file_server&#39;)
 
-<div><pre><code class="language-Js">const server = new Server(
-  {
-    name: &quot;github-mcp-server&quot;,
-    version: VERSION,
-  },
-  {
-    capabilities: {
-      tools: {},
-    },
-  }
-);
+@app.tool()
+async def delete_file(file_path: str):
+    # 创建 SamplingMessage 用于触发 sampling callback 函数
+    result = await app.get_context().session.create_message(
+        messages=[
+            SamplingMessage(
+                role=&#39;user&#39;, content=TextContent(
+                    type=&#39;text&#39;, text=f&#39;是否要删除文件: {file_path} (Y)&#39;)
+            )
+        ],
+        max_tokens=100
+    )
 
-server.setRequestHandler(ListToolsRequestSchema, async () =&gt; {
-  return {
-    tools: [
-      {
-        name: &quot;search_repositories&quot;,
-        description: &quot;Search for GitHub repositories&quot;,
-        inputSchema: zodToJsonSchema(repository.SearchRepositoriesSchema),
-      },
-      {
-        name: &quot;create_issue&quot;,
-        description: &quot;Create a new issue in a GitHub repository&quot;,
-        inputSchema: zodToJsonSchema(issues.CreateIssueSchema),
-      },
-      {
-        name: &quot;search_issues&quot;,
-        description: &quot;Search for issues and pull requests across GitHub repositories&quot;,
-        inputSchema: zodToJsonSchema(search.SearchIssuesSchema),
-      }
-    ],
-  };
-});
+    # 获取到 sampling callback 函数的返回值，并根据返回值进行处理
+    if result.content.text == &#39;Y&#39;:
+        return f&#39;文件 {file_path} 已被删除！！&#39;
 
-server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; {
-  try {
-    if (!request.params.arguments) {
-      throw new Error(&quot;Arguments are required&quot;);
-    }
+if __name__ == &#39;__main__&#39;:
+    app.run(transport=&#39;stdio&#39;)
+</code></pre></div>
 
-    switch (request.params.name) {
-      case &quot;search_repositories&quot;: {
-        const args = repository.SearchRepositoriesSchema.parse(request.params.arguments);
-        const results = await repository.searchRepositories(
-          args.query,
-          args.page,
-          args.perPage
-        );
-        return {
-          content: [{ type: &quot;text&quot;, text: JSON.stringify(results, null, 2) }],
-        };
-      }
+<p>当前主要使用 Tools 和 Resources。</p>
 
-      case &quot;create_issue&quot;: {
-        const args = issues.CreateIssueSchema.parse(request.params.arguments);
-        const { owner, repo, ...options } = args;
-        const issue = await issues.createIssue(owner, repo, options);
-        return {
-          content: [{ type: &quot;text&quot;, text: JSON.stringify(issue, null, 2) }],
-        };
-      }
+<h3 id="toc_10">2.3.1 <strong>Tools vs API</strong></h3>
 
-      case &quot;search_issues&quot;: {
-        const args = search.SearchIssuesSchema.parse(request.params.arguments);
-        const results = await search.searchIssues(args);
-        return {
-          content: [{ type: &quot;text&quot;, text: JSON.stringify(results, null, 2) }],
-        };
-      }
+<p>MCP Tool 与 传统的 API 以及 Function Calling 在设计理念、功能特性和使用方式上存在不同。传统的 API 通常通过一组预先定义好的、固定的端点来暴露其功能，客户端需要按照这些端点的特定结构进行交互 。相比之下，MCP Tool 包含了丰富的语义描述，详细说明了该工具的具体功能、每个参数的含义、预期的输出格式以及任何相关的约束和限制。这种自描述的特性使得 MCP 在很大程度上减少了对外部文档的依赖，可以简单认为 Tool = API + Doc。</p>
 
-      default:
-        throw new Error(`Unknown tool: ${request.params.name}`);
-    }
-  } catch (error) {
-    // 处理错误
-  }
-});
+<p>从通信模式来看，传统的 API 通常采用简单的请求-响应模式，而 MCP 则是一个持续的、双向的对话过程 。它允许 AI 模型请求数据或执行操作，还能够动态地接收来自外部工具的更新，而无需客户端不断地发送新的请求 。这种持久的、实时的双向通信能力，类似于 WebSockets，使得 MCP 更适合构建需要保持状态和实时交互的 AI 应用。</p>
 
-async function runServer() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error(&quot;GitHub MCP Server running on stdio&quot;);
-}
+<table>
+<thead>
+<tr>
+<th style="text-align: left">特性</th>
+<th style="text-align: left">MCP</th>
+<th style="text-align: left">API</th>
+</tr>
+</thead>
 
-runServer().catch((error) =&gt; {
-  console.error(&quot;Fatal error in main():&quot;, error);
-  process.exit(1);
-});</code></pre></div>
+<tbody>
+<tr>
+<td style="text-align: left">定义</td>
+<td style="text-align: left">AI 交互的标准化协议</td>
+<td style="text-align: left">预定义的固定端点集合</td>
+</tr>
+<tr>
+<td style="text-align: left">工具定义</td>
+<td style="text-align: left">带有元数据的自描述工具</td>
+<td style="text-align: left">具有固定结构的固定端点</td>
+</tr>
+<tr>
+<td style="text-align: left">通信</td>
+<td style="text-align: left">有状态，双向，实时</td>
+<td style="text-align: left">无状态，请求-响应</td>
+</tr>
+<tr>
+<td style="text-align: left">上下文处理</td>
+<td style="text-align: left">增强的上下文感知和管理</td>
+<td style="text-align: left">有限的上下文管理</td>
+</tr>
+<tr>
+<td style="text-align: left">互操作性</td>
+<td style="text-align: left">模型无关，旨在成为通用标准</td>
+<td style="text-align: left">通常特定于某个服务或平台</td>
+</tr>
+<tr>
+<td style="text-align: left">灵活性</td>
+<td style="text-align: left">动态工具发现和适应</td>
+<td style="text-align: left">需要更新客户端以适应变化</td>
+</tr>
+<tr>
+<td style="text-align: left">安全性</td>
+<td style="text-align: left">内置机制，服务器控制资源</td>
+<td style="text-align: left">依赖 API 密钥管理</td>
+</tr>
+</tbody>
+</table>
 
-<p>可以很清晰的看到，我们最终实现是通过了 <a href="https://api.github.com">https://api.github.com</a> 的 API 来实现和 Github 交互的，我们通过 githubRequest 函数来调用 GitHub 的 API，最后返回结果。</p>
-
-<p>在调用 Github 官方的 API 之前，MCP 的主要工作是描述 Server 提供了哪些能力(给 LLM 提供)，需要哪些参数(参数具体的功能是什么)，最后返回的结果是什么。</p>
-
-<p>AI Agent 自动的根据本地错误日志，自动搜索相关的 GitHub Repository，然后搜索 Issue，最后将结果发送到 Slack。我们需要创建三个不同的 MCP Server：Local Log Server，用来查询本地日志；GitHub Server，用来搜索 Issue；Slack Server，用来发送消息。</p>
-
-<p>AI Agent 在用户输入 我需要查询本地错误日志，将相关的 Issue 发送到 Slack 指令后，自行判断需要调用哪些 MCP Server，并决定调用顺序，最终根据不同 MCP Server 的返回结果来决定是否需要调用下一个 Server，以此来完成整个任务。</p>
-
-<h3 id="toc_10">2.4 <strong>Transportation（通信）</strong></h3>
+<h3 id="toc_11">2.4 <strong>Transportation（通信）</strong></h3>
 
 <p><img src="https://sy0.img.it168.com/article/5/5104/5104207.png" alt=""></p>
 
@@ -767,7 +779,7 @@ runServer().catch((error) =&gt; {
 
 <p>传输是模型上下文协议（MCP）的核心组件之一，为客户端和服务器之间的通信提供基础。传输机制负责处理消息的发送和接收的底层逻辑。</p>
 
-<h4 id="toc_11">2.4.1 消息类型（Message types）</h4>
+<h4 id="toc_12">2.4.1 消息类型（Message types）</h4>
 
 <p>MCP 定义了以下主要消息类型：</p>
 
@@ -799,7 +811,7 @@ runServer().catch((error) =&gt; {
     data: unknown;
 }</code></pre></div>
 
-<h4 id="toc_12">2.4.2 通信协议</h4>
+<h4 id="toc_13">2.4.2 通信协议</h4>
 
 <p>MCP 使用 JSON-RPC 2.0 作为传输格式，旨在规范支持模型、资源、工具等多种交互，具体的规范请参考：<a href="https://github.com/modelcontextprotocol/specification%E3%80%82%E4%BC%A0%E8%BE%93%E5%B1%82%E8%B4%9F%E8%B4%A3%E5%B0%86">https://github.com/modelcontextprotocol/specification。传输层负责将</a> MCP 协议消息转换为 JSON-RPC 格式进行传输，并将接收到的 JSON-RPC 消息还原为 MCP 协议消息。</p>
 
@@ -886,7 +898,7 @@ id：唯一标识请求的 ID，用于匹配响应。</code></pre></div>
     “id”: 1
 }</code></pre></div>
 
-<h4 id="toc_13">2.4.3 错误处理（Error Handling）</h4>
+<h4 id="toc_14">2.4.3 错误处理（Error Handling）</h4>
 
 <p>传输实现需要处理各种错误场景，包括：<br>
 • 连接错误（Connection errors）<br>
@@ -896,14 +908,6 @@ id：唯一标识请求的 ID，用于匹配响应。</code></pre></div>
 • 资源清理（Resource cleanup）</p>
 
 <p>通过设计健壮的错误处理机制，可以确保传输的稳定性和可靠性。</p>
-
-<h4 id="toc_14">2.4.4 最佳实践</h4>
-
-<p>在实现或使用 MCP 传输机制时，需要正确管理连接生命周期，确保在连接关闭时清理资源，并使用合适的超时时间。同时，应实现适当的错误处理机制，在发送前验证消息内容，并记录传输事件以便调试。在适当情况下，添加重连逻辑，处理消息队列中的回压问题，并持续监控连接的健康状态。此外，还需要实施必要的安全措施以保证传输的可靠性。</p>
-
-<p>在安全方面，需要重点关注身份验证与授权，包括实现可靠的身份验证机制、验证客户端凭证、使用安全的令牌处理方法以及执行授权检查。在数据安全层面，应使用 TLS 加密网络传输，保护敏感数据，验证消息完整性，限制消息大小，并清理输入数据以防止恶意内容。在网络安全层面，需实施速率限制、设置合适的超时时间、处理拒绝服务（DoS）攻击场景、监控异常通信模式，并制定合适的防火墙规则。</p>
-
-<p>为有效调试传输问题，可启用调试日志记录、监控消息流量、检查连接状态并验证消息格式，同时测试各种错误场景。使用网络分析工具和错误跟踪工具有助于发现问题。此外，可以通过健康检查和资源使用监控，验证系统在边缘情况和高负载条件下的稳定性，从而确保传输机制的健壮性和安全性。</p>
 
 <h3 id="toc_15">2.5 工程实践</h3>
 
@@ -1106,13 +1110,13 @@ if __name__==&quot;__main__&quot;:
 <p>MCP Inspector</p>
 </blockquote>
 
-<p>MCP 提供了 MCP Inspector 用于调试与测试 MCP Server，使得 Server 开发更加方便。</p>
+<p>MCP 提供了 <a href="https://github.com/modelcontextprotocol/inspector">MCP Inspector</a> 用于调试与测试 MCP Server，使得 Server 开发更加方便。</p>
 
 <p>使用 Node.js 启动 Inspector 程序，启动后可以在浏览器访问 <a href="http://localhost:5173">http://localhost:5173</a> 查看。可以在其中查看 MCP Server 提供的各种服务，如 Tools、Resources、Prompts 等，以及调用 Tools 服务。</p>
 
 <div><pre><code class="language-Js">npx @modelcontextprotocol/inspector</code></pre></div>
 
-<p><img src="https://img2024.cnblogs.com/blog/84976/202412/84976-20241223201900364-2013919728.png" alt=""></p>
+<p><img src="https://pic1.zhimg.com/v2-c82e4c0ffd5f2bb6a60b19488ab64a34_1440w.jpg" alt=""></p>
 
 <hr>
 
@@ -1145,7 +1149,7 @@ if __name__==&quot;__main__&quot;:
 
 <h3 id="toc_18">3.2 <strong>集成效率与性能优化</strong></h3>
 
-<p>将传统 M×N 的集成复杂度（M 个模型 × N 个工具）降为 M+N 模式，适配成本降低 70% 以上。</p>
+<p>连接 AI 模型与各种数据源通常需要为每个数据源编写定制化的代码，这不仅耗时，而且容易出错 。这种为连接 M 个不同的 LLM 和 N 个不同的工具而产生的 “MxN” 问题。MCP 将传统 M×N 的集成复杂度降为 M+N（M 个 LLM 模型接入 + N 个工具 Server 实现） 模式，适配成本降低 70% 以上。</p>
 
 <p>轻量化协议头（占比 &lt; 5%），支持消息压缩与容错机制（如断点续传），减少通信开销。</p>
 
@@ -1183,9 +1187,9 @@ if __name__==&quot;__main__&quot;:
 
 <p>可以实现个性化对话体验、专业领域问答和多轮对话管理。</p>
 
-<p><strong>案例</strong>：用户通过 Slack 提交功能需求，Cursor 自动调用 MCP 服务器连接 GitHub、Slack 和测试工具，生成代码并提交 Pull Request，全流程无需人工干预。</p>
+<p><strong>案例</strong>：用户通过 Slack 提交功能需求，Cursor 自动调用 MCP 服务器连接 GitHub/Gitlab、Slack 和测试工具，生成代码并提交 Pull Request，全流程无需人工干预。</p>
 
-<p>动态分析代码库架构，结合项目规范生成代码片段（通过 GitHub MCP 服务器）。</p>
+<p>动态分析代码库架构，结合项目规范生成代码片段（通过 GitHub MCP 服务器）。通过集成 Git 和 GitHub/GitLab MCP 服务器，Claude 可以管理代码仓库，执行代码提交、创建分支、创建拉取请求等操作 。例如，用户可以指示 Claude 创建一个新的 GitHub 仓库，并将一个 HTML 文件推送到主分支 。与代码仓库的集成使得 AI 成为软件开发工作流程中一个非常有价值的工具，能够自动化代码管理和代码审查等任务。</p>
 
 <p>实时检测安全漏洞并推荐修复方案（集成静态分析工具）。</p>
 
@@ -1214,6 +1218,8 @@ if __name__==&quot;__main__&quot;:
 <h3 id="toc_28">4.6 <strong>隐私敏感场景</strong></h3>
 
 <p><strong>医疗数据处理</strong>：本地 Server 对接医院数据库，模型在隔离环境中分析患者记录。</p>
+
+<p>数据库交互是 MCP 的一个重要应用领域。通过 PostgreSQL 和 SQLite MCP 服务器，Agent 能够查询和更新数据库中的数据 。例如，开发者可以要求 Agent 查询电影数据库的结构模式，或者检索特定电影的详细信息。数据库集成使得 AI 能够访问和分析结构化数据，从而可以通过自然语言实现数据分析和报告等应用。这项功能使得 AI 成为处理数据的更强大的工具。</p>
 
 <p><strong>法律文档审查</strong>：仅授权访问特定案例库，确保合规性。</p>
 
@@ -1263,6 +1269,8 @@ if __name__==&quot;__main__&quot;:
 <li>1 <a href="https://www.cnblogs.com/softlin/p/18624966">模型上下文协议MCP</a></li>
 <li>2 <a href="https://mp.weixin.qq.com/s/GhxTft6ccDLpqhJb0sKrzw">一文揭秘MCP Server、Function Call与Agent的核心区别</a></li>
 <li>3 <a href="https://www.cnblogs.com/softlin/p/18669191">AI Agents(智能体)是什么能做什么</a></li>
+<li>4 <a href="https://mp.weixin.qq.com/s/cgZoVD0WgmT03VcHlo10dg">7000字详解火爆全网的Claude 模型上下文协议 (MCP)</a></li>
+<li>5 <a href="https://zhuanlan.zhihu.com/p/27463359194">Model Context Protocol(MCP) 编程极速入门</a></li>
 </ul>
 
 <h2 id="toc_34">Payment</h2>
@@ -1349,6 +1357,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
+
 
 
 
