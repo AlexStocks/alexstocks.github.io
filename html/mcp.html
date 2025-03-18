@@ -504,11 +504,11 @@ pre[class*="language-"] {
 
 <p>介绍两种相对简单的模式：串行 Workflow 模式和动态 Agents 模式。</p>
 
-<p><img src="https://img2024.cnblogs.com/blog/84976/202501/84976-20250113215113713-51302085.png" alt=""></p>
+<p><img src="../pic/mcp-workflow-serial.png" alt=""></p>
 
 <p>Workflow模式: 初级智能体，此模式下智能体只能执行某些经过编排好的能力实现固定功能。</p>
 
-<p><img src="https://img2024.cnblogs.com/blog/84976/202501/84976-20250113215113796-1494386501.png" alt=""></p>
+<p><img src="../pic/mcp-workflow-agentic.png" alt=""></p>
 
 <p>动态 Agents 模式：高级智能体，完全由智能体规划任务并决定如何执行任务，是否调用两个服务还是三个服务，取决于任务本身及其规划。</p>
 
@@ -673,16 +673,13 @@ functions = [
 ◦ <strong>Local Resources （本地资源）</strong>：MCP 服务器可以安全访问的计算机资源（如数据库、文件、服务）。</p>
 
 <p>◦ <strong>Remote Resources （远程资源）</strong>：MCP 服务器可以连接的通过互联网（如通过 API）可用的资源。  </p></li>
-<li><p><strong>Prompts（提示模板）</strong>：预定义任务模板或流程（如医疗诊断模板、代码审查规则），旨在指导 AI 模型完成特定的任务 。</p>
-
-<ul>
-<li><strong>Sampling（采样）</strong>: 这是一种特殊的机制，它允许 MCP 服务器请求宿主 AI 基于给定的提示生成文本完成。这个功能主要用于促进更复杂的多步骤推理过程。Anthropic 建议对任何采样请求都进行人工批准，以确保用户对 AI 的行为保持控制 。</li>
-</ul></li>
+<li><p><strong>Prompts（提示模板）</strong>：预定义任务模板或流程（如医疗诊断模板、代码审查规则），旨在指导 AI 模型完成特定的任务 。</p></li>
+<li><p><strong>Sampling（采样）</strong>: 这是一种特殊的机制，它允许 MCP 服务器请求宿主 AI 基于给定的提示生成文本完成。这个功能主要用于促进更复杂的多步骤推理过程。Anthropic 建议对任何采样请求都进行人工批准，以确保用户对 AI 的行为保持控制。</p></li>
 </ul>
 
-<p>Sampling 的功能，这个如果从字面来理解会让人摸不到头脑，但实际上这个功能就给了我们一个在执行工具的前后的接口，我们可以在工具执行前后来执行一些操作。比如，当调用本地文件的删除的工具的时候，肯定是期望我们确认后再进行删除。那么，此时就可以使用这个功能。</p>
+<p>Sampling 就给了用户一个在执行工具的前后的接口，用户可以在工具执行前后来执行一些操作。比如，当调用本地文件的删除的工具的时候，肯定是期望用户确认后再进行删除。那么，此时就可以使用这个功能。</p>
 
-<div><pre><code class="language-Js">from mcp.server import FastMCP
+<div><pre><code class="language-Python">from mcp.server import FastMCP
 from mcp.types import SamplingMessage, TextContent
 
 app = FastMCP(&#39;file_server&#39;)
@@ -712,7 +709,7 @@ if __name__ == &#39;__main__&#39;:
 
 <h3 id="toc_10">2.3.1 <strong>Tools vs API</strong></h3>
 
-<p>MCP Tool 与 传统的 API 以及 Function Calling 在设计理念、功能特性和使用方式上存在不同。传统的 API 通常通过一组预先定义好的、固定的端点来暴露其功能，客户端需要按照这些端点的特定结构进行交互 。相比之下，MCP Tool 包含了丰富的语义描述，详细说明了该工具的具体功能、每个参数的含义、预期的输出格式以及任何相关的约束和限制。这种自描述的特性使得 MCP 在很大程度上减少了对外部文档的依赖，可以简单认为 Tool = API + Doc。</p>
+<p>MCP Tools 与 传统的 API 以及 Function Calling 在设计理念、功能特性和使用方式上存在不同。传统的 API 通常通过一组预先定义好的、固定的端点来暴露其功能，客户端需要按照这些端点的特定结构进行交互 。相比之下，MCP Tools 包含了丰富的语义描述，详细说明了该工具的具体功能、每个参数的含义、预期的输出格式以及任何相关的约束和限制。这种自描述的特性使得 MCP 在很大程度上减少了对外部文档的依赖，可以简单认为 Tool = API + Doc。</p>
 
 <p>从通信模式来看，传统的 API 通常采用简单的请求-响应模式，而 MCP 则是一个持续的、双向的对话过程 。它允许 AI 模型请求数据或执行操作，还能够动态地接收来自外部工具的更新，而无需客户端不断地发送新的请求 。这种持久的、实时的双向通信能力，类似于 WebSockets，使得 MCP 更适合构建需要保持状态和实时交互的 AI 应用。</p>
 
@@ -720,7 +717,7 @@ if __name__ == &#39;__main__&#39;:
 <thead>
 <tr>
 <th style="text-align: left">特性</th>
-<th style="text-align: left">MCP</th>
+<th style="text-align: left">MCP Tools</th>
 <th style="text-align: left">API</th>
 </tr>
 </thead>
@@ -1357,7 +1354,6 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container');
 </script>
 <!-- Gitalk end -->
-
 
 
 
